@@ -19,6 +19,7 @@
     <ProjectReference Include="..\Sokoban.Solver\Sokoban.Solver.csproj" />
     <ProjectReference Include="..\Klondike\Klondike.csproj" />
     <ProjectReference Include="..\FreeCell\FreeCell.csproj" />
+    <ProjectReference Include="..\Spider\Spider.csproj" />
   </ItemGroup>
 
   <ItemGroup>

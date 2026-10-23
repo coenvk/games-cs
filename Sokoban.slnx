@@ -10,6 +10,7 @@
     <Project Path="src/Sokoban.Model/Sokoban.Model.csproj" />
     <Project Path="src/Sokoban.Solver/Sokoban.Solver.csproj" />
     <Project Path="src/Sokoban.Web/Sokoban.Web.csproj" />
+    <Project Path="src/Spider/Spider.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/FreeCell.Tests/FreeCell.Tests.csproj" />
@@ -19,6 +20,7 @@
     <Project Path="tests/Klondike.Tests/Klondike.Tests.csproj" />
     <Project Path="tests/Sokoban.Model.Tests/Sokoban.Model.Tests.csproj" />
     <Project Path="tests/Sokoban.Solver.Tests/Sokoban.Solver.Tests.csproj" />
+    <Project Path="tests/Spider.Tests/Spider.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/">
     <Project Path="tools/LevelConverter/LevelConverter.csproj" />

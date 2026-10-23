@@ -20,6 +20,7 @@ internal sealed class CardGamesScene : Scene
             context.Sounds,
             new MenuItem("Klondike", () => Scenes.Replace(new KlondikeScene(context), Navigation.Fade())),
             new MenuItem("FreeCell", () => Scenes.Replace(new FreeCellScene(context), Navigation.Fade())),
+            new MenuItem("Spider", () => Scenes.Replace(new SpiderSuitsScene(context))),
             new MenuItem("Back", () => Scenes.Pop()));
     }
 
@@ -125,4 +126,42 @@ internal sealed class CardWonScene : Scene
             "You won!",
             [new PanelLine($"{_game.Name} #{_game.Deal}: {Format.Count(_game.MoveCount, "move")}, {Format.Duration(_game.Time)}", Palette.Text)],
             _menu);
+}
+
+/// <summary>Picks how many suits a Spider deal uses: fewer suits, easier game.</summary>
+internal sealed class SpiderSuitsScene : Scene
+{
+    private readonly GameContext _context;
+    private readonly Menu _menu;
+
+    public SpiderSuitsScene(GameContext context)
+    {
+        _context = context;
+        _menu = new Menu(
+            context.Sounds,
+            new MenuItem("1 suit (easy)", () => Start(1)),
+            new MenuItem("2 suits (medium)", () => Start(2)),
+            new MenuItem("4 suits (hard)", () => Start(4)),
+            new MenuItem("Back", Back));
+    }
+
+    public override bool IsOverlay => true;
+
+    public override void Update(TimeSpan elapsed, InputState input)
+    {
+        if (_context.Actions.WasPressed(input, GameAction.Back))
+        {
+            Back();
+            return;
+        }
+
+        _menu.Update(input, _context.Actions, elapsed);
+    }
+
+    public override void Draw(SpriteBatch batch, Rectangle viewport) =>
+        OverlayPanel.Draw(batch, viewport, _context.Fonts, "Spider", [new PanelLine("How many suits?", Palette.Muted)], _menu);
+
+    private void Start(int suits) => Scenes.Replace(new SpiderScene(_context, suits), Navigation.Fade());
+
+    private void Back() => Scenes.Replace(new CardGamesScene(_context));
 }

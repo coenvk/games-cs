@@ -13,14 +13,14 @@ A C# rewrite of [coenvk/Sokoban](https://github.com/coenvk/Sokoban), with engine
 | `src/Jentl.Core` | Small engine on MonoGame: `JentlGame`, `SceneManager` (scene stack, overlays, transitions), input action map and auto-repeat, easing |
 | `src/Jentl.Puzzle` | Puzzle kit: turn-based grid puzzles with rules, undo/redo and level files (see `docs/kits.md`) |
 | `src/Jentl.Cards` | Card kit: cards, decks, piles, rules, undo/redo and hints (see `docs/kits.md`) |
-| `src/Klondike`, `src/FreeCell` | Klondike and FreeCell rules on the card kit |
+| `src/Klondike`, `src/FreeCell`, `src/Spider` | Klondike, FreeCell and Spider rules on the card kit |
 | `src/Sokoban.Solver` | Solver (A* over pushes, matching heuristic, dead-square and frozen-block pruning) and level generator (reverse play) |
 | `src/Sokoban.Desktop` | MonoGame (DesktopGL) app: scenes (menu, level select, play, pause, complete), rendering, UI |
 | `src/Jentl.Core.Kni`, `src/Sokoban.Web` | Browser build: the same engine and game sources compiled against KNI and hosted in Blazor WebAssembly |
 | `tests/Sokoban.Model.Tests` | xUnit tests for the model |
 | `tests/Jentl.Core.Tests` | xUnit tests for the engine (runs headless) |
 | `tests/Sokoban.Solver.Tests` | xUnit tests for the solver, deadlock detection and generator |
-| `tests/Jentl.Puzzle.Tests`, `tests/Jentl.Cards.Tests`, `tests/Klondike.Tests`, `tests/FreeCell.Tests` | xUnit tests for the kits and Klondike |
+| `tests/Jentl.Puzzle.Tests`, `tests/Jentl.Cards.Tests`, `tests/Klondike.Tests`, `tests/FreeCell.Tests`, `tests/Spider.Tests` | xUnit tests for the kits and card games |
 | `tools/LevelConverter` | One-shot converter from the old Java level format to XSB |
 | `tools/SolverBench` | `solve`: run the solver over a pack; `generate`: print generated levels as XSB |
 | `levels/original.xsb` | The 100 levels from the Java version |
@@ -166,6 +166,6 @@ Differences from desktop:
 
 Sokoban runs on Jentl's **puzzle kit** (`Jentl.Puzzle`): its rules, ice included, are an `IPuzzleRules`, and moves,
 undo, redo and level files come from the kit. The main menu also has card games built on the **card
-kit** (`Jentl.Cards`) under **Card games**: Klondike and FreeCell. Drag cards or tap one to send it where it fits,
+kit** (`Jentl.Cards`) under **Card games**: Klondike, FreeCell and Spider (1, 2 or 4 suits). Drag cards or tap one to send it where it fits,
 with undo, hints and automatic moves home. FreeCell deal numbers match Microsoft FreeCell (deal 1 is the classic deal 1).
 `docs/kits.md` explains how to build a new puzzle or card game with the kits.

@@ -193,10 +193,18 @@ internal abstract class CardGameScene : Scene
         _ => "Try that pile",
     };
 
+    /// <summary>Why a move was refused, when that is worth telling the player; null says nothing.</summary>
+    protected virtual string? DescribeRejected(CardInput input) => null;
+
     protected void Play(CardInput input)
     {
         if (Game.Play(input) is not { } turn)
         {
+            if (DescribeRejected(input) is { } reason)
+            {
+                ShowMessage(reason);
+            }
+
             return;
         }
 
@@ -245,6 +253,12 @@ internal abstract class CardGameScene : Scene
             _message = "No moves left. Undo, or start a new deal.";
         }
 
+        _messageFor = MessageDuration;
+    }
+
+    private void ShowMessage(string message)
+    {
+        _message = message;
         _messageFor = MessageDuration;
     }
 
