@@ -7,14 +7,49 @@ using Sokoban.Desktop.UI;
 
 namespace Sokoban.Desktop.Scenes;
 
-internal sealed class SolitairePauseScene : Scene
+/// <summary>Picks a card game from the main menu.</summary>
+internal sealed class CardGamesScene : Scene
 {
     private readonly GameContext _context;
     private readonly Menu _menu;
 
-    public SolitairePauseScene(GameContext context, SolitaireScene game)
+    public CardGamesScene(GameContext context)
     {
         _context = context;
+        _menu = new Menu(
+            context.Sounds,
+            new MenuItem("Klondike", () => Scenes.Replace(new KlondikeScene(context), Navigation.Fade())),
+            new MenuItem("FreeCell", () => Scenes.Replace(new FreeCellScene(context), Navigation.Fade())),
+            new MenuItem("Back", () => Scenes.Pop()));
+    }
+
+    public override bool IsOverlay => true;
+
+    public override void Update(TimeSpan elapsed, InputState input)
+    {
+        if (_context.Actions.WasPressed(input, GameAction.Back))
+        {
+            Scenes.Pop();
+            return;
+        }
+
+        _menu.Update(input, _context.Actions, elapsed);
+    }
+
+    public override void Draw(SpriteBatch batch, Rectangle viewport) =>
+        OverlayPanel.Draw(batch, viewport, _context.Fonts, "Card games", [], _menu);
+}
+
+internal sealed class CardPauseScene : Scene
+{
+    private readonly GameContext _context;
+    private readonly CardGameScene _game;
+    private readonly Menu _menu;
+
+    public CardPauseScene(GameContext context, CardGameScene game)
+    {
+        _context = context;
+        _game = game;
         _menu = new Menu(
             context.Sounds,
             new MenuItem("Resume", () => Scenes.Pop()),
@@ -46,16 +81,16 @@ internal sealed class SolitairePauseScene : Scene
     }
 
     public override void Draw(SpriteBatch batch, Rectangle viewport) =>
-        OverlayPanel.Draw(batch, viewport, _context.Fonts, "Paused", [new PanelLine("Solitaire", Palette.Muted)], _menu);
+        OverlayPanel.Draw(batch, viewport, _context.Fonts, "Paused", [new PanelLine($"{_game.Name} #{_game.Deal}", Palette.Muted)], _menu);
 }
 
-internal sealed class SolitaireWonScene : Scene
+internal sealed class CardWonScene : Scene
 {
     private readonly GameContext _context;
-    private readonly SolitaireScene _game;
+    private readonly CardGameScene _game;
     private readonly Menu _menu;
 
-    public SolitaireWonScene(GameContext context, SolitaireScene game)
+    public CardWonScene(GameContext context, CardGameScene game)
     {
         _context = context;
         _game = game;
@@ -88,6 +123,6 @@ internal sealed class SolitaireWonScene : Scene
             viewport,
             _context.Fonts,
             "You won!",
-            [new PanelLine($"{Format.Count(_game.MoveCount, "move")}, {Format.Duration(_game.Time)}", Palette.Text)],
+            [new PanelLine($"{_game.Name} #{_game.Deal}: {Format.Count(_game.MoveCount, "move")}, {Format.Duration(_game.Time)}", Palette.Text)],
             _menu);
 }

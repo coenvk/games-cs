@@ -94,7 +94,7 @@ internal sealed class MenuScene : Scene
             new(started ? "Continue" : "Play", () => Scenes.Push(new PlayScene(context, context.Continue), Navigation.Fade())),
             new("Select level", () => Scenes.Push(new LevelSelectScene(context, context.Continue), Navigation.Fade())),
             new("Random level", () => Scenes.Push(new GenerateScene(context), Navigation.Fade())),
-            new("Solitaire", () => Scenes.Push(new SolitaireScene(context), Navigation.Fade())),
+            new("Card games", () => Scenes.Push(new CardGamesScene(context))),
             new("Options", () => Scenes.Push(new OptionsScene(context))),
         ];
         if (context.Platform.CanQuit)
