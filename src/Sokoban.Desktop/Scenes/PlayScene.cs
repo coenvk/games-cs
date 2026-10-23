@@ -74,7 +74,7 @@ internal sealed class PlayScene : Scene
             : int.Parse(level.Key[..7], NumberStyles.HexNumber, CultureInfo.InvariantCulture));
         _renderer = new BoardRenderer(context.Tileset);
         _solver = new Solver.Solver(level.Board);
-        _hints = new HintRunner(_solver);
+        _hints = new HintRunner(_solver, context.Platform.HintTime);
     }
 
     /// <summary>Where the level sits in the packs, or null for a generated level.</summary>

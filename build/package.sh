@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Packages the game for distribution.
 #
-# Usage: build/package.sh [rid]   (default: this machine's runtime, e.g. osx-arm64)
+# Usage: build/package.sh [rid|web]   (default: this machine's runtime, e.g. osx-arm64)
 #
 # For this machine's own runtime the game is compiled ahead of time (NativeAOT): one native
 # executable, fast start-up, no .NET install needed. Other runtimes cannot be AOT-compiled
@@ -10,12 +10,24 @@
 # Output in dist/:
 #   macOS:          Sokoban-<rid>.zip containing Sokoban.app (ad-hoc signed)
 #   Windows/Linux:  Sokoban-<rid>.zip containing a Sokoban/ folder
+#   web:            Sokoban-<version>-web.zip, a static site (index.html at the root) for any web host
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
 host_rid="$(dotnet --info | awk '/RID:/ { print $2; exit }')"
 rid="${1:-$host_rid}"
 version="$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' "$root/src/Sokoban.Desktop/Sokoban.Desktop.csproj")"
+
+if [[ "$rid" == web ]]; then
+    site="$root/dist/web"
+    rm -rf "$site"
+    dotnet publish "$root/src/Sokoban.Web" -c Release -o "$site" -p:DebugType=None
+    archive="$root/dist/Sokoban-$version-web.zip"
+    rm -f "$archive"
+    (cd "$site/wwwroot" && zip -qr "$archive" .)
+    echo "Created $archive"
+    exit 0
+fi
 work="$root/dist/$rid"
 app="$work/Sokoban"
 

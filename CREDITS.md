@@ -20,3 +20,13 @@ there, so check their license before distributing the game.
 ## Levels
 
 `levels/original.xsb` holds the 100 levels from [coenvk/Sokoban](https://github.com/coenvk/Sokoban), converted to XSB.
+
+## Libraries
+
+[MonoGame](https://monogame.net) and [KNI](https://github.com/kniEngine/kni) (MS-PL),
+[FontStashSharp](https://github.com/FontStashSharp/FontStashSharp) (MIT) and
+[StbImageSharp](https://github.com/StbSharp/StbImageSharp) (public domain / MIT).
+
+## App icon
+
+`build/icon.png` and `build/macos/Sokoban.icns` are composed from two sprites of the pack above (CC BY-SA 4.0).

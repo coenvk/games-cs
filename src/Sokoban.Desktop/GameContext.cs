@@ -18,11 +18,15 @@ internal static class Sound
 internal sealed record LevelPack(string Name, string Prefix, IReadOnlyList<Level> Levels);
 
 /// <summary>What the platform supports; a browser tab cannot quit or switch to fullscreen by itself.</summary>
-internal sealed record PlatformFeatures(bool CanQuit, bool CanFullscreen)
+/// <param name="HintTime">
+/// Search budget for a hint. WebAssembly has a single thread, so there the search holds up the frame
+/// and must stay short.
+/// </param>
+internal sealed record PlatformFeatures(bool CanQuit, bool CanFullscreen, TimeSpan HintTime)
 {
-    public static PlatformFeatures Desktop { get; } = new(CanQuit: true, CanFullscreen: true);
+    public static PlatformFeatures Desktop { get; } = new(CanQuit: true, CanFullscreen: true, TimeSpan.FromSeconds(3));
 
-    public static PlatformFeatures Browser { get; } = new(CanQuit: false, CanFullscreen: false);
+    public static PlatformFeatures Browser { get; } = new(CanQuit: false, CanFullscreen: false, TimeSpan.FromSeconds(1));
 }
 
 /// <summary>A level by its place in the packs.</summary>

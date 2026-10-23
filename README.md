@@ -11,6 +11,7 @@ A C# rewrite of [coenvk/Sokoban](https://github.com/coenvk/Sokoban), with engine
 | `src/Jentl.Core` | Small engine on MonoGame: `JentlGame`, `SceneManager` (scene stack, overlays, transitions), input action map and auto-repeat, easing |
 | `src/Sokoban.Solver` | Solver (A* over pushes, matching heuristic, dead-square and frozen-block pruning) and level generator (reverse play) |
 | `src/Sokoban.Desktop` | MonoGame (DesktopGL) app: scenes (menu, level select, play, pause, complete), rendering, UI |
+| `src/Jentl.Core.Kni`, `src/Sokoban.Web` | Browser build: the same engine and game sources compiled against KNI and hosted in Blazor WebAssembly |
 | `tests/Sokoban.Model.Tests` | xUnit tests for the model |
 | `tests/Jentl.Core.Tests` | xUnit tests for the engine (runs headless) |
 | `tests/Sokoban.Solver.Tests` | xUnit tests for the solver, deadlock detection and generator |
@@ -114,6 +115,7 @@ dotnet run -c Release --project tools/SolverBench -- generate 10 7 9 8 3 8 7 > i
 build/package.sh              # this machine's runtime, compiled with NativeAOT
 build/package.sh win-x64      # other runtimes: self-contained, trimmed single file
 build/package.sh linux-x64
+build/package.sh web          # static website (zip of wwwroot)
 ```
 
 Each run writes `dist/Sokoban-<version>-<rid>.zip`. On macOS it contains `Sokoban.app` (icon, `Info.plist`, ad-hoc
@@ -124,3 +126,22 @@ signature); elsewhere a `Sokoban/` folder with the executable, SDL2/OpenAL libra
 - Linux needs OpenGL and OpenSSL (`libssl`), both present on desktop distributions. The Linux build was smoke-tested
   in Docker under Xvfb; the Windows build has not been run.
 - Without an audio device the game runs silently.
+
+## Web
+
+The browser build compiles the desktop game's sources unchanged against [KNI](https://github.com/kniEngine/kni)
+(a MonoGame fork with a Blazor WebAssembly platform):
+
+```bash
+dotnet run --project src/Sokoban.Web     # http://localhost:5259
+build/package.sh web                     # dist/Sokoban-<version>-web.zip: upload to any static host
+```
+
+Differences from desktop:
+
+- Game files are downloaded up front (the list is generated at build time) and read from memory; KNI's synchronous
+  file requests cannot carry binary files intact.
+- Progress and settings live in `localStorage`.
+- Quit and Fullscreen are hidden.
+- WebAssembly has one thread, so a hint blocks the game while it searches; its budget is 1 second instead of 3.
+- The dev server needs the linked assets physically under `wwwroot`; the build mirrors them there (git-ignored).

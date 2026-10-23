@@ -10,14 +10,17 @@ namespace Sokoban.Desktop;
 /// </summary>
 internal sealed class HintRunner : IDisposable
 {
-    private static readonly SolverOptions Options = new(MaxNodes: 1_000_000, Weight: 3, MaxTime: TimeSpan.FromSeconds(3));
-
     private readonly Solver.Solver _solver;
+    private readonly SolverOptions _options;
     private CancellationTokenSource? _cancellation;
     private Task<SolveResult>? _task;
     private int _version;
 
-    public HintRunner(Solver.Solver solver) => _solver = solver;
+    public HintRunner(Solver.Solver solver, TimeSpan budget)
+    {
+        _solver = solver;
+        _options = new SolverOptions(MaxNodes: 1_000_000, Weight: 3, MaxTime: budget);
+    }
 
     public bool IsThinking => _task is { IsCompleted: false };
 
@@ -30,7 +33,7 @@ internal sealed class HintRunner : IDisposable
         _cancellation = new CancellationTokenSource();
         var token = _cancellation.Token;
         _version = version;
-        _task = Task.Run(() => _solver.Solve(player, crates, Options, token), token);
+        _task = Task.Run(() => _solver.Solve(player, crates, _options, token), token);
     }
 
     /// <summary>The finished result, if there is one for <paramref name="currentVersion"/>; stale results are discarded.</summary>

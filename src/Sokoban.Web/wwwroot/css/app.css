@@ -1,0 +1,28 @@
+html, body {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+    background: #1c2130;
+}
+
+#canvasHolder {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+}
+
+#theCanvas {
+    display: block;
+    outline: none;
+    touch-action: none;
+}
+
+#loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    color: #ffc72c;
+    font: 600 1.6rem system-ui, sans-serif;
+}

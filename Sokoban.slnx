@@ -1,9 +1,11 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/Jentl.Core.Kni/Jentl.Core.Kni.csproj" />
     <Project Path="src/Jentl.Core/Jentl.Core.csproj" />
     <Project Path="src/Sokoban.Desktop/Sokoban.Desktop.csproj" />
     <Project Path="src/Sokoban.Model/Sokoban.Model.csproj" />
     <Project Path="src/Sokoban.Solver/Sokoban.Solver.csproj" />
+    <Project Path="src/Sokoban.Web/Sokoban.Web.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Jentl.Core.Tests/Jentl.Core.Tests.csproj" />
