@@ -20,6 +20,7 @@ internal sealed class CardGamesScene : Scene
             context.Sounds,
             new MenuItem("Klondike", () => Scenes.Replace(new KlondikeScene(context), Navigation.Fade())),
             new MenuItem("FreeCell", () => Scenes.Replace(new FreeCellScene(context), Navigation.Fade())),
+            new MenuItem("Pyramid", () => Scenes.Replace(new PyramidScene(context), Navigation.Fade())),
             new MenuItem("Spider", () => Scenes.Replace(new SpiderSuitsScene(context))),
             new MenuItem("Back", () => Scenes.Pop()));
     }

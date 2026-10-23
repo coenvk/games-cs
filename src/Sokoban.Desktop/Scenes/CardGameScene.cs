@@ -106,7 +106,7 @@ internal abstract class CardGameScene : Scene
 
         if (!_buttons.Update(input) && View.Update(input, elapsed) is { } move)
         {
-            Play(move);
+            OnInput(move);
         }
 
         PlayAutoMoves(elapsed);
@@ -192,6 +192,9 @@ internal abstract class CardGameScene : Scene
         ClickPile click when click.Index >= 0 => $"Try the {CardName(click.Pile[click.Index].Card)}",
         _ => "Try that pile",
     };
+
+    /// <summary>A drag or tap on the table; plays it by default. Pyramid overrides it to pair cards with two taps.</summary>
+    protected virtual void OnInput(CardInput input) => Play(input);
 
     /// <summary>Why a move was refused, when that is worth telling the player; null says nothing.</summary>
     protected virtual string? DescribeRejected(CardInput input) => null;
