@@ -1,6 +1,8 @@
-﻿using Jentl.Core;
+﻿using System.Globalization;
+using Jentl.Core;
 using Jentl.Core.Audio;
 using Jentl.Core.Content;
+using Jentl.Core.Input;
 using Jentl.Core.Scenes;
 using Jentl.Core.Storage;
 using Microsoft.Xna.Framework;
@@ -16,11 +18,13 @@ namespace Sokoban.Desktop;
 internal sealed class SokobanGame : JentlGame
 {
     private const int WaitFrames = 30;
+    private const int DragFrames = 12;
 
     private readonly GameOptions _options;
     private readonly ISaveStore? _store;
     private readonly PlatformFeatures _platform;
-    private readonly Queue<KeyboardState>? _script;
+    private readonly Queue<ScriptFrame>? _script;
+    private PointerState _scriptPointer;
     private int _settledFrames;
     private Tileset? _tileset;
     private Fonts? _fonts;
@@ -88,13 +92,24 @@ internal sealed class SokobanGame : JentlGame
             return base.ReadKeyboard();
         }
 
-        if (_script.TryDequeue(out var state))
+        if (_script.TryDequeue(out var frame))
         {
-            return state;
+            _scriptPointer = frame.Pointer ?? _scriptPointer with { IsDown = false };
+            return frame.Keys;
         }
 
         _settledFrames++;
+        _scriptPointer = _scriptPointer with { IsDown = false };
         return default;
+    }
+
+    // Called right after ReadKeyboard each frame, so it returns the same script frame's pointer.
+    protected override PointerState ReadPointer(TimeSpan now) => _script is null ? base.ReadPointer(now) : _scriptPointer;
+
+    protected override void Update(GameTime gameTime)
+    {
+        _fonts?.Fit(GraphicsDevice.Viewport.Bounds);
+        base.Update(gameTime);
     }
 
     protected override void Draw(GameTime gameTime)
@@ -131,12 +146,35 @@ internal sealed class SokobanGame : JentlGame
         }
     }
 
-    /// <summary>Each key is held for one frame and released for one frame.</summary>
-    private static Queue<KeyboardState> BuildScript(IEnumerable<string> keys)
+    /// <summary>
+    /// Each key is held for one frame and released for one frame. <c>Tap:x,y</c> presses and releases the
+    /// pointer there; <c>Drag:x1,y1,x2,y2</c> moves it from one point to the other while held.
+    /// </summary>
+    private static Queue<ScriptFrame> BuildScript(IEnumerable<string> keys)
     {
-        var frames = new Queue<KeyboardState>();
+        var frames = new Queue<ScriptFrame>();
         foreach (var name in keys)
         {
+            if (name.StartsWith("Tap:", StringComparison.OrdinalIgnoreCase))
+            {
+                var at = Coordinates(name)[0];
+                frames.Enqueue(new ScriptFrame(default, new PointerState(true, at)));
+                frames.Enqueue(new ScriptFrame(default, new PointerState(false, at)));
+                continue;
+            }
+
+            if (name.StartsWith("Drag:", StringComparison.OrdinalIgnoreCase))
+            {
+                var points = Coordinates(name);
+                for (var step = 0; step <= DragFrames; step++)
+                {
+                    frames.Enqueue(new ScriptFrame(default, new PointerState(true, Vector2.Lerp(points[0], points[1], step / (float)DragFrames))));
+                }
+
+                frames.Enqueue(new ScriptFrame(default, new PointerState(false, points[1])));
+                continue;
+            }
+
             if (name.Equals("Wait", StringComparison.OrdinalIgnoreCase))
             {
                 for (var i = 0; i < WaitFrames; i++)
@@ -147,10 +185,22 @@ internal sealed class SokobanGame : JentlGame
                 continue;
             }
 
-            frames.Enqueue(new KeyboardState(Enum.Parse<Keys>(name, ignoreCase: true)));
+            frames.Enqueue(new ScriptFrame(new KeyboardState(Enum.Parse<Keys>(name, ignoreCase: true)), null));
             frames.Enqueue(default);
         }
 
         return frames;
     }
+
+    private static Vector2[] Coordinates(string token)
+    {
+        var numbers = token[(token.IndexOf(':', StringComparison.Ordinal) + 1)..]
+            .Split(',')
+            .Select(n => float.Parse(n, CultureInfo.InvariantCulture))
+            .ToArray();
+        return Enumerable.Range(0, numbers.Length / 2).Select(i => new Vector2(numbers[2 * i], numbers[2 * i + 1])).ToArray();
+    }
+
+    /// <summary>One frame of scripted input; a null pointer means "released where it last was".</summary>
+    private readonly record struct ScriptFrame(KeyboardState Keys, PointerState? Pointer);
 }

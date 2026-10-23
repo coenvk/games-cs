@@ -33,7 +33,8 @@ dotnet run --project src/Sokoban.Desktop
 Command-line options (handy for checking screens without playing):
 
 - `--level <n>` opens level n directly (above the main menu)
-- `--keys "<k1> <k2> ..."` plays these keys instead of reading the keyboard (MonoGame `Keys` names; `Wait` idles half a second)
+- `--keys "<k1> <k2> ..."` plays these keys instead of reading the keyboard (MonoGame `Keys` names; `Wait` idles half a second), plus
+  `Tap:x,y` and `Drag:x1,y1,x2,y2` for pointer input
 - `--screenshot <path>` saves a PNG once the keys have played out, then exits
 - `--save-dir <path>` keeps progress in this directory (scripted runs otherwise keep progress in memory only)
 - `--settle <frames>` idle frames after the keys before the screenshot (default 60; use 1 to catch an animation mid-step)
@@ -55,6 +56,12 @@ Settings (sound, fullscreen) live next to it in `settings.json`.
 Levels are keyed by a hash of their layout, so reordering or retitling a pack keeps progress. An unreadable file is renamed to `progress.json.corrupt-<timestamp>` and the game starts fresh.
 
 ## Controls
+
+On a touchscreen or with a mouse: tap or click menu items and level tiles (a selected tile again to play), tap a
+cell to walk there, tap a crate next to the player to push it, and swipe or drag to step. The buttons under the
+board undo, redo, restart, give a hint and open the menu.
+
+On a keyboard:
 
 | Key | Action |
 |---|---|

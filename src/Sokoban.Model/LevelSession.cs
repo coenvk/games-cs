@@ -78,6 +78,52 @@ public sealed class LevelSession
         return cell;
     }
 
+    /// <summary>
+    /// The shortest walk from the player to <paramref name="target"/> around walls and crates, or null if
+    /// the player cannot get there without pushing. Empty when the player already stands on it.
+    /// </summary>
+    public IReadOnlyList<Direction>? FindPath(int target)
+    {
+        if (target < 0 || target >= Board.Size || Board.IsWall(target) || _crates[target] || !Board.IsInterior(target))
+        {
+            return null;
+        }
+
+        var cameFrom = new Direction?[Board.Size];
+        var visited = new bool[Board.Size];
+        var queue = new Queue<int>();
+        visited[Player] = true;
+        queue.Enqueue(Player);
+        while (queue.TryDequeue(out var cell))
+        {
+            if (cell == target)
+            {
+                var path = new List<Direction>();
+                for (var at = target; at != Player;)
+                {
+                    var step = cameFrom[at]!.Value;
+                    path.Add(step);
+                    at = Neighbor(at, step.Opposite());
+                }
+
+                path.Reverse();
+                return path;
+            }
+
+            foreach (var direction in (ReadOnlySpan<Direction>)[Direction.Up, Direction.Down, Direction.Left, Direction.Right])
+            {
+                if (Board.TryGetNeighbor(cell, direction, out var next) && !visited[next] && !Board.IsWall(next) && !_crates[next])
+                {
+                    visited[next] = true;
+                    cameFrom[next] = direction;
+                    queue.Enqueue(next);
+                }
+            }
+        }
+
+        return null;
+    }
+
     public bool Undo()
     {
         if (!_undo.TryPop(out var move))

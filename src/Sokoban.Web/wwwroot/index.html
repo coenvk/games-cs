@@ -40,8 +40,15 @@
 
             const canvas = document.getElementById('theCanvas');
             const holder = document.getElementById('canvasHolder');
-            canvas.width = holder.clientWidth;
-            canvas.height = holder.clientHeight;
+
+            // Keep the canvas the size of the window, also after rotating a phone.
+            const fit = () => {
+                canvas.width = holder.clientWidth;
+                canvas.height = holder.clientHeight;
+            };
+            fit();
+            window.addEventListener('resize', fit);
+
             canvas.addEventListener('contextmenu', e => e.preventDefault());
             canvas.focus();
 

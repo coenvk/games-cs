@@ -29,6 +29,7 @@ internal sealed class BoardRenderer
     private int _playerTarget = -1;
     private Tween? _crate;
     private int _crateTarget = -1;
+    private (Board Board, Vector2 Origin, int Tile)? _layout;
 
     public BoardRenderer(Tileset tileset) => _tileset = tileset;
 
@@ -64,6 +65,22 @@ internal sealed class BoardRenderer
     }
 
     /// <summary>Stops any animation and faces the player forward, e.g. after a restart.</summary>
+    /// <summary>Size of a cell on screen as last drawn, in pixels; 0 before the first draw.</summary>
+    public int TileSize => _layout?.Tile ?? 0;
+
+    /// <summary>The cell under a screen point as last drawn, or null when the point is off the board.</summary>
+    public int? CellAt(Vector2 point)
+    {
+        if (_layout is not var (board, origin, tile) || tile == 0)
+        {
+            return null;
+        }
+
+        var x = (int)MathF.Floor((point.X - origin.X) / tile);
+        var y = (int)MathF.Floor((point.Y - origin.Y) / tile);
+        return x >= 0 && y >= 0 && x < board.Width && y < board.Height ? board.IndexOf(x, y) : null;
+    }
+
     public void Reset()
     {
         _facing = Direction.Down;
@@ -84,6 +101,7 @@ internal sealed class BoardRenderer
         var origin = new Vector2(
             area.X + (area.Width - tile * board.Width) / 2,
             area.Y + (area.Height - tile * board.Height) / 2);
+        _layout = (board, origin, tile);
 
         Rectangle At(Vector2 grid) =>
             new((int)MathF.Round(origin.X + grid.X * tile), (int)MathF.Round(origin.Y + grid.Y * tile), tile, tile);

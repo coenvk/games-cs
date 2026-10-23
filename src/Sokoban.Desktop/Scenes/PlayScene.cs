@@ -23,6 +23,9 @@ internal sealed class PlayScene : Scene
     private static readonly TimeSpan RepeatDelay = TimeSpan.FromMilliseconds(200);
     private static readonly TimeSpan RepeatInterval = TimeSpan.FromMilliseconds(80);
     private static readonly TimeSpan HintStepInterval = TimeSpan.FromMilliseconds(130);
+
+    // Tap-to-walk plays at about the pace of a held arrow key.
+    private static readonly TimeSpan WalkStepInterval = TimeSpan.FromMilliseconds(75);
     private static readonly TimeSpan MessageDuration = TimeSpan.FromSeconds(3);
 
     // Lets the final push register before the completion screen covers the board.
@@ -33,7 +36,10 @@ internal sealed class PlayScene : Scene
     private readonly BoardRenderer _renderer;
     private readonly Solver.Solver _solver;
     private readonly HintRunner _hints;
-    private readonly Queue<Direction> _hintMoves = new();
+    private readonly ButtonBar _buttons;
+
+    // Moves played automatically, one per step interval: a hint, or a walk to a tapped cell.
+    private readonly Queue<Direction> _queuedMoves = new();
     private readonly ActionRepeater<GameAction> _repeater = new(
         RepeatDelay,
         RepeatInterval,
@@ -48,7 +54,8 @@ internal sealed class PlayScene : Scene
     private bool _completeShown;
     private bool _recorded;
     private int _positionVersion;
-    private TimeSpan _untilHintStep;
+    private TimeSpan _untilQueuedStep;
+    private TimeSpan _queuedStepInterval;
     private string? _message;
     private TimeSpan _messageFor;
 
@@ -75,6 +82,12 @@ internal sealed class PlayScene : Scene
         _renderer = new BoardRenderer(context.Tileset);
         _solver = new Solver.Solver(level.Board);
         _hints = new HintRunner(_solver, context.Platform.HintTime);
+        _buttons = new ButtonBar(
+            new Button("Undo", () => TakeOver(Undo)),
+            new Button("Redo", () => TakeOver(Redo)),
+            new Button("Restart", Restart),
+            new Button("Hint", RequestHint),
+            new Button("Menu", () => Scenes.Push(new PauseScene(_context, this))));
     }
 
     /// <summary>Where the level sits in the packs, or null for a generated level.</summary>
@@ -137,12 +150,12 @@ internal sealed class PlayScene : Scene
         var action = _repeater.Update(input, actions, elapsed);
         if (action is not null)
         {
-            // Taking over the controls stops a hint that is playing.
-            _hintMoves.Clear();
-            HandleMovement(action);
+            TakeOver(() => HandleMovement(action));
         }
 
-        UpdateHints(elapsed);
+        HandlePointer(input);
+        UpdateHints();
+        PlayQueuedMoves(elapsed);
         _renderer.Update(elapsed);
         UpdateCompletion(elapsed);
 
@@ -152,36 +165,63 @@ internal sealed class PlayScene : Scene
     public override void Draw(SpriteBatch batch, Rectangle viewport)
     {
         var fonts = _context.Fonts;
-        var hud = new Rectangle(viewport.X, viewport.Y, viewport.Width, HudHeight);
-        batch.FillRectangle(hud, Palette.Panel);
-
-        var hudText = hud;
-        hudText.Inflate(-Margin, 0);
-        batch.DrawText(fonts.Heading, Title, hudText, Palette.Text, Align.Left);
-        if (_context.Progress.Progress.Get(Session.Level) is { } record)
-        {
-            var best = hudText;
-            var titleWidth = (int)fonts.Heading.MeasureString(Title).X + Margin;
-            best.X += titleWidth;
-            best.Width -= titleWidth;
-            batch.DrawText(fonts.Small, Format.Best(record), best, Palette.Muted, Align.Left, shadow: false);
-        }
-
+        var margin = fonts.Px(Margin);
+        var record = _context.Progress.Progress.Get(Session.Level);
         var stats = string.Create(
             CultureInfo.InvariantCulture,
             $"Moves {Session.MoveCount}    Pushes {Session.PushCount}    {Format.Duration(Time)}");
-        batch.DrawText(fonts.Body, stats, hudText, Session.IsSolved ? Palette.Accent : Palette.Text, Align.Right);
+        var statsColor = Session.IsSolved ? Palette.Accent : Palette.Text;
 
-        var footer = new Rectangle(viewport.X, viewport.Bottom - 44, viewport.Width, 44);
-        var (footerText, footerColor) = _hints.IsThinking
+        // Landscape: title and best on the left, stats on the right. Portrait: stacked, stats below.
+        Rectangle hud;
+        if (fonts.IsPortrait)
+        {
+            var row = (int)fonts.Heading.LineHeight + fonts.Px(12);
+            hud = new Rectangle(viewport.X, viewport.Y, viewport.Width, row + (int)fonts.Body.LineHeight + fonts.Px(16));
+            batch.FillRectangle(hud, Palette.Panel);
+            var text = hud;
+            text.Inflate(-margin, 0);
+            batch.DrawText(fonts.Heading, Title, new Rectangle(text.X, text.Y, text.Width, row), Palette.Text, Align.Left);
+            var second = new Rectangle(text.X, text.Y + row, text.Width, hud.Height - row - fonts.Px(10));
+            batch.DrawText(fonts.Body, stats, second, statsColor, Align.Left);
+        }
+        else
+        {
+            hud = new Rectangle(viewport.X, viewport.Y, viewport.Width, fonts.Px(HudHeight));
+            batch.FillRectangle(hud, Palette.Panel);
+            var text = hud;
+            text.Inflate(-margin, 0);
+            batch.DrawText(fonts.Heading, Title, text, Palette.Text, Align.Left);
+            if (record is not null)
+            {
+                var best = text;
+                var titleWidth = (int)fonts.Heading.MeasureString(Title).X + margin;
+                best.X += titleWidth;
+                best.Width -= titleWidth;
+                batch.DrawText(fonts.Small, Format.Best(record), best, Palette.Muted, Align.Left, shadow: false);
+            }
+
+            batch.DrawText(fonts.Body, stats, text, statsColor, Align.Right);
+        }
+
+        // Footer: a status line (thinking, messages, best result) above the buttons.
+        var buttonFont = _buttons.Width(fonts.Body) <= viewport.Width - 2 * margin ? fonts.Body : fonts.Small;
+        var buttonsHeight = ButtonBar.Height(buttonFont) + fonts.Px(20);
+        var statusHeight = (int)fonts.Small.LineHeight + fonts.Px(8);
+        var buttons = new Rectangle(viewport.X + margin, viewport.Bottom - buttonsHeight, viewport.Width - 2 * margin, buttonsHeight);
+        var status = new Rectangle(viewport.X, buttons.Top - statusHeight, viewport.Width, statusHeight);
+        var (statusText, statusColor) = _hints.IsThinking
             ? ("Thinking...", Palette.Accent)
             : _message is not null && _messageFor > TimeSpan.Zero
                 ? (_message, Palette.Accent)
-                : ("Arrows move   Z undo   Y redo   R restart   H hint   Esc pause", Palette.Muted);
-        batch.DrawText(fonts.Small, footerText, footer, footerColor, shadow: false);
+                : fonts.IsPortrait && record is not null
+                    ? (Format.Best(record), Palette.Muted)
+                    : ("Tap a cell to walk there, swipe to step", Palette.Muted);
+        batch.DrawText(fonts.Small, statusText, status, statusColor, shadow: false);
+        _buttons.Draw(batch, buttonFont, buttons);
 
-        var board = new Rectangle(viewport.X, hud.Bottom, viewport.Width, footer.Top - hud.Bottom);
-        board.Inflate(-Margin, -Margin);
+        var board = new Rectangle(viewport.X, hud.Bottom, viewport.Width, status.Top - hud.Bottom);
+        board.Inflate(-margin, -margin);
         _renderer.Draw(batch, Session, _theme, board, _solver.Deadlocks.DeadCrates(Session));
     }
 
@@ -237,55 +277,122 @@ internal sealed class PlayScene : Scene
             return;
         }
 
-        _hintMoves.Clear();
+        _queuedMoves.Clear();
 
         if (_solver.Deadlocks.DeadCrates(Session).Count > 0)
         {
-            ShowMessage("A crate is stuck (shown in red). Undo with Z or restart with R.");
+            ShowMessage("A crate is stuck (shown in red). Undo or restart.");
             return;
         }
 
         _hints.Start(Session, _positionVersion);
     }
 
-    private void UpdateHints(TimeSpan elapsed)
+    private void UpdateHints()
     {
-        if (_hints.TakeResult(_positionVersion) is { } result)
-        {
-            switch (result.Status)
-            {
-                case SolveStatus.Solved:
-                    // Play up to and including the next push; that is a hint, not the whole answer.
-                    foreach (var move in result.Moves)
-                    {
-                        _hintMoves.Enqueue(move.Direction);
-                        if (move.IsPush)
-                        {
-                            break;
-                        }
-                    }
-
-                    _untilHintStep = TimeSpan.Zero;
-                    break;
-                case SolveStatus.Unsolvable:
-                    ShowMessage("This position can't be solved any more. Undo with Z or restart with R.");
-                    break;
-                case SolveStatus.LimitReached:
-                    ShowMessage("No hint found: this position is too tricky to work out quickly.");
-                    break;
-            }
-        }
-
-        if (_hintMoves.Count == 0)
+        if (_hints.TakeResult(_positionVersion) is not { } result)
         {
             return;
         }
 
-        _untilHintStep -= elapsed;
-        if (_untilHintStep <= TimeSpan.Zero)
+        switch (result.Status)
         {
-            _untilHintStep += HintStepInterval;
-            Move(_hintMoves.Dequeue());
+            case SolveStatus.Solved:
+                // Play up to and including the next push; that is a hint, not the whole answer.
+                Queue(result.Moves.TakeWhile((_, i) => i == 0 || !result.Moves[i - 1].IsPush).Select(m => m.Direction), HintStepInterval);
+                break;
+            case SolveStatus.Unsolvable:
+                ShowMessage("This position can't be solved any more. Undo or restart.");
+                break;
+            case SolveStatus.LimitReached:
+                ShowMessage("No hint found: this position is too tricky to work out quickly.");
+                break;
+        }
+    }
+
+    /// <summary>Buttons first; then a tap on the board walks or pushes, and a swipe steps.</summary>
+    private void HandlePointer(InputState input)
+    {
+        // A drag of about half a cell is one step, so a finger can walk the player along.
+        input.Gestures.SwipeDistance = Math.Max(24, _renderer.TileSize * 0.6f);
+
+        if (_buttons.Update(input))
+        {
+            return;
+        }
+
+        if (input.Tap is { } tap)
+        {
+            if (Session.IsSolved)
+            {
+                ShowComplete();
+            }
+            else if (_renderer.CellAt(tap) is { } cell)
+            {
+                TakeOver(() => TapCell(cell));
+            }
+        }
+        else if (input.Swipe is { } swipe && !Session.IsSolved)
+        {
+            TakeOver(() => Move(swipe switch
+            {
+                SwipeDirection.Up => Direction.Up,
+                SwipeDirection.Down => Direction.Down,
+                SwipeDirection.Left => Direction.Left,
+                _ => Direction.Right,
+            }));
+        }
+    }
+
+    /// <summary>A crate next to the player gets pushed; any other reachable cell is walked to.</summary>
+    private void TapCell(int cell)
+    {
+        foreach (var direction in (ReadOnlySpan<Direction>)[Direction.Up, Direction.Down, Direction.Left, Direction.Right])
+        {
+            if (Session.Board.TryGetNeighbor(Session.Player, direction, out var next) && next == cell && Session.HasCrate(cell))
+            {
+                Move(direction);
+                return;
+            }
+        }
+
+        if (Session.FindPath(cell) is { Count: > 0 } path)
+        {
+            Queue(path, WalkStepInterval);
+        }
+    }
+
+    /// <summary>Direct input from the player stops anything playing on its own, then runs.</summary>
+    private void TakeOver(Action action)
+    {
+        _queuedMoves.Clear();
+        action();
+    }
+
+    private void Queue(IEnumerable<Direction> moves, TimeSpan interval)
+    {
+        _queuedMoves.Clear();
+        foreach (var move in moves)
+        {
+            _queuedMoves.Enqueue(move);
+        }
+
+        _queuedStepInterval = interval;
+        _untilQueuedStep = TimeSpan.Zero;
+    }
+
+    private void PlayQueuedMoves(TimeSpan elapsed)
+    {
+        if (_queuedMoves.Count == 0)
+        {
+            return;
+        }
+
+        _untilQueuedStep -= elapsed;
+        if (_untilQueuedStep <= TimeSpan.Zero)
+        {
+            _untilQueuedStep += _queuedStepInterval;
+            Move(_queuedMoves.Dequeue());
         }
     }
 
@@ -384,7 +491,7 @@ internal sealed class PlayScene : Scene
         if (!_recorded)
         {
             _recorded = true;
-            _hintMoves.Clear();
+            _queuedMoves.Clear();
             LastImprovement = _context.Progress.Record(Session, Time);
             _context.Sounds.Play(Sound.Completed);
         }

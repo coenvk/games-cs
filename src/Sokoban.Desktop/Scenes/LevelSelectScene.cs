@@ -11,7 +11,10 @@ using Sokoban.Model;
 
 namespace Sokoban.Desktop.Scenes;
 
-/// <summary>A grid of level numbers per pack, with a live preview of the selected level.</summary>
+/// <summary>
+/// A grid of level numbers per pack, with a live preview of the selected level. Tap a level to select
+/// it and again (or Play) to start it; tap a pack name to switch packs.
+/// </summary>
 internal sealed class LevelSelectScene : Scene
 {
     private const int Columns = 10;
@@ -21,6 +24,7 @@ internal sealed class LevelSelectScene : Scene
 
     private readonly GameContext _context;
     private readonly BoardRenderer _preview;
+    private readonly ButtonBar _buttons;
     private readonly ActionRepeater<GameAction> _repeater = new(
         TimeSpan.FromMilliseconds(250),
         TimeSpan.FromMilliseconds(70),
@@ -31,6 +35,8 @@ internal sealed class LevelSelectScene : Scene
 
     private LevelRef _selected;
     private LevelSession _previewSession;
+    private Rectangle[] _tiles = [];
+    private Rectangle[] _tabs = [];
 
     public LevelSelectScene(GameContext context, LevelRef selected)
     {
@@ -38,6 +44,9 @@ internal sealed class LevelSelectScene : Scene
         _preview = new BoardRenderer(context.Tileset);
         _selected = selected;
         _previewSession = new LevelSession(context.LevelAt(selected));
+        _buttons = new ButtonBar(
+            new Button("Back", Back),
+            new Button("Play", Play, Highlight: true));
     }
 
     private LevelPack Pack => _context.Packs[_selected.Pack];
@@ -47,20 +56,24 @@ internal sealed class LevelSelectScene : Scene
         var actions = _context.Actions;
         if (actions.WasPressed(input, GameAction.Back))
         {
-            Scenes.Pop(Navigation.Fade());
+            Back();
             return;
         }
 
         if (actions.WasPressed(input, GameAction.Confirm))
         {
-            Scenes.Push(new PlayScene(_context, _selected), Navigation.Fade());
+            Play();
             return;
         }
 
         if (actions.WasPressed(input, GameAction.SwitchPack))
         {
-            var pack = (_selected.Pack + 1) % _context.Packs.Count;
-            Select(new LevelRef(pack, _context.Progress.Progress.FirstUnsolved(_context.Packs[pack].Levels) ?? 0));
+            SwitchPack((_selected.Pack + 1) % _context.Packs.Count);
+            return;
+        }
+
+        if (_buttons.Update(input) || HandleTaps(input))
+        {
             return;
         }
 
@@ -78,87 +91,135 @@ internal sealed class LevelSelectScene : Scene
     public override void Draw(SpriteBatch batch, Rectangle viewport)
     {
         var fonts = _context.Fonts;
-        viewport.Inflate(-Margin, -Margin);
+        // Phones get thin margins so the level grid can be as wide, and its tiles as easy to tap, as possible.
+        var margin = fonts.IsPortrait ? fonts.Px(Margin / 3) : fonts.Px(Margin);
+        var gap = Math.Max(4, fonts.Px(Gap));
+        viewport.Inflate(-margin, -margin);
         var progress = _context.Progress.Progress;
         var levels = Pack.Levels;
 
-        // Title, then one tab per pack; the current one highlighted.
+        // Header: title, then one tab per pack (the current one underlined), then the solved count.
+        // In portrait the tabs and count get their own row under the title.
+        var headingHeight = (int)fonts.Heading.LineHeight;
         batch.DrawText(fonts.Heading, "Select level", new Vector2(viewport.X, viewport.Y), Palette.Text);
-        var headerRow = new Rectangle(viewport.X, viewport.Y, viewport.Width, (int)fonts.Heading.LineHeight);
-        var tabX = viewport.X + (int)fonts.Heading.MeasureString("Select level").X + 2 * TabGap;
+        var tabRow = fonts.IsPortrait
+            ? new Rectangle(viewport.X, viewport.Y + headingHeight, viewport.Width, (int)fonts.Body.LineHeight + fonts.Px(12))
+            : new Rectangle(viewport.X, viewport.Y, viewport.Width, headingHeight);
+        var tabX = fonts.IsPortrait ? tabRow.X : tabRow.X + (int)fonts.Heading.MeasureString("Select level").X + 2 * fonts.Px(TabGap);
+        _tabs = new Rectangle[_context.Packs.Count];
         for (var p = 0; p < _context.Packs.Count; p++)
         {
             var name = _context.Packs[p].Name;
-            var tab = new Rectangle(tabX, headerRow.Y, (int)fonts.Body.MeasureString(name).X, headerRow.Height);
+            var tab = new Rectangle(tabX, tabRow.Y, (int)fonts.Body.MeasureString(name).X, tabRow.Height);
+            _tabs[p] = tab;
             batch.DrawText(fonts.Body, name, tab, p == _selected.Pack ? Palette.Accent : Palette.Muted, Align.Left, shadow: false);
             if (p == _selected.Pack)
             {
                 batch.FillRectangle(new Rectangle(tab.X, tab.Bottom - 4, tab.Width, 4), Palette.Accent);
             }
 
-            tabX = tab.Right + TabGap;
+            tabX = tab.Right + fonts.Px(TabGap);
         }
 
         batch.DrawText(
             fonts.Body,
             string.Create(CultureInfo.InvariantCulture, $"{progress.SolvedCount(levels)} / {levels.Count} solved"),
-            headerRow,
+            tabRow,
             Palette.Muted,
             Align.Right,
             shadow: false);
 
+        var buttonsHeight = ButtonBar.Height(fonts.Body) + fonts.Px(16);
         var content = viewport;
-        content.Y += (int)fonts.Heading.LineHeight + 24;
-        content.Height -= (int)fonts.Heading.LineHeight + 24 + 40;
+        content.Y = tabRow.Bottom + fonts.Px(20);
+        content.Height = viewport.Bottom - buttonsHeight - content.Y;
+        _buttons.Draw(batch, fonts.Body, new Rectangle(viewport.X, viewport.Bottom - buttonsHeight, viewport.Width, buttonsHeight));
 
-        // Grid on the left, sized for the biggest pack so switching packs keeps the layout steady.
+        // Grid sized for the biggest pack so switching packs keeps the layout steady. Landscape: grid
+        // on the left, preview on the right. Portrait: grid across the top, preview underneath.
         var rows = _context.Packs.Max(p => (p.Levels.Count + Columns - 1) / Columns);
-        var cell = Math.Min((content.Width / 2 - Gap * Columns) / Columns, (content.Height - Gap * rows) / rows);
+        var gridArea = fonts.IsPortrait
+            ? new Rectangle(content.X, content.Y, content.Width, content.Height * 62 / 100)
+            : new Rectangle(content.X, content.Y, content.Width / 2, content.Height);
+        var cell = Math.Max(8, Math.Min((gridArea.Width - gap * (Columns - 1)) / Columns, (gridArea.Height - gap * (rows - 1)) / rows));
+        var gridWidth = Columns * cell + (Columns - 1) * gap;
+        var gridLeft = fonts.IsPortrait ? gridArea.X + (gridArea.Width - gridWidth) / 2 : gridArea.X;
+        _tiles = new Rectangle[levels.Count];
         for (var i = 0; i < levels.Count; i++)
         {
-            var bounds = new Rectangle(
-                content.X + i % Columns * (cell + Gap),
-                content.Y + i / Columns * (cell + Gap),
-                cell,
-                cell);
+            var bounds = new Rectangle(gridLeft + i % Columns * (cell + gap), gridArea.Y + i / Columns * (cell + gap), cell, cell);
+            _tiles[i] = bounds;
             var selected = i == _selected.Index;
             var fill = selected ? Palette.Accent : progress.IsSolved(levels[i]) ? Palette.Solved : Palette.Panel;
             batch.FillRectangle(bounds, fill);
             batch.DrawText(fonts.Small, (i + 1).ToString(CultureInfo.InvariantCulture), bounds, selected ? Palette.Ink : Palette.Text, shadow: false);
         }
 
-        // Preview on the right.
-        var gridWidth = Columns * (cell + Gap);
-        var preview = new Rectangle(content.X + gridWidth + Margin, content.Y, content.Width - gridWidth - Margin, content.Height);
+        var gridHeight = rows * cell + (rows - 1) * gap;
+        var previewTop = gridArea.Y + gridHeight + fonts.Px(24);
+        var preview = fonts.IsPortrait
+            ? new Rectangle(content.X, previewTop, content.Width, content.Bottom - previewTop)
+            : new Rectangle(gridLeft + gridWidth + margin, content.Y, content.Right - (gridLeft + gridWidth + margin), content.Height);
         var level = _context.LevelAt(_selected);
         batch.DrawText(fonts.Body, _context.TitleOf(_selected), new Vector2(preview.Center.X, preview.Y), Palette.Text, Align.Center);
         var record = progress.Get(level);
         batch.DrawText(
             fonts.Small,
-            record is null
-                ? $"{Format.Count(level.Board.Goals.Count, "crate")}, not solved yet"
-                : Format.Best(record),
+            record is null ? $"{Format.Count(level.Board.Goals.Count, "crate")}, not solved yet" : Format.Best(record),
             new Vector2(preview.Center.X, preview.Y + fonts.Body.LineHeight + 4),
             record is null ? Palette.Muted : Palette.Accent,
             Align.Center,
             shadow: false);
 
         var board = preview;
-        var header = (int)(fonts.Body.LineHeight + fonts.Small.LineHeight) + 24;
+        var header = (int)(fonts.Body.LineHeight + fonts.Small.LineHeight) + fonts.Px(24);
         board.Y += header;
         board.Height -= header;
         _preview.Draw(batch, _previewSession, _context.Tileset.ThemeFor(GameContext.ThemeSeed(_selected)), board);
+    }
 
-        var hint = _context.Packs.Count > 1
-            ? "Arrows to choose, Tab to switch pack, Enter to play, Esc to go back"
-            : "Arrows to choose, Enter to play, Esc to go back";
-        batch.DrawText(
-            fonts.Small,
-            hint,
-            new Vector2(viewport.Center.X, viewport.Bottom - fonts.Small.LineHeight),
-            Palette.Muted,
-            Align.Center,
-            shadow: false);
+    /// <summary>Tabs switch packs; a tile selects its level, or plays it if it was already selected.</summary>
+    private bool HandleTaps(InputState input)
+    {
+        for (var p = 0; p < _tabs.Length; p++)
+        {
+            if (input.Tapped(_tabs[p]))
+            {
+                SwitchPack(p);
+                return true;
+            }
+        }
+
+        for (var i = 0; i < _tiles.Length; i++)
+        {
+            if (input.Tapped(_tiles[i]))
+            {
+                if (i == _selected.Index)
+                {
+                    Play();
+                }
+                else
+                {
+                    Select(_selected with { Index = i });
+                }
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void Back() => Scenes.Pop(Navigation.Fade());
+
+    private void Play() => Scenes.Push(new PlayScene(_context, _selected), Navigation.Fade());
+
+    private void SwitchPack(int pack)
+    {
+        if (pack != _selected.Pack)
+        {
+            Select(new LevelRef(pack, _context.Progress.Progress.FirstUnsolved(_context.Packs[pack].Levels) ?? 0));
+        }
     }
 
     private void Select(LevelRef where)

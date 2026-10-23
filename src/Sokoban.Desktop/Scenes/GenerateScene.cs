@@ -26,12 +26,18 @@ internal sealed class GenerateScene : Scene
     private Task<Level?>? _task;
     private bool _failed;
     private int _runs;
+    private readonly ButtonBar _buildingButtons;
+    private readonly ButtonBar _failedButtons;
 
     /// <param name="seed">Fixes the level for reproducible runs; random when null.</param>
     public GenerateScene(GameContext context, int? seed = null)
     {
         _context = context;
         _seed = seed;
+        _buildingButtons = new ButtonBar(new Button("Cancel", () => Scenes.Pop(Navigation.Fade())));
+        _failedButtons = new ButtonBar(
+            new Button("Back", () => Scenes.Pop(Navigation.Fade())),
+            new Button("Try again", Retry, Highlight: true));
     }
 
     protected override void OnEnter() => Start();
@@ -57,8 +63,12 @@ internal sealed class GenerateScene : Scene
 
         if (_failed && _context.Actions.WasPressed(input, GameAction.Confirm))
         {
-            _runs = 0;
-            Start();
+            Retry();
+            return;
+        }
+
+        if ((_failed ? _failedButtons : _buildingButtons).Update(input))
+        {
             return;
         }
 
@@ -84,11 +94,16 @@ internal sealed class GenerateScene : Scene
     {
         var fonts = _context.Fonts;
         var center = new Vector2(viewport.Center.X, viewport.Center.Y - fonts.Heading.LineHeight);
-        var (title, hint) = _failed
-            ? ("Couldn't make a good level", "Enter to try again, Esc to go back")
-            : ("Building a level...", "Esc to cancel");
+        var title = _failed ? "Couldn't make a good level" : "Building a level...";
         batch.DrawText(fonts.Heading, title, center, Palette.Text, Align.Center);
-        batch.DrawText(fonts.Small, hint, center + new Vector2(0, fonts.Heading.LineHeight + 12), Palette.Muted, Align.Center, shadow: false);
+        var buttons = new Rectangle(viewport.X, (int)(center.Y + fonts.Heading.LineHeight + fonts.Px(24)), viewport.Width, ButtonBar.Height(fonts.Body));
+        (_failed ? _failedButtons : _buildingButtons).Draw(batch, fonts.Body, buttons);
+    }
+
+    private void Retry()
+    {
+        _runs = 0;
+        Start();
     }
 
     private void Start()

@@ -65,7 +65,7 @@ internal sealed class MenuScene : Scene
 
         batch.DrawText(
             fonts.Small,
-            "Arrows to choose, Enter to select",
+            "Tap, or use the arrow keys and Enter",
             new Vector2(centerX, viewport.Bottom - 48),
             Palette.Muted,
             Align.Center,
@@ -100,7 +100,7 @@ internal sealed class MenuScene : Scene
     /// <summary>A player pushing a crate towards a goal, under the title.</summary>
     private void DrawMascot(SpriteBatch batch, int centerX, int top)
     {
-        const int size = 64;
+        var size = _context.Fonts.Px(64);
         var theme = _context.Tileset.ThemeFor(1);
         var left = centerX - 3 * size / 2;
         batch.Draw(_context.Tileset.PlayerFrames(Direction.Right)[0], new Rectangle(left, top, size, size), Color.White);
