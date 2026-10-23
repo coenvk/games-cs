@@ -14,6 +14,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Sokoban.Model\Sokoban.Model.csproj" />
     <ProjectReference Include="..\Jentl.Core\Jentl.Core.csproj" />
+    <ProjectReference Include="..\Sokoban.Solver\Sokoban.Solver.csproj" />
   </ItemGroup>
 
   <ItemGroup>

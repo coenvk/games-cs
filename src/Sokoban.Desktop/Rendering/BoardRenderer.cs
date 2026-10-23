@@ -19,6 +19,8 @@ internal sealed class BoardRenderer
     // Close to the key-repeat interval, so holding a direction reads as continuous walking.
     private static readonly TimeSpan StepDuration = TimeSpan.FromMilliseconds(85);
 
+    private static readonly Color DeadOverlay = new(235, 40, 40, 205);
+
     private readonly Tileset _tileset;
     private Direction _facing = Direction.Down;
     private int _frame;
@@ -65,7 +67,8 @@ internal sealed class BoardRenderer
         _crateTarget = -1;
     }
 
-    public void Draw(SpriteBatch batch, LevelSession session, Theme theme, Rectangle area)
+    /// <param name="deadCrates">Crates that can no longer be solved; marked red as a warning.</param>
+    public void Draw(SpriteBatch batch, LevelSession session, Theme theme, Rectangle area, IReadOnlySet<int>? deadCrates = null)
     {
         var board = session.Board;
         var tile = (int)MathF.Min(
@@ -100,6 +103,13 @@ internal sealed class BoardRenderer
         {
             var position = crate == _crateTarget && _crate is not null ? _crate.Value : GridPosition(board, crate);
             batch.Draw(board.IsGoal(crate) ? theme.CrateOnGoal : theme.Crate, At(position), Color.White);
+            if (deadCrates?.Contains(crate) == true)
+            {
+                // An overlay rather than a tint, so it reads as red whatever colour the crate is.
+                var mark = At(position);
+                mark.Inflate(-tile / 10, -tile / 10);
+                batch.FillRectangle(mark, DeadOverlay);
+            }
         }
 
         var player = session.Player == _playerTarget && _player is not null ? _player.Value : GridPosition(board, session.Player);

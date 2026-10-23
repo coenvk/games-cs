@@ -9,10 +9,13 @@ A C# rewrite of [coenvk/Sokoban](https://github.com/coenvk/Sokoban), with engine
 |---|---|
 | `src/Sokoban.Model` | Pure game logic, no rendering: `Board`, `Level`, `LevelSession` (moves, undo/redo), `Xsb` parser/writer |
 | `src/Jentl.Core` | Small engine on MonoGame: `JentlGame`, `SceneManager` (scene stack, overlays, transitions), input action map and auto-repeat, easing |
+| `src/Sokoban.Solver` | Solver (A* over pushes, matching heuristic, dead-square and frozen-block pruning) and level generator (reverse play) |
 | `src/Sokoban.Desktop` | MonoGame (DesktopGL) app: scenes (menu, level select, play, pause, complete), rendering, UI |
 | `tests/Sokoban.Model.Tests` | xUnit tests for the model |
 | `tests/Jentl.Core.Tests` | xUnit tests for the engine (runs headless) |
+| `tests/Sokoban.Solver.Tests` | xUnit tests for the solver, deadlock detection and generator |
 | `tools/LevelConverter` | One-shot converter from the old Java level format to XSB |
+| `tools/SolverBench` | `solve`: run the solver over a pack; `generate`: print generated levels as XSB |
 | `levels/original.xsb` | The 100 levels from the Java version |
 
 ## Build
@@ -55,6 +58,7 @@ Levels are keyed by a hash of their layout, so reordering or retitling a pack ke
 | Z / U / Backspace | Undo (hold to repeat) |
 | Y | Redo |
 | R | Restart level |
+| H | Hint: plays the moves up to the next push (stuck crates are marked red) |
 | Enter / Space | Select menu item; reopen the completion screen on a solved level |
 | PageDown / `]`, PageUp / `[` | Next / previous level |
 | Esc | Pause in a level; back in menus |
@@ -67,4 +71,22 @@ Levels are keyed by a hash of their layout, so reordering or retitling a pack ke
 4. ~~Menus, level select, pause, completion screen~~
 5. ~~Saved progress (best moves/pushes/time)~~
 6. ~~Polish: tweened movement, animation, sound, options (sound, fullscreen)~~
-7. Solver (hints, deadlock detection), level generator, twist mechanic
+7. ~~Solver (hints, deadlock detection), level generator~~, twist mechanic
+
+## Solver and generator
+
+`Sokoban.Solver` searches over crate pushes with weighted A*. The heuristic is the cheapest assignment of crates to
+distinct goals by push distance (Hungarian algorithm); positions with a crate on a dead square or in a frozen 2x2
+block are pruned. In-game hints use weight 3 and a 3 second budget, which solves 58 of the 100 original levels from
+the start (average 86 ms when it succeeds):
+
+```bash
+dotnet run -c Release --project tools/SolverBench -- solve levels/original.xsb 1000000 3 3
+```
+
+The generator carves a room, starts with every crate on a goal and plays backwards with random pulls, so every level
+it makes is solvable; the solver then picks the candidate needing the most pushes:
+
+```bash
+dotnet run -c Release --project tools/SolverBench -- generate 10 42 > generated.xsb
+```

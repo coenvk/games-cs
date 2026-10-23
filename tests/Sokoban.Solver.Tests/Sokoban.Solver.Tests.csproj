@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\..\test.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Sokoban.Solver\Sokoban.Solver.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\levels\*.xsb" LinkBase="levels" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

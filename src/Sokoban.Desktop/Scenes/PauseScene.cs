@@ -25,7 +25,7 @@ internal sealed class PauseScene : Scene
                 play.Restart();
                 Scenes.Pop();
             }),
-            new MenuItem("Select level", () => Navigation.ToLevelSelect(Scenes, context, play.LevelIndex)),
+            new MenuItem("Select level", () => Navigation.ToLevelSelect(Scenes, context, play.SelectIndex)),
             new MenuItem("Options", () => Scenes.Push(new OptionsScene(context))),
             new MenuItem("Main menu", () => Navigation.ToMainMenu(Scenes, context)));
     }

@@ -21,12 +21,12 @@ internal sealed class CompleteScene : Scene
         _play = play;
 
         var items = new List<MenuItem>();
-        if (!play.IsLastLevel)
+        if (play.HasNextLevel)
         {
             items.Add(new MenuItem("Next level", () =>
             {
                 Scenes.Pop();
-                play.GoToLevel(play.LevelIndex + 1);
+                play.NextLevel();
             }));
         }
 
@@ -35,7 +35,7 @@ internal sealed class CompleteScene : Scene
             play.Restart();
             Scenes.Pop();
         }));
-        items.Add(new MenuItem("Select level", () => Navigation.ToLevelSelect(Scenes, context, play.LevelIndex)));
+        items.Add(new MenuItem("Select level", () => Navigation.ToLevelSelect(Scenes, context, play.SelectIndex)));
         items.Add(new MenuItem("Main menu", () => Navigation.ToMainMenu(Scenes, context)));
         _menu = new Menu(context.Sounds, [.. items]);
     }
@@ -56,7 +56,7 @@ internal sealed class CompleteScene : Scene
     public override void Draw(SpriteBatch batch, Rectangle viewport)
     {
         var session = _play.Session;
-        var title = _play.IsLastLevel ? "Last level done!" : "Level complete!";
+        var title = _play.HasNextLevel ? "Level complete!" : "Last level done!";
         var lines = new List<PanelLine>
         {
             new(Format.Result(session.MoveCount, session.PushCount, _play.Time), Palette.Text),
