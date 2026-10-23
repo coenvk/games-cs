@@ -41,7 +41,26 @@ internal sealed class CodeLockLevelsScene : Scene
     }
 
     public override void Draw(SpriteBatch batch, Rectangle viewport) =>
-        OverlayPanel.Draw(batch, viewport, _context.Fonts, "Code lock", [new PanelLine("Crack the code in ten tries.", Palette.Muted)], _menu);
+        OverlayPanel.Draw(batch, viewport, _context.Fonts, "Code lock", Lines(), _menu);
+
+    /// <summary>The rules, then each difficulty's best so far (only the ones played).</summary>
+    private PanelLine[] Lines()
+    {
+        var lines = new List<PanelLine> { new("Crack the code in ten tries.", Palette.Muted) };
+        foreach (var (name, rules) in new[] { ("Easy", LockRules.Easy), ("Normal", LockRules.Normal), ("Hard", LockRules.Hard) })
+        {
+            var record = _context.Locks.Records[CodeLockScene.Key(rules)];
+            if (record.Played > 0)
+            {
+                var best = record.BestTries is { } tries ? $"best {Tries(tries)}, " : "";
+                lines.Add(new PanelLine(string.Create(CultureInfo.InvariantCulture, $"{name}: {best}{record.Won} of {record.Played} won"), Palette.Text));
+            }
+        }
+
+        return [.. lines];
+    }
+
+    private static string Tries(int count) => count == 1 ? "1 try" : string.Create(CultureInfo.InvariantCulture, $"{count} tries");
 
     private void Start(LockRules rules) => Scenes.Replace(new CodeLockScene(_context, rules), Navigation.Fade());
 }
@@ -115,9 +134,24 @@ internal sealed class CodeLockEndScene : Scene
         var game = _game.Game;
         var tries = game.Attempts.Count == 1 ? "1 try" : string.Create(CultureInfo.InvariantCulture, $"{game.Attempts.Count} tries");
         var hints = _game.HintsUsed == 0 ? "no hints" : Format.Count(_game.HintsUsed, "hint");
-        PanelLine[] lines = game.IsSolved
-            ? [new($"Cracked in {tries}, {hints}", Palette.Text)]
+        var lines = game.IsSolved
+            ? new List<PanelLine> { new($"Cracked in {tries}, {hints}", Palette.Text) }
             : [new("The lock holds.", Palette.Text), new($"The code was {string.Join(' ', game.Secret)}", Palette.Accent)];
+        var record = _context.Locks.Records[_game.Difficulty];
+        if (_game.Result is { NewBest: true } && record.Won > 1)
+        {
+            lines.Add(new PanelLine("A new best!", Palette.Accent));
+        }
+        else if (record.BestTries is { } best && game.IsSolved)
+        {
+            lines.Add(new PanelLine(best == 1 ? "Best: 1 try" : string.Create(CultureInfo.InvariantCulture, $"Best: {best} tries"), Palette.Muted));
+        }
+
+        if (record.Streak > 1)
+        {
+            var streak = string.Create(CultureInfo.InvariantCulture, $"{record.Streak} wins in a row");
+            lines.Add(new PanelLine(_game.Result is { NewBestStreak: true } ? $"{streak}, your longest yet" : streak, Palette.Accent));
+        }
         OverlayPanel.Draw(batch, viewport, _context.Fonts, game.IsSolved ? "Unlocked!" : "Out of tries", lines, _menu);
     }
 }

@@ -73,6 +73,14 @@ internal sealed class CodeLockScene : Scene
 
     public string Name => Game.Rules == LockRules.Easy ? "Easy" : Game.Rules == LockRules.Hard ? "Hard" : "Normal";
 
+    /// <summary>Which record this lock counts for.</summary>
+    public string Difficulty => Key(Game.Rules);
+
+    /// <summary>What finishing this lock did to the records; set once the game is over.</summary>
+    public LockResult? Result { get; private set; }
+
+    public static string Key(LockRules rules) => rules == LockRules.Easy ? "easy" : rules == LockRules.Hard ? "hard" : "normal";
+
     public void NewLock() => Scenes.Replace(new CodeLockScene(_context, Game.Rules), Navigation.Fade());
 
     public override void Update(TimeSpan elapsed, InputState input)
@@ -281,6 +289,7 @@ internal sealed class CodeLockScene : Scene
         if (Game.IsOver)
         {
             _endIn = EndDelay;
+            Result = _context.Locks.Record(Difficulty, Game.IsSolved, Game.Attempts.Count);
         }
     }
 

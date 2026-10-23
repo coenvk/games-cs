@@ -213,3 +213,7 @@ place. Easy locks have 3 different digits, normal ones 4, and hard ones 5 that m
 arrows above and below them (or swipe them), or type digits; Enter tries the code. **Hint** sets the wheels to a code
 that fits every answer so far, picked to split the remaining possibilities as evenly as possible (minimax, as in
 Knuth's Mastermind strategy), and the status line says how many codes still fit. `--deal` picks the lock.
+
+Each difficulty keeps its record in `codelock.json`, next to `progress.json` (in `localStorage` in the browser): games
+played and won, the fewest tries, and the current and longest winning streak. The difficulty menu shows them, and the
+end screen points out a new best. Only finished locks count; one left half-cracked is neither a win nor a loss.

@@ -46,6 +46,7 @@ internal sealed record GameContext(
     PlatformFeatures Platform,
     CardRenderer Cards,
     AdventureSaves Adventures,
+    CodeLockStore Locks,
     int? Deal = null)
 {
     public IEnumerable<Level> AllLevels => Packs.SelectMany(p => p.Levels);
