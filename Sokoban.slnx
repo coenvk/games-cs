@@ -1,9 +1,11 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/Jentl.Core/Jentl.Core.csproj" />
     <Project Path="src/Sokoban.Desktop/Sokoban.Desktop.csproj" />
     <Project Path="src/Sokoban.Model/Sokoban.Model.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Jentl.Core.Tests/Jentl.Core.Tests.csproj" />
     <Project Path="tests/Sokoban.Model.Tests/Sokoban.Model.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/">

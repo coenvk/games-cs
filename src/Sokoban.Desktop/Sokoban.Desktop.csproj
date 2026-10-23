@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Sokoban.Model\Sokoban.Model.csproj" />
+    <ProjectReference Include="..\Jentl.Core\Jentl.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

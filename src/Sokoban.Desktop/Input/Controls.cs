@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework.Input;
+﻿using Jentl.Core.Input;
+using Microsoft.Xna.Framework.Input;
 
 namespace Sokoban.Desktop.Input;
 
@@ -14,17 +15,12 @@ internal enum GameAction
     Confirm,
     NextLevel,
     PreviousLevel,
-    Quit,
+    Back,
 }
 
-/// <summary>Maps game actions to keys, so the rest of the game never looks at raw keys.</summary>
-internal sealed class ActionMap
+internal static class Controls
 {
-    private readonly Dictionary<GameAction, Keys[]> _bindings;
-
-    public ActionMap(Dictionary<GameAction, Keys[]> bindings) => _bindings = bindings;
-
-    public static ActionMap Default { get; } = new(new()
+    public static ActionMap<GameAction> Default { get; } = new(new Dictionary<GameAction, Keys[]>
     {
         [GameAction.Up] = [Keys.Up, Keys.W],
         [GameAction.Down] = [Keys.Down, Keys.S],
@@ -36,12 +32,6 @@ internal sealed class ActionMap
         [GameAction.Confirm] = [Keys.Enter, Keys.Space],
         [GameAction.NextLevel] = [Keys.PageDown, Keys.OemCloseBrackets],
         [GameAction.PreviousLevel] = [Keys.PageUp, Keys.OemOpenBrackets],
-        [GameAction.Quit] = [Keys.Escape],
+        [GameAction.Back] = [Keys.Escape],
     });
-
-    public bool IsDown(InputState input, GameAction action) =>
-        _bindings.TryGetValue(action, out var keys) && keys.Any(input.IsDown);
-
-    public bool WasPressed(InputState input, GameAction action) =>
-        _bindings.TryGetValue(action, out var keys) && keys.Any(input.WasPressed);
 }

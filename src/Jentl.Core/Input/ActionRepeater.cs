@@ -1,27 +1,34 @@
-﻿namespace Sokoban.Desktop.Input;
+﻿namespace Jentl.Core.Input;
 
 /// <summary>
 /// Turns held keys into repeated actions, like a keyboard's auto-repeat.
 /// Only the most recently pressed action repeats, so switching direction mid-hold feels right.
 /// </summary>
-internal sealed class ActionRepeater
+public sealed class ActionRepeater<TAction>
+    where TAction : struct, Enum
 {
-    private readonly GameAction[] _actions;
+    private readonly TAction[] _actions;
     private readonly TimeSpan _initialDelay;
     private readonly TimeSpan _interval;
-    private GameAction? _held;
+    private TAction? _held;
     private TimeSpan _untilNext;
 
-    public ActionRepeater(TimeSpan initialDelay, TimeSpan interval, params GameAction[] actions)
+    public ActionRepeater(TimeSpan initialDelay, TimeSpan interval, params TAction[] actions)
     {
+        if (interval <= TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(interval), interval, "Interval must be positive.");
+        }
+
         _actions = actions;
         _initialDelay = initialDelay;
         _interval = interval;
     }
 
     /// <summary>Returns the action that fires this frame, if any.</summary>
-    public GameAction? Update(InputState input, ActionMap map, TimeSpan elapsed)
+    public TAction? Update(InputState input, ActionMap<TAction> map, TimeSpan elapsed)
     {
+        ArgumentNullException.ThrowIfNull(map);
         foreach (var action in _actions)
         {
             if (map.WasPressed(input, action))
@@ -52,4 +59,7 @@ internal sealed class ActionRepeater
         _untilNext += _interval;
         return held;
     }
+
+    /// <summary>Forgets the held action, e.g. when the scene using it is left.</summary>
+    public void Reset() => _held = null;
 }

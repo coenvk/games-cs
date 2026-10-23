@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Jentl.Core.Input;
+using Jentl.Core.Scenes;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Sokoban.Desktop.Input;
 using Sokoban.Desktop.Rendering;
@@ -6,16 +8,20 @@ using Sokoban.Model;
 
 namespace Sokoban.Desktop;
 
-/// <summary>Plays through a level pack: movement, undo/redo, restart and level switching.</summary>
-internal sealed class PlayScene
+/// <summary>Plays one level: movement, undo/redo and restart. Switching level replaces this scene.</summary>
+internal sealed class PlayScene : Scene
 {
+    private const int Margin = 24;
     private static readonly TimeSpan RepeatDelay = TimeSpan.FromMilliseconds(200);
     private static readonly TimeSpan RepeatInterval = TimeSpan.FromMilliseconds(80);
+    private static readonly TimeSpan LevelTransition = TimeSpan.FromMilliseconds(500);
 
-    private readonly IReadOnlyList<Level> _levels;
-    private readonly Tileset _tileset;
+    private readonly GameContext _context;
+    private readonly int _levelIndex;
+    private readonly LevelSession _session;
+    private readonly Theme _theme;
     private readonly BoardRenderer _renderer;
-    private readonly ActionRepeater _repeater = new(
+    private readonly ActionRepeater<GameAction> _repeater = new(
         RepeatDelay,
         RepeatInterval,
         GameAction.Up,
@@ -25,16 +31,13 @@ internal sealed class PlayScene
         GameAction.Undo,
         GameAction.Redo);
 
-    private int _levelIndex;
-    private LevelSession _session;
-    private Theme _theme;
-
-    public PlayScene(IReadOnlyList<Level> levels, Tileset tileset, int startIndex = 0)
+    public PlayScene(GameContext context, int levelIndex)
     {
-        _levels = levels;
-        _tileset = tileset;
-        _renderer = new BoardRenderer(tileset);
-        (_session, _theme) = Load(startIndex);
+        _context = context;
+        _levelIndex = Math.Clamp(levelIndex, 0, context.Levels.Count - 1);
+        _session = new LevelSession(context.Levels[_levelIndex]);
+        _theme = context.Tileset.ThemeFor(_levelIndex + 1);
+        _renderer = new BoardRenderer(context.Tileset);
     }
 
     public string Status
@@ -42,31 +45,42 @@ internal sealed class PlayScene
         get
         {
             var title = _session.Level.Title ?? $"Level {_levelIndex + 1}";
-            var progress = $"{title} ({_levelIndex + 1}/{_levels.Count})";
+            var progress = $"{title} ({_levelIndex + 1}/{_context.Levels.Count})";
             return _session.IsSolved
                 ? $"{progress} · Solved in {_session.MoveCount} moves, {_session.PushCount} pushes · Enter: next level"
                 : $"{progress} · Moves {_session.MoveCount} · Pushes {_session.PushCount}";
         }
     }
 
-    public void Update(InputState input, ActionMap map, TimeSpan elapsed)
+    public override void Update(TimeSpan elapsed, InputState input)
     {
-        if (map.WasPressed(input, GameAction.Restart))
+        var actions = _context.Actions;
+        if (actions.WasPressed(input, GameAction.Back))
+        {
+            Scenes.Pop(new FadeTransition(LevelTransition));
+            return;
+        }
+
+        if (actions.WasPressed(input, GameAction.Restart))
         {
             _session.Restart();
             _renderer.ResetPlayer();
         }
-        else if (map.WasPressed(input, GameAction.NextLevel)
-                 || (_session.IsSolved && map.WasPressed(input, GameAction.Confirm)))
+        else if (actions.WasPressed(input, GameAction.NextLevel)
+                 || (_session.IsSolved && actions.WasPressed(input, GameAction.Confirm)))
         {
-            (_session, _theme) = Load(_levelIndex + 1);
+            GoToLevel(_levelIndex + 1, _session.IsSolved
+                ? new WipeTransition(LevelTransition)
+                : new FadeTransition(LevelTransition));
+            return;
         }
-        else if (map.WasPressed(input, GameAction.PreviousLevel))
+        else if (actions.WasPressed(input, GameAction.PreviousLevel))
         {
-            (_session, _theme) = Load(_levelIndex - 1);
+            GoToLevel(_levelIndex - 1, new FadeTransition(LevelTransition));
+            return;
         }
 
-        switch (_repeater.Update(input, map, elapsed))
+        switch (_repeater.Update(input, actions, elapsed))
         {
             case GameAction.Up when !_session.IsSolved:
                 Move(Direction.Up);
@@ -97,7 +111,21 @@ internal sealed class PlayScene
         }
     }
 
-    public void Draw(SpriteBatch batch, Rectangle area) => _renderer.Draw(batch, _session, _theme, area);
+    public override void Draw(SpriteBatch batch, Rectangle viewport)
+    {
+        viewport.Inflate(-Margin, -Margin);
+        _renderer.Draw(batch, _session, _theme, viewport);
+    }
+
+    protected override void OnCovered() => _repeater.Reset();
+
+    private void GoToLevel(int index, Transition transition)
+    {
+        if (index >= 0 && index < _context.Levels.Count)
+        {
+            Scenes.Replace(new PlayScene(_context, index), transition);
+        }
+    }
 
     private void Move(Direction direction)
     {
@@ -105,12 +133,5 @@ internal sealed class PlayScene
         {
             _renderer.OnPlayerMoved(direction);
         }
-    }
-
-    private (LevelSession, Theme) Load(int index)
-    {
-        _levelIndex = Math.Clamp(index, 0, _levels.Count - 1);
-        _renderer.ResetPlayer();
-        return (new LevelSession(_levels[_levelIndex]), _tileset.ThemeFor(_levelIndex + 1));
     }
 }
