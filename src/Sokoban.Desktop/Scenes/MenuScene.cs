@@ -11,7 +11,7 @@ namespace Sokoban.Desktop.Scenes;
 
 internal sealed class MenuScene : Scene
 {
-    private const int QuitItem = 2;
+    private const int QuitItem = 3;
 
     private readonly GameContext _context;
     private Menu _menu;
@@ -75,8 +75,10 @@ internal sealed class MenuScene : Scene
         var context = _context;
         var started = context.Progress.Progress.SolvedCount(context.Levels) > 0;
         return new Menu(
+            context.Sounds,
             new MenuItem(started ? "Continue" : "Play", () => Scenes.Push(new PlayScene(context, context.ContinueIndex), Navigation.Fade())),
             new MenuItem("Select level", () => Scenes.Push(new LevelSelectScene(context, context.ContinueIndex), Navigation.Fade())),
+            new MenuItem("Options", () => Scenes.Push(new OptionsScene(context))),
             new MenuItem("Quit", () => Scenes.Pop(Navigation.Fade())))
         {
             Selected = selected,

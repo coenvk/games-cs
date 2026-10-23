@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="Assets\**\*.png;Assets\**\*.ttf;Assets\**\*.txt" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Assets\**\*.png;Assets\**\*.ttf;Assets\**\*.txt;Assets\**\*.wav" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\levels\*.xsb" LinkBase="Levels" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 

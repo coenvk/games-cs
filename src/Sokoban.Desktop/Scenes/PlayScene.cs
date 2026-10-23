@@ -97,6 +97,7 @@ internal sealed class PlayScene : Scene
         }
 
         HandleMovement(_repeater.Update(input, actions, elapsed));
+        _renderer.Update(elapsed);
         UpdateCompletion(elapsed);
     }
 
@@ -139,7 +140,7 @@ internal sealed class PlayScene : Scene
     public void Restart()
     {
         Session.Restart();
-        _renderer.ResetPlayer();
+        _renderer.Reset();
         Time = TimeSpan.Zero;
         ResetCompletion();
     }
@@ -173,21 +174,58 @@ internal sealed class PlayScene : Scene
                 Move(Direction.Right);
                 break;
             case GameAction.Undo:
-                if (Session.LastMove is { } undone && Session.Undo())
-                {
-                    _renderer.OnPlayerMoved(undone.Direction);
-                }
-
+                Undo();
                 break;
             case GameAction.Redo:
-                if (Session.Redo() && Session.LastMove is { } redone)
-                {
-                    _renderer.OnPlayerMoved(redone.Direction);
-                }
-
+                Redo();
                 break;
         }
     }
+
+    private void Move(Direction direction)
+    {
+        var from = Session.Player;
+        var result = Session.TryMove(direction);
+        if (result != MoveResult.Blocked)
+        {
+            AnimateForward(direction, from, result == MoveResult.Pushed);
+        }
+    }
+
+    private void Redo()
+    {
+        var from = Session.Player;
+        if (Session.Redo() && Session.LastMove is { } move)
+        {
+            AnimateForward(move.Direction, from, move.IsPush);
+        }
+    }
+
+    private void Undo()
+    {
+        if (Session.LastMove is not { } move)
+        {
+            return;
+        }
+
+        var from = Session.Player;
+        Session.Undo();
+
+        // The player steps back while still facing the original direction; a pushed crate follows it back.
+        var crateFrom = move.IsPush ? Neighbor(from, move.Direction) : (int?)null;
+        _renderer.Animate(Session.Board, new Step(move.Direction, from, Session.Player, crateFrom, move.IsPush ? from : null));
+    }
+
+    private void AnimateForward(Direction direction, int from, bool pushed)
+    {
+        var to = Session.Player;
+        _renderer.Animate(
+            Session.Board,
+            pushed ? new Step(direction, from, to, to, Neighbor(to, direction)) : new Step(direction, from, to));
+    }
+
+    private int Neighbor(int index, Direction direction) =>
+        Session.Board.TryGetNeighbor(index, direction, out var neighbor) ? neighbor : index;
 
     private void UpdateCompletion(TimeSpan elapsed)
     {
@@ -201,6 +239,7 @@ internal sealed class PlayScene : Scene
         {
             _recorded = true;
             LastImprovement = _context.Progress.Record(Session, Time);
+            _context.Sounds.Play(Sound.Completed);
         }
 
         _solvedFor += elapsed;
@@ -221,13 +260,5 @@ internal sealed class PlayScene : Scene
         _solvedFor = TimeSpan.Zero;
         _completeShown = false;
         _recorded = false;
-    }
-
-    private void Move(Direction direction)
-    {
-        if (Session.TryMove(direction) != MoveResult.Blocked)
-        {
-            _renderer.OnPlayerMoved(direction);
-        }
     }
 }

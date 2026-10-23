@@ -141,5 +141,6 @@ internal sealed class LevelSelectScene : Scene
 
         _selected = index;
         _previewSession = new LevelSession(_context.Levels[index]);
+        _context.Sounds.Play(Sound.Navigate);
     }
 }

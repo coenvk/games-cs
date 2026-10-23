@@ -6,6 +6,7 @@ using Sokoban.Desktop;
 //   --keys "<k1> <k2>"   play these keys (MonoGame key names, or Wait) instead of the keyboard
 //   --screenshot <path>  after the keys have played, render one frame to a PNG and exit
 //   --save-dir <path>    keep progress in this directory instead of the user data folder
+//   --settle <frames>    idle frames after the keys before the screenshot (default 60)
 var options = new GameOptions();
 for (var i = 0; i + 1 < args.Length; i += 2)
 {
@@ -22,6 +23,9 @@ for (var i = 0; i + 1 < args.Length; i += 2)
             break;
         case "--save-dir":
             options = options with { SaveDirectory = args[i + 1] };
+            break;
+        case "--settle":
+            options = options with { SettleFrames = int.Parse(args[i + 1], CultureInfo.InvariantCulture) };
             break;
         default:
             Console.Error.WriteLine($"Unknown option '{args[i]}'.");

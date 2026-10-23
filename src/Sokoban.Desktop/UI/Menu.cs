@@ -1,4 +1,5 @@
 ﻿using FontStashSharp;
+using Jentl.Core.Audio;
 using Jentl.Core.Graphics;
 using Jentl.Core.Input;
 using Microsoft.Xna.Framework;
@@ -16,14 +17,16 @@ internal sealed class Menu
     private const int PillPadding = 40;
 
     private readonly MenuItem[] _items;
+    private readonly SoundPlayer _sounds;
     private readonly ActionRepeater<GameAction> _repeater = new(
         TimeSpan.FromMilliseconds(250),
         TimeSpan.FromMilliseconds(120),
         GameAction.Up,
         GameAction.Down);
 
-    public Menu(params MenuItem[] items)
+    public Menu(SoundPlayer sounds, params MenuItem[] items)
     {
+        _sounds = sounds;
         if (items.Length == 0)
         {
             throw new ArgumentException("A menu needs at least one item.", nameof(items));
@@ -41,9 +44,11 @@ internal sealed class Menu
         {
             case GameAction.Up:
                 Selected = (Selected - 1 + _items.Length) % _items.Length;
+                _sounds.Play(Sound.Navigate);
                 break;
             case GameAction.Down:
                 Selected = (Selected + 1) % _items.Length;
+                _sounds.Play(Sound.Navigate);
                 break;
         }
 

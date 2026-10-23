@@ -11,6 +11,12 @@ The sprites are unmodified; modified versions must be shared under the same lice
 `src/Sokoban.Desktop/Assets/fonts/LilitaOne-Regular.ttf` is **Lilita One** by Juan Montoreano, licensed under the
 [SIL Open Font License 1.1](src/Sokoban.Desktop/Assets/fonts/OFL.txt).
 
+## Sounds
+
+`src/Sokoban.Desktop/Assets/sounds/` holds `navigate.wav` and `completed.wav` from [coenvk/Sokoban](https://github.com/coenvk/Sokoban);
+`completed.wav` was converted from 24-bit to 16-bit PCM, which MonoGame requires. Their original source is not recorded
+there, so check their license before distributing the game.
+
 ## Levels
 
 `levels/original.xsb` holds the 100 levels from [coenvk/Sokoban](https://github.com/coenvk/Sokoban), converted to XSB.

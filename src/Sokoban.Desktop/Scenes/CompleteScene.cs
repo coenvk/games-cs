@@ -37,7 +37,7 @@ internal sealed class CompleteScene : Scene
         }));
         items.Add(new MenuItem("Select level", () => Navigation.ToLevelSelect(Scenes, context, play.LevelIndex)));
         items.Add(new MenuItem("Main menu", () => Navigation.ToMainMenu(Scenes, context)));
-        _menu = new Menu([.. items]);
+        _menu = new Menu(context.Sounds, [.. items]);
     }
 
     public override bool IsOverlay => true;

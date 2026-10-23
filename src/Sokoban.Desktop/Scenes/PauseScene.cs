@@ -18,6 +18,7 @@ internal sealed class PauseScene : Scene
         _context = context;
         _play = play;
         _menu = new Menu(
+            context.Sounds,
             new MenuItem("Resume", () => Scenes.Pop()),
             new MenuItem("Restart level", () =>
             {
@@ -25,6 +26,7 @@ internal sealed class PauseScene : Scene
                 Scenes.Pop();
             }),
             new MenuItem("Select level", () => Navigation.ToLevelSelect(Scenes, context, play.LevelIndex)),
+            new MenuItem("Options", () => Scenes.Push(new OptionsScene(context))),
             new MenuItem("Main menu", () => Navigation.ToMainMenu(Scenes, context)));
     }
 

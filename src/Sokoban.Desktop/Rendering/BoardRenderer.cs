@@ -1,31 +1,68 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Jentl.Core.Graphics;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Sokoban.Model;
 
 namespace Sokoban.Desktop.Rendering;
 
-/// <summary>Draws a level session centred in a target rectangle, scaled to fit.</summary>
+/// <summary>A step to animate: the player moving, and optionally the crate it pushed (or pulled back on undo).</summary>
+internal readonly record struct Step(Direction Facing, int PlayerFrom, int PlayerTo, int? CrateFrom = null, int? CrateTo = null);
+
+/// <summary>
+/// Draws a level session centred in a target rectangle, scaled to fit. The model moves
+/// instantly; the renderer slides the player and pushed crate between cells to catch up.
+/// </summary>
 internal sealed class BoardRenderer
 {
     private const float MaxScale = 2f;
 
+    // Close to the key-repeat interval, so holding a direction reads as continuous walking.
+    private static readonly TimeSpan StepDuration = TimeSpan.FromMilliseconds(85);
+
     private readonly Tileset _tileset;
     private Direction _facing = Direction.Down;
     private int _frame;
+    private Tween? _player;
+    private int _playerTarget = -1;
+    private Tween? _crate;
+    private int _crateTarget = -1;
 
     public BoardRenderer(Tileset tileset) => _tileset = tileset;
 
-    /// <summary>Advances the walk cycle; call after each move or undo.</summary>
-    public void OnPlayerMoved(Direction direction)
+    public void Animate(Board board, Step step)
     {
-        _frame = direction == _facing ? _frame + 1 : 0;
-        _facing = direction;
+        ArgumentNullException.ThrowIfNull(board);
+        _frame = step.Facing == _facing ? _frame + 1 : 0;
+        _facing = step.Facing;
+
+        // Start from wherever the sprite is drawn now, so quick successive moves chain smoothly.
+        var playerStart = _player is not null && _playerTarget == step.PlayerFrom ? _player.Value : GridPosition(board, step.PlayerFrom);
+        _player = new Tween(playerStart, GridPosition(board, step.PlayerTo), StepDuration);
+        _playerTarget = step.PlayerTo;
+
+        if (step is { CrateFrom: { } from, CrateTo: { } to })
+        {
+            var crateStart = _crate is not null && _crateTarget == from ? _crate.Value : GridPosition(board, from);
+            _crate = new Tween(crateStart, GridPosition(board, to), StepDuration);
+            _crateTarget = to;
+        }
     }
 
-    public void ResetPlayer()
+    public void Update(TimeSpan elapsed)
+    {
+        _player?.Update(elapsed);
+        _crate?.Update(elapsed);
+    }
+
+    /// <summary>Stops any animation and faces the player forward, e.g. after a restart.</summary>
+    public void Reset()
     {
         _facing = Direction.Down;
         _frame = 0;
+        _player = null;
+        _playerTarget = -1;
+        _crate = null;
+        _crateTarget = -1;
     }
 
     public void Draw(SpriteBatch batch, LevelSession session, Theme theme, Rectangle area)
@@ -34,38 +71,41 @@ internal sealed class BoardRenderer
         var tile = (int)MathF.Min(
             Tileset.TileSize * MaxScale,
             MathF.Min(area.Width / (float)board.Width, area.Height / (float)board.Height));
-        var origin = new Point(
+        var origin = new Vector2(
             area.X + (area.Width - tile * board.Width) / 2,
             area.Y + (area.Height - tile * board.Height) / 2);
 
-        Rectangle Cell(int index) =>
-            new(origin.X + board.XOf(index) * tile, origin.Y + board.YOf(index) * tile, tile, tile);
+        Rectangle At(Vector2 grid) =>
+            new((int)MathF.Round(origin.X + grid.X * tile), (int)MathF.Round(origin.Y + grid.Y * tile), tile, tile);
 
+        // Tiles first, so a sliding crate or player is never painted over by a neighbouring floor.
         for (var i = 0; i < board.Size; i++)
         {
+            var cell = At(GridPosition(board, i));
             if (board.IsWall(i))
             {
-                batch.Draw(theme.Wall, Cell(i), Color.White);
-                continue;
+                batch.Draw(theme.Wall, cell, Color.White);
             }
-
-            if (!board.IsInterior(i))
+            else if (board.IsInterior(i))
             {
-                continue;
-            }
-
-            batch.Draw(theme.Floor, Cell(i), Color.White);
-            if (session.HasCrate(i))
-            {
-                batch.Draw(board.IsGoal(i) ? theme.CrateOnGoal : theme.Crate, Cell(i), Color.White);
-            }
-            else if (board.IsGoal(i))
-            {
-                batch.Draw(theme.Goal, Cell(i), Color.White);
+                batch.Draw(theme.Floor, cell, Color.White);
+                if (board.IsGoal(i))
+                {
+                    batch.Draw(theme.Goal, cell, Color.White);
+                }
             }
         }
 
+        foreach (var crate in session.Crates)
+        {
+            var position = crate == _crateTarget && _crate is not null ? _crate.Value : GridPosition(board, crate);
+            batch.Draw(board.IsGoal(crate) ? theme.CrateOnGoal : theme.Crate, At(position), Color.White);
+        }
+
+        var player = session.Player == _playerTarget && _player is not null ? _player.Value : GridPosition(board, session.Player);
         var frames = _tileset.PlayerFrames(_facing);
-        batch.Draw(frames[_frame % frames.Length], Cell(session.Player), Color.White);
+        batch.Draw(frames[_frame % frames.Length], At(player), Color.White);
     }
+
+    private static Vector2 GridPosition(Board board, int index) => new(board.XOf(index), board.YOf(index));
 }
