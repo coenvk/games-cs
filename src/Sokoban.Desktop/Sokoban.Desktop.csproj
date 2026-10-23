@@ -22,10 +22,11 @@
     <ProjectReference Include="..\Pyramid\Pyramid.csproj" />
     <ProjectReference Include="..\Spider\Spider.csproj" />
     <ProjectReference Include="..\TriPeaks\TriPeaks.csproj" />
+    <ProjectReference Include="..\Mossbrook\Mossbrook.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="Assets\**\*.png;Assets\**\*.ttf;Assets\**\*.txt;Assets\**\*.wav" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <None Include="Assets\**\*.png;Assets\**\*.ttf;Assets\**\*.txt;Assets\**\*.wav;Assets\**\*.json;Assets\**\*.tmx;Assets\**\*.tsx" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
     <None Include="..\..\levels\*.xsb" LinkBase="Levels" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
   </ItemGroup>
 

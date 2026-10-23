@@ -1,0 +1,20 @@
+{
+  "items": [
+    { "id": "potion", "name": "Healing potion", "sprite": "potion", "stack": 5, "value": 8,
+      "description": "Restores 10 health.", "use": [ { "heal": 10 } ] },
+    { "id": "bread", "name": "Bread", "sprite": "bread", "stack": 5, "value": 2,
+      "description": "A fresh loaf. Restores 4 health.", "use": [ { "heal": 4 } ] },
+    { "id": "glowcap", "name": "Glowcap", "sprite": "glowcap", "stack": 10, "value": 3,
+      "description": "A mushroom that glows faintly. Wren the herbalist wants these." },
+    { "id": "amulet", "name": "Elder's amulet", "sprite": "amulet", "value": 50,
+      "description": "A gold amulet with a blue stone. It hums softly." },
+    { "id": "coins", "name": "Coins", "sprite": "coins", "stack": 999, "value": 1,
+      "description": "Mossbrook pennies." },
+    { "id": "sword", "name": "Short sword", "sprite": "sword", "slot": "weapon", "attack": 2, "value": 15,
+      "description": "Plain but sharp. +2 attack." },
+    { "id": "shield", "name": "Round shield", "sprite": "shield", "slot": "shield", "defense": 1, "value": 15,
+      "description": "Oak and iron. +1 defense." },
+    { "id": "vest", "name": "Leather vest", "sprite": "armor", "slot": "armor", "defense": 2, "value": 20,
+      "description": "Tough boiled leather. +2 defense." }
+  ]
+}

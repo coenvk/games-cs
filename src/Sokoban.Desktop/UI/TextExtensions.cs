@@ -43,6 +43,35 @@ internal static class TextExtensions
         font.DrawText(batch, text, position, color);
     }
 
+    /// <summary>Breaks <paramref name="text"/> into lines no wider than <paramref name="width"/>, at spaces.</summary>
+    public static IReadOnlyList<string> Wrap(this SpriteFontBase font, string text, float width)
+    {
+        ArgumentNullException.ThrowIfNull(font);
+        ArgumentNullException.ThrowIfNull(text);
+        var lines = new List<string>();
+        var line = "";
+        foreach (var word in text.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var candidate = line.Length == 0 ? word : $"{line} {word}";
+            if (line.Length > 0 && font.MeasureString(candidate).X > width)
+            {
+                lines.Add(line);
+                line = word;
+            }
+            else
+            {
+                line = candidate;
+            }
+        }
+
+        if (line.Length > 0)
+        {
+            lines.Add(line);
+        }
+
+        return lines;
+    }
+
     /// <summary>Draws text vertically centred in <paramref name="bounds"/>.</summary>
     public static void DrawText(
         this SpriteBatch batch,

@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="..\Sokoban.Desktop\Assets\**\*.png;..\Sokoban.Desktop\Assets\**\*.ttf;..\Sokoban.Desktop\Assets\**\*.wav" Link="wwwroot\Assets\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Content Include="..\Sokoban.Desktop\Assets\**\*.png;..\Sokoban.Desktop\Assets\**\*.ttf;..\Sokoban.Desktop\Assets\**\*.wav;..\Sokoban.Desktop\Assets\**\*.json;..\Sokoban.Desktop\Assets\**\*.tmx;..\Sokoban.Desktop\Assets\**\*.tsx" Link="wwwroot\Assets\%(RecursiveDir)%(Filename)%(Extension)" />
     <Content Include="..\..\levels\*.xsb" Link="wwwroot\Levels\%(Filename)%(Extension)" />
   </ItemGroup>
 
@@ -51,6 +51,7 @@
     <ProjectReference Include="..\Pyramid\Pyramid.csproj" />
     <ProjectReference Include="..\Spider\Spider.csproj" />
     <ProjectReference Include="..\TriPeaks\TriPeaks.csproj" />
+    <ProjectReference Include="..\Mossbrook\Mossbrook.csproj" />
   </ItemGroup>
 
   <ItemGroup>

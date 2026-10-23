@@ -1,0 +1,31 @@
+{
+  "quests": [
+    {
+      "id": "amulet", "title": "The Elder's Amulet",
+      "description": "Thieves hid Elder Maren's amulet in the old cellar beneath the chapel ruins, east of the river. Bring it back.",
+      "objectives": [
+        { "text": "Find the amulet in the old cellar", "collect": "amulet" },
+        { "text": "Bring the amulet to Elder Maren", "talk": "elder" }
+      ],
+      "rewards": [ { "give": "coins", "count": 30 }, { "setFlag": "amulet_returned" }, { "victory": true } ]
+    },
+    {
+      "id": "glowcaps", "title": "Glowcaps for Wren",
+      "description": "Wren the herbalist needs glowcaps for her remedies. They grow in the dark of the cellar.",
+      "objectives": [
+        { "text": "Gather three glowcaps", "collect": "glowcap", "count": 3 },
+        { "text": "Bring them to Wren", "talk": "herbalist" }
+      ],
+      "rewards": [ { "give": "potion", "count": 2 }, { "give": "vest" } ]
+    },
+    {
+      "id": "rats", "title": "Pest Control",
+      "description": "Farmer Tom says rats from the cellar are eating his grain.",
+      "objectives": [
+        { "text": "Defeat three cellar rats", "kill": "rat", "count": 3 },
+        { "text": "Tell Farmer Tom", "talk": "farmer" }
+      ],
+      "rewards": [ { "give": "coins", "count": 10 }, { "give": "bread", "count": 2 } ]
+    }
+  ]
+}

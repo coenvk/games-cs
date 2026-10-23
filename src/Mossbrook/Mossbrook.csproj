@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The Mossbrook adventure: content loading and dungeon floors on the Jentl RPG kit; framework-free like the kit. -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\Jentl.Rpg\Jentl.Rpg.csproj" />
+  </ItemGroup>
+
+</Project>

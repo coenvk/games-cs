@@ -14,6 +14,14 @@ internal static class OverlayPanel
     private const int AccentHeight = 6;
     private const int LineGap = 4;
 
+    /// <summary>How wide a line of text may be inside the panel drawn for <paramref name="viewport"/>.</summary>
+    public static int TextWidth(Rectangle viewport, Fonts fonts)
+    {
+        ArgumentNullException.ThrowIfNull(fonts);
+        var padding = fonts.Px(DesignPadding);
+        return Math.Min(viewport.Width - 2 * padding, fonts.Px(600)) - 2 * padding;
+    }
+
     public static void Draw(
         SpriteBatch batch,
         Rectangle viewport,

@@ -18,6 +18,9 @@ internal enum GameAction
     NextLevel,
     PreviousLevel,
     Back,
+    Inventory,
+    Journal,
+    Wait,
 }
 
 internal static class Controls
@@ -37,5 +40,8 @@ internal static class Controls
         [GameAction.NextLevel] = [Keys.PageDown, Keys.OemCloseBrackets],
         [GameAction.PreviousLevel] = [Keys.PageUp, Keys.OemOpenBrackets],
         [GameAction.Back] = [Keys.Escape],
+        [GameAction.Inventory] = [Keys.I, Keys.B],
+        [GameAction.Journal] = [Keys.J, Keys.Q],
+        [GameAction.Wait] = [Keys.OemPeriod, Keys.T],
     });
 }

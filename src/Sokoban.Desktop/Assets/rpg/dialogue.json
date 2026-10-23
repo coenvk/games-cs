@@ -1,0 +1,93 @@
+{
+  "dialogues": [
+    {
+      "id": "elder", "speaker": "Elder Maren",
+      "nodes": {
+        "start": { "goto": [
+          { "if": { "quest": "amulet", "is": "completed" }, "node": "thanks_again" },
+          { "if": { "quest": "amulet", "is": "ready" }, "node": "return" },
+          { "if": { "quest": "amulet", "is": "active" }, "node": "waiting" },
+          { "node": "hello" } ] },
+        "hello": { "text": "Ah, a traveller! Welcome to Mossbrook. Forgive an old woman her worries.",
+          "choices": [ { "text": "What's wrong?", "next": "problem" }, { "text": "Just passing through." } ] },
+        "problem": { "text": "Thieves took my amulet last night, the stone that keeps our wells sweet. They fled into the old cellar under the chapel ruins, across the river.",
+          "choices": [
+            { "text": "I'll get it back.", "next": "accept", "do": [ { "startQuest": "amulet" } ] },
+            { "text": "Sounds dangerous.", "next": "danger" } ] },
+        "danger": { "text": "It is. Rats and worse live down there. Bram the smith could arm you, and Wren has remedies.",
+          "choices": [
+            { "text": "I'll do it.", "next": "accept", "do": [ { "startQuest": "amulet" } ] },
+            { "text": "Not today." } ] },
+        "accept": { "text": "Bless you. The trapdoor is in the ruins east of the bridge. Do take care." },
+        "waiting": { "text": "Any sign of my amulet? The trapdoor is in the chapel ruins, east across the bridge." },
+        "return": { "text": "My amulet! You found it!", "do": [ { "take": "amulet" }, { "completeQuest": "amulet" } ], "next": "reward" },
+        "reward": { "text": "Take these coins, and know that Mossbrook will not forget you." },
+        "thanks_again": { "text": "Thanks to you, the wells run sweet again." }
+      }
+    },
+    {
+      "id": "herbalist", "speaker": "Wren",
+      "nodes": {
+        "start": { "goto": [
+          { "if": { "quest": "glowcaps", "is": "completed" }, "node": "done" },
+          { "if": { "quest": "glowcaps", "is": "ready" }, "node": "return" },
+          { "if": { "quest": "glowcaps", "is": "active" }, "node": "waiting" },
+          { "node": "hello" } ] },
+        "hello": { "text": "Mind the seedlings! Oh, hello. I'm Wren. I make remedies, when I have glowcaps.",
+          "choices": [ { "text": "Glowcaps?", "next": "explain" }, { "text": "Goodbye." } ] },
+        "explain": { "text": "Glowing mushrooms. They only grow in the dark, like in the old cellar. Bring me three and I'll make it worth your while.",
+          "choices": [
+            { "text": "I'll look for some.", "next": "thanks", "do": [ { "startQuest": "glowcaps" } ] },
+            { "text": "Maybe later." } ] },
+        "thanks": { "text": "Wonderful! Watch out for the slimes; they love glowcaps too." },
+        "waiting": { "text": "Found any glowcaps yet? I need three." },
+        "return": { "text": "Three glowcaps! Perfect.", "do": [ { "take": "glowcap", "count": 3 }, { "completeQuest": "glowcaps" } ], "next": "reward" },
+        "reward": { "text": "Here: two potions, and my late husband's leather vest. It will serve you better than it serves the moths." },
+        "done": { "text": "The remedies are coming along nicely, thanks to you." }
+      }
+    },
+    {
+      "id": "smith", "speaker": "Bram",
+      "nodes": {
+        "start": { "goto": [ { "if": { "notFlag": "got_sword" }, "node": "first" }, { "node": "shop" } ] },
+        "first": { "text": "You've the look of someone heading into trouble. Here, take this. I've no use for a spare.",
+          "do": [ { "give": "sword" }, { "setFlag": "got_sword" } ], "next": "tip" },
+        "tip": { "text": "Open your bag to put it in your hand. Bare fists won't do much against what's in that cellar." },
+        "shop": { "text": "Need anything? A round shield's fifteen coins.",
+          "choices": [
+            { "text": "Buy a shield (15 coins)", "if": { "has": "coins", "count": 15 }, "next": "sold",
+              "do": [ { "take": "coins", "count": 15 }, { "give": "shield" } ] },
+            { "text": "Not right now." } ] },
+        "sold": { "text": "Good oak, that. It'll turn a rat's tooth." }
+      }
+    },
+    {
+      "id": "farmer", "speaker": "Farmer Tom",
+      "nodes": {
+        "start": { "goto": [
+          { "if": { "quest": "rats", "is": "completed" }, "node": "done" },
+          { "if": { "quest": "rats", "is": "ready" }, "node": "return" },
+          { "if": { "quest": "rats", "is": "active" }, "node": "waiting" },
+          { "node": "hello" } ] },
+        "hello": { "text": "Rats! Rats from that cursed cellar, eating my grain.",
+          "choices": [
+            { "text": "I'll deal with them.", "next": "thanks", "do": [ { "startQuest": "rats" } ] },
+            { "text": "Good luck with that." } ] },
+        "thanks": { "text": "Three of them should teach the rest a lesson." },
+        "waiting": { "text": "I still hear them scratching about at night." },
+        "return": { "text": "No more scratching! Here, for your trouble.", "do": [ { "completeQuest": "rats" } ] },
+        "done": { "text": "Best harvest in years, if the weather holds." }
+      }
+    },
+    {
+      "id": "child", "speaker": "Pip",
+      "nodes": {
+        "start": { "goto": [ { "if": { "quest": "amulet", "is": "completed" }, "node": "after" }, { "node": "hello" } ] },
+        "hello": { "text": "Did you know there's a cellar under the old chapel? The grown-ups say it's haunted.",
+          "choices": [ { "text": "Haunted?", "next": "haunted" }, { "text": "Run along, Pip." } ] },
+        "haunted": { "text": "Skeletons! Way down deep. Mum says if you get hurt, eat something. Bread helps!" },
+        "after": { "text": "You're the hero! Can I see the amulet? ...You gave it back? Aww." }
+      }
+    }
+  ]
+}

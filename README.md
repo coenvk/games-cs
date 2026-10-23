@@ -13,6 +13,8 @@ A C# rewrite of [coenvk/Sokoban](https://github.com/coenvk/Sokoban), with engine
 | `src/Jentl.Core` | Small engine on MonoGame: `JentlGame`, `SceneManager` (scene stack, overlays, transitions), input action map and auto-repeat, easing |
 | `src/Jentl.Puzzle` | Puzzle kit: turn-based grid puzzles with rules, undo/redo and level files (see `docs/kits.md`) |
 | `src/Jentl.Cards` | Card kit: cards, decks, piles, rules, undo/redo and hints (see `docs/kits.md`) |
+| `src/Jentl.Rpg` | RPG kit: Tiled maps, field of view, pathfinding, dungeon generation, turn engine, inventory, quests and dialogue (see `docs/kits.md`) |
+| `src/Mossbrook` | Mossbrook, the RPG demo: starting a game and generating the cellar floors; its content is in `src/Sokoban.Desktop/Assets/rpg` |
 | `src/Klondike`, `src/FreeCell`, `src/Pyramid`, `src/Spider`, `src/TriPeaks` | Klondike, FreeCell, Pyramid, Spider and TriPeaks rules on the card kit |
 | `src/Sokoban.Solver` | Solver (A* over pushes, matching heuristic, dead-square and frozen-block pruning) and level generator (reverse play) |
 | `src/Sokoban.Desktop` | MonoGame (DesktopGL) app: scenes (menu, level select, play, pause, complete), rendering, UI |
@@ -21,8 +23,10 @@ A C# rewrite of [coenvk/Sokoban](https://github.com/coenvk/Sokoban), with engine
 | `tests/Jentl.Core.Tests` | xUnit tests for the engine (runs headless) |
 | `tests/Sokoban.Solver.Tests` | xUnit tests for the solver, deadlock detection and generator |
 | `tests/Jentl.Puzzle.Tests`, `tests/Jentl.Cards.Tests`, `tests/Klondike.Tests`, `tests/FreeCell.Tests`, `tests/Pyramid.Tests`, `tests/Spider.Tests`, `tests/TriPeaks.Tests` | xUnit tests for the kits and card games |
+| `tests/Jentl.Rpg.Tests`, `tests/Mossbrook.Tests` | xUnit tests for the RPG kit, and checks of the shipped Mossbrook content |
 | `tools/LevelConverter` | One-shot converter from the old Java level format to XSB |
 | `tools/SolverBench` | `solve`: run the solver over a pack; `generate`: print generated levels as XSB |
+| `tools/RpgArt` | Draws the RPG tileset (`tiles.png` and `tiles.tsx`) in code |
 | `levels/original.xsb` | The 100 levels from the Java version |
 | `levels/ice.xsb` | 20 ice levels: three hand-made tutorials, then generated levels from easy to hard |
 
@@ -169,3 +173,25 @@ undo, redo and level files come from the kit. The main menu also has card games 
 kit** (`Jentl.Cards`) under **Card games**: Klondike, FreeCell, Pyramid, Spider (1, 2 or 4 suits) and TriPeaks. Drag cards or tap one to send it where it fits,
 with undo, hints and automatic moves home. FreeCell deal numbers match Microsoft FreeCell (deal 1 is the classic deal 1).
 `docs/kits.md` explains how to build a new puzzle or card game with the kits.
+
+## Adventure: Mossbrook
+
+**Adventure** on the main menu is a small turn-based RPG on Jentl's **RPG kit** (`Jentl.Rpg`). Thieves have hidden
+Elder Maren's amulet in the old cellar under the chapel ruins. Talk to the villagers, pick up quests, get a sword from
+Bram the smith, and go down: the cellar's two floors are generated from the game's seed (`--deal` sets it), dark, and
+full of rats, slimes, spiders and skeletons. Returning the amulet wins; two side quests give potions and armour.
+
+Walk into people to talk and into monsters to fight; walking over items picks them up. Arrows/WASD or swipes step,
+tapping a cell walks there, `.` or T waits a turn, I or B opens the bag (use potions, equip gear), J or Q the journal.
+
+The content is plain files in `src/Sokoban.Desktop/Assets/rpg`: `items.json`, `actors.json`, `quests.json`,
+`dialogue.json`, and the village map `village.tmx` with its tileset `tiles.tsx`, which open in the
+[Tiled](https://www.mapeditor.org) map editor. The tileset image is drawn by `tools/RpgArt`:
+
+```sh
+dotnet run --project tools/RpgArt -- src/Sokoban.Desktop/Assets/rpg              # tiles.png and tiles.tsx
+dotnet run --project tools/RpgArt -- src/Sokoban.Desktop/Assets/rpg --preview x.png   # plus a 4x preview
+```
+
+`tests/Mossbrook.Tests` validates the content (every dialogue node, item, quest and map object referenced exists),
+checks that every villager and the cellar's stairs and amulet can be reached, and plays the quests through.

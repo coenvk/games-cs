@@ -1,0 +1,20 @@
+{
+  "actors": [
+    { "id": "player", "name": "You", "sprite": "player", "faction": "player", "hp": 20, "attack": 2, "defense": 0 },
+
+    { "id": "elder", "name": "Elder Maren", "sprite": "elder", "faction": "friendly", "dialogue": "elder" },
+    { "id": "herbalist", "name": "Wren", "sprite": "herbalist", "faction": "friendly", "dialogue": "herbalist" },
+    { "id": "smith", "name": "Bram the smith", "sprite": "smith", "faction": "friendly", "dialogue": "smith" },
+    { "id": "farmer", "name": "Farmer Tom", "sprite": "villager", "faction": "friendly", "dialogue": "farmer", "brain": "wander" },
+    { "id": "child", "name": "Pip", "sprite": "child", "faction": "friendly", "dialogue": "child", "brain": "wander" },
+
+    { "id": "rat", "name": "cellar rat", "sprite": "rat", "faction": "hostile", "hp": 4, "attack": 2, "sight": 6,
+      "brain": "hunter", "xp": 3, "drops": [ { "item": "coins", "chance": 0.4, "count": 2 } ] },
+    { "id": "slime", "name": "slime", "sprite": "slime", "faction": "hostile", "hp": 8, "attack": 2, "defense": 1, "sight": 4,
+      "brain": "hunter", "xp": 5, "drops": [ { "item": "glowcap", "chance": 0.25 } ] },
+    { "id": "spider", "name": "cave spider", "sprite": "spider", "faction": "hostile", "hp": 7, "attack": 4, "sight": 7,
+      "brain": "hunter", "xp": 6, "drops": [ { "item": "coins", "chance": 0.5, "count": 3 } ] },
+    { "id": "skeleton", "name": "skeleton", "sprite": "skeleton", "faction": "hostile", "hp": 12, "attack": 4, "defense": 2, "sight": 6,
+      "brain": "hunter", "xp": 9, "drops": [ { "item": "coins", "chance": 0.7, "count": 5 }, { "item": "potion", "chance": 0.2 } ] }
+  ]
+}
