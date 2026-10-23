@@ -42,5 +42,5 @@ internal sealed class PauseScene : Scene
     }
 
     public override void Draw(SpriteBatch batch, Rectangle viewport) =>
-        OverlayPanel.Draw(batch, viewport, _context.Fonts, "Paused", _play.Title, _menu);
+        OverlayPanel.Draw(batch, viewport, _context.Fonts, "Paused", [new PanelLine(_play.Title, Palette.Muted)], _menu);
 }

@@ -1,4 +1,5 @@
-﻿using Jentl.Core.Input;
+﻿using System.Globalization;
+using Jentl.Core.Input;
 using Jentl.Core.Scenes;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -13,15 +14,12 @@ internal sealed class MenuScene : Scene
     private const int QuitItem = 2;
 
     private readonly GameContext _context;
-    private readonly Menu _menu;
+    private Menu _menu;
 
     public MenuScene(GameContext context)
     {
         _context = context;
-        _menu = new Menu(
-            new MenuItem("Play", () => Scenes.Push(new PlayScene(context, 0), Navigation.Fade())),
-            new MenuItem("Select level", () => Scenes.Push(new LevelSelectScene(context, 0), Navigation.Fade())),
-            new MenuItem("Quit", () => Scenes.Pop(Navigation.Fade())));
+        _menu = BuildMenu();
     }
 
     public override void Update(TimeSpan elapsed, InputState input)
@@ -48,6 +46,18 @@ internal sealed class MenuScene : Scene
         var menuTop = viewport.Y + viewport.Height / 2 + 20;
         _menu.Draw(batch, fonts.Body, centerX, menuTop);
 
+        var solved = _context.Progress.Progress.SolvedCount(_context.Levels);
+        if (solved > 0)
+        {
+            batch.DrawText(
+                fonts.Small,
+                string.Create(CultureInfo.InvariantCulture, $"{solved} of {_context.Levels.Count} levels solved"),
+                new Vector2(centerX, menuTop + _menu.Height(fonts.Body) + 16),
+                Palette.Muted,
+                Align.Center,
+                shadow: false);
+        }
+
         batch.DrawText(
             fonts.Small,
             "Arrows to choose, Enter to select",
@@ -55,6 +65,22 @@ internal sealed class MenuScene : Scene
             Palette.Muted,
             Align.Center,
             shadow: false);
+    }
+
+    // Progress may have changed while another scene was on top, so the labels are rebuilt.
+    protected override void OnUncovered() => _menu = BuildMenu(_menu.Selected);
+
+    private Menu BuildMenu(int selected = 0)
+    {
+        var context = _context;
+        var started = context.Progress.Progress.SolvedCount(context.Levels) > 0;
+        return new Menu(
+            new MenuItem(started ? "Continue" : "Play", () => Scenes.Push(new PlayScene(context, context.ContinueIndex), Navigation.Fade())),
+            new MenuItem("Select level", () => Scenes.Push(new LevelSelectScene(context, context.ContinueIndex), Navigation.Fade())),
+            new MenuItem("Quit", () => Scenes.Pop(Navigation.Fade())))
+        {
+            Selected = selected,
+        };
     }
 
     /// <summary>A player pushing a crate towards a goal, under the title.</summary>

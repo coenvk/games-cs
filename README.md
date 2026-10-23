@@ -28,10 +28,21 @@ Command-line options (handy for checking screens without playing):
 - `--level <n>` opens level n directly (above the main menu)
 - `--keys "<k1> <k2> ..."` plays these keys instead of reading the keyboard (MonoGame `Keys` names; `Wait` idles half a second)
 - `--screenshot <path>` saves a PNG once the keys have played out, then exits
+- `--save-dir <path>` keeps progress in this directory (scripted runs otherwise keep progress in memory only)
 
 ```bash
 dotnet run --project src/Sokoban.Desktop -- --keys "Down Enter Wait" --screenshot select.png
 ```
+
+## Progress
+
+Progress (best moves, pushes, time and the fewest-moves solution per level) is saved as JSON after every improvement:
+
+- macOS: `~/Library/Application Support/Sokoban/progress.json`
+- Windows: `%LOCALAPPDATA%\Sokoban\progress.json`
+- Linux: `~/.local/share/Sokoban/progress.json`
+
+Levels are keyed by a hash of their layout, so reordering or retitling a pack keeps progress. An unreadable file is renamed to `progress.json.corrupt-<timestamp>` and the game starts fresh.
 
 ## Controls
 
@@ -51,6 +62,6 @@ dotnet run --project src/Sokoban.Desktop -- --keys "Down Enter Wait" --screensho
 2. ~~MonoGame play scene: grid rendering, movement, undo/redo, win check~~
 3. ~~Engine layer (`Jentl.Core`): scene stack, transitions, input action map~~
 4. ~~Menus, level select, pause, completion screen~~
-5. Saved progress (best moves/pushes/time)
+5. ~~Saved progress (best moves/pushes/time)~~
 6. Polish: tweened movement, animation, sound
 7. Solver (hints, deadlock detection), level generator, twist mechanic

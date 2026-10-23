@@ -1,4 +1,6 @@
 ﻿using System.Collections.Immutable;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Sokoban.Model;
 
@@ -20,6 +22,12 @@ public sealed class Level
     public int PlayerStart { get; }
 
     public ImmutableArray<int> CrateStarts { get; }
+
+    /// <summary>
+    /// A stable identifier derived from the layout (not the title or position in a pack),
+    /// used to key saved progress.
+    /// </summary>
+    public string Key => field ??= ComputeKey();
 
     /// <summary>
     /// Builds and validates a level. The interior is found by flood-filling from the player
@@ -92,6 +100,12 @@ public sealed class Level
         }
 
         return new Level(title, board, player, crateStarts);
+    }
+
+    private string ComputeKey()
+    {
+        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(Xsb.Write(this)));
+        return Convert.ToHexStringLower(hash)[..16];
     }
 
     private static int CheckIndex(int index, int size, string what)

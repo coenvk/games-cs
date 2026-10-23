@@ -1,5 +1,6 @@
 ﻿using Jentl.Core;
 using Jentl.Core.Scenes;
+using Jentl.Core.Storage;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using Sokoban.Desktop.Input;
@@ -40,7 +41,7 @@ internal sealed class SokobanGame : JentlGame
         _tileset = new Tileset(GraphicsDevice);
         _fonts = new Fonts();
         var levels = Xsb.ParsePack(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Levels", "original.xsb")));
-        var context = new GameContext(levels, _tileset, _fonts, Controls.Default);
+        var context = new GameContext(levels, _tileset, _fonts, Controls.Default, LoadProgress());
 
         Scene[] start = _options.StartLevel is { } level
             ? [new MenuScene(context), new PlayScene(context, level)]
@@ -84,6 +85,14 @@ internal sealed class SokobanGame : JentlGame
 
         base.Dispose(disposing);
     }
+
+    // Scripted runs must not touch the player's real progress unless a directory is given.
+    private ProgressStore LoadProgress() => _options switch
+    {
+        { SaveDirectory: { } directory } => ProgressStore.Load(new SaveStore(directory)),
+        { Script: not null } => ProgressStore.InMemory(),
+        _ => ProgressStore.Load(SaveStore.ForApp("Sokoban")),
+    };
 
     /// <summary>Each key is held for one frame and released for one frame.</summary>
     private static Queue<KeyboardState> BuildScript(IEnumerable<string> keys)

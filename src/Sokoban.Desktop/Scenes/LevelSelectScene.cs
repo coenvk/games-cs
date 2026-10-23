@@ -1,4 +1,5 @@
-﻿using Jentl.Core.Graphics;
+﻿using System.Globalization;
+using Jentl.Core.Graphics;
 using Jentl.Core.Input;
 using Jentl.Core.Scenes;
 using Microsoft.Xna.Framework;
@@ -70,7 +71,16 @@ internal sealed class LevelSelectScene : Scene
     {
         var fonts = _context.Fonts;
         viewport.Inflate(-Margin, -Margin);
+        var progress = _context.Progress.Progress;
         batch.DrawText(fonts.Heading, "Select level", new Vector2(viewport.X, viewport.Y), Palette.Text);
+        var headerRow = new Rectangle(viewport.X, viewport.Y, viewport.Width, (int)fonts.Heading.LineHeight);
+        batch.DrawText(
+            fonts.Body,
+            string.Create(CultureInfo.InvariantCulture, $"{progress.SolvedCount(_context.Levels)} / {Count} solved"),
+            headerRow,
+            Palette.Muted,
+            Align.Right,
+            shadow: false);
 
         var content = viewport;
         content.Y += (int)fonts.Heading.LineHeight + 24;
@@ -87,19 +97,23 @@ internal sealed class LevelSelectScene : Scene
                 cell,
                 cell);
             var selected = i == _selected;
-            batch.FillRectangle(bounds, selected ? Palette.Accent : Palette.Panel);
-            batch.DrawText(fonts.Small, (i + 1).ToString(System.Globalization.CultureInfo.InvariantCulture), bounds, selected ? Palette.Ink : Palette.Text, shadow: false);
+            var fill = selected ? Palette.Accent : progress.IsSolved(_context.Levels[i]) ? Palette.Solved : Palette.Panel;
+            batch.FillRectangle(bounds, fill);
+            batch.DrawText(fonts.Small, (i + 1).ToString(CultureInfo.InvariantCulture), bounds, selected ? Palette.Ink : Palette.Text, shadow: false);
         }
 
         var gridWidth = Columns * (cell + Gap);
         var preview = new Rectangle(content.X + gridWidth + Margin, content.Y, content.Width - gridWidth - Margin, content.Height);
         var level = _context.Levels[_selected];
         batch.DrawText(fonts.Body, level.Title ?? $"Level {_selected + 1}", new Vector2(preview.Center.X, preview.Y), Palette.Text, Align.Center);
+        var record = progress.Get(level);
         batch.DrawText(
             fonts.Small,
-            $"{level.Board.Goals.Count} crates",
+            record is null
+                ? string.Create(CultureInfo.InvariantCulture, $"{level.Board.Goals.Count} crates, not solved yet")
+                : Format.Best(record),
             new Vector2(preview.Center.X, preview.Y + fonts.Body.LineHeight + 4),
-            Palette.Muted,
+            record is null ? Palette.Muted : Palette.Accent,
             Align.Center,
             shadow: false);
 

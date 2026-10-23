@@ -37,6 +37,7 @@ internal sealed class PlayScene : Scene
 
     private TimeSpan _solvedFor;
     private bool _completeShown;
+    private bool _recorded;
 
     public PlayScene(GameContext context, int levelIndex)
     {
@@ -54,6 +55,12 @@ internal sealed class PlayScene : Scene
     public bool IsLastLevel => LevelIndex == _context.Levels.Count - 1;
 
     public string Title => Session.Level.Title ?? $"Level {LevelIndex + 1}";
+
+    /// <summary>Time spent on the current attempt. Only runs while this scene is on top and unsolved.</summary>
+    public TimeSpan Time { get; private set; }
+
+    /// <summary>What the most recent solve improved on.</summary>
+    public Improvement LastImprovement { get; private set; }
 
     public override void Update(TimeSpan elapsed, InputState input)
     {
@@ -84,6 +91,11 @@ internal sealed class PlayScene : Scene
             return;
         }
 
+        if (!Session.IsSolved)
+        {
+            Time += elapsed;
+        }
+
         HandleMovement(_repeater.Update(input, actions, elapsed));
         UpdateCompletion(elapsed);
     }
@@ -97,9 +109,18 @@ internal sealed class PlayScene : Scene
         var hudText = hud;
         hudText.Inflate(-Margin, 0);
         batch.DrawText(fonts.Heading, Title, hudText, Palette.Text, Align.Left);
+        if (_context.Progress.Progress.Get(Session.Level) is { } record)
+        {
+            var best = hudText;
+            var titleWidth = (int)fonts.Heading.MeasureString(Title).X + Margin;
+            best.X += titleWidth;
+            best.Width -= titleWidth;
+            batch.DrawText(fonts.Small, Format.Best(record), best, Palette.Muted, Align.Left, shadow: false);
+        }
+
         var stats = string.Create(
             CultureInfo.InvariantCulture,
-            $"Moves {Session.MoveCount}    Pushes {Session.PushCount}");
+            $"Moves {Session.MoveCount}    Pushes {Session.PushCount}    {Format.Duration(Time)}");
         batch.DrawText(fonts.Body, stats, hudText, Session.IsSolved ? Palette.Accent : Palette.Text, Align.Right);
 
         var footer = new Rectangle(viewport.X, viewport.Bottom - 44, viewport.Width, 44);
@@ -119,6 +140,7 @@ internal sealed class PlayScene : Scene
     {
         Session.Restart();
         _renderer.ResetPlayer();
+        Time = TimeSpan.Zero;
         ResetCompletion();
     }
 
@@ -175,6 +197,12 @@ internal sealed class PlayScene : Scene
             return;
         }
 
+        if (!_recorded)
+        {
+            _recorded = true;
+            LastImprovement = _context.Progress.Record(Session, Time);
+        }
+
         _solvedFor += elapsed;
         if (!_completeShown && _solvedFor >= CompleteDelay)
         {
@@ -192,6 +220,7 @@ internal sealed class PlayScene : Scene
     {
         _solvedFor = TimeSpan.Zero;
         _completeShown = false;
+        _recorded = false;
     }
 
     private void Move(Direction direction)

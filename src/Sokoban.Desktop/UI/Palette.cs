@@ -10,6 +10,7 @@ internal static class Palette
     public static readonly Color Text = new(242, 238, 228);
     public static readonly Color Muted = new(150, 160, 186);
     public static readonly Color Accent = new(255, 199, 44);
+    public static readonly Color Solved = new(56, 128, 84);
     public static readonly Color Ink = new(28, 33, 48);
     public static readonly Color Shadow = new(0, 0, 0, 110);
     public static readonly Color Dim = new(10, 12, 20, 170);

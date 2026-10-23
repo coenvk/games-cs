@@ -1,10 +1,10 @@
-﻿using System.Globalization;
-using Jentl.Core.Input;
+﻿using Jentl.Core.Input;
 using Jentl.Core.Scenes;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Sokoban.Desktop.Input;
 using Sokoban.Desktop.UI;
+using Sokoban.Model;
 
 namespace Sokoban.Desktop.Scenes;
 
@@ -56,8 +56,25 @@ internal sealed class CompleteScene : Scene
     public override void Draw(SpriteBatch batch, Rectangle viewport)
     {
         var session = _play.Session;
-        var title = _play.IsLastLevel ? "All levels done!" : "Level complete!";
-        var stats = string.Create(CultureInfo.InvariantCulture, $"{session.MoveCount} moves, {session.PushCount} pushes");
-        OverlayPanel.Draw(batch, viewport, _context.Fonts, title, stats, _menu);
+        var title = _play.IsLastLevel ? "Last level done!" : "Level complete!";
+        var lines = new List<PanelLine>
+        {
+            new(Format.Result(session.MoveCount, session.PushCount, _play.Time), Palette.Text),
+        };
+
+        // A first solve is its own best, so only later solves compare against the record.
+        if (_play.LastImprovement != Improvement.FirstSolve)
+        {
+            if (Format.Improvement(_play.LastImprovement) is { } improved)
+            {
+                lines.Add(new PanelLine(improved, Palette.Accent));
+            }
+            else if (_context.Progress.Progress.Get(session.Level) is { } record)
+            {
+                lines.Add(new PanelLine(Format.Best(record), Palette.Muted));
+            }
+        }
+
+        OverlayPanel.Draw(batch, viewport, _context.Fonts, title, lines, _menu);
     }
 }
