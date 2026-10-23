@@ -16,6 +16,8 @@ A C# rewrite of [coenvk/Sokoban](https://github.com/coenvk/Sokoban), with engine
 | `src/Jentl.Rpg` | RPG kit: Tiled maps, field of view, pathfinding, dungeon generation, turn engine, inventory, quests and dialogue (see `docs/kits.md`) |
 | `src/Fluffy` | Fluffy, a finite state machine engine: guards, nested states, timers, diagrams (see `docs/fluffy.md`) |
 | `src/CodeLock` | Code lock: Mastermind with a combination lock's digits, and a minimax hint solver |
+| `src/Jentl.Multiplayer` | Turn-based multiplayer: players, turn order, bots, and a match runner with pass-the-device handovers (see `docs/kits.md`) |
+| `src/Uno` | Uno: rules, scoring and bots on the multiplayer layer |
 | `src/Mossbrook` | Mossbrook, the RPG demo: starting a game and generating the cellar floors; its content is in `src/Sokoban.Desktop/Assets/rpg` |
 | `src/Klondike`, `src/Easthaven`, `src/FortyThieves`, `src/FreeCell`, `src/Golf`, `src/Pyramid`, `src/Spider`, `src/TriPeaks`, `src/Yukon` | The solitaire games' rules on the card kit |
 | `src/Sokoban.Solver` | Solver (A* over pushes, matching heuristic, dead-square and frozen-block pruning) and level generator (reverse play) |
@@ -27,6 +29,7 @@ A C# rewrite of [coenvk/Sokoban](https://github.com/coenvk/Sokoban), with engine
 | `tests/Jentl.Puzzle.Tests`, `tests/Jentl.Cards.Tests`, `tests/Klondike.Tests`, `tests/FreeCell.Tests`, `tests/Pyramid.Tests`, `tests/Spider.Tests`, `tests/TriPeaks.Tests`, `tests/Golf.Tests`, `tests/Yukon.Tests`, `tests/FortyThieves.Tests`, `tests/Easthaven.Tests` | xUnit tests for the kits and card games |
 | `tests/Fluffy.Tests` | xUnit tests for Fluffy |
 | `tests/CodeLock.Tests` | xUnit tests for the code lock rules and solver |
+| `tests/Jentl.Multiplayer.Tests`, `tests/Uno.Tests` | xUnit tests for the multiplayer layer, and Uno's rules and bots |
 | `tests/Jentl.Rpg.Tests`, `tests/Mossbrook.Tests` | xUnit tests for the RPG kit, and checks of the shipped Mossbrook content |
 | `tools/LevelConverter` | One-shot converter from the old Java level format to XSB |
 | `tools/SolverBench` | `solve`: run the solver over a pack; `generate`: print generated levels as XSB |
@@ -220,3 +223,16 @@ Knuth's Mastermind strategy), and the status line says how many codes still fit.
 Each difficulty keeps its record in `codelock.json`, next to `progress.json` (in `localStorage` in the browser): games
 played and won, the fewest tries, and the current and longest winning streak. The difficulty menu shows them, and the
 end screen points out a new best. Only finished locks count; one left half-cracked is neither a win nor a loss.
+
+## Uno
+
+**Card games > Uno** plays Uno against computer opponents (you and 1 to 3 bots) or with 2 to 4 people passing the
+device around; with several people, hands stay hidden until the next player confirms they have the device. The
+official basic rules: match the top card by colour or by number or symbol, or play a wild; Skip, Reverse (a Skip
+with two players), Draw Two, Wild and Wild Draw Four (only without a card of the current colour). Tap Draw when
+nothing fits; a drawn card that fits may be played straight away, or kept. Tap Uno! before playing your
+second-to-last card, or draw two. The round's winner scores the cards left in the other hands, and the first to 500
+wins the match. On a keyboard: Left/Right pick a card, Enter plays it, Down draws, Up calls Uno.
+
+The bots match colour before number, keep wilds for when nothing else fits, and attack with Skip, Reverse and Draw
+Two when the next player is close to going out; in the tests they beat a random player well over half the time.
