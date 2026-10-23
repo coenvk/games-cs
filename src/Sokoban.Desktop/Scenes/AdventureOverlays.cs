@@ -341,3 +341,36 @@ internal sealed class AdventureEndScene : Scene
             _menu);
     }
 }
+
+/// <summary>Carry on the saved adventure or start a new one, when there is a save.</summary>
+internal sealed class AdventureMenuScene : Scene
+{
+    private readonly GameContext _context;
+    private readonly Menu _menu;
+
+    public AdventureMenuScene(GameContext context)
+    {
+        _context = context;
+        _menu = new Menu(
+            context.Sounds,
+            new MenuItem("Continue", () => Scenes.Replace(AdventureScene.Continue(context) ?? AdventureScene.New(context), Navigation.Fade())),
+            new MenuItem("New adventure", () => Scenes.Replace(AdventureScene.New(context), Navigation.Fade())),
+            new MenuItem("Back", () => Scenes.Pop()));
+    }
+
+    public override bool IsOverlay => true;
+
+    public override void Update(TimeSpan elapsed, InputState input)
+    {
+        if (_context.Actions.WasPressed(input, GameAction.Back))
+        {
+            Scenes.Pop();
+            return;
+        }
+
+        _menu.Update(input, _context.Actions, elapsed);
+    }
+
+    public override void Draw(SpriteBatch batch, Rectangle viewport) =>
+        OverlayPanel.Draw(batch, viewport, _context.Fonts, "Mossbrook", [new PanelLine("A new adventure replaces your saved one.", Palette.Muted)], _menu);
+}

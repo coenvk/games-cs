@@ -184,6 +184,10 @@ full of rats, slimes, spiders and skeletons. Returning the amulet wins; two side
 Walk into people to talk and into monsters to fight; walking over items picks them up. Arrows/WASD or swipes step,
 tapping a cell walks there, `.` or T waits a turn, I or B opens the bag (use potions, equip gear), J or Q the journal.
 
+The game saves itself: on entering an area, opening or closing a conversation, the bag or the menu, every ten turns,
+and on leaving. **Adventure** then offers Continue or New adventure. Falling in the cellar deletes the save, as in a
+roguelike. Saves live next to `progress.json` on desktop and in `localStorage` in the browser.
+
 The content is plain files in `src/Sokoban.Desktop/Assets/rpg`: `items.json`, `actors.json`, `quests.json`,
 `dialogue.json`, and the village map `village.tmx` with its tileset `tiles.tsx`, which open in the
 [Tiled](https://www.mapeditor.org) map editor. The tileset image is drawn by `tools/RpgArt`:

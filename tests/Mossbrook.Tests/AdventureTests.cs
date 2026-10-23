@@ -173,6 +173,39 @@ public class AdventureTests
         world.State.Inventory.Count("sword").Should().Be(1, "only the first visit gives a sword");
     }
 
+    [Fact]
+    public void AGameSavedInTheCellar_LoadsWhereItWasLeft()
+    {
+        var adventure = Adventure.Start(Read, seed: 4);
+        var world = adventure.World;
+        WalkTo(world, world.Area.Spawns["hatch"]);
+        world.Step(world.Player.Position.DirectionTo(world.Area.Portals[0].Cell)!.Value);
+        world.Area.Id.Should().Be("cellar1");
+        world.State.Give("glowcap", 2);
+        var save = adventure.Save();
+
+        var loaded = Adventure.Load(Read, save);
+
+        loaded.Save().Should().Be(save);
+        loaded.World.Area.Id.Should().Be("cellar1");
+        loaded.World.Player.Position.Should().Be(world.Player.Position);
+        loaded.World.Area.Map.Cells.Select(c => loaded.World.Area.Map.Layers[0][c])
+            .Should().Equal(world.Area.Map.Cells.Select(c => world.Area.Map.Layers[0][c]), "the floor is rebuilt from the seed");
+        loaded.World.State.Inventory.Count("glowcap").Should().Be(2);
+        loaded.World.GetArea(Adventure.Village).Actors.Should().Contain(a => a.Tag == "elder");
+        loaded.IsWon.Should().BeFalse();
+    }
+
+    [Fact]
+    public void AWonGame_LoadsAsWon()
+    {
+        var adventure = Adventure.Start(Read, seed: 1);
+        adventure.World.State.CompleteQuest("amulet");
+        adventure.IsWon.Should().BeTrue();
+
+        Adventure.Load(Read, adventure.Save()).IsWon.Should().BeTrue();
+    }
+
     private static void Choose(DialogueRunner talk, string text)
     {
         var index = talk.Choices.Select(c => c.Text).ToList().IndexOf(text);

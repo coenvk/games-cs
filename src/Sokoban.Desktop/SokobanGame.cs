@@ -81,6 +81,7 @@ internal sealed class SokobanGame : JentlGame
             SetFullscreen,
             _platform,
             new CardRenderer(_cardArt = new CardArt(GraphicsDevice), new FontTextDrawer(_fonts)),
+            new AdventureSaves(store),
             _options.Deal);
 
         Scene[] start = _options.StartLevel is { } level

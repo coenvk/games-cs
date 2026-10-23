@@ -6,6 +6,7 @@ using Jentl.Core.Puzzle;
 using Jentl.Core.Rpg;
 using Jentl.Core.Scenes;
 using Jentl.Puzzle;
+using Jentl.Rpg;
 using Jentl.Rpg.Maps;
 using Jentl.Rpg.World;
 using Microsoft.Xna.Framework;
@@ -32,6 +33,9 @@ internal sealed class AdventureScene : Scene
     private static readonly TimeSpan WalkInterval = TimeSpan.FromMilliseconds(130);
     private static readonly TimeSpan EndDelay = TimeSpan.FromMilliseconds(700);
 
+    // Saved at least this often while just walking about; area changes and menus save straight away.
+    private const int AutosaveTurns = 10;
+
     private readonly GameContext _context;
     private readonly MapView _view;
     private readonly ButtonBar _buttons;
@@ -51,11 +55,16 @@ internal sealed class AdventureScene : Scene
     private TimeSpan _untilWalk;
     private TimeSpan _overFor;
     private bool _endShown;
+    private int _savedTurn;
 
-    public AdventureScene(GameContext context, int? seed = null)
+    private AdventureScene(GameContext context, Adventure adventure)
     {
         _context = context;
-        Adventure = Adventure.Start(name => GameFiles.ReadAllText($"{Folder}/{name}"), seed ?? context.Deal ?? Random.Shared.Next(1, 1_000_000));
+        Adventure = adventure;
+
+        // A loaded game that is already won does not celebrate again.
+        _endShown = adventure.IsWon;
+        _savedTurn = adventure.World.Turn;
         _view = new MapView(Texture, new FontTextDrawer(context.Fonts));
         _buttons = new ButtonBar(
             new Button("Bag", OpenBag),
@@ -68,8 +77,50 @@ internal sealed class AdventureScene : Scene
 
     public RpgWorld World => Adventure.World;
 
+    /// <summary>A fresh game, replacing any saved one once it is first saved.</summary>
+    public static AdventureScene New(GameContext context, int? seed = null) =>
+        new(context, Adventure.Start(Read, seed ?? context.Deal ?? Random.Shared.Next(1, 1_000_000)));
+
+    /// <summary>
+    /// The saved game, or null if there is none. A save that no longer loads (after a content change) is moved
+    /// aside and a new game begins, with a message saying so.
+    /// </summary>
+    public static AdventureScene? Continue(GameContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        if (context.Adventures.Read() is not { } save)
+        {
+            return null;
+        }
+
+        try
+        {
+            return new AdventureScene(context, Adventure.Load(Read, save));
+        }
+        catch (ContentException e)
+        {
+            context.Adventures.Discard(e.Message);
+            var scene = New(context);
+            scene.World.Log("Your saved adventure could not be loaded, so a new one begins.");
+            return scene;
+        }
+    }
+
     /// <summary>Starts over with a new cellar.</summary>
-    public void NewAdventure() => Scenes.Replace(new AdventureScene(_context), Navigation.Fade());
+    public void NewAdventure() => Scenes.Replace(New(_context), Navigation.Fade());
+
+    /// <summary>Writes the game to the save slot; a fallen hero's save is removed instead.</summary>
+    public void SaveGame()
+    {
+        if (World.IsOver)
+        {
+            _context.Adventures.Delete();
+            return;
+        }
+
+        _context.Adventures.Write(Adventure.Save());
+        _savedTurn = World.Turn;
+    }
 
     /// <summary>Shows a turn's outcome: animations, a conversation, the end of the game.</summary>
     public void Process(TurnResult result)
@@ -89,6 +140,10 @@ internal sealed class AdventureScene : Scene
         if (result.TalkTo is { } someone)
         {
             Scenes.Push(new DialogueScene(_context, World.Talk(someone)));
+        }
+        else if (result.Events.Any(e => e is AreaEntered) || World.Turn - _savedTurn >= AutosaveTurns)
+        {
+            SaveGame();
         }
     }
 
@@ -227,7 +282,16 @@ internal sealed class AdventureScene : Scene
         _view.Stop();
         _repeater.Reset();
         _walk.Clear();
+        SaveGame();
     }
+
+    // A new game takes the save slot straight away, so "New adventure" really does start over.
+    protected override void OnEnter() => SaveGame();
+
+    // After a conversation, the bag or the pause menu: whatever they changed is kept.
+    protected override void OnUncovered() => SaveGame();
+
+    protected override void OnExit() => SaveGame();
 
     protected override void Dispose(bool disposing)
     {
@@ -243,6 +307,8 @@ internal sealed class AdventureScene : Scene
 
         base.Dispose(disposing);
     }
+
+    private static string Read(string name) => GameFiles.ReadAllText($"{Folder}/{name}");
 
     private Texture2D Texture(Tileset tileset)
     {
@@ -343,6 +409,7 @@ internal sealed class AdventureScene : Scene
             if (_overFor >= EndDelay)
             {
                 _endShown = true;
+                SaveGame();
                 Scenes.Push(new AdventureEndScene(_context, this, won: false));
             }
 

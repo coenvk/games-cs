@@ -12,6 +12,8 @@ internal sealed class LocalStorageStore(IJSInProcessRuntime js) : ISaveStore
 
     public void WriteText(string name, string contents) => js.InvokeVoid("localStorage.setItem", Prefix + name, contents);
 
+    public void Delete(string name) => js.InvokeVoid("localStorage.removeItem", Prefix + name);
+
     public string? Quarantine(string name, DateTimeOffset now)
     {
         if (ReadText(name) is not { } contents)
