@@ -1,4 +1,6 @@
 ﻿using System.Text;
+using Jentl.Puzzle;
+using PuzzleBoard = Jentl.Puzzle.Board;
 
 namespace Sokoban.Model;
 
@@ -12,59 +14,60 @@ public enum MoveResult
 /// <param name="Slide">For a push onto ice: how many cells the crate slid beyond the first.</param>
 public readonly record struct Move(Direction Direction, bool IsPush, int Slide = 0);
 
-/// <summary>The mutable play state of one level, with undo and redo.</summary>
+/// <summary>
+/// The play state of one level, with undo and redo. Runs on the Jentl puzzle kit
+/// (<see cref="PuzzleGame{TInput}"/> with <see cref="SokobanRules"/>) and presents it in Sokoban terms:
+/// cells by flat index, moves with their push and slide.
+/// </summary>
 public sealed class LevelSession
 {
-    private readonly bool[] _crates;
-    private readonly Stack<Move> _undo = new();
-    private readonly Stack<Move> _redo = new();
-    private int _cratesOnGoals;
+    private readonly PuzzleGame<Direction> _game;
+    private readonly Piece _player;
 
     public LevelSession(Level level)
     {
         ArgumentNullException.ThrowIfNull(level);
         Level = level;
-        _crates = new bool[level.Board.Size];
-        Restart();
+        PuzzleBoard = SokobanRules.ToBoard(level);
+        _player = PuzzleBoard.PiecesOf(SokobanRules.Player).Single();
+        _game = new PuzzleGame<Direction>(PuzzleBoard, SokobanRules.Instance);
     }
 
     public Level Level { get; }
 
     public Board Board => Level.Board;
 
-    public int Player { get; private set; }
+    public int Player => IndexOf(_player.Position);
 
-    public int MoveCount => _undo.Count;
+    public int MoveCount => _game.History.Count;
 
-    public int PushCount { get; private set; }
+    public int PushCount => _game.CountTagged(SokobanRules.PushTag);
 
-    public bool IsSolved => _cratesOnGoals == Board.Goals.Count;
+    public bool IsSolved => _game.IsSolved;
 
-    public bool CanUndo => _undo.Count > 0;
+    public bool CanUndo => _game.CanUndo;
 
-    public bool CanRedo => _redo.Count > 0;
+    public bool CanRedo => _game.CanRedo;
 
     /// <summary>The move that <see cref="Undo"/> would revert, if any.</summary>
-    public Move? LastMove => _undo.TryPeek(out var move) ? move : null;
+    public Move? LastMove => _game.LastTurn is { } turn ? ToMove(turn) : null;
 
-    public IEnumerable<int> Crates => Enumerable.Range(0, _crates.Length).Where(i => _crates[i]);
-
-    public bool HasCrate(int index) => _crates[index];
+    public IEnumerable<int> Crates => PuzzleBoard.PiecesOf(SokobanRules.Crate).Select(p => IndexOf(p.Position)).Order();
 
     /// <summary>Moves taken so far, oldest first.</summary>
-    public IEnumerable<Move> History => _undo.Reverse();
+    public IEnumerable<Move> History => _game.History.Select(ToMove);
 
-    public MoveResult TryMove(Direction direction)
+    /// <summary>The kit board the game plays on, in its current position.</summary>
+    internal PuzzleBoard PuzzleBoard { get; }
+
+    public bool HasCrate(int index) => PuzzleBoard.PieceAt(CellOf(index))?.Kind == SokobanRules.Crate;
+
+    public MoveResult TryMove(Direction direction) => _game.Play(direction) switch
     {
-        var (result, slide) = Apply(direction);
-        if (result != MoveResult.Blocked)
-        {
-            _undo.Push(new Move(direction, result == MoveResult.Pushed, slide));
-            _redo.Clear();
-        }
-
-        return result;
-    }
+        null => MoveResult.Blocked,
+        var turn when turn.Has(SokobanRules.PushTag) => MoveResult.Pushed,
+        _ => MoveResult.Walked,
+    };
 
     /// <summary>Where the crate pushed by <paramref name="move"/> came to rest, seen from the player after the move.</summary>
     public int CrateTarget(Move move, int player)
@@ -84,22 +87,23 @@ public sealed class LevelSession
     /// </summary>
     public IReadOnlyList<Direction>? FindPath(int target)
     {
-        if (target < 0 || target >= Board.Size || Board.IsWall(target) || _crates[target] || !Board.IsInterior(target))
+        if (target < 0 || target >= Board.Size || Board.IsWall(target) || HasCrate(target) || !Board.IsInterior(target))
         {
             return null;
         }
 
+        var start = Player;
         var cameFrom = new Direction?[Board.Size];
         var visited = new bool[Board.Size];
         var queue = new Queue<int>();
-        visited[Player] = true;
-        queue.Enqueue(Player);
+        visited[start] = true;
+        queue.Enqueue(start);
         while (queue.TryDequeue(out var cell))
         {
             if (cell == target)
             {
                 var path = new List<Direction>();
-                for (var at = target; at != Player;)
+                for (var at = target; at != start;)
                 {
                     var step = cameFrom[at]!.Value;
                     path.Add(step);
@@ -112,7 +116,7 @@ public sealed class LevelSession
 
             foreach (var direction in (ReadOnlySpan<Direction>)[Direction.Up, Direction.Down, Direction.Left, Direction.Right])
             {
-                if (Board.TryGetNeighbor(cell, direction, out var next) && !visited[next] && !Board.IsWall(next) && !_crates[next])
+                if (Board.TryGetNeighbor(cell, direction, out var next) && !visited[next] && !Board.IsWall(next) && !HasCrate(next))
                 {
                     visited[next] = true;
                     cameFrom[next] = direction;
@@ -124,61 +128,16 @@ public sealed class LevelSession
         return null;
     }
 
-    public bool Undo()
-    {
-        if (!_undo.TryPop(out var move))
-        {
-            return false;
-        }
+    public bool Undo() => _game.Undo() is not null;
 
-        var previous = Neighbor(Player, move.Direction.Opposite());
-        if (move.IsPush)
-        {
-            MoveCrate(CrateTarget(move, Player), Player);
-            PushCount--;
-        }
+    public bool Redo() => _game.Redo() is not null;
 
-        Player = previous;
-        _redo.Push(move);
-        return true;
-    }
-
-    public bool Redo()
-    {
-        if (!_redo.TryPop(out var move))
-        {
-            return false;
-        }
-
-        // Redo replays a move that was legal from this exact state, so it cannot be blocked.
-        Apply(move.Direction);
-        _undo.Push(move);
-        return true;
-    }
-
-    public void Restart()
-    {
-        Array.Clear(_crates);
-        _cratesOnGoals = 0;
-        foreach (var crate in Level.CrateStarts)
-        {
-            _crates[crate] = true;
-            if (Board.IsGoal(crate))
-            {
-                _cratesOnGoals++;
-            }
-        }
-
-        Player = Level.PlayerStart;
-        PushCount = 0;
-        _undo.Clear();
-        _redo.Clear();
-    }
+    public void Restart() => _game.Restart();
 
     /// <summary>The history in LURD notation, e.g. <c>"rrUl"</c>.</summary>
     public string ToLurd()
     {
-        var sb = new StringBuilder(_undo.Count);
+        var sb = new StringBuilder(MoveCount);
         foreach (var move in History)
         {
             sb.Append(move.Direction.ToLurd(move.IsPush));
@@ -187,43 +146,16 @@ public sealed class LevelSession
         return sb.ToString();
     }
 
-    private (MoveResult Result, int Slide) Apply(Direction direction)
+    private static Move ToMove(Turn<Direction> turn)
     {
-        if (!Board.TryGetNeighbor(Player, direction, out var target) || Board.IsWall(target))
-        {
-            return (MoveResult.Blocked, 0);
-        }
-
-        if (!_crates[target])
-        {
-            Player = target;
-            return (MoveResult.Walked, 0);
-        }
-
-        if (!Board.TryGetNeighbor(target, direction, out var beyond) || Board.IsWall(beyond) || _crates[beyond])
-        {
-            return (MoveResult.Blocked, 0);
-        }
-
-        var slide = 0;
-        while (Board.IsIce(beyond) && Board.TryGetNeighbor(beyond, direction, out var next) && !Board.IsWall(next) && !_crates[next])
-        {
-            beyond = next;
-            slide++;
-        }
-
-        MoveCrate(target, beyond);
-        Player = target;
-        PushCount++;
-        return (MoveResult.Pushed, slide);
+        var crate = turn.Moves.FirstOrDefault(m => m.Piece.Kind == SokobanRules.Crate);
+        var slide = crate is null ? 0 : Math.Abs(crate.To.X - crate.From.X) + Math.Abs(crate.To.Y - crate.From.Y) - 1;
+        return new Move(turn.Input, crate is not null, slide);
     }
 
-    private void MoveCrate(int from, int to)
-    {
-        _crates[from] = false;
-        _crates[to] = true;
-        _cratesOnGoals += (Board.IsGoal(to) ? 1 : 0) - (Board.IsGoal(from) ? 1 : 0);
-    }
+    private int IndexOf(Cell cell) => Board.IndexOf(cell.X, cell.Y);
+
+    private Cell CellOf(int index) => new(Board.XOf(index), Board.YOf(index));
 
     private int Neighbor(int index, Direction direction) =>
         Board.TryGetNeighbor(index, direction, out var neighbor)

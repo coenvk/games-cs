@@ -1,17 +1,16 @@
-﻿using System.Text;
+﻿using Jentl.Puzzle;
 
 namespace Sokoban.Model;
 
 /// <summary>
-/// Reads and writes the standard XSB level format.
+/// Reads and writes the standard XSB level format, through the Jentl puzzle kit's level files with
+/// <see cref="SokobanRules.Legend"/>.
 /// <c>#</c> wall, <c>@</c> player, <c>+</c> player on goal, <c>$</c> crate, <c>*</c> crate on goal,
 /// <c>.</c> goal, and space, <c>-</c> or <c>_</c> floor.
 /// Extension for ice: <c>~</c> ice, <c>=</c> crate on ice, <c>&amp;</c> player on ice (ice never holds a goal).
 /// </summary>
 public static class Xsb
 {
-    private const string MapChars = "#@+$*.-_ ~=&";
-
     /// <summary>Parses text containing exactly one level.</summary>
     public static Level ParseLevel(string text)
     {
@@ -28,181 +27,65 @@ public static class Xsb
     public static IReadOnlyList<Level> ParsePack(string text)
     {
         ArgumentNullException.ThrowIfNull(text);
-        var lines = text.ReplaceLineEndings("\n").Split('\n');
-        var levels = new List<Level>();
-        string? pendingTitle = null;
-
-        for (var i = 0; i < lines.Length;)
+        IReadOnlyList<LevelData> maps;
+        try
         {
-            if (!IsMapLine(lines[i]))
-            {
-                var line = lines[i].Trim();
-                if (line.StartsWith(';'))
-                {
-                    pendingTitle = line.TrimStart(';').Trim();
-                }
-                else if (line.Length > 0 && !IsMetadataLine(line))
-                {
-                    pendingTitle = line;
-                }
-
-                i++;
-                continue;
-            }
-
-            var start = i;
-            while (i < lines.Length && IsMapLine(lines[i]))
-            {
-                i++;
-            }
-
-            var title = FindTitleLine(lines, i) ?? pendingTitle;
-            pendingTitle = null;
-            try
-            {
-                levels.Add(ParseMap(lines.AsSpan(start, i - start), title));
-            }
-            catch (InvalidLevelException e)
-            {
-                throw new InvalidLevelException($"Level at line {start + 1}: {e.Message}", e);
-            }
+            maps = LevelFile.ReadPack(text, SokobanRules.Legend);
+        }
+        catch (FormatException e)
+        {
+            throw new InvalidLevelException(e.Message, e);
         }
 
-        return levels;
+        return maps.Select((map, i) => ToLevel(map, i)).ToArray();
     }
 
     /// <summary>Writes the level in its starting position.</summary>
     public static string Write(Level level)
     {
         ArgumentNullException.ThrowIfNull(level);
-        var crates = level.CrateStarts.ToHashSet();
-        return Write(level.Board, level.PlayerStart, crates.Contains);
+        return LevelFile.Write(SokobanRules.ToBoard(level), SokobanRules.Legend);
     }
 
     /// <summary>Writes the session's current position.</summary>
     public static string Write(LevelSession session)
     {
         ArgumentNullException.ThrowIfNull(session);
-        return Write(session.Board, session.Player, session.HasCrate);
+        return LevelFile.Write(session.PuzzleBoard, SokobanRules.Legend);
     }
 
-    private static string Write(Board board, int player, Func<int, bool> hasCrate)
+    /// <summary>Validates a kit board as a Sokoban level: exactly one player, matching crates and goals, enclosed.</summary>
+    private static Level ToLevel(LevelData map, int index)
     {
-        var sb = new StringBuilder();
-        var row = new StringBuilder(board.Width);
-        for (var y = 0; y < board.Height; y++)
+        var board = map.Board;
+        int Index(Cell cell) => cell.Y * board.Width + cell.X;
+
+        try
         {
-            row.Clear();
-            for (var x = 0; x < board.Width; x++)
+            var players = board.PiecesOf(SokobanRules.Player).ToArray();
+            if (players.Length == 0)
             {
-                var i = board.IndexOf(x, y);
-                var goal = board.IsGoal(i);
-                var ice = board.IsIce(i);
-                row.Append(
-                    board.IsWall(i) ? '#'
-                    : i == player ? (goal ? '+' : ice ? '&' : '@')
-                    : hasCrate(i) ? (goal ? '*' : ice ? '=' : '$')
-                    : goal ? '.'
-                    : ice ? '~'
-                    : ' ');
+                throw new InvalidLevelException("Level has no player.");
             }
 
-            sb.Append(row.ToString().TrimEnd()).Append('\n');
-        }
-
-        return sb.ToString();
-    }
-
-    private static bool IsMapLine(string line) =>
-        line.Contains('#', StringComparison.Ordinal) && line.TrimEnd().All(c => MapChars.Contains(c, StringComparison.Ordinal));
-
-    /// <summary>Lines like <c>Title: ...</c> or <c>Author: ...</c>.</summary>
-    private static bool IsMetadataLine(string line)
-    {
-        var colon = line.IndexOf(':', StringComparison.Ordinal);
-        return colon > 0 && line[..colon].All(char.IsLetter);
-    }
-
-    private static string? FindTitleLine(string[] lines, int from)
-    {
-        for (var i = from; i < lines.Length && !IsMapLine(lines[i]); i++)
-        {
-            var line = lines[i].Trim();
-            if (line.StartsWith("Title:", StringComparison.OrdinalIgnoreCase))
+            if (players.Length > 1)
             {
-                return line["Title:".Length..].Trim();
+                throw new InvalidLevelException("Level has more than one player.");
             }
+
+            return Level.Create(
+                board.Width,
+                board.Height,
+                board.CellsOf(SokobanRules.Wall).Select(Index),
+                board.CellsOf(SokobanRules.Goal).Select(Index),
+                Index(players[0].Position),
+                board.PiecesOf(SokobanRules.Crate).Select(p => Index(p.Position)),
+                map.Title,
+                board.CellsOf(SokobanRules.Ice).Select(Index));
         }
-
-        return null;
-    }
-
-    private static Level ParseMap(ReadOnlySpan<string> rows, string? title)
-    {
-        var height = rows.Length;
-        var width = 0;
-        foreach (var row in rows)
+        catch (InvalidLevelException e)
         {
-            width = Math.Max(width, row.TrimEnd().Length);
+            throw new InvalidLevelException($"Level {index + 1}{(map.Title is null ? "" : $" ({map.Title})")}: {e.Message}", e);
         }
-
-        var walls = new List<int>();
-        var goals = new List<int>();
-        var crates = new List<int>();
-        var ice = new List<int>();
-        int? player = null;
-
-        for (var y = 0; y < height; y++)
-        {
-            var row = rows[y].TrimEnd();
-            for (var x = 0; x < row.Length; x++)
-            {
-                var i = y * width + x;
-                switch (row[x])
-                {
-                    case '#':
-                        walls.Add(i);
-                        break;
-                    case '.':
-                        goals.Add(i);
-                        break;
-                    case '$':
-                        crates.Add(i);
-                        break;
-                    case '*':
-                        crates.Add(i);
-                        goals.Add(i);
-                        break;
-                    case '~':
-                        ice.Add(i);
-                        break;
-                    case '=':
-                        ice.Add(i);
-                        crates.Add(i);
-                        break;
-                    case '&':
-                        ice.Add(i);
-                        goto case '@';
-                    case '+':
-                        goals.Add(i);
-                        goto case '@';
-                    case '@':
-                        if (player is not null)
-                        {
-                            throw new InvalidLevelException("Level has more than one player.");
-                        }
-
-                        player = i;
-                        break;
-                }
-            }
-        }
-
-        if (player is null)
-        {
-            throw new InvalidLevelException("Level has no player.");
-        }
-
-        return Level.Create(width, height, walls, goals, player.Value, crates, title, ice);
     }
 }
