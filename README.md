@@ -1,5 +1,7 @@
 # Sokoban
 
+**Play in your browser: https://coenvk.github.io/sokoban-cs/**
+
 A C# rewrite of [coenvk/Sokoban](https://github.com/coenvk/Sokoban), with engine ideas from
 [coenvk/Jentl](https://github.com/coenvk/Jentl). Rendering uses MonoGame.
 
@@ -117,6 +119,8 @@ build/package.sh win-x64      # other runtimes: self-contained, trimmed single f
 build/package.sh linux-x64
 build/package.sh web          # static website (zip of wwwroot)
 ```
+
+Pushing to `main` publishes the web build to GitHub Pages (`.github/workflows/pages.yml`).
 
 Each run writes `dist/Sokoban-<version>-<rid>.zip`. On macOS it contains `Sokoban.app` (icon, `Info.plist`, ad-hoc
 signature); elsewhere a `Sokoban/` folder with the executable, SDL2/OpenAL libraries, `Assets/` and `Levels/`.
