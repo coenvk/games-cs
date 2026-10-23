@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/FreeCell/FreeCell.csproj" />
     <Project Path="src/Jentl.Cards/Jentl.Cards.csproj" />
     <Project Path="src/Jentl.Core.Kni/Jentl.Core.Kni.csproj" />
     <Project Path="src/Jentl.Core/Jentl.Core.csproj" />
@@ -11,6 +12,7 @@
     <Project Path="src/Sokoban.Web/Sokoban.Web.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/FreeCell.Tests/FreeCell.Tests.csproj" />
     <Project Path="tests/Jentl.Cards.Tests/Jentl.Cards.Tests.csproj" />
     <Project Path="tests/Jentl.Core.Tests/Jentl.Core.Tests.csproj" />
     <Project Path="tests/Jentl.Puzzle.Tests/Jentl.Puzzle.Tests.csproj" />

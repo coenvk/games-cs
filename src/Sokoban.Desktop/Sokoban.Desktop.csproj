@@ -18,6 +18,7 @@
     <ProjectReference Include="..\Jentl.Core\Jentl.Core.csproj" />
     <ProjectReference Include="..\Sokoban.Solver\Sokoban.Solver.csproj" />
     <ProjectReference Include="..\Klondike\Klondike.csproj" />
+    <ProjectReference Include="..\FreeCell\FreeCell.csproj" />
   </ItemGroup>
 
   <ItemGroup>

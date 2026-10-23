@@ -47,6 +47,7 @@
     <ProjectReference Include="..\Sokoban.Model\Sokoban.Model.csproj" />
     <ProjectReference Include="..\Sokoban.Solver\Sokoban.Solver.csproj" />
     <ProjectReference Include="..\Klondike\Klondike.csproj" />
+    <ProjectReference Include="..\FreeCell\FreeCell.csproj" />
   </ItemGroup>
 
   <ItemGroup>
