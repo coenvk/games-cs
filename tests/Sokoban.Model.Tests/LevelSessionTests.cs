@@ -155,6 +155,19 @@ public class LevelSessionTests
     }
 
     [Fact]
+    public void LastMove_IsTheMoveUndoWouldRevert()
+    {
+        var session = NewSession();
+        session.LastMove.Should().BeNull();
+
+        Play(session, "rr");
+        session.LastMove.Should().Be(new Move(Direction.Right, IsPush: true));
+
+        session.Undo();
+        session.LastMove.Should().Be(new Move(Direction.Right, IsPush: false));
+    }
+
+    [Fact]
     public void Restart_ResetsEverything()
     {
         var session = NewSession();

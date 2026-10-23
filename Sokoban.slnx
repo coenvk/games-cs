@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/Sokoban.Desktop/Sokoban.Desktop.csproj" />
     <Project Path="src/Sokoban.Model/Sokoban.Model.csproj" />
   </Folder>
   <Folder Name="/tests/">

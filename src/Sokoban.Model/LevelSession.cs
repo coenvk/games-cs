@@ -43,6 +43,9 @@ public sealed class LevelSession
 
     public bool CanRedo => _redo.Count > 0;
 
+    /// <summary>The move that <see cref="Undo"/> would revert, if any.</summary>
+    public Move? LastMove => _undo.TryPeek(out var move) ? move : null;
+
     public IEnumerable<int> Crates => Enumerable.Range(0, _crates.Length).Where(i => _crates[i]);
 
     public bool HasCrate(int index) => _crates[index];
