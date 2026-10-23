@@ -17,14 +17,14 @@ A C# rewrite of [coenvk/Sokoban](https://github.com/coenvk/Sokoban), with engine
 | `src/Fluffy` | Fluffy, a finite state machine engine: guards, nested states, timers, diagrams (see `docs/fluffy.md`) |
 | `src/CodeLock` | Code lock: Mastermind with a combination lock's digits, and a minimax hint solver |
 | `src/Mossbrook` | Mossbrook, the RPG demo: starting a game and generating the cellar floors; its content is in `src/Sokoban.Desktop/Assets/rpg` |
-| `src/Klondike`, `src/FreeCell`, `src/Pyramid`, `src/Spider`, `src/TriPeaks` | Klondike, FreeCell, Pyramid, Spider and TriPeaks rules on the card kit |
+| `src/Klondike`, `src/FortyThieves`, `src/FreeCell`, `src/Golf`, `src/Pyramid`, `src/Spider`, `src/TriPeaks`, `src/Yukon` | The solitaire games' rules on the card kit |
 | `src/Sokoban.Solver` | Solver (A* over pushes, matching heuristic, dead-square and frozen-block pruning) and level generator (reverse play) |
 | `src/Sokoban.Desktop` | MonoGame (DesktopGL) app: scenes (menu, level select, play, pause, complete), rendering, UI |
 | `src/Jentl.Core.Kni`, `src/Sokoban.Web` | Browser build: the same engine and game sources compiled against KNI and hosted in Blazor WebAssembly |
 | `tests/Sokoban.Model.Tests` | xUnit tests for the model |
 | `tests/Jentl.Core.Tests` | xUnit tests for the engine (runs headless) |
 | `tests/Sokoban.Solver.Tests` | xUnit tests for the solver, deadlock detection and generator |
-| `tests/Jentl.Puzzle.Tests`, `tests/Jentl.Cards.Tests`, `tests/Klondike.Tests`, `tests/FreeCell.Tests`, `tests/Pyramid.Tests`, `tests/Spider.Tests`, `tests/TriPeaks.Tests` | xUnit tests for the kits and card games |
+| `tests/Jentl.Puzzle.Tests`, `tests/Jentl.Cards.Tests`, `tests/Klondike.Tests`, `tests/FreeCell.Tests`, `tests/Pyramid.Tests`, `tests/Spider.Tests`, `tests/TriPeaks.Tests`, `tests/Golf.Tests`, `tests/Yukon.Tests`, `tests/FortyThieves.Tests` | xUnit tests for the kits and card games |
 | `tests/Fluffy.Tests` | xUnit tests for Fluffy |
 | `tests/CodeLock.Tests` | xUnit tests for the code lock rules and solver |
 | `tests/Jentl.Rpg.Tests`, `tests/Mossbrook.Tests` | xUnit tests for the RPG kit, and checks of the shipped Mossbrook content |
@@ -174,7 +174,9 @@ Differences from desktop:
 
 Sokoban runs on Jentl's **puzzle kit** (`Jentl.Puzzle`): its rules, ice included, are an `IPuzzleRules`, and moves,
 undo, redo and level files come from the kit. The main menu also has card games built on the **card
-kit** (`Jentl.Cards`) under **Card games**: Klondike, FreeCell, Pyramid, Spider (1, 2 or 4 suits) and TriPeaks. Drag cards or tap one to send it where it fits,
+kit** (`Jentl.Cards`) under **Card games**: Klondike, Forty Thieves (two decks, build down in suit one card at a time), FreeCell, Golf (clear the
+columns onto the waste; the score is the cards left), Pyramid, Spider (1, 2 or 4 suits), TriPeaks and Yukon (move any
+face-up card with everything on it). Drag cards or tap one to send it where it fits,
 with undo, hints and automatic moves home. FreeCell deal numbers match Microsoft FreeCell (deal 1 is the classic deal 1).
 `docs/kits.md` explains how to build a new puzzle or card game with the kits.
 

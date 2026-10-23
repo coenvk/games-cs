@@ -51,6 +51,9 @@
     <ProjectReference Include="..\Pyramid\Pyramid.csproj" />
     <ProjectReference Include="..\Spider\Spider.csproj" />
     <ProjectReference Include="..\TriPeaks\TriPeaks.csproj" />
+    <ProjectReference Include="..\FortyThieves\FortyThieves.csproj" />
+    <ProjectReference Include="..\Yukon\Yukon.csproj" />
+    <ProjectReference Include="..\Golf\Golf.csproj" />
     <ProjectReference Include="..\Mossbrook\Mossbrook.csproj" />
     <ProjectReference Include="..\CodeLock\CodeLock.csproj" />
   </ItemGroup>

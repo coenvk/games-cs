@@ -17,6 +17,9 @@
     <Project Path="src/Pyramid/Pyramid.csproj" />
     <Project Path="src/Spider/Spider.csproj" />
     <Project Path="src/TriPeaks/TriPeaks.csproj" />
+    <Project Path="src/FortyThieves/FortyThieves.csproj" />
+    <Project Path="src/Yukon/Yukon.csproj" />
+    <Project Path="src/Golf/Golf.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/CodeLock.Tests/CodeLock.Tests.csproj" />
@@ -33,6 +36,9 @@
     <Project Path="tests/Pyramid.Tests/Pyramid.Tests.csproj" />
     <Project Path="tests/Spider.Tests/Spider.Tests.csproj" />
     <Project Path="tests/TriPeaks.Tests/TriPeaks.Tests.csproj" />
+    <Project Path="tests/FortyThieves.Tests/FortyThieves.Tests.csproj" />
+    <Project Path="tests/Yukon.Tests/Yukon.Tests.csproj" />
+    <Project Path="tests/Golf.Tests/Golf.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/">
     <Project Path="tools/LevelConverter/LevelConverter.csproj" />

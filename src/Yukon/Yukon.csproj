@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Yukon solitaire rules on the Jentl card kit; framework-free like the kit. -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\Jentl.Cards\Jentl.Cards.csproj" />
+  </ItemGroup>
+
+</Project>
