@@ -34,7 +34,7 @@ internal sealed class SokobanGame : JentlGame
 
     /// <param name="store">Where to keep progress and settings; null keeps them in memory only.</param>
     public SokobanGame(GameOptions options, ISaveStore? store, PlatformFeatures platform)
-        : base(1280, 800)
+        : base(options.Size?.X ?? 1280, options.Size?.Y ?? 800)
     {
         _options = options;
         _store = store;

@@ -42,12 +42,22 @@ internal sealed class MenuScene : Scene
     {
         var fonts = _context.Fonts;
         var centerX = viewport.Center.X;
-        var titleTop = viewport.Y + viewport.Height / 6;
+        var footerTop = viewport.Bottom - (int)fonts.Small.LineHeight - fonts.Px(24);
 
-        batch.DrawText(fonts.Title, "Sokoban", new Vector2(centerX, titleTop), Palette.Accent, Align.Center);
-        DrawMascot(batch, centerX, titleTop + (int)fonts.Title.LineHeight + 8);
+        // Title, mascot, menu and solved count as one column, centred in the space above the footer,
+        // so a longer menu or a shorter screen never runs into the footer.
+        var gap = fonts.Px(24);
+        var titleHeight = (int)fonts.Title.LineHeight;
+        var mascotHeight = fonts.Px(64);
+        var menuHeight = _menu.Height(fonts.Body);
+        var countHeight = (int)fonts.Small.LineHeight;
+        var column = titleHeight + mascotHeight + 2 * gap + menuHeight + gap / 2 + countHeight;
+        var top = viewport.Y + Math.Max(0, (footerTop - viewport.Y - column) / 2);
 
-        var menuTop = viewport.Y + viewport.Height / 2 + 20;
+        batch.DrawText(fonts.Title, "Sokoban", new Vector2(centerX, top), Palette.Accent, Align.Center);
+        DrawMascot(batch, centerX, top + titleHeight);
+
+        var menuTop = top + titleHeight + mascotHeight + 2 * gap;
         _menu.Draw(batch, fonts.Body, centerX, menuTop);
 
         var total = _context.AllLevels.Count();
@@ -57,7 +67,7 @@ internal sealed class MenuScene : Scene
             batch.DrawText(
                 fonts.Small,
                 string.Create(CultureInfo.InvariantCulture, $"{solved} of {total} levels solved"),
-                new Vector2(centerX, menuTop + _menu.Height(fonts.Body) + 16),
+                new Vector2(centerX, menuTop + menuHeight + gap / 2),
                 Palette.Muted,
                 Align.Center,
                 shadow: false);
@@ -66,7 +76,7 @@ internal sealed class MenuScene : Scene
         batch.DrawText(
             fonts.Small,
             "Tap, or use the arrow keys and Enter",
-            new Vector2(centerX, viewport.Bottom - 48),
+            new Vector2(centerX, footerTop),
             Palette.Muted,
             Align.Center,
             shadow: false);

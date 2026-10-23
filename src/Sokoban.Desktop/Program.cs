@@ -10,6 +10,7 @@ using Sokoban.Desktop;
 //   --save-dir <path>    keep progress in this directory instead of the user data folder
 //   --settle <frames>    idle frames after the keys before the screenshot (default 60)
 //   --deal <n>           deal solitaire game n instead of a random one
+//   --size <w>x<h>       window size in pixels (default 1280x800)
 var options = new GameOptions();
 for (var i = 0; i + 1 < args.Length; i += 2)
 {
@@ -32,6 +33,10 @@ for (var i = 0; i + 1 < args.Length; i += 2)
             break;
         case "--deal":
             options = options with { Deal = int.Parse(args[i + 1], CultureInfo.InvariantCulture) };
+            break;
+        case "--size":
+            var size = args[i + 1].Split('x');
+            options = options with { Size = new Microsoft.Xna.Framework.Point(int.Parse(size[0], CultureInfo.InvariantCulture), int.Parse(size[1], CultureInfo.InvariantCulture)) };
             break;
         default:
             Console.Error.WriteLine($"Unknown option '{args[i]}'.");
