@@ -9,7 +9,7 @@ internal sealed class ProgressStore
     private readonly SavedFile<Progress> _file;
 
     /// <param name="store">Where to save, or null to keep progress in memory only.</param>
-    public ProgressStore(SaveStore? store) =>
+    public ProgressStore(ISaveStore? store) =>
         _file = SavedFile<Progress>.Load(store, "progress.json", Progress.FromJson, p => p.ToJson(), () => new Progress());
 
     public Progress Progress => _file.Value;

@@ -9,11 +9,11 @@ namespace Sokoban.Desktop;
 internal sealed class SavedFile<T>
     where T : class
 {
-    private readonly SaveStore? _store;
+    private readonly ISaveStore? _store;
     private readonly string _name;
     private readonly Func<T, string> _serialize;
 
-    private SavedFile(SaveStore? store, string name, T value, Func<T, string> serialize)
+    private SavedFile(ISaveStore? store, string name, T value, Func<T, string> serialize)
     {
         _store = store;
         _name = name;
@@ -24,7 +24,7 @@ internal sealed class SavedFile<T>
     public T Value { get; }
 
     /// <param name="parse">Parses the file; throws <see cref="InvalidDataException"/> for bad contents.</param>
-    public static SavedFile<T> Load(SaveStore? store, string name, Func<string, T> parse, Func<T, string> serialize, Func<T> create)
+    public static SavedFile<T> Load(ISaveStore? store, string name, Func<string, T> parse, Func<T, string> serialize, Func<T> create)
     {
         ArgumentNullException.ThrowIfNull(parse);
         ArgumentNullException.ThrowIfNull(create);

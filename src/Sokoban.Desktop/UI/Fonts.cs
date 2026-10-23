@@ -1,4 +1,5 @@
 ﻿using FontStashSharp;
+using Jentl.Core.Content;
 
 namespace Sokoban.Desktop.UI;
 
@@ -11,7 +12,7 @@ internal sealed class Fonts : IDisposable
     {
         // The sprite batch blends non-premultiplied (see JentlGame), so the glyph atlas must be too.
         _system = new FontSystem(new FontSystemSettings { GlyphRenderResult = GlyphRenderResult.NonPremultiplied });
-        _system.AddFont(File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "Assets", "fonts", "LilitaOne-Regular.ttf")));
+        _system.AddFont(GameFiles.ReadAllBytes("Assets/fonts/LilitaOne-Regular.ttf"));
     }
 
     public SpriteFontBase Title => _system.GetFont(112);

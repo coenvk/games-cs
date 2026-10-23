@@ -27,7 +27,11 @@ internal sealed class MenuScene : Scene
         // Esc moves to Quit rather than quitting outright, so a stray press is harmless.
         if (_context.Actions.WasPressed(input, GameAction.Back))
         {
-            _menu.Selected = QuitItem;
+            if (_context.Platform.CanQuit)
+            {
+                _menu.Selected = QuitItem;
+            }
+
             return;
         }
 
@@ -75,13 +79,19 @@ internal sealed class MenuScene : Scene
     {
         var context = _context;
         var started = context.Progress.Progress.SolvedCount(context.AllLevels) > 0;
-        return new Menu(
-            context.Sounds,
-            new MenuItem(started ? "Continue" : "Play", () => Scenes.Push(new PlayScene(context, context.Continue), Navigation.Fade())),
-            new MenuItem("Select level", () => Scenes.Push(new LevelSelectScene(context, context.Continue), Navigation.Fade())),
-            new MenuItem("Random level", () => Scenes.Push(new GenerateScene(context), Navigation.Fade())),
-            new MenuItem("Options", () => Scenes.Push(new OptionsScene(context))),
-            new MenuItem("Quit", () => Scenes.Pop(Navigation.Fade())))
+        List<MenuItem> items =
+        [
+            new(started ? "Continue" : "Play", () => Scenes.Push(new PlayScene(context, context.Continue), Navigation.Fade())),
+            new("Select level", () => Scenes.Push(new LevelSelectScene(context, context.Continue), Navigation.Fade())),
+            new("Random level", () => Scenes.Push(new GenerateScene(context), Navigation.Fade())),
+            new("Options", () => Scenes.Push(new OptionsScene(context))),
+        ];
+        if (context.Platform.CanQuit)
+        {
+            items.Add(new MenuItem("Quit", () => Scenes.Pop(Navigation.Fade())));
+        }
+
+        return new Menu(context.Sounds, [.. items])
         {
             Selected = selected,
         };

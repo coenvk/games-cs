@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Jentl.Core.Content;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Sokoban.Model;
 
@@ -111,6 +112,6 @@ internal sealed class Tileset : IDisposable
 
     private static Texture2D[] Load(GraphicsDevice device, string prefix, int count) =>
         Enumerable.Range(1, count)
-            .Select(i => Texture2D.FromFile(device, Path.Combine(AppContext.BaseDirectory, "Assets", $"{prefix}{i}.png")))
+            .Select(i => GameFiles.LoadTexture(device, $"Assets/{prefix}{i}.png"))
             .ToArray();
 }

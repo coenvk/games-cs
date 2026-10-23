@@ -43,11 +43,14 @@ internal sealed class OptionsScene : Scene
     private Menu BuildMenu(int selected = 0)
     {
         var settings = _context.Settings.Value;
-        return new Menu(
-            _context.Sounds,
-            new MenuItem($"Sound: {OnOff(settings.Sound)}", ToggleSound),
-            new MenuItem($"Fullscreen: {OnOff(settings.Fullscreen)}", ToggleFullscreen),
-            new MenuItem("Back", () => Scenes.Pop()))
+        List<MenuItem> items = [new($"Sound: {OnOff(settings.Sound)}", ToggleSound)];
+        if (_context.Platform.CanFullscreen)
+        {
+            items.Add(new MenuItem($"Fullscreen: {OnOff(settings.Fullscreen)}", ToggleFullscreen));
+        }
+
+        items.Add(new MenuItem("Back", () => Scenes.Pop()));
+        return new Menu(_context.Sounds, [.. items])
         {
             Selected = selected,
         };

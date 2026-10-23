@@ -17,6 +17,14 @@ internal static class Sound
 /// <param name="Prefix">Used for untitled levels, e.g. "Ice" gives "Ice 3".</param>
 internal sealed record LevelPack(string Name, string Prefix, IReadOnlyList<Level> Levels);
 
+/// <summary>What the platform supports; a browser tab cannot quit or switch to fullscreen by itself.</summary>
+internal sealed record PlatformFeatures(bool CanQuit, bool CanFullscreen)
+{
+    public static PlatformFeatures Desktop { get; } = new(CanQuit: true, CanFullscreen: true);
+
+    public static PlatformFeatures Browser { get; } = new(CanQuit: false, CanFullscreen: false);
+}
+
 /// <summary>A level by its place in the packs.</summary>
 internal readonly record struct LevelRef(int Pack, int Index);
 
@@ -29,7 +37,8 @@ internal sealed record GameContext(
     ProgressStore Progress,
     SoundPlayer Sounds,
     SavedFile<Settings> Settings,
-    Action<bool> SetFullscreen)
+    Action<bool> SetFullscreen,
+    PlatformFeatures Platform)
 {
     public IEnumerable<Level> AllLevels => Packs.SelectMany(p => p.Levels);
 

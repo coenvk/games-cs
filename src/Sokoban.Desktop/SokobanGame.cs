@@ -1,5 +1,6 @@
 ﻿using Jentl.Core;
 using Jentl.Core.Audio;
+using Jentl.Core.Content;
 using Jentl.Core.Scenes;
 using Jentl.Core.Storage;
 using Microsoft.Xna.Framework;
@@ -17,16 +18,21 @@ internal sealed class SokobanGame : JentlGame
     private const int WaitFrames = 30;
 
     private readonly GameOptions _options;
+    private readonly ISaveStore? _store;
+    private readonly PlatformFeatures _platform;
     private readonly Queue<KeyboardState>? _script;
     private int _settledFrames;
     private Tileset? _tileset;
     private Fonts? _fonts;
     private SoundPlayer? _sounds;
 
-    public SokobanGame(GameOptions options)
+    /// <param name="store">Where to keep progress and settings; null keeps them in memory only.</param>
+    public SokobanGame(GameOptions options, ISaveStore? store, PlatformFeatures platform)
         : base(1280, 800)
     {
         _options = options;
+        _store = store;
+        _platform = platform;
         _script = options.Script is null ? null : BuildScript(options.Script);
         Window.AllowUserResizing = true;
         Window.Title = "Sokoban";
@@ -49,11 +55,14 @@ internal sealed class SokobanGame : JentlGame
             new("Ice", "Ice", LoadPack("ice.xsb")),
         ];
 
-        var store = ResolveStore();
+        var store = _store;
         var settings = SavedFile<Settings>.Load(store, "settings.json", Settings.FromJson, s => s.ToJson(), () => new Settings());
-        _sounds = SoundPlayer.Load(Path.Combine(AppContext.BaseDirectory, "Assets", "sounds"), Sound.Navigate, Sound.Completed);
+        _sounds = SoundPlayer.Load("Assets/sounds", Sound.Navigate, Sound.Completed);
         _sounds.Enabled = settings.Value.Sound;
-        SetFullscreen(settings.Value.Fullscreen);
+        if (_platform.CanFullscreen)
+        {
+            SetFullscreen(settings.Value.Fullscreen);
+        }
 
         var context = new GameContext(
             packs,
@@ -63,7 +72,8 @@ internal sealed class SokobanGame : JentlGame
             new ProgressStore(store),
             _sounds,
             settings,
-            SetFullscreen);
+            SetFullscreen,
+            _platform);
 
         Scene[] start = _options.StartLevel is { } level
             ? [new MenuScene(context), new PlayScene(context, new LevelRef(0, Math.Clamp(level, 0, packs[0].Levels.Count - 1)))]
@@ -110,15 +120,7 @@ internal sealed class SokobanGame : JentlGame
     }
 
     private static IReadOnlyList<Level> LoadPack(string file) =>
-        Xsb.ParsePack(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Levels", file)));
-
-    // Scripted runs must not touch the player's real saves unless a directory is given.
-    private SaveStore? ResolveStore() => _options switch
-    {
-        { SaveDirectory: { } directory } => new SaveStore(directory),
-        { Script: not null } => null,
-        _ => SaveStore.ForApp("Sokoban"),
-    };
+        Xsb.ParsePack(GameFiles.ReadAllText($"Levels/{file}"));
 
     private void SetFullscreen(bool fullscreen)
     {

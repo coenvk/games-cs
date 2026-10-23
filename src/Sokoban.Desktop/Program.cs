@@ -1,4 +1,6 @@
 ﻿using System.Globalization;
+using Jentl.Core.Content;
+using Jentl.Core.Storage;
 using Sokoban.Desktop;
 
 // Options:
@@ -33,6 +35,17 @@ for (var i = 0; i + 1 < args.Length; i += 2)
     }
 }
 
-using var game = new SokobanGame(options);
+// Scripted runs must not touch the player's real saves unless a directory is given.
+ISaveStore? store = options switch
+{
+    { SaveDirectory: { } directory } => new SaveStore(directory),
+    { Script: not null } => null,
+    _ => SaveStore.ForApp("Sokoban"),
+};
+
+// Game files sit next to the executable (also inside a macOS .app bundle).
+GameFiles.Root = AppContext.BaseDirectory;
+
+using var game = new SokobanGame(options, store, PlatformFeatures.Desktop);
 game.Run();
 return 0;

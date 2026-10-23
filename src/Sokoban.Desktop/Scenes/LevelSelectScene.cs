@@ -136,7 +136,7 @@ internal sealed class LevelSelectScene : Scene
         batch.DrawText(
             fonts.Small,
             record is null
-                ? string.Create(CultureInfo.InvariantCulture, $"{level.Board.Goals.Count} crates, not solved yet")
+                ? $"{Format.Count(level.Board.Goals.Count, "crate")}, not solved yet"
                 : Format.Best(record),
             new Vector2(preview.Center.X, preview.Y + fonts.Body.LineHeight + 4),
             record is null ? Palette.Muted : Palette.Accent,
