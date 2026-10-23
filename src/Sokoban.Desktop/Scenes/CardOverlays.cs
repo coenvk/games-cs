@@ -19,6 +19,7 @@ internal sealed class CardGamesScene : Scene
         _menu = new Menu(
             context.Sounds,
             new MenuItem("Klondike", () => Scenes.Replace(new KlondikeScene(context), Navigation.Fade())),
+            new MenuItem("Easthaven", () => Scenes.Replace(new EasthavenScene(context), Navigation.Fade())),
             new MenuItem("Forty Thieves", () => Scenes.Replace(new FortyThievesScene(context), Navigation.Fade())),
             new MenuItem("FreeCell", () => Scenes.Replace(new FreeCellScene(context), Navigation.Fade())),
             new MenuItem("Golf", () => Scenes.Replace(new GolfScene(context), Navigation.Fade())),

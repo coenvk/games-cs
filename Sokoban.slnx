@@ -19,6 +19,7 @@
     <Project Path="src/TriPeaks/TriPeaks.csproj" />
     <Project Path="src/FortyThieves/FortyThieves.csproj" />
     <Project Path="src/Yukon/Yukon.csproj" />
+    <Project Path="src/Easthaven/Easthaven.csproj" />
     <Project Path="src/Golf/Golf.csproj" />
   </Folder>
   <Folder Name="/tests/">
@@ -38,6 +39,7 @@
     <Project Path="tests/TriPeaks.Tests/TriPeaks.Tests.csproj" />
     <Project Path="tests/FortyThieves.Tests/FortyThieves.Tests.csproj" />
     <Project Path="tests/Yukon.Tests/Yukon.Tests.csproj" />
+    <Project Path="tests/Easthaven.Tests/Easthaven.Tests.csproj" />
     <Project Path="tests/Golf.Tests/Golf.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/">
