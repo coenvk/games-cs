@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Sokoban.Model/Sokoban.Model.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Sokoban.Model.Tests/Sokoban.Model.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/LevelConverter/LevelConverter.csproj" />
+  </Folder>
+</Solution>
