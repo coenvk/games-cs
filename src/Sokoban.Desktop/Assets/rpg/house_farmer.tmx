@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="10" height="7" tilewidth="16" tileheight="16" infinite="0" nextlayerid="4" nextobjectid="5">
+ <properties>
+  <property name="name" value="Tom's farmhouse"/>
+  <property name="lit" type="bool" value="true"/>
+ </properties>
+ <tileset firstgid="1" source="tiles.tsx"/>
+ <layer id="1" name="ground" width="10" height="7">
+  <data encoding="csv">
+44,45,44,44,44,46,44,44,45,44,
+44,43,43,43,43,43,43,43,43,44,
+44,43,43,43,43,43,43,43,43,44,
+44,43,43,43,43,43,43,43,43,44,
+44,43,43,43,43,43,43,43,43,44,
+44,43,43,43,43,43,43,43,43,44,
+44,44,44,44,44,59,44,44,44,44
+</data>
+ </layer>
+ <layer id="2" name="decor" width="10" height="7">
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,0,0,
+0,57,57,0,0,0,47,0,56,0,
+0,57,0,0,0,0,0,0,0,0,
+0,58,58,0,0,48,49,0,0,0,
+0,58,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0
+</data>
+ </layer>
+ <objectgroup id="3" name="objects">
+  <object id="1" name="start" type="spawn" x="80" y="80" width="16" height="16"/>
+  <object id="2" name="door" type="portal" x="80" y="96" width="16" height="16">
+   <properties>
+    <property name="area" value="village"/>
+    <property name="spawn" value="farmer_door"/>
+   </properties>
+  </object>
+  <object id="3" name="gran" type="actor" x="112" y="48" width="16" height="16"/>
+  <object id="4" name="droppings" type="trigger" x="32" y="64" width="16" height="16">
+   <properties>
+    <property name="do" value="[{&quot;message&quot;: &quot;Rat droppings around the grain sacks. Ugh.&quot;}]"/>
+   </properties>
+  </object>
+ </objectgroup>
+</map>

@@ -7,6 +7,8 @@
     { "id": "smith", "name": "Bram the smith", "sprite": "smith", "faction": "friendly", "dialogue": "smith" },
     { "id": "farmer", "name": "Farmer Tom", "sprite": "villager", "faction": "friendly", "dialogue": "farmer", "brain": "wander" },
     { "id": "child", "name": "Pip", "sprite": "child", "faction": "friendly", "dialogue": "child", "brain": "wander" },
+    { "id": "gran", "name": "Gran Hettie", "sprite": "old_woman", "faction": "friendly", "dialogue": "gran" },
+    { "id": "cat", "name": "Whiskers", "sprite": "cat", "faction": "friendly", "dialogue": "cat", "brain": "wander" },
 
     { "id": "rat", "name": "cellar rat", "sprite": "rat", "faction": "hostile", "hp": 4, "attack": 2, "sight": 6,
       "brain": "hunter", "xp": 3, "drops": [ { "item": "coins", "chance": 0.4, "count": 2 } ] },

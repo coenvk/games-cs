@@ -179,7 +179,8 @@ with undo, hints and automatic moves home. FreeCell deal numbers match Microsoft
 ## Adventure: Mossbrook
 
 **Adventure** on the main menu is a small turn-based RPG on Jentl's **RPG kit** (`Jentl.Rpg`). Thieves have hidden
-Elder Maren's amulet in the old cellar under the chapel ruins. Talk to the villagers, pick up quests, get a sword from
+Elder Maren's amulet in the old cellar under the chapel ruins. Talk to the villagers, step inside their houses (each a small Tiled map
+of its own, with a few things to find and Gran Hettie and Whiskers the cat to meet), pick up quests, get a sword from
 Bram the smith, and go down: the cellar's two floors are generated from the game's seed (`--deal` sets it), dark, and
 full of rats, slimes, spiders and skeletons. Spiders run on a state machine (Fluffy): they hunt you, flee when badly hurt, and rest out of sight to heal. Returning the amulet wins; two side quests give potions and armour.
 
@@ -191,7 +192,7 @@ and on leaving. **Adventure** then offers Continue or New adventure. Falling in 
 roguelike. Saves live next to `progress.json` on desktop and in `localStorage` in the browser.
 
 The content is plain files in `src/Sokoban.Desktop/Assets/rpg`: `items.json`, `actors.json`, `quests.json`,
-`dialogue.json`, and the village map `village.tmx` with its tileset `tiles.tsx`, which open in the
+`dialogue.json`, the village map `village.tmx`, the house interiors `house_*.tmx`, and their tileset `tiles.tsx`, all of which open in the
 [Tiled](https://www.mapeditor.org) map editor. The tileset image is drawn by `tools/RpgArt`:
 
 ```sh

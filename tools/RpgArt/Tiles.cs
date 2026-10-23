@@ -13,7 +13,7 @@ internal sealed record TileDef(string Name, bool Solid, bool Opaque, Action<Spri
 internal static partial class Tiles
 {
     public const int Columns = 8;
-    public const int Rows = 6;
+    public const int Rows = 8;
 
     public static readonly IReadOnlyList<TileDef> All =
     [
@@ -28,7 +28,7 @@ internal static partial class Tiles
         new("fence", true, false, Fence),
         new("house_wall", true, true, HouseWall),
         new("roof", true, true, RoofTile),
-        new("door", true, true, Door),
+        new("door", false, true, Door),
         new("window", true, true, Window),
         new("well", true, false, Well),
         new("sign", true, false, Sign),
@@ -59,6 +59,25 @@ internal static partial class Tiles
         new("coins", false, false, Coins),
         new("bread", false, false, Bread),
         new("armor", false, false, Armor),
+        new("wood_floor", false, false, WoodFloor),
+        new("inner_wall", true, true, InnerWall),
+        new("inner_window", true, true, InnerWindow),
+        new("fireplace", true, true, Fireplace),
+        new("bed", true, false, Bed),
+        new("table", true, false, Table),
+        new("chair", false, false, Chair),
+        new("bookshelf", true, false, Bookshelf),
+        new("rug", false, false, Rug),
+        new("anvil", true, false, Anvil),
+        new("forge", true, true, Forge),
+        new("cauldron", true, false, Cauldron),
+        new("plant_pot", true, false, PlantPot),
+        new("cupboard", true, false, Cupboard),
+        new("hay", true, false, Hay),
+        new("sack", true, false, Sack),
+        new("doormat", false, false, Doormat),
+        new("old_woman", false, false, OldWoman),
+        new("cat", false, false, Cat),
     ];
 
     private static void GrassTile(Sprite s, Rng r)

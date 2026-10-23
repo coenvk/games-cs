@@ -18,6 +18,9 @@ public sealed class Adventure
     /// <summary>The story flag the amulet quest sets; a loaded game with it is already won.</summary>
     public const string WonFlag = "amulet_returned";
 
+    /// <summary>The house interiors, each a Tiled map named after its area ("house_elder.tmx").</summary>
+    public static IReadOnlyList<string> Houses { get; } = ["house_elder", "house_herbalist", "house_smith", "house_farmer"];
+
     private Adventure(RpgWorld world)
     {
         World = world;
@@ -57,10 +60,12 @@ public sealed class Adventure
 
     public string Save() => World.Save();
 
-    /// <summary>The village comes from its Tiled map; the cellar floors are generated from the game's seed.</summary>
+    /// <summary>The village and the houses come from their Tiled maps; the cellar floors are generated from the game's seed.</summary>
     private static Func<RpgWorld, string, Area> Areas(Func<string, string> readFile)
     {
         var tileset = TmxReader.ReadTileset(readFile("tiles.tsx"));
-        return (w, id) => id == Village ? w.LoadArea(id, TmxReader.ReadMap(readFile("village.tmx"), readFile)) : Cellar.Build(w, id, tileset, w.Seed);
+        return (w, id) => id == Village || Houses.Contains(id)
+            ? w.LoadArea(id, TmxReader.ReadMap(readFile($"{id}.tmx"), readFile))
+            : Cellar.Build(w, id, tileset, w.Seed);
     }
 }

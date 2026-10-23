@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<tileset version="1.10" tiledversion="1.10.2" name="tiles" tilewidth="16" tileheight="16" tilecount="48" columns="8">
- <image source="tiles.png" width="128" height="96"/>
+<tileset version="1.10" tiledversion="1.10.2" name="tiles" tilewidth="16" tileheight="16" tilecount="64" columns="8">
+ <image source="tiles.png" width="128" height="128"/>
  <tile id="0">
   <properties>
    <property name="name" value="grass"/>
@@ -68,7 +68,6 @@
  <tile id="11">
   <properties>
    <property name="name" value="door"/>
-   <property name="solid" type="bool" value="true"/>
    <property name="opaque" type="bool" value="true"/>
   </properties>
  </tile>
@@ -230,6 +229,118 @@
  <tile id="41">
   <properties>
    <property name="name" value="armor"/>
+  </properties>
+ </tile>
+ <tile id="42">
+  <properties>
+   <property name="name" value="wood_floor"/>
+  </properties>
+ </tile>
+ <tile id="43">
+  <properties>
+   <property name="name" value="inner_wall"/>
+   <property name="solid" type="bool" value="true"/>
+   <property name="opaque" type="bool" value="true"/>
+  </properties>
+ </tile>
+ <tile id="44">
+  <properties>
+   <property name="name" value="inner_window"/>
+   <property name="solid" type="bool" value="true"/>
+   <property name="opaque" type="bool" value="true"/>
+  </properties>
+ </tile>
+ <tile id="45">
+  <properties>
+   <property name="name" value="fireplace"/>
+   <property name="solid" type="bool" value="true"/>
+   <property name="opaque" type="bool" value="true"/>
+  </properties>
+ </tile>
+ <tile id="46">
+  <properties>
+   <property name="name" value="bed"/>
+   <property name="solid" type="bool" value="true"/>
+  </properties>
+ </tile>
+ <tile id="47">
+  <properties>
+   <property name="name" value="table"/>
+   <property name="solid" type="bool" value="true"/>
+  </properties>
+ </tile>
+ <tile id="48">
+  <properties>
+   <property name="name" value="chair"/>
+  </properties>
+ </tile>
+ <tile id="49">
+  <properties>
+   <property name="name" value="bookshelf"/>
+   <property name="solid" type="bool" value="true"/>
+  </properties>
+ </tile>
+ <tile id="50">
+  <properties>
+   <property name="name" value="rug"/>
+  </properties>
+ </tile>
+ <tile id="51">
+  <properties>
+   <property name="name" value="anvil"/>
+   <property name="solid" type="bool" value="true"/>
+  </properties>
+ </tile>
+ <tile id="52">
+  <properties>
+   <property name="name" value="forge"/>
+   <property name="solid" type="bool" value="true"/>
+   <property name="opaque" type="bool" value="true"/>
+  </properties>
+ </tile>
+ <tile id="53">
+  <properties>
+   <property name="name" value="cauldron"/>
+   <property name="solid" type="bool" value="true"/>
+  </properties>
+ </tile>
+ <tile id="54">
+  <properties>
+   <property name="name" value="plant_pot"/>
+   <property name="solid" type="bool" value="true"/>
+  </properties>
+ </tile>
+ <tile id="55">
+  <properties>
+   <property name="name" value="cupboard"/>
+   <property name="solid" type="bool" value="true"/>
+  </properties>
+ </tile>
+ <tile id="56">
+  <properties>
+   <property name="name" value="hay"/>
+   <property name="solid" type="bool" value="true"/>
+  </properties>
+ </tile>
+ <tile id="57">
+  <properties>
+   <property name="name" value="sack"/>
+   <property name="solid" type="bool" value="true"/>
+  </properties>
+ </tile>
+ <tile id="58">
+  <properties>
+   <property name="name" value="doormat"/>
+  </properties>
+ </tile>
+ <tile id="59">
+  <properties>
+   <property name="name" value="old_woman"/>
+  </properties>
+ </tile>
+ <tile id="60">
+  <properties>
+   <property name="name" value="cat"/>
   </properties>
  </tile>
 </tileset>

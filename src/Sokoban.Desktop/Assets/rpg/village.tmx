@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="40" height="25" tilewidth="16" tileheight="16" infinite="0" nextlayerid="4" nextobjectid="13">
+<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="40" height="25" tilewidth="16" tileheight="16" infinite="0" nextlayerid="4" nextobjectid="21">
  <properties>
   <property name="name" value="Mossbrook"/>
   <property name="lit" type="bool" value="true"/>
@@ -77,24 +77,52 @@
     <property name="spawn" value="start"/>
    </properties>
   </object>
-  <object id="9" name="" type="item" x="48" y="160" width="16" height="16">
+  <object id="9" name="elder_house" type="portal" x="96" y="64" width="16" height="16">
+   <properties>
+    <property name="area" value="house_elder"/>
+    <property name="spawn" value="start"/>
+   </properties>
+  </object>
+  <object id="10" name="elder_door" type="spawn" x="96" y="80" width="16" height="16"/>
+  <object id="11" name="herbalist_house" type="portal" x="224" y="64" width="16" height="16">
+   <properties>
+    <property name="area" value="house_herbalist"/>
+    <property name="spawn" value="start"/>
+   </properties>
+  </object>
+  <object id="12" name="herbalist_door" type="spawn" x="224" y="80" width="16" height="16"/>
+  <object id="13" name="smithy" type="portal" x="304" y="80" width="16" height="16">
+   <properties>
+    <property name="area" value="house_smith"/>
+    <property name="spawn" value="start"/>
+   </properties>
+  </object>
+  <object id="14" name="smith_door" type="spawn" x="304" y="96" width="16" height="16"/>
+  <object id="15" name="farmhouse" type="portal" x="128" y="288" width="16" height="16">
+   <properties>
+    <property name="area" value="house_farmer"/>
+    <property name="spawn" value="start"/>
+   </properties>
+  </object>
+  <object id="16" name="farmer_door" type="spawn" x="128" y="304" width="16" height="16"/>
+  <object id="17" name="" type="item" x="48" y="160" width="16" height="16">
    <properties>
     <property name="item" value="bread"/>
    </properties>
   </object>
-  <object id="10" name="" type="item" x="432" y="144" width="16" height="16">
+  <object id="18" name="" type="item" x="432" y="144" width="16" height="16">
    <properties>
     <property name="count" type="int" value="5"/>
     <property name="item" value="coins"/>
    </properties>
   </object>
-  <object id="11" name="village_sign" type="trigger" x="128" y="208" width="16" height="16">
+  <object id="19" name="village_sign" type="trigger" x="128" y="208" width="16" height="16">
    <properties>
     <property name="do" value="[{&quot;message&quot;: &quot;The sign reads: MOSSBROOK. Mind the geese.&quot;}]"/>
     <property name="repeat" type="bool" value="true"/>
    </properties>
   </object>
-  <object id="12" name="ruin_sign" type="trigger" x="560" y="224" width="16" height="16">
+  <object id="20" name="ruin_sign" type="trigger" x="560" y="224" width="16" height="16">
    <properties>
     <property name="do" value="[{&quot;message&quot;: &quot;A weathered sign: KEEP OUT. OLD CELLAR. The trapdoor beside it stands ajar.&quot;}]"/>
    </properties>

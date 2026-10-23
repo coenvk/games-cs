@@ -52,7 +52,7 @@ public class AdventureTests
         var area = Adventure.Start(Read, seed: 1).World.Area;
         var start = area.Spawns["start"];
 
-        foreach (var target in area.Actors.Where(a => a.Faction == Faction.Friendly).Select(a => a.Position).Append(area.Portals[0].Cell))
+        foreach (var target in area.Actors.Where(a => a.Faction == Faction.Friendly).Select(a => a.Position).Append(area.Portals.Single(p => p.Area == "cellar1").Cell))
         {
             Pathfinder.Find(start, target, c => !area.Map.IsSolid(c)).Should().NotBeNull($"{target} can be reached");
         }
@@ -94,7 +94,7 @@ public class AdventureTests
     public void ThePlayer_CanGoDownTheHatch_AndBackUp()
     {
         var world = Adventure.Start(Read, seed: 1).World;
-        var hatch = world.Area.Portals[0].Cell;
+        var hatch = world.Area.Portals.Single(p => p.Area == "cellar1").Cell;
         WalkTo(world, world.Area.Spawns["hatch"]);
 
         world.Step(world.Player.Position.DirectionTo(hatch)!.Value);
@@ -179,7 +179,7 @@ public class AdventureTests
         var adventure = Adventure.Start(Read, seed: 4);
         var world = adventure.World;
         WalkTo(world, world.Area.Spawns["hatch"]);
-        world.Step(world.Player.Position.DirectionTo(world.Area.Portals[0].Cell)!.Value);
+        world.Step(world.Player.Position.DirectionTo(world.Area.Portals.Single(p => p.Area == "cellar1").Cell)!.Value);
         world.Area.Id.Should().Be("cellar1");
         world.State.Give("glowcap", 2);
         var save = adventure.Save();

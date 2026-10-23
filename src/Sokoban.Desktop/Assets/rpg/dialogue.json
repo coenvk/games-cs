@@ -88,6 +88,31 @@
         "haunted": { "text": "Skeletons! Way down deep. Mum says if you get hurt, eat something. Bread helps!" },
         "after": { "text": "You're the hero! Can I see the amulet? ...You gave it back? Aww." }
       }
+    },
+    {
+      "id": "gran", "speaker": "Gran Hettie",
+      "nodes": {
+        "start": { "goto": [ { "if": { "notFlag": "gran_bread" }, "node": "first" }, { "node": "chat" } ] },
+        "first": { "text": "Oh! A visitor. Sit, sit. Here, take some bread. You look half-starved.",
+          "do": [ { "give": "bread", "count": 2 }, { "setFlag": "gran_bread" } ], "next": "chat" },
+        "chat": { "goto": [
+          { "if": { "quest": "rats", "is": "completed" }, "node": "rats_done" },
+          { "if": { "quest": "rats", "is": "active" }, "node": "rats" },
+          { "node": "weather" } ] },
+        "rats": { "text": "Tom's been on about those rats for weeks. Squash a few and he'll stop his moaning." },
+        "rats_done": { "text": "Not a squeak since you dealt with those rats. Bless you, dear." },
+        "weather": { "text": "My knees say rain's coming. They're never wrong, my knees." }
+      }
+    },
+    {
+      "id": "cat", "speaker": "Whiskers",
+      "nodes": {
+        "start": { "text": "Mrrp.",
+          "choices": [
+            { "text": "Pet the cat.", "next": "purr", "do": [ { "setFlag": "petted_cat" } ] },
+            { "text": "Leave it be." } ] },
+        "purr": { "text": "Whiskers purrs and winds around your ankles." }
+      }
     }
   ]
 }
