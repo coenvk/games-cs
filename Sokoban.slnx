@@ -4,6 +4,7 @@
     <Project Path="src/Jentl.Core.Kni/Jentl.Core.Kni.csproj" />
     <Project Path="src/Jentl.Core/Jentl.Core.csproj" />
     <Project Path="src/Jentl.Puzzle/Jentl.Puzzle.csproj" />
+    <Project Path="src/Klondike/Klondike.csproj" />
     <Project Path="src/Sokoban.Desktop/Sokoban.Desktop.csproj" />
     <Project Path="src/Sokoban.Model/Sokoban.Model.csproj" />
     <Project Path="src/Sokoban.Solver/Sokoban.Solver.csproj" />
@@ -13,6 +14,7 @@
     <Project Path="tests/Jentl.Cards.Tests/Jentl.Cards.Tests.csproj" />
     <Project Path="tests/Jentl.Core.Tests/Jentl.Core.Tests.csproj" />
     <Project Path="tests/Jentl.Puzzle.Tests/Jentl.Puzzle.Tests.csproj" />
+    <Project Path="tests/Klondike.Tests/Klondike.Tests.csproj" />
     <Project Path="tests/Sokoban.Model.Tests/Sokoban.Model.Tests.csproj" />
     <Project Path="tests/Sokoban.Solver.Tests/Sokoban.Solver.Tests.csproj" />
   </Folder>
