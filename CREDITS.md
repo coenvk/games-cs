@@ -2,9 +2,14 @@
 
 ## Sprites
 
-`src/Sokoban.Desktop/Assets/` contains sprites from **"50 Sokoban assets"** by [1001.com](https://www.1001.com),
+`src/Sokoban.Desktop/Assets/` (except `fonts/`) contains sprites from **"50 Sokoban assets"** by [1001.com](https://www.1001.com),
 licensed under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
 The sprites are unmodified; modified versions must be shared under the same license.
+
+## Font
+
+`src/Sokoban.Desktop/Assets/fonts/LilitaOne-Regular.ttf` is **Lilita One** by Juan Montoreano, licensed under the
+[SIL Open Font License 1.1](src/Sokoban.Desktop/Assets/fonts/OFL.txt).
 
 ## Levels
 

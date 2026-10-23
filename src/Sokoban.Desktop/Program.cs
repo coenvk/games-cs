@@ -3,7 +3,8 @@ using Sokoban.Desktop;
 
 // Options:
 //   --level <n>          start at level n (1-based)
-//   --screenshot <path>  render one frame to a PNG and exit
+//   --keys "<k1> <k2>"   play these keys (MonoGame key names, or Wait) instead of the keyboard
+//   --screenshot <path>  after the keys have played, render one frame to a PNG and exit
 var options = new GameOptions();
 for (var i = 0; i + 1 < args.Length; i += 2)
 {
@@ -11,6 +12,9 @@ for (var i = 0; i + 1 < args.Length; i += 2)
     {
         case "--level":
             options = options with { StartLevel = int.Parse(args[i + 1], CultureInfo.InvariantCulture) - 1 };
+            break;
+        case "--keys":
+            options = options with { Script = args[i + 1].Split(' ', StringSplitOptions.RemoveEmptyEntries) };
             break;
         case "--screenshot":
             options = options with { ScreenshotPath = args[i + 1] };

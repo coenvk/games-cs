@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="MonoGame.Framework.DesktopGL" Version="$(MonoGameVersion)" />
+    <PackageReference Include="FontStashSharp.MonoGame" Version="$(FontStashSharpVersion)" />
   </ItemGroup>
 
   <ItemGroup>
@@ -16,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="Assets\**\*.png" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Assets\**\*.png;Assets\**\*.ttf;Assets\**\*.txt" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\levels\*.xsb" LinkBase="Levels" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
