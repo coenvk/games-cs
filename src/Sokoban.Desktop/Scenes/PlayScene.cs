@@ -52,41 +52,43 @@ internal sealed class PlayScene : Scene
     private string? _message;
     private TimeSpan _messageFor;
 
-    /// <summary>Plays level <paramref name="packIndex"/> of the level pack.</summary>
-    public PlayScene(GameContext context, int packIndex)
-        : this(context, context.Levels[Math.Clamp(packIndex, 0, context.Levels.Count - 1)], Math.Clamp(packIndex, 0, context.Levels.Count - 1))
+    /// <summary>Plays a level from one of the packs.</summary>
+    public PlayScene(GameContext context, LevelRef where)
+        : this(context, context.LevelAt(where), where)
     {
     }
 
-    /// <summary>Plays a level that is not part of the pack, such as a generated one.</summary>
+    /// <summary>Plays a level that is not part of any pack, such as a generated one.</summary>
     public PlayScene(GameContext context, Level level)
-        : this(context, level, packIndex: null)
+        : this(context, level, where: null)
     {
     }
 
-    private PlayScene(GameContext context, Level level, int? packIndex)
+    private PlayScene(GameContext context, Level level, LevelRef? where)
     {
         _context = context;
-        PackIndex = packIndex;
+        Where = where;
         Session = new LevelSession(level);
-        _theme = context.Tileset.ThemeFor(packIndex + 1 ?? int.Parse(level.Key[..7], NumberStyles.HexNumber, CultureInfo.InvariantCulture));
+        _theme = context.Tileset.ThemeFor(where is { } w
+            ? GameContext.ThemeSeed(w)
+            : int.Parse(level.Key[..7], NumberStyles.HexNumber, CultureInfo.InvariantCulture));
         _renderer = new BoardRenderer(context.Tileset);
         _solver = new Solver.Solver(level.Board);
         _hints = new HintRunner(_solver);
     }
 
-    /// <summary>Position in the level pack, or null for a generated level.</summary>
-    public int? PackIndex { get; }
+    /// <summary>Where the level sits in the packs, or null for a generated level.</summary>
+    public LevelRef? Where { get; }
 
     public LevelSession Session { get; }
 
     /// <summary>The level to highlight when going to level select from here.</summary>
-    public int SelectIndex => PackIndex ?? _context.ContinueIndex;
+    public LevelRef SelectTarget => Where ?? _context.Continue;
 
     /// <summary>Whether there is a next level: always for generated levels, which can generate another.</summary>
-    public bool HasNextLevel => PackIndex is not { } index || index < _context.Levels.Count - 1;
+    public bool HasNextLevel => Where is not { } w || w.Index < _context.Packs[w.Pack].Levels.Count - 1;
 
-    public string Title => PackIndex is { } index ? Session.Level.Title ?? $"Level {index + 1}" : "Random level";
+    public string Title => Where is { } w ? _context.TitleOf(w) : "Random level";
 
     /// <summary>Time spent on the current attempt. Only runs while this scene is on top and unsolved.</summary>
     public TimeSpan Time { get; private set; }
@@ -107,14 +109,14 @@ internal sealed class PlayScene : Scene
         {
             Restart();
         }
-        else if (actions.WasPressed(input, GameAction.NextLevel) && PackIndex is { } next)
+        else if (actions.WasPressed(input, GameAction.NextLevel) && Where is { } next)
         {
-            GoToPackLevel(next + 1);
+            GoToPackLevel(next.Index + 1);
             return;
         }
-        else if (actions.WasPressed(input, GameAction.PreviousLevel) && PackIndex is { } previous)
+        else if (actions.WasPressed(input, GameAction.PreviousLevel) && Where is { } previous)
         {
-            GoToPackLevel(previous - 1);
+            GoToPackLevel(previous.Index - 1);
             return;
         }
         else if (Session.IsSolved && actions.WasPressed(input, GameAction.Confirm))
@@ -195,9 +197,9 @@ internal sealed class PlayScene : Scene
     /// <summary>Goes to the next pack level, or generates a new level after a generated one.</summary>
     public void NextLevel()
     {
-        if (PackIndex is { } index)
+        if (Where is { } where)
         {
-            GoToPackLevel(index + 1);
+            GoToPackLevel(where.Index + 1);
         }
         else
         {
@@ -217,13 +219,14 @@ internal sealed class PlayScene : Scene
         base.Dispose(disposing);
     }
 
+    /// <summary>Goes to another level in the same pack, if it exists.</summary>
     private void GoToPackLevel(int index)
     {
-        if (index >= 0 && index < _context.Levels.Count)
+        if (Where is { } where && index >= 0 && index < _context.Packs[where.Pack].Levels.Count)
         {
             Scenes.Replace(
-                new PlayScene(_context, index),
-                Session.IsSolved && index == PackIndex + 1 ? Navigation.Wipe() : Navigation.Fade());
+                new PlayScene(_context, where with { Index = index }),
+                Session.IsSolved && index == where.Index + 1 ? Navigation.Wipe() : Navigation.Fade());
         }
     }
 
@@ -356,7 +359,7 @@ internal sealed class PlayScene : Scene
         PositionChanged();
 
         // The player steps back while still facing the original direction; a pushed crate follows it back.
-        var crateFrom = move.IsPush ? Neighbor(from, move.Direction) : (int?)null;
+        var crateFrom = move.IsPush ? Session.CrateTarget(move, from) : (int?)null;
         _renderer.Animate(Session.Board, new Step(move.Direction, from, Session.Player, crateFrom, move.IsPush ? from : null));
     }
 
@@ -365,11 +368,10 @@ internal sealed class PlayScene : Scene
         var to = Session.Player;
         _renderer.Animate(
             Session.Board,
-            pushed ? new Step(direction, from, to, to, Neighbor(to, direction)) : new Step(direction, from, to));
+            pushed && Session.LastMove is { } move
+                ? new Step(direction, from, to, to, Session.CrateTarget(move, to))
+                : new Step(direction, from, to));
     }
-
-    private int Neighbor(int index, Direction direction) =>
-        Session.Board.TryGetNeighbor(index, direction, out var neighbor) ? neighbor : index;
 
     private void UpdateCompletion(TimeSpan elapsed)
     {

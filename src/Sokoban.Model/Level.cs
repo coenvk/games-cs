@@ -40,7 +40,8 @@ public sealed class Level
         IEnumerable<int> goals,
         int player,
         IEnumerable<int> crates,
-        string? title = null)
+        string? title = null,
+        IEnumerable<int>? ice = null)
     {
         if (width <= 0 || height <= 0)
         {
@@ -57,6 +58,16 @@ public sealed class Level
         foreach (var goal in goals)
         {
             tiles[CheckIndex(goal, size, "Goal")] |= Board.Tile.Goal;
+        }
+
+        foreach (var cell in ice ?? [])
+        {
+            if ((tiles[CheckIndex(cell, size, "Ice")] & (Board.Tile.Wall | Board.Tile.Goal)) != 0)
+            {
+                throw new InvalidLevelException($"Ice at {cell} is on a wall or a goal.");
+            }
+
+            tiles[cell] |= Board.Tile.Ice;
         }
 
         CheckIndex(player, size, "Player");
@@ -91,6 +102,11 @@ public sealed class Level
         if (board.Goals.Any(g => !board.IsInterior(g)))
         {
             throw new InvalidLevelException("A goal is on a wall or outside the level.");
+        }
+
+        if (Enumerable.Range(0, size).Any(i => board.IsIce(i) && !board.IsInterior(i)))
+        {
+            throw new InvalidLevelException("Ice is outside the level.");
         }
 
         if (board.Goals.Count != crateStarts.Length)

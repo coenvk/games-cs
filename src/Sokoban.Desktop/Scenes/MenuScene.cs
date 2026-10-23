@@ -46,12 +46,13 @@ internal sealed class MenuScene : Scene
         var menuTop = viewport.Y + viewport.Height / 2 + 20;
         _menu.Draw(batch, fonts.Body, centerX, menuTop);
 
-        var solved = _context.Progress.Progress.SolvedCount(_context.Levels);
+        var total = _context.AllLevels.Count();
+        var solved = _context.Progress.Progress.SolvedCount(_context.AllLevels);
         if (solved > 0)
         {
             batch.DrawText(
                 fonts.Small,
-                string.Create(CultureInfo.InvariantCulture, $"{solved} of {_context.Levels.Count} levels solved"),
+                string.Create(CultureInfo.InvariantCulture, $"{solved} of {total} levels solved"),
                 new Vector2(centerX, menuTop + _menu.Height(fonts.Body) + 16),
                 Palette.Muted,
                 Align.Center,
@@ -73,11 +74,11 @@ internal sealed class MenuScene : Scene
     private Menu BuildMenu(int selected = 0)
     {
         var context = _context;
-        var started = context.Progress.Progress.SolvedCount(context.Levels) > 0;
+        var started = context.Progress.Progress.SolvedCount(context.AllLevels) > 0;
         return new Menu(
             context.Sounds,
-            new MenuItem(started ? "Continue" : "Play", () => Scenes.Push(new PlayScene(context, context.ContinueIndex), Navigation.Fade())),
-            new MenuItem("Select level", () => Scenes.Push(new LevelSelectScene(context, context.ContinueIndex), Navigation.Fade())),
+            new MenuItem(started ? "Continue" : "Play", () => Scenes.Push(new PlayScene(context, context.Continue), Navigation.Fade())),
+            new MenuItem("Select level", () => Scenes.Push(new LevelSelectScene(context, context.Continue), Navigation.Fade())),
             new MenuItem("Random level", () => Scenes.Push(new GenerateScene(context), Navigation.Fade())),
             new MenuItem("Options", () => Scenes.Push(new OptionsScene(context))),
             new MenuItem("Quit", () => Scenes.Pop(Navigation.Fade())))

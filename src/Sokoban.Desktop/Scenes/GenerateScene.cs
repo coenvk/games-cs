@@ -15,7 +15,10 @@ internal sealed class GenerateScene : Scene
     // A run occasionally finds nothing hard enough; retry quietly a few times before giving up.
     private const int MaxRuns = 5;
 
-    private static readonly GeneratorOptions Options = new(Width: 10, Height: 9, Crates: 4, MinPushes: 12, Attempts: 80);
+    private static readonly GeneratorOptions Plain = new(Width: 10, Height: 9, Crates: 4, MinPushes: 12, Attempts: 80);
+
+    // Ice makes levels harder to build (the solver must confirm every one), so ask a little less of them.
+    private static readonly GeneratorOptions Icy = Plain with { MinPushes = 10, IceCells = 10 };
 
     private readonly GameContext _context;
     private readonly int? _seed;
@@ -98,6 +101,8 @@ internal sealed class GenerateScene : Scene
 #pragma warning disable CA5394 // Level layout randomness, not security relevant.
         var random = new Random(_seed + _runs ?? Random.Shared.Next());
 #pragma warning restore CA5394
-        _task = Task.Run(() => LevelGenerator.Generate(Options, random, token), token);
+        // Every other random level has ice.
+        var options = random.Next(2) == 0 ? Plain : Icy;
+        _task = Task.Run(() => LevelGenerator.Generate(options, random, token), token);
     }
 }

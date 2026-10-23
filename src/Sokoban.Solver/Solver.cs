@@ -135,7 +135,13 @@ public sealed class Solver
             {
                 if (!_board.TryGetNeighbor(crate, direction.Opposite(), out var behind) || !reach.Contains(behind)
                     || !_board.TryGetNeighbor(crate, direction, out var target)
-                    || _board.IsWall(target) || occupied[target] || Deadlocks.IsDeadSquare(target))
+                    || _board.IsWall(target) || occupied[target])
+                {
+                    continue;
+                }
+
+                target = Slide(target, direction, occupied);
+                if (Deadlocks.IsDeadSquare(target))
                 {
                     continue;
                 }
@@ -191,14 +197,27 @@ public sealed class Solver
         {
             _board.TryGetNeighbor(from, direction.Opposite(), out var behind);
             moves.AddRange(Walk(player, behind, occupied).Select(d => new Move(d, IsPush: false)));
-            moves.Add(new Move(direction, IsPush: true));
-            _board.TryGetNeighbor(from, direction, out var target);
+            _board.TryGetNeighbor(from, direction, out var first);
             occupied[from] = false;
+            var target = Slide(first, direction, occupied);
             occupied[target] = true;
+            var slide = Math.Abs(_board.XOf(target) - _board.XOf(first)) + Math.Abs(_board.YOf(target) - _board.YOf(first));
+            moves.Add(new Move(direction, IsPush: true, slide));
             player = from;
         }
 
         return new SolveResult(SolveStatus.Solved, moves, pushes.Count, explored);
+    }
+
+    /// <summary>Where a crate pushed onto <paramref name="cell"/> comes to rest: it keeps sliding while on ice and the way is clear.</summary>
+    private int Slide(int cell, Direction direction, bool[] occupied)
+    {
+        while (_board.IsIce(cell) && _board.TryGetNeighbor(cell, direction, out var next) && !_board.IsWall(next) && !occupied[next])
+        {
+            cell = next;
+        }
+
+        return cell;
     }
 
     /// <summary>Shortest walk between two cells around crates (breadth-first).</summary>

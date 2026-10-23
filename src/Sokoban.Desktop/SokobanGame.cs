@@ -43,7 +43,11 @@ internal sealed class SokobanGame : JentlGame
         base.LoadContent();
         _tileset = new Tileset(GraphicsDevice);
         _fonts = new Fonts();
-        var levels = Xsb.ParsePack(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Levels", "original.xsb")));
+        LevelPack[] packs =
+        [
+            new("Classic", "Level", LoadPack("original.xsb")),
+            new("Ice", "Ice", LoadPack("ice.xsb")),
+        ];
 
         var store = ResolveStore();
         var settings = SavedFile<Settings>.Load(store, "settings.json", Settings.FromJson, s => s.ToJson(), () => new Settings());
@@ -52,7 +56,7 @@ internal sealed class SokobanGame : JentlGame
         SetFullscreen(settings.Value.Fullscreen);
 
         var context = new GameContext(
-            levels,
+            packs,
             _tileset,
             _fonts,
             Controls.Default,
@@ -62,7 +66,7 @@ internal sealed class SokobanGame : JentlGame
             SetFullscreen);
 
         Scene[] start = _options.StartLevel is { } level
-            ? [new MenuScene(context), new PlayScene(context, level)]
+            ? [new MenuScene(context), new PlayScene(context, new LevelRef(0, Math.Clamp(level, 0, packs[0].Levels.Count - 1)))]
             : [new MenuScene(context)];
         Scenes.Reset(start);
     }
@@ -104,6 +108,9 @@ internal sealed class SokobanGame : JentlGame
 
         base.Dispose(disposing);
     }
+
+    private static IReadOnlyList<Level> LoadPack(string file) =>
+        Xsb.ParsePack(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Levels", file)));
 
     // Scripted runs must not touch the player's real saves unless a directory is given.
     private SaveStore? ResolveStore() => _options switch

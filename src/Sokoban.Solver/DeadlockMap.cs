@@ -8,8 +8,6 @@ namespace Sokoban.Solver;
 /// </summary>
 public sealed class DeadlockMap
 {
-    private static readonly Direction[] Directions = [Direction.Up, Direction.Down, Direction.Left, Direction.Right];
-
     private readonly Board _board;
     private readonly int[] _distance;
 
@@ -17,7 +15,7 @@ public sealed class DeadlockMap
     {
         ArgumentNullException.ThrowIfNull(board);
         _board = board;
-        _distance = ComputeGoalDistances(board);
+        _distance = PushGraph.DistancesTo(board, board.Goals);
     }
 
     /// <summary>True for floor cells from which no sequence of pushes can bring a crate to any goal.</summary>
@@ -96,38 +94,5 @@ public sealed class DeadlockMap
         }
 
         return offGoalCrate;
-    }
-
-    // Breadth-first search backwards from every goal, "pulling" a crate: a crate at q pushed
-    // in direction d lands on p = q + d, which needs the player to stand on q - d.
-    private static int[] ComputeGoalDistances(Board board)
-    {
-        var distance = new int[board.Size];
-        Array.Fill(distance, int.MaxValue);
-        var queue = new Queue<int>();
-        foreach (var goal in board.Goals)
-        {
-            distance[goal] = 0;
-            queue.Enqueue(goal);
-        }
-
-        while (queue.TryDequeue(out var p))
-        {
-            foreach (var d in Directions)
-            {
-                var back = d.Opposite();
-                if (board.TryGetNeighbor(p, back, out var q)
-                    && board.TryGetNeighbor(q, back, out var playerCell)
-                    && board.IsInterior(q)
-                    && board.IsInterior(playerCell)
-                    && distance[q] == int.MaxValue)
-                {
-                    distance[q] = distance[p] + 1;
-                    queue.Enqueue(q);
-                }
-            }
-        }
-
-        return distance;
     }
 }

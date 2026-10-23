@@ -18,6 +18,7 @@ internal sealed class BoardRenderer
 
     // Close to the key-repeat interval, so holding a direction reads as continuous walking.
     private static readonly TimeSpan StepDuration = TimeSpan.FromMilliseconds(85);
+    private static readonly TimeSpan SlidePerCell = TimeSpan.FromMilliseconds(55);
 
     private static readonly Color DeadOverlay = new(235, 40, 40, 205);
 
@@ -45,7 +46,13 @@ internal sealed class BoardRenderer
         if (step is { CrateFrom: { } from, CrateTo: { } to })
         {
             var crateStart = _crate is not null && _crateTarget == from ? _crate.Value : GridPosition(board, from);
-            _crate = new Tween(crateStart, GridPosition(board, to), StepDuration);
+            var crateEnd = GridPosition(board, to);
+
+            // A slide across ice takes longer and eases out, so the crate visibly glides to a stop.
+            var cells = Vector2.Distance(GridPosition(board, from), crateEnd);
+            _crate = cells > 1.5f
+                ? new Tween(crateStart, crateEnd, StepDuration + SlidePerCell * (cells - 1), Easing.CubicOut)
+                : new Tween(crateStart, crateEnd, StepDuration);
             _crateTarget = to;
         }
     }
@@ -91,7 +98,7 @@ internal sealed class BoardRenderer
             }
             else if (board.IsInterior(i))
             {
-                batch.Draw(theme.Floor, cell, Color.White);
+                batch.Draw(board.IsIce(i) ? _tileset.Ice : theme.Floor, cell, Color.White);
                 if (board.IsGoal(i))
                 {
                     batch.Draw(theme.Goal, cell, Color.White);

@@ -29,7 +29,7 @@ internal sealed class MatchingHeuristic
     public MatchingHeuristic(Board board)
     {
         _n = board.Goals.Count;
-        _distance = board.Goals.Select(goal => PullDistances(board, goal)).ToArray();
+        _distance = board.Goals.Select(goal => PushGraph.DistancesTo(board, [goal])).ToArray();
         _u = new int[_n + 1];
         _v = new int[_n + 1];
         _match = new int[_n + 1];
@@ -120,33 +120,5 @@ internal sealed class MatchingHeuristic
     {
         var distance = _distance[goalIndex][crates[crateIndex]];
         return distance == int.MaxValue ? Infinity : distance;
-    }
-
-    /// <summary>Pushes needed to bring a crate from each cell to <paramref name="goal"/>, found by pulling backwards.</summary>
-    private static int[] PullDistances(Board board, int goal)
-    {
-        var distance = new int[board.Size];
-        Array.Fill(distance, int.MaxValue);
-        distance[goal] = 0;
-        var queue = new Queue<int>();
-        queue.Enqueue(goal);
-        while (queue.TryDequeue(out var p))
-        {
-            foreach (var d in (ReadOnlySpan<Direction>)[Direction.Up, Direction.Down, Direction.Left, Direction.Right])
-            {
-                var back = d.Opposite();
-                if (board.TryGetNeighbor(p, back, out var q)
-                    && board.TryGetNeighbor(q, back, out var playerCell)
-                    && board.IsInterior(q)
-                    && board.IsInterior(playerCell)
-                    && distance[q] == int.MaxValue)
-                {
-                    distance[q] = distance[p] + 1;
-                    queue.Enqueue(q);
-                }
-            }
-        }
-
-        return distance;
     }
 }

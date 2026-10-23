@@ -16,6 +16,6 @@ internal static class Navigation
     public static void ToMainMenu(SceneManager scenes, GameContext context) =>
         scenes.Reset(new MenuScene(context), Fade());
 
-    public static void ToLevelSelect(SceneManager scenes, GameContext context, int selected) =>
+    public static void ToLevelSelect(SceneManager scenes, GameContext context, LevelRef selected) =>
         scenes.Reset([new MenuScene(context), new LevelSelectScene(context, selected)], Fade());
 }

@@ -13,6 +13,7 @@ public sealed class Board
         Wall = 1,
         Goal = 2,
         Interior = 4,
+        Ice = 8,
     }
 
     private readonly Tile[] _tiles;
@@ -23,7 +24,11 @@ public sealed class Board
         Height = height;
         _tiles = tiles;
         Goals = Enumerable.Range(0, tiles.Length).Where(IsGoal).ToArray();
+        HasIce = tiles.Any(t => (t & Tile.Ice) != 0);
     }
+
+    /// <summary>True when any cell is ice, so crates can slide.</summary>
+    public bool HasIce { get; }
 
     public int Width { get; }
 
@@ -45,6 +50,9 @@ public sealed class Board
 
     /// <summary>True for floor cells enclosed by walls; false for walls and the void outside.</summary>
     public bool IsInterior(int index) => (_tiles[index] & Tile.Interior) != 0;
+
+    /// <summary>A crate pushed onto ice keeps sliding until it is blocked or reaches a cell that is not ice.</summary>
+    public bool IsIce(int index) => (_tiles[index] & Tile.Ice) != 0;
 
     public bool TryGetNeighbor(int index, Direction direction, out int neighbor)
     {

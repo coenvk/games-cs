@@ -9,7 +9,8 @@ public enum MoveResult
     Pushed,
 }
 
-public readonly record struct Move(Direction Direction, bool IsPush);
+/// <param name="Slide">For a push onto ice: how many cells the crate slid beyond the first.</param>
+public readonly record struct Move(Direction Direction, bool IsPush, int Slide = 0);
 
 /// <summary>The mutable play state of one level, with undo and redo.</summary>
 public sealed class LevelSession
@@ -55,14 +56,26 @@ public sealed class LevelSession
 
     public MoveResult TryMove(Direction direction)
     {
-        var result = Apply(direction);
+        var (result, slide) = Apply(direction);
         if (result != MoveResult.Blocked)
         {
-            _undo.Push(new Move(direction, result == MoveResult.Pushed));
+            _undo.Push(new Move(direction, result == MoveResult.Pushed, slide));
             _redo.Clear();
         }
 
         return result;
+    }
+
+    /// <summary>Where the crate pushed by <paramref name="move"/> came to rest, seen from the player after the move.</summary>
+    public int CrateTarget(Move move, int player)
+    {
+        var cell = player;
+        for (var i = 0; i <= move.Slide; i++)
+        {
+            cell = Neighbor(cell, move.Direction);
+        }
+
+        return cell;
     }
 
     public bool Undo()
@@ -75,7 +88,7 @@ public sealed class LevelSession
         var previous = Neighbor(Player, move.Direction.Opposite());
         if (move.IsPush)
         {
-            MoveCrate(Neighbor(Player, move.Direction), Player);
+            MoveCrate(CrateTarget(move, Player), Player);
             PushCount--;
         }
 
@@ -128,28 +141,35 @@ public sealed class LevelSession
         return sb.ToString();
     }
 
-    private MoveResult Apply(Direction direction)
+    private (MoveResult Result, int Slide) Apply(Direction direction)
     {
         if (!Board.TryGetNeighbor(Player, direction, out var target) || Board.IsWall(target))
         {
-            return MoveResult.Blocked;
+            return (MoveResult.Blocked, 0);
         }
 
         if (!_crates[target])
         {
             Player = target;
-            return MoveResult.Walked;
+            return (MoveResult.Walked, 0);
         }
 
         if (!Board.TryGetNeighbor(target, direction, out var beyond) || Board.IsWall(beyond) || _crates[beyond])
         {
-            return MoveResult.Blocked;
+            return (MoveResult.Blocked, 0);
+        }
+
+        var slide = 0;
+        while (Board.IsIce(beyond) && Board.TryGetNeighbor(beyond, direction, out var next) && !Board.IsWall(next) && !_crates[next])
+        {
+            beyond = next;
+            slide++;
         }
 
         MoveCrate(target, beyond);
         Player = target;
         PushCount++;
-        return MoveResult.Pushed;
+        return (MoveResult.Pushed, slide);
     }
 
     private void MoveCrate(int from, int to)

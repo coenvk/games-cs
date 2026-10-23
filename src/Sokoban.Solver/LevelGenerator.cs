@@ -9,13 +9,15 @@ namespace Sokoban.Solver;
 /// <param name="MinPushes">Reject levels the solver finishes in fewer pushes than this.</param>
 /// <param name="Attempts">Candidates to build; the one needing the most pushes wins.</param>
 /// <param name="ReverseSteps">Random reverse moves used to scramble the crates off their goals.</param>
+/// <param name="IceCells">Ice tiles to add in small patches; levels whose solution never slides are rejected.</param>
 public sealed record GeneratorOptions(
     int Width = 10,
     int Height = 9,
     int Crates = 3,
     int MinPushes = 8,
     int Attempts = 40,
-    int ReverseSteps = 500);
+    int ReverseSteps = 500,
+    int IceCells = 0);
 
 /// <summary>
 /// Generates levels by playing backwards: crates start on their goals and the player walks
@@ -44,7 +46,8 @@ public static class LevelGenerator
                 new LevelSession(candidate),
                 new SolverOptions(MaxNodes: 50_000),
                 cancellation);
-            if (result.Status == SolveStatus.Solved && result.Pushes > bestPushes)
+            if (result.Status == SolveStatus.Solved && result.Pushes > bestPushes
+                && (options.IceCells == 0 || result.Moves.Any(m => m.Slide > 0)))
             {
                 best = candidate;
                 bestPushes = result.Pushes;
@@ -95,7 +98,49 @@ public static class LevelGenerator
             return null;
         }
 
-        return Xsb.ParseLevel(ToXsb(width, height, floor, goals, crates, player));
+        var ice = PlaceIce(options.IceCells, width, floor, cells, goals, crates, player, random);
+        return Xsb.ParseLevel(ToXsb(width, height, floor, goals, crates, player, ice));
+    }
+
+    /// <summary>
+    /// Grows patches of ice on empty floor (never under a goal, crate or the player), so slides are
+    /// a few cells long rather than single scattered tiles.
+    /// </summary>
+    private static HashSet<int> PlaceIce(
+        int count,
+        int width,
+        bool[] floor,
+        List<int> cells,
+        HashSet<int> goals,
+        HashSet<int> crates,
+        int player,
+        Random random)
+    {
+        var ice = new HashSet<int>();
+        var free = cells.Where(c => !goals.Contains(c) && !crates.Contains(c) && c != player).ToList();
+        for (var patches = 0; ice.Count < count && free.Count > 0 && patches < count; patches++)
+        {
+            var patch = new List<int> { free[random.Next(free.Count)] };
+            var size = random.Next(2, 5);
+            for (var grown = 0; grown < size * 4 && patch.Count < size && ice.Count + patch.Count < count; grown++)
+            {
+                var from = patch[random.Next(patch.Count)];
+                var direction = Directions[random.Next(Directions.Length)];
+                if (TryStep(from, direction, width, floor.Length / width, out var next) && floor[next]
+                    && free.Contains(next) && !patch.Contains(next))
+                {
+                    patch.Add(next);
+                }
+            }
+
+            foreach (var cell in patch)
+            {
+                ice.Add(cell);
+                free.Remove(cell);
+            }
+        }
+
+        return ice;
     }
 
     /// <summary>A connected room made of overlapping random rectangles inside an outer wall.</summary>
@@ -169,7 +214,7 @@ public static class LevelGenerator
     }
 
     /// <summary>Walls only where they touch the room (including diagonally), so the level has a clean outline.</summary>
-    private static string ToXsb(int width, int height, bool[] floor, HashSet<int> goals, HashSet<int> crates, int player)
+    private static string ToXsb(int width, int height, bool[] floor, HashSet<int> goals, HashSet<int> crates, int player, HashSet<int> ice)
     {
         bool NearFloor(int x, int y)
         {
@@ -200,6 +245,7 @@ public static class LevelGenerator
                     : i == player ? (goals.Contains(i) ? '+' : '@')
                     : crates.Contains(i) ? (goals.Contains(i) ? '*' : '$')
                     : goals.Contains(i) ? '.'
+                    : ice.Contains(i) ? '~'
                     : ' ');
             }
 

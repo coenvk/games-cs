@@ -17,6 +17,7 @@ A C# rewrite of [coenvk/Sokoban](https://github.com/coenvk/Sokoban), with engine
 | `tools/LevelConverter` | One-shot converter from the old Java level format to XSB |
 | `tools/SolverBench` | `solve`: run the solver over a pack; `generate`: print generated levels as XSB |
 | `levels/original.xsb` | The 100 levels from the Java version |
+| `levels/ice.xsb` | 20 ice levels: three hand-made tutorials, then generated levels from easy to hard |
 
 ## Build
 
@@ -59,6 +60,7 @@ Levels are keyed by a hash of their layout, so reordering or retitling a pack ke
 | Y | Redo |
 | R | Restart level |
 | H | Hint: plays the moves up to the next push (stuck crates are marked red) |
+| Tab | Switch level pack (Classic / Ice) in level select |
 | Enter / Space | Select menu item; reopen the completion screen on a solved level |
 | PageDown / `]`, PageUp / `[` | Next / previous level |
 | Esc | Pause in a level; back in menus |
@@ -71,7 +73,7 @@ Levels are keyed by a hash of their layout, so reordering or retitling a pack ke
 4. ~~Menus, level select, pause, completion screen~~
 5. ~~Saved progress (best moves/pushes/time)~~
 6. ~~Polish: tweened movement, animation, sound, options (sound, fullscreen)~~
-7. ~~Solver (hints, deadlock detection), level generator~~, twist mechanic
+7. ~~Solver (hints, deadlock detection), level generator~~, ~~twist mechanic: ice tiles~~
 
 ## Solver and generator
 
@@ -89,4 +91,19 @@ it makes is solvable; the solver then picks the candidate needing the most pushe
 
 ```bash
 dotnet run -c Release --project tools/SolverBench -- generate 10 42 > generated.xsb
+```
+
+## Ice
+
+Crates pushed onto ice keep sliding in the push direction until the next cell is a wall or a crate, or until they
+reach a cell that is not ice (where they stop). The player walks on ice normally, and ice never holds a goal.
+The XSB format is extended with `~` (ice), `=` (crate on ice) and `&` (player on ice); levels without ice are written
+exactly as before, so their progress keys are unchanged.
+
+The solver handles slides directly. Its dead-square analysis treats every cell along a slide as a possible stop,
+because another crate could stop a slide there; that keeps the analysis safe. The generator adds ice patches to
+reverse-played rooms and keeps a level only if the solver solves it with at least one slide:
+
+```bash
+dotnet run -c Release --project tools/SolverBench -- generate 10 7 9 8 3 8 7 > ice-extra.xsb
 ```

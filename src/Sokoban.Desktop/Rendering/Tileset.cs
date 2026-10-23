@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework.Graphics;
+﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Sokoban.Model;
 
 namespace Sokoban.Desktop.Rendering;
@@ -21,6 +22,7 @@ internal sealed class Tileset : IDisposable
     private readonly Texture2D[] _goals;
     private readonly Texture2D[] _crates;
     private readonly Texture2D[] _players;
+    private readonly Texture2D _ice;
 
     public Tileset(GraphicsDevice device)
     {
@@ -29,9 +31,13 @@ internal sealed class Tileset : IDisposable
         _goals = Load(device, "areas/area", ColorCount);
         _crates = Load(device, "crates/crate", 2 * ColorCount);
         _players = Load(device, "players/player", 10);
+        _ice = CreateIce(device);
     }
 
     /// <summary>Picks a theme for a level; the same level always gets the same theme.</summary>
+    /// <summary>Ice drawn in place of the floor. Generated, as the sprite pack has no ice tile.</summary>
+    public Texture2D Ice => _ice;
+
     public Theme ThemeFor(int levelNumber)
     {
 #pragma warning disable CA5394 // Cosmetic randomness, not security relevant.
@@ -62,6 +68,42 @@ internal sealed class Tileset : IDisposable
         {
             texture.Dispose();
         }
+
+        _ice.Dispose();
+    }
+
+    private static Texture2D CreateIce(GraphicsDevice device)
+    {
+        const int size = TileSize;
+        var top = new Color(218, 243, 252);
+        var bottom = new Color(168, 218, 242);
+        var edge = new Color(128, 186, 222);
+        var pixels = new Color[size * size];
+        for (var y = 0; y < size; y++)
+        {
+            for (var x = 0; x < size; x++)
+            {
+                var color = Color.Lerp(top, bottom, (x + y) / (2f * (size - 1)));
+
+                // Two thin diagonal shine streaks.
+                var diagonal = (x - y + size) % size;
+                if (diagonal is >= 14 and < 17 || diagonal is >= 36 and < 38)
+                {
+                    color = Color.Lerp(color, Color.White, 0.65f);
+                }
+
+                if (x < 2 || y < 2 || x >= size - 2 || y >= size - 2)
+                {
+                    color = Color.Lerp(color, edge, 0.6f);
+                }
+
+                pixels[y * size + x] = color;
+            }
+        }
+
+        var texture = new Texture2D(device, size, size);
+        texture.SetData(pixels);
+        return texture;
     }
 
     // Files 1-4 and 9-12 are light crates; the dark variant of each is four files later.

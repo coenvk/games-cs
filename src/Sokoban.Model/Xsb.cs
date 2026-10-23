@@ -6,10 +6,11 @@ namespace Sokoban.Model;
 /// Reads and writes the standard XSB level format.
 /// <c>#</c> wall, <c>@</c> player, <c>+</c> player on goal, <c>$</c> crate, <c>*</c> crate on goal,
 /// <c>.</c> goal, and space, <c>-</c> or <c>_</c> floor.
+/// Extension for ice: <c>~</c> ice, <c>=</c> crate on ice, <c>&amp;</c> player on ice (ice never holds a goal).
 /// </summary>
 public static class Xsb
 {
-    private const string MapChars = "#@+$*.-_ ";
+    private const string MapChars = "#@+$*.-_ ~=&";
 
     /// <summary>Parses text containing exactly one level.</summary>
     public static Level ParseLevel(string text)
@@ -96,11 +97,13 @@ public static class Xsb
             {
                 var i = board.IndexOf(x, y);
                 var goal = board.IsGoal(i);
+                var ice = board.IsIce(i);
                 row.Append(
                     board.IsWall(i) ? '#'
-                    : i == player ? (goal ? '+' : '@')
-                    : hasCrate(i) ? (goal ? '*' : '$')
+                    : i == player ? (goal ? '+' : ice ? '&' : '@')
+                    : hasCrate(i) ? (goal ? '*' : ice ? '=' : '$')
                     : goal ? '.'
+                    : ice ? '~'
                     : ' ');
             }
 
@@ -146,6 +149,7 @@ public static class Xsb
         var walls = new List<int>();
         var goals = new List<int>();
         var crates = new List<int>();
+        var ice = new List<int>();
         int? player = null;
 
         for (var y = 0; y < height; y++)
@@ -169,6 +173,16 @@ public static class Xsb
                         crates.Add(i);
                         goals.Add(i);
                         break;
+                    case '~':
+                        ice.Add(i);
+                        break;
+                    case '=':
+                        ice.Add(i);
+                        crates.Add(i);
+                        break;
+                    case '&':
+                        ice.Add(i);
+                        goto case '@';
                     case '+':
                         goals.Add(i);
                         goto case '@';
@@ -189,6 +203,6 @@ public static class Xsb
             throw new InvalidLevelException("Level has no player.");
         }
 
-        return Level.Create(width, height, walls, goals, player.Value, crates, title);
+        return Level.Create(width, height, walls, goals, player.Value, crates, title, ice);
     }
 }

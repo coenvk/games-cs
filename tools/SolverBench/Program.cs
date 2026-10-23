@@ -3,7 +3,7 @@
 // Usage:
 //   SolverBench solve <pack.xsb> [max-nodes] [weight] [max-seconds]
 //       Runs the solver over a pack and reports, per level, whether it solved it and how hard it worked.
-//   SolverBench generate <count> [seed] [width] [height] [crates] [min-pushes]
+//   SolverBench generate <count> [seed] [width] [height] [crates] [min-pushes] [ice-cells]
 //       Generates levels and prints them as an XSB pack (stats on stderr).
 
 using System.Diagnostics;
@@ -21,7 +21,7 @@ switch (args.FirstOrDefault())
             MaxNodes: Arg(2, SolverOptions.Default.MaxNodes),
             Weight: Arg(3, SolverOptions.Default.Weight),
             MaxTime: args.Length > 4 ? TimeSpan.FromSeconds(Arg(4, 0)) : null));
-    case "generate" when args.Length is >= 2 and <= 7:
+    case "generate" when args.Length is >= 2 and <= 8:
         var defaults = new GeneratorOptions();
         return Generate(
             Arg(1, 1),
@@ -32,10 +32,11 @@ switch (args.FirstOrDefault())
                 Height = Arg(4, defaults.Height),
                 Crates = Arg(5, defaults.Crates),
                 MinPushes = Arg(6, defaults.MinPushes),
+                IceCells = Arg(7, defaults.IceCells),
             });
     default:
         Console.Error.WriteLine("Usage: SolverBench solve <pack.xsb> [max-nodes] [weight] [max-seconds]");
-        Console.Error.WriteLine("       SolverBench generate <count> [seed] [width] [height] [crates] [min-pushes]");
+        Console.Error.WriteLine("       SolverBench generate <count> [seed] [width] [height] [crates] [min-pushes] [ice-cells]");
         return 1;
 }
 
@@ -60,7 +61,7 @@ static int Solve(string pack, SolverOptions options)
 
         Console.WriteLine(string.Create(
             CultureInfo.InvariantCulture,
-            $"{level.Title ?? $"#{i + 1}",-12} {result.Status,-13} {result.Pushes,7} {result.Moves.Count,7} {result.Explored,9} {watch.Elapsed.TotalMilliseconds,7:0}ms"));
+            $"{level.Title ?? $"#{i + 1}",-12} {result.Status,-13} {result.Pushes,7} {result.Moves.Count,7} {result.Explored,9} {watch.Elapsed.TotalMilliseconds,7:0}ms  {Lurd(result.Moves)}"));
     }
 
     Console.WriteLine(string.Create(
@@ -68,6 +69,8 @@ static int Solve(string pack, SolverOptions options)
         $"Solved {solved}/{levels.Count} in {total.Elapsed.TotalSeconds:0.0}s (budget {options.MaxNodes} nodes, weight {options.Weight})."));
     return 0;
 }
+
+static string Lurd(IEnumerable<Move> moves) => string.Concat(moves.Select(m => m.Direction.ToLurd(m.IsPush)));
 
 static int Generate(int count, int seed, GeneratorOptions options)
 {
