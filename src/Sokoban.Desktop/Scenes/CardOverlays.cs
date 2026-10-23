@@ -22,6 +22,7 @@ internal sealed class CardGamesScene : Scene
             new MenuItem("FreeCell", () => Scenes.Replace(new FreeCellScene(context), Navigation.Fade())),
             new MenuItem("Pyramid", () => Scenes.Replace(new PyramidScene(context), Navigation.Fade())),
             new MenuItem("Spider", () => Scenes.Replace(new SpiderSuitsScene(context))),
+            new MenuItem("TriPeaks", () => Scenes.Replace(new TriPeaksScene(context), Navigation.Fade())),
             new MenuItem("Back", () => Scenes.Pop()));
     }
 

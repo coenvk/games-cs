@@ -21,6 +21,7 @@
     <ProjectReference Include="..\FreeCell\FreeCell.csproj" />
     <ProjectReference Include="..\Pyramid\Pyramid.csproj" />
     <ProjectReference Include="..\Spider\Spider.csproj" />
+    <ProjectReference Include="..\TriPeaks\TriPeaks.csproj" />
   </ItemGroup>
 
   <ItemGroup>
