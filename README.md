@@ -15,6 +15,7 @@ A C# rewrite of [coenvk/Sokoban](https://github.com/coenvk/Sokoban), with engine
 | `src/Jentl.Cards` | Card kit: cards, decks, piles, rules, undo/redo and hints (see `docs/kits.md`) |
 | `src/Jentl.Rpg` | RPG kit: Tiled maps, field of view, pathfinding, dungeon generation, turn engine, inventory, quests and dialogue (see `docs/kits.md`) |
 | `src/Fluffy` | Fluffy, a finite state machine engine: guards, nested states, timers, diagrams (see `docs/fluffy.md`) |
+| `src/CodeLock` | Code lock: Mastermind with a combination lock's digits, and a minimax hint solver |
 | `src/Mossbrook` | Mossbrook, the RPG demo: starting a game and generating the cellar floors; its content is in `src/Sokoban.Desktop/Assets/rpg` |
 | `src/Klondike`, `src/FreeCell`, `src/Pyramid`, `src/Spider`, `src/TriPeaks` | Klondike, FreeCell, Pyramid, Spider and TriPeaks rules on the card kit |
 | `src/Sokoban.Solver` | Solver (A* over pushes, matching heuristic, dead-square and frozen-block pruning) and level generator (reverse play) |
@@ -25,6 +26,7 @@ A C# rewrite of [coenvk/Sokoban](https://github.com/coenvk/Sokoban), with engine
 | `tests/Sokoban.Solver.Tests` | xUnit tests for the solver, deadlock detection and generator |
 | `tests/Jentl.Puzzle.Tests`, `tests/Jentl.Cards.Tests`, `tests/Klondike.Tests`, `tests/FreeCell.Tests`, `tests/Pyramid.Tests`, `tests/Spider.Tests`, `tests/TriPeaks.Tests` | xUnit tests for the kits and card games |
 | `tests/Fluffy.Tests` | xUnit tests for Fluffy |
+| `tests/CodeLock.Tests` | xUnit tests for the code lock rules and solver |
 | `tests/Jentl.Rpg.Tests`, `tests/Mossbrook.Tests` | xUnit tests for the RPG kit, and checks of the shipped Mossbrook content |
 | `tools/LevelConverter` | One-shot converter from the old Java level format to XSB |
 | `tools/SolverBench` | `solve`: run the solver over a pack; `generate`: print generated levels as XSB |
@@ -202,3 +204,12 @@ dotnet run --project tools/RpgArt -- src/Sokoban.Desktop/Assets/rpg --preview x.
 
 `tests/Mossbrook.Tests` validates the content (every dialogue node, item, quest and map object referenced exists),
 checks that every villager and the cellar's stairs and amulet can be reached, and plays the quests through.
+
+## Code lock
+
+**Code lock** on the main menu is Mastermind with a combination lock: find the code in ten tries. After each try the
+lock lights one green lamp for every digit in the right place and one amber lamp for every right digit in the wrong
+place. Easy locks have 3 different digits, normal ones 4, and hard ones 5 that may repeat. Turn the wheels with the
+arrows above and below them (or swipe them), or type digits; Enter tries the code. **Hint** sets the wheels to a code
+that fits every answer so far, picked to split the remaining possibilities as evenly as possible (minimax, as in
+Knuth's Mastermind strategy), and the status line says how many codes still fit. `--deal` picks the lock.

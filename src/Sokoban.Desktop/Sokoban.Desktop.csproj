@@ -23,6 +23,7 @@
     <ProjectReference Include="..\Spider\Spider.csproj" />
     <ProjectReference Include="..\TriPeaks\TriPeaks.csproj" />
     <ProjectReference Include="..\Mossbrook\Mossbrook.csproj" />
+    <ProjectReference Include="..\CodeLock\CodeLock.csproj" />
   </ItemGroup>
 
   <ItemGroup>

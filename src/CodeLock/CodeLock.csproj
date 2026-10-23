@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Code lock: Mastermind with a combination lock's digits. Framework-free game logic and solver. -->
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CodeLock.Tests" />
+  </ItemGroup>
+
+</Project>
