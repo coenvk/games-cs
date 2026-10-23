@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/Fluffy/Fluffy.csproj" />
     <Project Path="src/FreeCell/FreeCell.csproj" />
     <Project Path="src/Jentl.Cards/Jentl.Cards.csproj" />
     <Project Path="src/Jentl.Core.Kni/Jentl.Core.Kni.csproj" />
@@ -17,6 +18,7 @@
     <Project Path="src/TriPeaks/TriPeaks.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Fluffy.Tests/Fluffy.Tests.csproj" />
     <Project Path="tests/FreeCell.Tests/FreeCell.Tests.csproj" />
     <Project Path="tests/Jentl.Cards.Tests/Jentl.Cards.Tests.csproj" />
     <Project Path="tests/Jentl.Core.Tests/Jentl.Core.Tests.csproj" />

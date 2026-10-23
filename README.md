@@ -14,6 +14,7 @@ A C# rewrite of [coenvk/Sokoban](https://github.com/coenvk/Sokoban), with engine
 | `src/Jentl.Puzzle` | Puzzle kit: turn-based grid puzzles with rules, undo/redo and level files (see `docs/kits.md`) |
 | `src/Jentl.Cards` | Card kit: cards, decks, piles, rules, undo/redo and hints (see `docs/kits.md`) |
 | `src/Jentl.Rpg` | RPG kit: Tiled maps, field of view, pathfinding, dungeon generation, turn engine, inventory, quests and dialogue (see `docs/kits.md`) |
+| `src/Fluffy` | Fluffy, a finite state machine engine: guards, nested states, timers, diagrams (see `docs/fluffy.md`) |
 | `src/Mossbrook` | Mossbrook, the RPG demo: starting a game and generating the cellar floors; its content is in `src/Sokoban.Desktop/Assets/rpg` |
 | `src/Klondike`, `src/FreeCell`, `src/Pyramid`, `src/Spider`, `src/TriPeaks` | Klondike, FreeCell, Pyramid, Spider and TriPeaks rules on the card kit |
 | `src/Sokoban.Solver` | Solver (A* over pushes, matching heuristic, dead-square and frozen-block pruning) and level generator (reverse play) |
@@ -23,6 +24,7 @@ A C# rewrite of [coenvk/Sokoban](https://github.com/coenvk/Sokoban), with engine
 | `tests/Jentl.Core.Tests` | xUnit tests for the engine (runs headless) |
 | `tests/Sokoban.Solver.Tests` | xUnit tests for the solver, deadlock detection and generator |
 | `tests/Jentl.Puzzle.Tests`, `tests/Jentl.Cards.Tests`, `tests/Klondike.Tests`, `tests/FreeCell.Tests`, `tests/Pyramid.Tests`, `tests/Spider.Tests`, `tests/TriPeaks.Tests` | xUnit tests for the kits and card games |
+| `tests/Fluffy.Tests` | xUnit tests for Fluffy |
 | `tests/Jentl.Rpg.Tests`, `tests/Mossbrook.Tests` | xUnit tests for the RPG kit, and checks of the shipped Mossbrook content |
 | `tools/LevelConverter` | One-shot converter from the old Java level format to XSB |
 | `tools/SolverBench` | `solve`: run the solver over a pack; `generate`: print generated levels as XSB |
@@ -179,7 +181,7 @@ with undo, hints and automatic moves home. FreeCell deal numbers match Microsoft
 **Adventure** on the main menu is a small turn-based RPG on Jentl's **RPG kit** (`Jentl.Rpg`). Thieves have hidden
 Elder Maren's amulet in the old cellar under the chapel ruins. Talk to the villagers, pick up quests, get a sword from
 Bram the smith, and go down: the cellar's two floors are generated from the game's seed (`--deal` sets it), dark, and
-full of rats, slimes, spiders and skeletons. Returning the amulet wins; two side quests give potions and armour.
+full of rats, slimes, spiders and skeletons. Spiders run on a state machine (Fluffy): they hunt you, flee when badly hurt, and rest out of sight to heal. Returning the amulet wins; two side quests give potions and armour.
 
 Walk into people to talk and into monsters to fight; walking over items picks them up. Arrows/WASD or swipes step,
 tapping a cell walks there, `.` or T waits a turn, I or B opens the bag (use potions, equip gear), J or Q the journal.

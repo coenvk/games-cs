@@ -13,7 +13,7 @@
     { "id": "slime", "name": "slime", "sprite": "slime", "faction": "hostile", "hp": 8, "attack": 2, "defense": 1, "sight": 4,
       "brain": "hunter", "xp": 5, "drops": [ { "item": "glowcap", "chance": 0.25 } ] },
     { "id": "spider", "name": "cave spider", "sprite": "spider", "faction": "hostile", "hp": 7, "attack": 4, "sight": 7,
-      "brain": "hunter", "xp": 6, "drops": [ { "item": "coins", "chance": 0.5, "count": 3 } ] },
+      "brain": "skittish", "xp": 6, "drops": [ { "item": "coins", "chance": 0.5, "count": 3 } ] },
     { "id": "skeleton", "name": "skeleton", "sprite": "skeleton", "faction": "hostile", "hp": 12, "attack": 4, "defense": 2, "sight": 6,
       "brain": "hunter", "xp": 9, "drops": [ { "item": "coins", "chance": 0.7, "count": 5 }, { "item": "potion", "chance": 0.2 } ] }
   ]
