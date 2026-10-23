@@ -107,3 +107,20 @@ reverse-played rooms and keeps a level only if the solver solves it with at leas
 ```bash
 dotnet run -c Release --project tools/SolverBench -- generate 10 7 9 8 3 8 7 > ice-extra.xsb
 ```
+
+## Packaging
+
+```bash
+build/package.sh              # this machine's runtime, compiled with NativeAOT
+build/package.sh win-x64      # other runtimes: self-contained, trimmed single file
+build/package.sh linux-x64
+```
+
+Each run writes `dist/Sokoban-<version>-<rid>.zip`. On macOS it contains `Sokoban.app` (icon, `Info.plist`, ad-hoc
+signature); elsewhere a `Sokoban/` folder with the executable, SDL2/OpenAL libraries, `Assets/` and `Levels/`.
+
+- The ad-hoc signature is enough to run the app on the Mac that built it. Handing it to other Macs needs a Developer ID
+  signature and notarisation, otherwise Gatekeeper blocks it.
+- Linux needs OpenGL and OpenSSL (`libssl`), both present on desktop distributions. The Linux build was smoke-tested
+  in Docker under Xvfb; the Windows build has not been run.
+- Without an audio device the game runs silently.

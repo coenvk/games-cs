@@ -10,7 +10,11 @@ internal static class Format
         time.ToString(time.TotalHours >= 1 ? @"h\:mm\:ss" : @"m\:ss", CultureInfo.InvariantCulture);
 
     public static string Result(int moves, int pushes, TimeSpan time) =>
-        string.Create(CultureInfo.InvariantCulture, $"{moves} moves, {pushes} pushes, {Duration(time)}");
+        $"{Count(moves, "move")}, {Count(pushes, "push")}, {Duration(time)}";
+
+    /// <summary>"1 move", "2 moves", "1 push", "3 pushes".</summary>
+    public static string Count(int count, string noun) =>
+        string.Create(CultureInfo.InvariantCulture, $"{count} {noun}{(count == 1 ? "" : noun.EndsWith('h') ? "es" : "s")}");
 
     public static string Best(LevelRecord record) =>
         "Best: " + Result(record.BestMoves, record.BestPushes, record.BestTime);
