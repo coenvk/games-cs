@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using Jentl.Core;
 using Jentl.Core.Audio;
+using Jentl.Core.Cards;
 using Jentl.Core.Content;
 using Jentl.Core.Input;
 using Jentl.Core.Scenes;
@@ -29,6 +30,7 @@ internal sealed class SokobanGame : JentlGame
     private Tileset? _tileset;
     private Fonts? _fonts;
     private SoundPlayer? _sounds;
+    private CardArt? _cardArt;
 
     /// <param name="store">Where to keep progress and settings; null keeps them in memory only.</param>
     public SokobanGame(GameOptions options, ISaveStore? store, PlatformFeatures platform)
@@ -77,7 +79,9 @@ internal sealed class SokobanGame : JentlGame
             _sounds,
             settings,
             SetFullscreen,
-            _platform);
+            _platform,
+            new CardRenderer(_cardArt = new CardArt(GraphicsDevice), new FontTextDrawer(_fonts)),
+            _options.Deal);
 
         Scene[] start = _options.StartLevel is { } level
             ? [new MenuScene(context), new PlayScene(context, new LevelRef(0, Math.Clamp(level, 0, packs[0].Levels.Count - 1)))]
@@ -129,6 +133,7 @@ internal sealed class SokobanGame : JentlGame
             _tileset?.Dispose();
             _fonts?.Dispose();
             _sounds?.Dispose();
+            _cardArt?.Dispose();
         }
 
         base.Dispose(disposing);

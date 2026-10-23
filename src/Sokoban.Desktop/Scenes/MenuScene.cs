@@ -11,7 +11,7 @@ namespace Sokoban.Desktop.Scenes;
 
 internal sealed class MenuScene : Scene
 {
-    private const int QuitItem = 4;
+    private const int QuitItem = 5;
 
     private readonly GameContext _context;
     private Menu _menu;
@@ -84,6 +84,7 @@ internal sealed class MenuScene : Scene
             new(started ? "Continue" : "Play", () => Scenes.Push(new PlayScene(context, context.Continue), Navigation.Fade())),
             new("Select level", () => Scenes.Push(new LevelSelectScene(context, context.Continue), Navigation.Fade())),
             new("Random level", () => Scenes.Push(new GenerateScene(context), Navigation.Fade())),
+            new("Solitaire", () => Scenes.Push(new SolitaireScene(context), Navigation.Fade())),
             new("Options", () => Scenes.Push(new OptionsScene(context))),
         ];
         if (context.Platform.CanQuit)

@@ -42,6 +42,9 @@ internal sealed class Fonts : IDisposable
 
     public SpriteFontBase Small => _system.GetFont(Math.Max(MinSmallSize, Px(22)));
 
+    /// <summary>The font at any pixel size, for text that scales with something other than the UI (such as cards).</summary>
+    public SpriteFontBase Sized(float pixels) => _system.GetFont(Math.Max(6, (int)MathF.Round(pixels)));
+
     /// <summary>Recomputes the scale for the current screen; call once per frame.</summary>
     public void Fit(Rectangle viewport)
     {

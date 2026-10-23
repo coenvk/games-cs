@@ -1,4 +1,5 @@
 ﻿using Jentl.Core.Audio;
+using Jentl.Core.Cards;
 using Jentl.Core.Input;
 using Sokoban.Desktop.Input;
 using Sokoban.Desktop.Rendering;
@@ -42,7 +43,9 @@ internal sealed record GameContext(
     SoundPlayer Sounds,
     SavedFile<Settings> Settings,
     Action<bool> SetFullscreen,
-    PlatformFeatures Platform)
+    PlatformFeatures Platform,
+    CardRenderer Cards,
+    int? Deal = null)
 {
     public IEnumerable<Level> AllLevels => Packs.SelectMany(p => p.Levels);
 

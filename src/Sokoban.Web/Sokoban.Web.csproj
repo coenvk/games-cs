@@ -46,6 +46,7 @@
     <ProjectReference Include="..\Jentl.Core.Kni\Jentl.Core.Kni.csproj" />
     <ProjectReference Include="..\Sokoban.Model\Sokoban.Model.csproj" />
     <ProjectReference Include="..\Sokoban.Solver\Sokoban.Solver.csproj" />
+    <ProjectReference Include="..\Klondike\Klondike.csproj" />
   </ItemGroup>
 
   <ItemGroup>
