@@ -71,14 +71,21 @@ internal sealed class CampaignScene : Scene
                 var open = CampaignPlay.IsOpen(Profile, Regions, stage);
                 var won = Profile.Campaign.Won(stage);
                 var label = open
-                    ? T("{0} · RQ {1} · prizes {2}/{3}", T(region.Name) + stage.Name[region.Name.Length..], stage.HandRqLimit, won, stage.PrizeCarIds.Count)
-                    : T("{0} · locked", T(region.Name) + stage.Name[region.Name.Length..]);
+                    ? T("{0} · RQ {1} · prizes {2}/{3}", StageName(stage), stage.HandRqLimit, won, stage.PrizeCarIds.Count)
+                    : T("{0} · locked", StageName(stage));
                 items.Add(new MenuItem(label, () => Race(stage)));
             }
         }
 
         items.Add(new MenuItem(T("Back"), () => Scenes.Pop(Navigation.Fade())));
         return new Menu(_context.Sounds, [.. items]);
+    }
+
+    // "Riverside 3", with the region's name translated.
+    private string StageName(StageDef stage)
+    {
+        var region = Regions.First(r => r.Stages.Contains(stage));
+        return T(region.Name) + stage.Name[region.Name.Length..];
     }
 
     private void Race(StageDef stage)
@@ -92,7 +99,7 @@ internal sealed class CampaignScene : Scene
 
         var data = _context.PaddockData;
         var setup = CampaignPlay.Setup(stage, data.Roster, data.Tracks);
-        Scenes.Push(new MatchSetupScene(_context, stage.Name, setup, stage.HandRqLimit, _ => true, order =>
+        Scenes.Push(new MatchSetupScene(_context, StageName(stage), setup, stage.HandRqLimit, _ => true, order =>
         {
             var cars = order.Select(id => Profile.Car(id)!).ToList();
             var outcome = CampaignPlay.Race(Profile, Regions, stage, order, data.Roster, data.Tracks);

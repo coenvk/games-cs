@@ -2,7 +2,7 @@
 
 **Play in your browser: https://coenvk.github.io/games-cs/**
 
-Six small games made with [Jentl](https://github.com/coenvk/jentl-cs), a C# game engine on MonoGame (desktop) and KNI (the
+Seven small games made with [Jentl](https://github.com/coenvk/jentl-cs), a C# game engine on MonoGame (desktop) and KNI (the
 browser). It started as a C# rewrite of [coenvk/Sokoban](https://github.com/coenvk/Sokoban), and the engine grew alongside;
 the engine now lives in its own repository and comes in here as packages.
 
@@ -14,6 +14,7 @@ the engine now lives in its own repository and comes in here as packages.
 | **Mossbrook** | A small turn-based adventure: a village, a cellar and a lost amulet |
 | **Code Lock** | Mastermind on a combination lock |
 | **Bricks** | A brick breaker with power-ups |
+| **Paddock** | Collect invented cars, race hands of five on tracks in all weathers, upgrade and fuse them, win rare ones in events |
 
 Each is its own app, on the desktop and in the browser (each in its own folder of the site above).
 
@@ -29,9 +30,10 @@ Each is its own app, on the desktop and in the browser (each in its own folder o
 | `src/Klondike` ... `src/Yukon` | The solitaire games' rules on the card kit |
 | `src/Uno`, `src/Poker` | Uno (rules, bots, its online room) and Texas Hold'em |
 | `src/Mossbrook`, `src/CodeLock`, `src/Bricks` | The adventure on the RPG kit, the code lock and its solver, and the brick breaker on the ECS and physics |
+| `src/Paddock` | Paddock's cars, race simulation, upgrades and fusing, matches, events, campaign and economy |
 | `src/GameServer` | The online game server (rooms over WebSockets, hosting Uno), with a Dockerfile |
 | `tests/*` | xUnit tests for every game library and the server; `tests/Apps.Tests` checks the apps' translations and assets |
-| `tools/LevelConverter`, `tools/SolverBench`, `tools/RpgArt` | The old level converter, the solver bench, and the RPG tileset drawn in code |
+| `tools/LevelConverter`, `tools/SolverBench`, `tools/RpgArt`, `tools/CarArt` | The old level converter, the solver bench, the RPG tileset drawn in code, and Paddock's cars drawn in code |
 | `levels` | Sokoban's level packs |
 | `build` | Packaging, the landing page, and scripts for the engine packages and the sprite atlas |
 
@@ -43,7 +45,7 @@ one if there is one, otherwise from GitHub at the version in `dependencies.props
 ```bash
 build/jentl.sh
 dotnet test Games.slnx
-dotnet run --project apps/Sokoban/Desktop        # or Solitaire, CardTable, Mossbrook, CodeLock, Bricks
+dotnet run --project apps/Sokoban/Desktop        # or Solitaire, CardTable, Mossbrook, CodeLock, Bricks, Paddock
 dotnet run --project apps/Sokoban/Web            # in the browser
 ```
 
@@ -197,7 +199,7 @@ signature); elsewhere a folder with the executable, SDL2/OpenAL libraries and `A
 The browser apps compile the same sources against [KNI](https://github.com/kniEngine/kni) (a MonoGame fork with a
 Blazor WebAssembly platform). Pushing to `main` tests everything and publishes the site (`.github/workflows/pages.yml`):
 a landing page (`build/site`) with each game in its own folder (`sokoban/`, `solitaire/`, `card-table/`, `mossbrook/`,
-`code-lock/`, `bricks/`). CI builds the engine packages from the public jentl repository, so it needs no tokens.
+`code-lock/`, `bricks/`, `paddock/`). CI builds the engine packages from the public jentl repository, so it needs no tokens.
 
 Differences from desktop:
 
@@ -300,3 +302,31 @@ Showdowns name the hands ("Two pair, sevens and threes"), and all-ins for differ
 The bots deal out the unknown cards a hundred and fifty times to estimate their chances, then weigh that against
 the pot odds; each seat plays its own style, from tight and careful to loose and pushy, with the odd bluff. The
 engine (`src/Poker`) is framework-free and runs on the same multiplayer layer as Uno.
+
+## Paddock
+
+**Paddock** is a car collecting game in the spirit of Top Drives, with 100 invented cars from invented makers, drawn in
+code (`tools/CarArt`, `build/cars.sh`). Every car is a card with a rarity class (F up to S), an RQ (its strength), top
+speed, 0-100, handling, weight, drive, tyres and ground clearance.
+
+- **Matches**: your hand of five against an opponent's five, over five rounds. You see the tracks, their conditions
+  (dry, wet, dirt, gravel, snow, ice, sand) and the opponent's cars, then order your cars to decide which races where;
+  the hand's RQ must stay within the limit, which grows with your level. Most rounds won wins the match.
+- **Races** are decided by the stats, metre by metre (`src/Paddock/RaceSimulator.cs`): the engine pulls towards top
+  speed, corners are taken as fast as the grip allows (handling times the tyres' grip on the surface), drive decides
+  the launch, low cars slow down on rough ground, heavy cars brake later. The same match always ends the same way, on
+  every platform. The round then plays out on screen in 10 to 20 seconds: drag races from the side, everything else
+  from above, following your car (Options > Race camera: Fixed, or Turn with car). After each round: who won, by how
+  much, and the stats that decided it. Skip jumps to the result.
+- **Upgrades**: each car has three stages of 8 points (at most 3 per area per stage) in engine, weight and chassis,
+  bought with cash; a full stage needs another car of the same class fused into it. The tune shows as "3.3.2", up to
+  e.g. "9.9.6". Upgrades never change a car's RQ.
+- **Events**: three at a time, each changing every three days (one a day), the same everywhere; entry rules, a ladder
+  of 12 matches with packs at 4 and 8 and a rare prize car at the top. Each event has 5 tickets, one back every 30
+  minutes, also while the game is closed.
+- **Campaign**: five regions of six stages, no tickets; each stage has three prize cars, one per win.
+- **Packs**: Starter, Classic and Elite, bought with cash; the odds are on the pack.
+
+The rules (`src/Paddock`) are framework-free and tested in `tests/Paddock.Tests`; the data (cars, tracks, events,
+campaign) is JSON in `apps/Paddock/Assets/paddock`, and the numbers that balance it all are in `src/Paddock/Balance.cs`.
+Progress is saved in `profile.json` (and Paddock's own settings in `paddock.json`) in the `Paddock` folder.

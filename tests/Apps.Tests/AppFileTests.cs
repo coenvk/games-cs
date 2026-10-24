@@ -8,7 +8,7 @@ public class AppFileTests
 {
     private static readonly string Root = RepositoryRoot();
 
-    public static TheoryData<string> Apps => ["Sokoban", "Solitaire", "CardTable", "Mossbrook", "CodeLock", "Bricks"];
+    public static TheoryData<string> Apps => ["Sokoban", "Solitaire", "CardTable", "Mossbrook", "CodeLock", "Bricks", "Paddock"];
 
     /// <summary>One language file serves every app, so it must cover the shell's texts and all the apps'.</summary>
     [Fact]
@@ -17,6 +17,7 @@ public class AppFileTests
         var used = new HashSet<string>(TranslationCheck.SourceTexts(Path.Combine(Root, "shell")), StringComparer.Ordinal);
         used.UnionWith(TranslationCheck.SourceTexts(Path.Combine(Root, "apps")));
         used.Should().Contain(["Options", "Select level", "{0} move"], "the scan finds texts in the shell and the apps");
+        used.UnionWith(PaddockTexts());
 
         // Looked up from data rather than written in the code: Sokoban's level packs and their title prefix.
         TranslationCheck.Problems(used, Path.Combine(Root, "shell", "Assets", "lang"), indirect: ["Classic", "Ice", "Level"])
@@ -43,6 +44,24 @@ public class AppFileTests
     [Fact]
     public void TheSharedAssets_PassTheCheck() =>
         new AssetCheck(Path.Combine(Root, "shell", "Assets")).Run().Should().BeEmpty();
+
+    // Paddock shows names from its data (tracks, events, campaign regions, makers' countries) and a few texts from its
+    // rules library (pack names, why an event can't be entered), all through the language file.
+    private static IEnumerable<string> PaddockTexts()
+    {
+        var folder = Path.Combine(Root, "apps", "Paddock", "Assets", "paddock");
+        IEnumerable<string> Strings(string file, string list, string field)
+        {
+            using var json = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(folder, file)));
+            return [.. json.RootElement.GetProperty(list).EnumerateArray().Select(e => e.GetProperty(field).GetString()!)];
+        }
+
+        return Strings("tracks.json", "tracks", "name")
+            .Concat(Strings("events.json", "events", "name"))
+            .Concat(Strings("campaign.json", "regions", "name"))
+            .Concat(Strings("cars.json", "cars", "country"))
+            .Concat(["Starter pack", "Classic pack", "Elite pack", "Event finished", "Not enough cars that may enter", "No tickets left"]);
+    }
 
     private static string RepositoryRoot()
     {
