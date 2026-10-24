@@ -26,11 +26,27 @@ public sealed partial class Index : IDisposable
         if (_game is null)
         {
             var store = new LocalStorageStore((IJSInProcessRuntime)JsRuntime);
-            _game = new SokobanGame(new GameOptions(), store, PlatformFeatures.Browser);
+            _game = new SokobanGame(new GameOptions(Server: ServerFromAddress(Navigation.Uri)), store, PlatformFeatures.Browser);
             _game.Run();
         }
 
         _game.Tick();
+    }
+
+    /// <summary>The game server named in the page address (<c>?server=wss://example.org/play</c>), if any.</summary>
+    private static Uri? ServerFromAddress(string address)
+    {
+        var query = new Uri(address).Query.TrimStart('?');
+        foreach (var part in query.Split('&', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var pair = part.Split('=', 2);
+            if (pair is ["server", var value] && Uri.TryCreate(Uri.UnescapeDataString(value), UriKind.Absolute, out var server) && server.Scheme is "ws" or "wss")
+            {
+                return server;
+            }
+        }
+
+        return null;
     }
 
     public void Dispose()

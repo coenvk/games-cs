@@ -57,8 +57,15 @@ internal sealed record GameContext(
     CardRenderer Cards,
     AdventureSaves Adventures,
     CodeLockStore Locks,
-    int? Deal = null)
+    int? Deal = null,
+    Uri? Server = null)
 {
+    /// <summary>The game server for online play: chosen at start-up, or one on this machine.</summary>
+    public Uri GameServer => Server ?? DefaultServer;
+
+    /// <summary>A server run locally with <c>dotnet run --project src/Jentl.Server</c>.</summary>
+    public static Uri DefaultServer { get; } = new("ws://localhost:5080/play");
+
     public IEnumerable<Level> AllLevels => Packs.SelectMany(p => p.Levels);
 
     /// <summary>Where "Continue" picks up: the first unsolved level, pack by pack; the very first level once all are solved.</summary>

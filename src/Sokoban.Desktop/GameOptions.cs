@@ -12,6 +12,7 @@ namespace Sokoban.Desktop;
 /// <param name="Size">Window size in pixels instead of the default 1280x800, e.g. to check a phone-shaped layout.</param>
 /// <param name="Virtual">Render at this design resolution, scaled to the window (Jentl's <c>VirtualScreen</c>).</param>
 /// <param name="Debug">Start with the debug overlay (F3) showing.</param>
+/// <param name="Server">The game server for online play (<c>ws://</c> or <c>wss://</c>).</param>
 internal sealed record GameOptions(
     int? StartLevel = null,
     string? ScreenshotPath = null,
@@ -21,4 +22,5 @@ internal sealed record GameOptions(
     int? Deal = null,
     Point? Size = null,
     VirtualScreen? Virtual = null,
-    bool Debug = false);
+    bool Debug = false,
+    Uri? Server = null);

@@ -14,6 +14,7 @@ using Sokoban.Desktop;
 //   --size <w>x<h>       window size in pixels (default 1280x800)
 //   --virtual <w>x<h>[:fit|pixel|expand]  render at a fixed design resolution, scaled to the window
 //   --debug true         start with the debug overlay (F3) showing
+//   --server <url>       the game server for online play (default ws://localhost:5080/play, or JENTL_SERVER)
 var options = new GameOptions();
 for (var i = 0; i + 1 < args.Length; i += 2)
 {
@@ -41,6 +42,9 @@ for (var i = 0; i + 1 < args.Length; i += 2)
             var size = args[i + 1].Split('x');
             options = options with { Size = new Microsoft.Xna.Framework.Point(int.Parse(size[0], CultureInfo.InvariantCulture), int.Parse(size[1], CultureInfo.InvariantCulture)) };
             break;
+        case "--server":
+            options = options with { Server = new Uri(args[i + 1]) };
+            break;
         case "--debug":
             options = options with { Debug = bool.Parse(args[i + 1]) };
             break;
@@ -59,6 +63,11 @@ for (var i = 0; i + 1 < args.Length; i += 2)
             Console.Error.WriteLine($"Unknown option '{args[i]}'.");
             return 1;
     }
+}
+
+if (options.Server is null && Environment.GetEnvironmentVariable("JENTL_SERVER") is { Length: > 0 } server)
+{
+    options = options with { Server = new Uri(server) };
 }
 
 // Scripted runs must not touch the player's real saves unless a directory is given.

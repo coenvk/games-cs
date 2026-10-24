@@ -17,7 +17,7 @@ internal sealed class UnoSetupScene : PanelScene
         : base(context)
     {
         UnoSetup[] setups = [UnoSetup.VersusBots(3), UnoSetup.VersusBots(2), UnoSetup.VersusBots(1), UnoSetup.PassAndPlay(2), UnoSetup.PassAndPlay(3), UnoSetup.PassAndPlay(4)];
-        Menu = new Menu(context.Sounds, [.. setups.Select(s => new MenuItem(s.Name, () => Scenes.Replace(new UnoScene(context, s), Navigation.Fade()))), new MenuItem("Back", () => Scenes.Pop())]);
+        Menu = new Menu(context.Sounds, [.. setups.Select(s => new MenuItem(s.Name, () => Scenes.Replace(new UnoScene(context, s), Navigation.Fade()))), new MenuItem("Play online", () => Scenes.Replace(new UnoOnlineScene(context))), new MenuItem("Back", () => Scenes.Pop())]);
     }
 
     protected override string Title => "Uno";
@@ -26,10 +26,10 @@ internal sealed class UnoSetupScene : PanelScene
 }
 
 /// <summary>The colour a wild calls.</summary>
-internal sealed class UnoColourScene : PanelScene
+internal sealed class UnoColourScene : UnoPanel
 {
     public UnoColourScene(GameContext context, UnoScene game, UnoCard card)
-        : base(context)
+        : base(context, game)
     {
         Menu = new Menu(context.Sounds, [.. Enum.GetValues<UnoColor>().Select(c => new MenuItem(c.ToString(), () =>
         {
@@ -68,15 +68,16 @@ internal sealed class UnoHandoverScene : PanelScene
 }
 
 /// <summary>The round's winner and points, and the scores so far.</summary>
-internal sealed class UnoRoundScene : PanelScene
+internal sealed class UnoRoundScene : UnoPanel
 {
-    private readonly UnoScene _game;
+    private readonly int _round;
 
     public UnoRoundScene(GameContext context, UnoScene game)
-        : base(context)
+        : base(context, game)
     {
-        _game = game;
-        var over = game.Match.Champion is not null;
+        var view = game.Table.View!;
+        _round = view.RoundNumber;
+        var over = view.Champion is not null;
         Menu = new Menu(
             context.Sounds,
             new MenuItem(over ? "New match" : "Next round", () =>
@@ -91,51 +92,104 @@ internal sealed class UnoRoundScene : PanelScene
                     game.NextRound();
                 }
             }),
-            new MenuItem("Main menu", () => Navigation.ToMainMenu(Scenes, context)));
+            new MenuItem("Main menu", () => game.Leave()));
     }
 
-    protected override string Title => _game.Match.Champion is { } champion
-        ? $"{_game.Players[champion].Name} {(_game.Players[champion].Name == "You" ? "win" : "wins")} the match!"
+    protected override string Title => Game.Table.View is { Champion: { } champion } view
+        ? (champion == view.Seat && Game.Table.IsOnline) || Name(champion) == "You" ? "You win the match!" : $"{Name(champion)} wins the match!"
         : "Round over";
 
     protected override IReadOnlyList<PanelLine> Lines
     {
         get
         {
-            var match = _game.Match;
-            var winner = match.Round.Winner!.Value;
+            if (Game.Table.View is not { Winner: { } winner } view)
+            {
+                return [];
+            }
+
             var lines = new List<PanelLine>
             {
-                new(string.Create(CultureInfo.InvariantCulture, $"{_game.Players[winner].Name}: +{match.ScoreRound()} points"), Palette.Accent),
+                new(string.Create(CultureInfo.InvariantCulture, $"{Name(winner)}: +{view.RoundPoints} points"), Palette.Accent),
             };
-            lines.AddRange(_game.Players.OrderByDescending(p => match.Scores[p.Seat])
-                .Select(p => new PanelLine(string.Create(CultureInfo.InvariantCulture, $"{p.Name}  {match.Scores[p.Seat]}"), Palette.Text)));
+            lines.AddRange(Enumerable.Range(0, view.Players).OrderByDescending(s => view.Scores[s])
+                .Select(s => new PanelLine(string.Create(CultureInfo.InvariantCulture, $"{Name(s)}  {view.Scores[s]}"), Palette.Text)));
             return lines;
+        }
+    }
+
+    public override void Update(TimeSpan elapsed, InputState input)
+    {
+        base.Update(elapsed, input);
+
+        // Online, someone else may deal the next round (or the server does, after a while).
+        if (Game.Table.View is { } view && view.RoundNumber != _round && Scenes.Top == this)
+        {
+            Scenes.Pop();
         }
     }
 }
 
-internal sealed class UnoPauseScene : PanelScene
+internal sealed class UnoPauseScene : UnoPanel
 {
-    private readonly UnoScene _game;
-
     public UnoPauseScene(GameContext context, UnoScene game)
-        : base(context)
+        : base(context, game)
     {
-        _game = game;
-        Menu = new Menu(
-            context.Sounds,
-            new MenuItem("Resume", () => Scenes.Pop()),
-            new MenuItem("New match", () =>
-            {
-                Scenes.Pop();
-                game.NewMatch();
-            }),
-            new MenuItem("Options", () => Scenes.Push(new OptionsScene(context))),
-            new MenuItem("Main menu", () => Navigation.ToMainMenu(Scenes, context)));
+        Menu = game.Table.IsOnline
+            ? new Menu(
+                context.Sounds,
+                new MenuItem("Resume", () => Scenes.Pop()),
+                new MenuItem("Options", () => Scenes.Push(new OptionsScene(context))),
+                new MenuItem("Leave the room", () => game.Leave()))
+            : new Menu(
+                context.Sounds,
+                new MenuItem("Resume", () => Scenes.Pop()),
+                new MenuItem("New match", () =>
+                {
+                    Scenes.Pop();
+                    game.NewMatch();
+                }),
+                new MenuItem("Options", () => Scenes.Push(new OptionsScene(context))),
+                new MenuItem("Main menu", () => game.Leave()));
     }
 
     protected override string Title => "Paused";
 
-    protected override IReadOnlyList<PanelLine> Lines => [new(_game.Setup.Name, Palette.Muted)];
+    protected override IReadOnlyList<PanelLine> Lines =>
+        Game.Table.IsOnline
+            ? [new(Game.Table.Name, Palette.Muted), new("The game goes on without you while you're here.", Palette.Muted)]
+            : [new(Game.Table.Name, Palette.Muted)];
+}
+
+/// <summary>An online table that can't go on: the connection dropped or the room closed.</summary>
+internal sealed class UnoGoneScene : UnoPanel
+{
+    private readonly string _reason;
+
+    public UnoGoneScene(GameContext context, UnoScene game, string reason)
+        : base(context, game)
+    {
+        _reason = reason;
+        Menu = new Menu(context.Sounds, new MenuItem("Main menu", () => game.Leave()));
+    }
+
+    protected override string Title => "Game interrupted";
+
+    protected override IReadOnlyList<PanelLine> Lines => [new(_reason, Palette.Text)];
+
+    protected override void OnBack() => Game.Leave();
+}
+
+/// <summary>A panel over the Uno table that keeps an online game talking to the server while it shows.</summary>
+internal abstract class UnoPanel(GameContext context, UnoScene game) : PanelScene(context)
+{
+    protected UnoScene Game { get; } = game;
+
+    public override void Update(TimeSpan elapsed, InputState input)
+    {
+        Game.KeepAlive(elapsed);
+        base.Update(elapsed, input);
+    }
+
+    protected string Name(int seat) => seat < Game.Names.Count ? Game.Names[seat] : $"Player {seat + 1}";
 }

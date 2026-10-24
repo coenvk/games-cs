@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Uno's rules, scoring and bots on Jentl.Multiplayer; framework-free. -->
+  <!-- Uno's rules, scoring, bots and online room on Jentl.Multiplayer and Jentl.Net; framework-free. -->
 
   <ItemGroup>
     <InternalsVisibleTo Include="Uno.Tests" />
@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Jentl.Multiplayer\Jentl.Multiplayer.csproj" />
+    <ProjectReference Include="..\Jentl.Net\Jentl.Net.csproj" />
   </ItemGroup>
 
 </Project>

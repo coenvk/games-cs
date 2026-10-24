@@ -30,10 +30,10 @@ internal sealed record UnoSetup(string Name, IReadOnlyList<Player> Players)
 }
 
 /// <summary>
-/// Uno at one table: the other players along the top (with their card counts and scores), the draw pile and
+/// Uno at one table, on this device or online (<see cref="IUnoTable"/>): the other players along the top (with their card counts and scores), the draw pile and
 /// the discard in the middle, and the viewer's hand at the bottom. Tap a card to play it, Draw to draw, and
 /// Uno! before playing your second-to-last card. Bots take their turns by themselves; with several people
-/// at the device, hands are hidden while it is passed on.
+/// at the device, hands are hidden while it is passed on. Online, the server deals and checks every move.
 /// </summary>
 internal sealed class UnoScene : Scene
 {
@@ -43,9 +43,6 @@ internal sealed class UnoScene : Scene
     private static readonly TimeSpan RoundEndDelay = TimeSpan.FromMilliseconds(1100);
 
     private readonly GameContext _context;
-    private readonly UnoSetup _setup;
-    private readonly int _seed;
-    private readonly IBot<UnoGame, UnoMove> _bot = new SmartUnoBot();
     private readonly ButtonBar _buttons;
     private readonly List<string> _log = [];
     private readonly List<Flight> _flights = [];
@@ -55,58 +52,79 @@ internal sealed class UnoScene : Scene
     private UnoArt? _art;
     private Rectangle _drawPile;
     private Rectangle _discard;
-    private Match<UnoGame, UnoMove> _runner;
     private bool _callUno;
     private int _selected;
     private TimeSpan _roundOverFor;
     private bool _roundShown;
+    private int _round;
+    private bool _problemShown;
+    private string? _lastProblem;
 
     public UnoScene(GameContext context, UnoSetup setup, int? seed = null)
+        : this(context, new LocalUnoTable(setup, seed ?? context.Deal ?? Random.Shared.Next(1, 1_000_000)))
+    {
+    }
+
+    public UnoScene(GameContext context, IUnoTable table)
     {
         _context = context;
-        _setup = setup;
-        _seed = seed ?? context.Deal ?? Random.Shared.Next(1, 1_000_000);
-        Match = new UnoMatch(setup.Players.Count, _seed);
-        _runner = NewRunner();
+        Table = table;
         _buttons = new ButtonBar(
             new Button("Draw", DrawOrKeep),
             new Button("Uno!", () => _callUno = !_callUno),
             new Button("Menu", () => Scenes.Push(new UnoPauseScene(context, this))));
-        Say(Match.Round.Events);
-        Match.Round.TakeEvents();
+        Say(Table.TakeEvents());
     }
 
-    public UnoMatch Match { get; }
+    public IUnoTable Table { get; }
 
-    public UnoSetup Setup => _setup;
+    public IReadOnlyList<string> Names => Table.Names;
 
-    public IReadOnlyList<Player> Players => _setup.Players;
-
-    public void NewMatch() => Scenes.Replace(new UnoScene(_context, _setup), Navigation.Fade());
+    /// <summary>A fresh match: dealt here for a local table, asked of the server online.</summary>
+    public void NewMatch()
+    {
+        if (Table is LocalUnoTable local)
+        {
+            Scenes.Replace(new UnoScene(_context, local.Setup), Navigation.Fade());
+        }
+        else
+        {
+            Table.NextRound();
+        }
+    }
 
     /// <summary>Deals the next round after the round-over panel.</summary>
     public void NextRound()
     {
-        Match.NextRound();
-        _runner = NewRunner();
-        _roundShown = false;
-        _roundOverFor = TimeSpan.Zero;
+        Table.NextRound();
         _flights.Clear();
         _log.Clear();
-        Say(Match.Round.TakeEvents());
+        Say(Table.TakeEvents());
+    }
+
+    /// <summary>Keeps an online table talking to the server while a panel covers this screen.</summary>
+    public void KeepAlive(TimeSpan elapsed)
+    {
+        if (Table.IsOnline)
+        {
+            Table.Update(elapsed);
+        }
     }
 
     /// <summary>The handover panel's "it's me" button.</summary>
-    public void ConfirmHandover() => _runner.ConfirmHandover();
+    public void ConfirmHandover() => Table.ConfirmHandover();
 
     /// <summary>Plays the chosen colour for a wild picked from the hand.</summary>
     public void PlayWild(UnoCard card, UnoColor colour) => PlayHuman(new PlayCard(card, colour, _callUno));
+
+    /// <summary>The table and its connection are this screen's to close.</summary>
+    public void Leave() => Navigation.ToMainMenu(Scenes, _context);
 
     protected override void OnEnter() => _context.Sounds.PlayMusic(Music.Table);
 
     public override IEnumerable<string> DebugInfo =>
     [
-        string.Create(CultureInfo.InvariantCulture, $"Seed {_seed}  round {Match.RoundNumber}"),
+        string.Create(CultureInfo.InvariantCulture, $"{Table.Name}  round {Table.View?.RoundNumber}"),
     ];
 
     public override void Update(TimeSpan elapsed, InputState input)
@@ -117,14 +135,40 @@ internal sealed class UnoScene : Scene
         }
 
         _flights.RemoveAll(f => f.Tween.IsDone);
-        var game = Match.Round;
-        if (game.IsOver)
+        Table.Update(elapsed);
+        Show(Table.TakeEvents());
+        if (Table.Problem is { } problem && problem != _lastProblem)
+        {
+            Say(problem);
+        }
+
+        _lastProblem = Table.Problem;
+        if (Table.IsGone && !_problemShown)
+        {
+            _problemShown = true;
+            Scenes.Push(new UnoGoneScene(_context, this, Table.Problem ?? "The game has ended."));
+            return;
+        }
+
+        if (Table.View is not { } view)
+        {
+            return;
+        }
+
+        // A new round (dealt here, or by someone else online): start afresh.
+        if (view.RoundNumber != _round)
+        {
+            _round = view.RoundNumber;
+            _roundShown = false;
+            _roundOverFor = TimeSpan.Zero;
+        }
+
+        if (view.IsOver)
         {
             _roundOverFor += elapsed;
             if (!_roundShown && _roundOverFor >= RoundEndDelay)
             {
                 _roundShown = true;
-                Match.ScoreRound();
                 _context.Sounds.Play(Sound.Fanfare);
                 Celebration.Confetti(Scenes);
                 Scenes.Push(new UnoRoundScene(_context, this));
@@ -139,25 +183,19 @@ internal sealed class UnoScene : Scene
             return;
         }
 
-        if (_runner.AwaitingHandover)
+        if (Table.AwaitingHandover)
         {
-            Scenes.Push(new UnoHandoverScene(_context, this, _runner.Current.Name));
+            Scenes.Push(new UnoHandoverScene(_context, this, Names[view.CurrentSeat]));
             return;
         }
 
-        if (_runner.Update(elapsed) is not null)
-        {
-            Show(game.TakeEvents());
-            return;
-        }
-
-        if (!_runner.IsHumansTurn || _buttons.Update(input))
+        if (!Table.CanAct || _buttons.Update(input))
         {
             return;
         }
 
         var actions = _context.Actions;
-        var hand = game.Hand(_runner.Current.Seat);
+        var hand = view.Hand;
         switch (_repeater.Update(input, actions, elapsed))
         {
             case GameAction.Left:
@@ -205,19 +243,25 @@ internal sealed class UnoScene : Scene
         _art ??= new UnoArt(batch.GraphicsDevice, _context.Cards.Art, new FontTextDrawer(_context.Fonts));
         var fonts = _context.Fonts;
         var margin = fonts.Px(16);
-        var game = Match.Round;
-        var viewer = _runner.Viewer;
-
         var hud = new Rectangle(viewport.X, viewport.Y, viewport.Width, fonts.Px(HudHeight));
         batch.FillRectangle(hud, Palette.Panel);
         var text = hud;
         text.Inflate(-margin, 0);
-        batch.DrawText(fonts.Body, string.Create(CultureInfo.InvariantCulture, $"Uno: round {Match.RoundNumber}"), text, Palette.Text, Align.Left);
-        batch.DrawText(fonts.Small, string.Create(CultureInfo.InvariantCulture, $"first to {Match.Target}"), text, Palette.Muted, Align.Right, shadow: false);
+        if (Table.View is not { } game)
+        {
+            batch.DrawText(fonts.Body, Table.Name, text, Palette.Text, Align.Left);
+            batch.DrawText(fonts.Body, Table.Problem ?? "Waiting for the deal…", viewport, Palette.Muted);
+            return;
+        }
+
+        var title = Table.IsOnline ? $"{Table.Name}, round {game.RoundNumber}" : $"Uno: round {game.RoundNumber}";
+        batch.DrawText(fonts.Body, title, text, Palette.Text, Align.Left);
+        batch.DrawText(fonts.Small, string.Create(CultureInfo.InvariantCulture, $"first to {game.Target}"), text, Palette.Muted, Align.Right, shadow: false);
 
         // The others along the top, in turn order starting after whoever sits at the bottom.
-        var bottomSeat = viewer ?? (_runner.Current.IsHuman ? _runner.Current.Seat : Players.First(p => p.IsHuman).Seat);
-        var others = Enumerable.Range(1, Players.Count - 1).Select(i => (bottomSeat + i) % Players.Count).ToArray();
+        var players = game.Players;
+        var bottomSeat = game.Seat;
+        var others = Enumerable.Range(1, players - 1).Select(i => (bottomSeat + i) % players).ToArray();
         var badgeWidth = Math.Min(fonts.Px(220), (viewport.Width - 2 * margin) / others.Length - margin / 2);
         var badgeHeight = fonts.Px(96);
         var badgesLeft = viewport.Center.X - (others.Length * badgeWidth + (others.Length - 1) * margin / 2) / 2;
@@ -226,7 +270,7 @@ internal sealed class UnoScene : Scene
         {
             var badge = new Rectangle(badgesLeft + i * (badgeWidth + margin / 2), hud.Bottom + margin / 2, badgeWidth, badgeHeight);
             _seats[others[i]] = badge;
-            DrawBadge(batch, badge, others[i]);
+            DrawBadge(batch, game, badge, others[i]);
         }
 
         // Footer: messages above the buttons.
@@ -250,7 +294,7 @@ internal sealed class UnoScene : Scene
         var cardHeight = Math.Min(fonts.Px(150), space * 2 / 5);
         var cardWidth = (int)(cardHeight * UnoArt.AspectRatio);
         _seats[bottomSeat] = new Rectangle(viewport.Center.X - cardWidth / 2, log.Top - margin - cardHeight, cardWidth, cardHeight);
-        DrawHand(batch, viewport, bottomSeat, log.Top - margin / 2 - cardHeight, cardWidth, cardHeight);
+        DrawHand(batch, game, viewport, log.Top - margin / 2 - cardHeight, cardWidth, cardHeight);
 
         // The table: draw pile, discard, and the colour and direction of play.
         var tableTop = hud.Bottom + badgeHeight + margin;
@@ -268,8 +312,8 @@ internal sealed class UnoScene : Scene
         var swatch = new Rectangle(_discard.X - fonts.Px(6), _discard.Y - fonts.Px(6), _discard.Width + fonts.Px(12), _discard.Height + fonts.Px(12));
         batch.FillRectangle(swatch, UnoArt.ColorOf(game.Color) * 0.55f);
         _art.Draw(batch, game.Top, _discard);
-        var next = Players[(game.CurrentSeat + game.Direction + Players.Count) % Players.Count].Name;
-        var turn = game.IsOver ? "" : $"{Players[game.CurrentSeat].Name} to play, then {next}   ({game.Color}, {(game.Direction > 0 ? "clockwise" : "counter-clockwise")})";
+        var next = Name((game.CurrentSeat + game.Direction + players) % players);
+        var turn = game.IsOver ? "" : $"{Name(game.CurrentSeat)} to play, then {next}   ({game.Color}, {(game.Direction > 0 ? "clockwise" : "counter-clockwise")})";
         batch.DrawText(fonts.Small, turn, new Vector2(viewport.Center.X, _drawPile.Bottom + fonts.Px(10)), Palette.Muted, Align.Center, shadow: false);
 
         foreach (var flight in _flights)
@@ -294,25 +338,27 @@ internal sealed class UnoScene : Scene
         if (disposing)
         {
             _art?.Dispose();
+            Table.Dispose();
         }
 
         base.Dispose(disposing);
     }
 
-    private Match<UnoGame, UnoMove> NewRunner() =>
-        new(Match.Round, Players, _ => _bot, unchecked(_seed + Match.RoundNumber));
+    private string Name(int seat) => seat < Names.Count ? Names[seat] : $"Player {seat + 1}";
 
-    private void DrawBadge(SpriteBatch batch, Rectangle badge, int seat)
+    /// <summary>"Ruby plays", but "You play".</summary>
+    private string Does(int seat, string verb, string youVerb) => Name(seat) == "You" ? $"You {youVerb}" : $"{Name(seat)} {verb}";
+
+    private void DrawBadge(SpriteBatch batch, UnoView game, Rectangle badge, int seat)
     {
         var fonts = _context.Fonts;
-        var game = Match.Round;
         var current = !game.IsOver && game.CurrentSeat == seat;
         batch.FillRectangle(badge, current ? Palette.Accent : Palette.Panel);
         var inner = badge;
         inner.Inflate(-3, -3);
         batch.FillRectangle(inner, Palette.Panel);
-        var count = game.Hand(seat).Count;
-        var name = string.Create(CultureInfo.InvariantCulture, $"{Players[seat].Name} ({Match.Scores[seat]}){(count == 1 ? "  UNO!" : "")}");
+        var count = game.HandCounts[seat];
+        var name = string.Create(CultureInfo.InvariantCulture, $"{Name(seat)} ({game.Scores[seat]}){(count == 1 ? "  UNO!" : "")}");
         batch.DrawText(fonts.Small, name, new Vector2(badge.Center.X, badge.Y + fonts.Px(6)), current ? Palette.Accent : Palette.Text, Align.Center, shadow: false);
 
         // A small fan of backs, one per card (up to a dozen), with the count beside it.
@@ -330,31 +376,30 @@ internal sealed class UnoScene : Scene
         batch.DrawText(fonts.Small, label, new Vector2(left + backWidth + step * Math.Max(0, shown - 1) + fonts.Px(8), badge.Bottom - backHeight / 2 - fonts.Px(14)), Palette.Muted, shadow: false);
     }
 
-    private void DrawHand(SpriteBatch batch, Rectangle viewport, int seat, int top, int width, int height)
+    private void DrawHand(SpriteBatch batch, UnoView game, Rectangle viewport, int top, int width, int height)
     {
         var fonts = _context.Fonts;
-        var game = Match.Round;
-        var cards = game.Hand(seat);
-        var visible = _runner.Viewer == seat;
-        var playing = visible && _runner.IsHumansTurn && game.CurrentSeat == seat;
+        var visible = Table.HandVisible;
+        var count = visible ? game.Hand.Count : game.HandCounts[game.Seat];
+        var playing = visible && Table.CanAct;
         var avail = viewport.Width - 2 * fonts.Px(16);
-        var step = cards.Count <= 1 ? 0 : Math.Min(width + fonts.Px(8), (avail - width) / (cards.Count - 1));
-        var left = viewport.Center.X - (width + step * Math.Max(0, cards.Count - 1)) / 2;
-        _selected = Math.Clamp(_selected, 0, Math.Max(0, cards.Count - 1));
+        var step = count <= 1 ? 0 : Math.Min(width + fonts.Px(8), (avail - width) / (count - 1));
+        var left = viewport.Center.X - (width + step * Math.Max(0, count - 1)) / 2;
+        _selected = Math.Clamp(_selected, 0, Math.Max(0, count - 1));
         _hand = [];
-        for (var i = 0; i < cards.Count; i++)
+        for (var i = 0; i < count; i++)
         {
-            var card = cards[i];
-            var playable = playing && (game.Drawn is null ? game.CanPlay(seat, card) : game.Drawn == card);
-            var raise = playable ? height / 7 : 0;
-            var bounds = new Rectangle(left + i * step, top - raise, width, height);
-            _hand.Add((card, bounds));
+            var bounds = new Rectangle(left + i * step, top, width, height);
             if (!visible)
             {
                 _art!.DrawBack(batch, bounds);
                 continue;
             }
 
+            var card = game.Hand[i];
+            var playable = playing && game.CanPlay(card);
+            bounds.Y -= playable ? height / 7 : 0;
+            _hand.Add((card, bounds));
             if (playing && i == _selected)
             {
                 var outline = bounds;
@@ -365,23 +410,26 @@ internal sealed class UnoScene : Scene
             _art!.Draw(batch, card, bounds, dim: playing && !playable);
         }
 
-        if (!visible && cards.Count > 0)
+        if (!visible && count > 0)
         {
-            batch.DrawText(fonts.Body, $"{Players[seat].Name}'s hand", new Vector2(viewport.Center.X, top + height / 2 - fonts.Body.LineHeight / 2), Palette.Text, Align.Center);
+            batch.DrawText(fonts.Body, $"{Name(game.Seat)}'s hand", new Vector2(viewport.Center.X, top + height / 2 - fonts.Body.LineHeight / 2), Palette.Text, Align.Center);
         }
     }
 
     private void Choose(UnoCard card)
     {
-        var game = Match.Round;
-        var seat = _runner.Current.Seat;
+        if (Table.View is not { } game)
+        {
+            return;
+        }
+
         if (game.Drawn is { } drawn && drawn != card)
         {
             Say("Play the card you drew, or keep it");
             return;
         }
 
-        if (!game.CanPlay(seat, card))
+        if (!game.CanPlay(card))
         {
             Say(card.Value == UnoValue.WildDrawFour
                 ? "A Wild +4 only goes when you have nothing in the current colour"
@@ -400,33 +448,26 @@ internal sealed class UnoScene : Scene
 
     private void DrawOrKeep()
     {
-        if (_runner.IsHumansTurn)
+        if (Table.CanAct && Table.View is { } game)
         {
-            PlayHuman(Match.Round.Drawn is null ? DrawCard.Instance : Uno.Pass.Instance);
+            PlayHuman(game.Drawn is null ? DrawCard.Instance : Uno.Pass.Instance);
         }
     }
 
     private void PlayHuman(UnoMove move)
     {
-        if (!_runner.IsHumansTurn)
+        if (!Table.CanAct)
         {
             return;
         }
 
-        var seat = _runner.Current.Seat;
-        _runner.Play(move);
+        Table.Play(move);
         if (move is PlayCard)
         {
             _callUno = false;
         }
 
-        Show(Match.Round.TakeEvents());
-
-        // Passing the device on: nobody else may see this hand.
-        if (Match.Round.CurrentSeat != seat)
-        {
-            _runner.HideHands();
-        }
+        Show(Table.TakeEvents());
     }
 
     private void Show(IReadOnlyList<UnoEvent> events)
@@ -454,20 +495,19 @@ internal sealed class UnoScene : Scene
 
     private void Say(IEnumerable<UnoEvent> events)
     {
-        string Name(int seat) => Players[seat].Name;
         foreach (var e in events)
         {
             Say(e switch
             {
-                CardPlayed { Card.IsWild: true } p => $"{Name(p.Seat)} plays {p.Card} and picks {p.Color}",
-                CardPlayed p => $"{Name(p.Seat)} plays {p.Card}",
-                CardsDrawn d => d.Count == 1 ? $"{Name(d.Seat)} draws a card" : $"{Name(d.Seat)} draws {d.Count}",
-                PlayerSkipped s => $"{Name(s.Seat)} is skipped",
+                CardPlayed { Card.IsWild: true } p => $"{Does(p.Seat, "plays", "play")} {p.Card} and {(Name(p.Seat) == "You" ? "pick" : "picks")} {p.Color}",
+                CardPlayed p => $"{Does(p.Seat, "plays", "play")} {p.Card}",
+                CardsDrawn d => d.Count == 1 ? $"{Does(d.Seat, "draws", "draw")} a card" : $"{Does(d.Seat, "draws", "draw")} {d.Count}",
+                PlayerSkipped s => $"{Does(s.Seat, "is", "are")} skipped",
                 DirectionReversed => "Play turns around",
                 UnoCalled u => $"{Name(u.Seat)}: Uno!",
                 UnoForgotten u => $"{Name(u.Seat)} forgot to call Uno: two cards",
                 DrawPileReshuffled => "The discards are shuffled into a new draw pile",
-                RoundWon w => $"{Name(w.Seat)} wins the round!",
+                RoundWon w => $"{Does(w.Seat, "wins", "win")} the round!",
                 _ => e.ToString(),
             });
         }

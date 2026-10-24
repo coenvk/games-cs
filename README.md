@@ -59,6 +59,7 @@ Command-line options (handy for checking screens without playing):
 - `--virtual <w>x<h>[:fit|pixel|expand]` renders at a fixed design resolution scaled into the window (Jentl's
   `VirtualScreen`); the app normally lays out for the window itself
 - `--debug true` starts with the debug overlay showing (F3 toggles it, as does Options > Debug overlay)
+- `--server <url>` uses this game server for online play (default `ws://localhost:5080/play`, or `JENTL_SERVER`)
 
 ```bash
 dotnet run --project src/Sokoban.Desktop -- --keys "Down Enter Wait" --screenshot select.png
@@ -269,6 +270,13 @@ with two players), Draw Two, Wild and Wild Draw Four (only without a card of the
 nothing fits; a drawn card that fits may be played straight away, or kept. Tap Uno! before playing your
 second-to-last card, or draw two. The round's winner scores the cards left in the other hands, and the first to 500
 wins the match. On a keyboard: Left/Right pick a card, Enter plays it, Down draws, Up calls Uno.
+
+**Play online** (in the Uno menu) plays against people on other devices through a game server. Pick "New room" for 2
+to 4 players and share the four-digit code it shows, or "Join a room" and type a friend's code; the host starts, and
+bots fill any empty seats (and take over for anyone who leaves). Run a server with `dotnet run --project
+src/Jentl.Server` (port 5080); the app connects to `ws://localhost:5080/play` unless told otherwise: `--server
+wss://example.org/play` or the `JENTL_SERVER` variable on the desktop, `?server=wss://example.org/play` in the page
+address in the browser. See [docs/kits.md](docs/kits.md) for how it works and how to host it.
 
 The bots match colour before number, keep wilds for when nothing else fits, and attack with Skip, Reverse and Draw
 Two when the next player is close to going out; in the tests they beat a random player well over half the time.

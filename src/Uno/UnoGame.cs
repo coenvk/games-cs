@@ -1,8 +1,13 @@
-﻿using Jentl.Multiplayer;
+﻿using System.Text.Json.Serialization;
+using Jentl.Multiplayer;
 
 namespace Uno;
 
 /// <summary>What a player does on their turn.</summary>
+[JsonPolymorphic(TypeDiscriminatorPropertyName = "move")]
+[JsonDerivedType(typeof(PlayCard), "play")]
+[JsonDerivedType(typeof(DrawCard), "draw")]
+[JsonDerivedType(typeof(Pass), "pass")]
 public abstract record UnoMove;
 
 /// <summary>
@@ -24,6 +29,15 @@ public sealed record Pass : UnoMove
 }
 
 /// <summary>Something that happened, for the screen to show.</summary>
+[JsonPolymorphic(TypeDiscriminatorPropertyName = "event")]
+[JsonDerivedType(typeof(CardPlayed), "played")]
+[JsonDerivedType(typeof(CardsDrawn), "drew")]
+[JsonDerivedType(typeof(PlayerSkipped), "skipped")]
+[JsonDerivedType(typeof(DirectionReversed), "reversed")]
+[JsonDerivedType(typeof(UnoCalled), "uno")]
+[JsonDerivedType(typeof(UnoForgotten), "forgot")]
+[JsonDerivedType(typeof(DrawPileReshuffled), "reshuffled")]
+[JsonDerivedType(typeof(RoundWon), "won")]
 public abstract record UnoEvent;
 
 public sealed record CardPlayed(int Seat, UnoCard Card, UnoColor Color) : UnoEvent;

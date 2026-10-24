@@ -1,4 +1,6 @@
-﻿namespace Uno;
+﻿using System.Text.Json.Serialization;
+
+namespace Uno;
 
 public enum UnoColor
 {
@@ -33,14 +35,18 @@ public enum UnoValue
 /// </summary>
 public readonly record struct UnoCard(UnoValue Value, UnoColor? Color, int Copy = 0)
 {
+    [JsonIgnore]
     public bool IsWild => Value is UnoValue.Wild or UnoValue.WildDrawFour;
 
+    [JsonIgnore]
     public bool IsNumber => Value <= UnoValue.Nine;
 
     /// <summary>What the card scores for the round's winner when left in a hand: face value, 20 for actions, 50 for wilds.</summary>
+    [JsonIgnore]
     public int Points => IsNumber ? (int)Value : IsWild ? 50 : 20;
 
     /// <summary>"7", "Skip", "Reverse", "+2", "Wild" or "+4".</summary>
+    [JsonIgnore]
     public string Label => Value switch
     {
         UnoValue.Skip => "Skip",
