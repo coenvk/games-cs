@@ -1,0 +1,634 @@
+{
+  "tracks": [
+    {
+      "id": "drag-402",
+      "name": "Quarter Mile",
+      "kind": "Drag",
+      "pieces": [
+        {
+          "length": 402
+        }
+      ],
+      "conditions": [
+        "Dry",
+        "Wet"
+      ]
+    },
+    {
+      "id": "drag-805",
+      "name": "Half Mile",
+      "kind": "Drag",
+      "pieces": [
+        {
+          "length": 805
+        }
+      ],
+      "conditions": [
+        "Dry",
+        "Wet"
+      ]
+    },
+    {
+      "id": "drag-sand",
+      "name": "Beach Sprint",
+      "kind": "Drag",
+      "pieces": [
+        {
+          "length": 402
+        }
+      ],
+      "conditions": [
+        "Sand"
+      ]
+    },
+    {
+      "id": "harbour-ring",
+      "name": "Harbour Ring",
+      "kind": "Circuit",
+      "pieces": [
+        {
+          "length": 300
+        },
+        {
+          "radius": 60,
+          "degrees": 90
+        },
+        {
+          "length": 150
+        },
+        {
+          "radius": 40,
+          "degrees": 90
+        },
+        {
+          "length": 300
+        },
+        {
+          "radius": 60,
+          "degrees": 90
+        },
+        {
+          "length": 150
+        },
+        {
+          "radius": 40,
+          "degrees": 90
+        }
+      ],
+      "conditions": [
+        "Dry",
+        "Wet"
+      ]
+    },
+    {
+      "id": "grand-loop",
+      "name": "Grand Loop",
+      "kind": "Circuit",
+      "pieces": [
+        {
+          "length": 450
+        },
+        {
+          "radius": 90,
+          "degrees": 60
+        },
+        {
+          "length": 120
+        },
+        {
+          "radius": 35,
+          "degrees": 45
+        },
+        {
+          "radius": 35,
+          "degrees": -45
+        },
+        {
+          "length": 100
+        },
+        {
+          "radius": 50,
+          "degrees": 120
+        },
+        {
+          "length": 200
+        },
+        {
+          "radius": 70,
+          "degrees": -30
+        },
+        {
+          "radius": 45,
+          "degrees": 30
+        },
+        {
+          "length": 450
+        },
+        {
+          "radius": 90,
+          "degrees": 60
+        },
+        {
+          "length": 120
+        },
+        {
+          "radius": 35,
+          "degrees": 45
+        },
+        {
+          "radius": 35,
+          "degrees": -45
+        },
+        {
+          "length": 100
+        },
+        {
+          "radius": 50,
+          "degrees": 120
+        },
+        {
+          "length": 200
+        },
+        {
+          "radius": 70,
+          "degrees": -30
+        },
+        {
+          "radius": 45,
+          "degrees": 30
+        }
+      ],
+      "conditions": [
+        "Dry",
+        "Wet"
+      ]
+    },
+    {
+      "id": "ice-lake",
+      "name": "Ice Lake",
+      "kind": "Circuit",
+      "pieces": [
+        {
+          "length": 220
+        },
+        {
+          "radius": 70,
+          "degrees": 120
+        },
+        {
+          "length": 90
+        },
+        {
+          "radius": 40,
+          "degrees": 60
+        },
+        {
+          "length": 220
+        },
+        {
+          "radius": 70,
+          "degrees": 120
+        },
+        {
+          "length": 90
+        },
+        {
+          "radius": 40,
+          "degrees": 60
+        }
+      ],
+      "conditions": [
+        "Ice",
+        "Snow"
+      ]
+    },
+    {
+      "id": "old-town",
+      "name": "Old Town",
+      "kind": "City",
+      "pieces": [
+        {
+          "length": 120
+        },
+        {
+          "radius": 15,
+          "degrees": 90
+        },
+        {
+          "length": 80
+        },
+        {
+          "radius": 15,
+          "degrees": -90
+        },
+        {
+          "length": 60
+        },
+        {
+          "radius": 18,
+          "degrees": 90
+        },
+        {
+          "length": 140
+        },
+        {
+          "radius": 15,
+          "degrees": 90
+        },
+        {
+          "length": 120
+        },
+        {
+          "radius": 15,
+          "degrees": 90
+        },
+        {
+          "length": 80
+        },
+        {
+          "radius": 15,
+          "degrees": -90
+        },
+        {
+          "length": 60
+        },
+        {
+          "radius": 18,
+          "degrees": 90
+        },
+        {
+          "length": 140
+        },
+        {
+          "radius": 15,
+          "degrees": 90
+        }
+      ],
+      "conditions": [
+        "Dry",
+        "Wet"
+      ]
+    },
+    {
+      "id": "dock-streets",
+      "name": "Dock Streets",
+      "kind": "City",
+      "pieces": [
+        {
+          "length": 200
+        },
+        {
+          "radius": 20,
+          "degrees": 90
+        },
+        {
+          "length": 60
+        },
+        {
+          "radius": 12,
+          "degrees": 90
+        },
+        {
+          "length": 90
+        },
+        {
+          "radius": 12,
+          "degrees": -90
+        },
+        {
+          "length": 70
+        },
+        {
+          "radius": 20,
+          "degrees": 90
+        },
+        {
+          "length": 200
+        },
+        {
+          "radius": 20,
+          "degrees": 90
+        },
+        {
+          "length": 60
+        },
+        {
+          "radius": 12,
+          "degrees": 90
+        },
+        {
+          "length": 90
+        },
+        {
+          "radius": 12,
+          "degrees": -90
+        },
+        {
+          "length": 70
+        },
+        {
+          "radius": 20,
+          "degrees": 90
+        }
+      ],
+      "conditions": [
+        "Dry",
+        "Wet"
+      ]
+    },
+    {
+      "id": "valley-road",
+      "name": "Valley Road",
+      "kind": "Twisty",
+      "pieces": [
+        {
+          "length": 60
+        },
+        {
+          "radius": 30,
+          "degrees": 70
+        },
+        {
+          "length": 40
+        },
+        {
+          "radius": 25,
+          "degrees": -110
+        },
+        {
+          "length": 30
+        },
+        {
+          "radius": 45,
+          "degrees": 60
+        },
+        {
+          "length": 80
+        },
+        {
+          "radius": 20,
+          "degrees": -90
+        },
+        {
+          "length": 35
+        },
+        {
+          "radius": 35,
+          "degrees": 120
+        },
+        {
+          "length": 50
+        },
+        {
+          "radius": 30,
+          "degrees": -80
+        },
+        {
+          "length": 60
+        }
+      ],
+      "conditions": [
+        "Dry",
+        "Wet",
+        "Snow"
+      ]
+    },
+    {
+      "id": "coast-road",
+      "name": "Coast Road",
+      "kind": "Twisty",
+      "pieces": [
+        {
+          "length": 120
+        },
+        {
+          "radius": 60,
+          "degrees": 50
+        },
+        {
+          "length": 70
+        },
+        {
+          "radius": 40,
+          "degrees": -70
+        },
+        {
+          "length": 90
+        },
+        {
+          "radius": 80,
+          "degrees": 40
+        },
+        {
+          "length": 150
+        },
+        {
+          "radius": 35,
+          "degrees": -100
+        },
+        {
+          "length": 60
+        },
+        {
+          "radius": 55,
+          "degrees": 80
+        },
+        {
+          "length": 100
+        }
+      ],
+      "conditions": [
+        "Dry",
+        "Wet"
+      ]
+    },
+    {
+      "id": "pine-climb",
+      "name": "Pine Climb",
+      "kind": "HillClimb",
+      "pieces": [
+        {
+          "length": 150,
+          "gradient": 0.06
+        },
+        {
+          "radius": 40,
+          "degrees": 60,
+          "gradient": 0.07
+        },
+        {
+          "length": 90,
+          "gradient": 0.08
+        },
+        {
+          "radius": 15,
+          "degrees": -170,
+          "gradient": 0.05
+        },
+        {
+          "length": 110,
+          "gradient": 0.09
+        },
+        {
+          "radius": 15,
+          "degrees": 170,
+          "gradient": 0.05
+        },
+        {
+          "length": 130,
+          "gradient": 0.08
+        },
+        {
+          "radius": 50,
+          "degrees": -60,
+          "gradient": 0.07
+        },
+        {
+          "length": 120,
+          "gradient": 0.06
+        }
+      ],
+      "conditions": [
+        "Dry",
+        "Wet",
+        "Snow",
+        "Gravel"
+      ]
+    },
+    {
+      "id": "quarry-run",
+      "name": "Quarry Run",
+      "kind": "OffRoad",
+      "pieces": [
+        {
+          "length": 80
+        },
+        {
+          "radius": 25,
+          "degrees": 80
+        },
+        {
+          "length": 60,
+          "gradient": 0.05
+        },
+        {
+          "radius": 30,
+          "degrees": -100,
+          "gradient": 0.03
+        },
+        {
+          "length": 90,
+          "gradient": -0.04
+        },
+        {
+          "radius": 20,
+          "degrees": 120
+        },
+        {
+          "length": 70
+        },
+        {
+          "radius": 35,
+          "degrees": -60
+        },
+        {
+          "length": 100
+        }
+      ],
+      "conditions": [
+        "Dirt",
+        "Gravel"
+      ]
+    },
+    {
+      "id": "dune-trail",
+      "name": "Dune Trail",
+      "kind": "OffRoad",
+      "pieces": [
+        {
+          "length": 120
+        },
+        {
+          "radius": 50,
+          "degrees": 60
+        },
+        {
+          "length": 80,
+          "gradient": 0.06
+        },
+        {
+          "radius": 40,
+          "degrees": -90,
+          "gradient": -0.04
+        },
+        {
+          "length": 110
+        },
+        {
+          "radius": 45,
+          "degrees": 70
+        },
+        {
+          "length": 90
+        }
+      ],
+      "conditions": [
+        "Sand",
+        "Dirt"
+      ]
+    },
+    {
+      "id": "forest-stage",
+      "name": "Forest Stage",
+      "kind": "OffRoad",
+      "pieces": [
+        {
+          "length": 100
+        },
+        {
+          "radius": 30,
+          "degrees": -70
+        },
+        {
+          "length": 60
+        },
+        {
+          "radius": 22,
+          "degrees": 100
+        },
+        {
+          "length": 120,
+          "gradient": 0.03
+        },
+        {
+          "radius": 28,
+          "degrees": -90
+        },
+        {
+          "length": 80,
+          "gradient": -0.03
+        },
+        {
+          "radius": 40,
+          "degrees": 60
+        },
+        {
+          "length": 90
+        },
+        {
+          "radius": 20,
+          "degrees": -110
+        },
+        {
+          "length": 70
+        }
+      ],
+      "conditions": [
+        "Gravel",
+        "Dirt",
+        "Snow",
+        "Wet"
+      ]
+    }
+  ]
+}

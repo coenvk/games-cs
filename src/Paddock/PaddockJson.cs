@@ -6,4 +6,5 @@ namespace Paddock;
 /// <summary>Paddock's data files and saves: camelCase, enums as names.</summary>
 [JsonSourceGenerationOptions(JsonSerializerDefaults.Web, UseStringEnumConverter = true, WriteIndented = true)]
 [JsonSerializable(typeof(RosterFile))]
+[JsonSerializable(typeof(TracksFile))]
 internal sealed partial class PaddockJson : JsonSerializerContext;
