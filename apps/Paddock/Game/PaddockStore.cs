@@ -22,8 +22,18 @@ internal sealed class PaddockSettings
 
     public string ToJson() => JsonSerializer.Serialize(this, PaddockSettingsJson.Default.PaddockSettings);
 
-    public static PaddockSettings FromJson(string json) =>
-        JsonSerializer.Deserialize(json, PaddockSettingsJson.Default.PaddockSettings) ?? new PaddockSettings();
+    /// <exception cref="InvalidDataException">The text isn't Paddock's settings (the file is then set aside).</exception>
+    public static PaddockSettings FromJson(string json)
+    {
+        try
+        {
+            return JsonSerializer.Deserialize(json, PaddockSettingsJson.Default.PaddockSettings) ?? new PaddockSettings();
+        }
+        catch (JsonException e)
+        {
+            throw new InvalidDataException("Paddock's settings are not valid JSON.", e);
+        }
+    }
 }
 
 [JsonSourceGenerationOptions(JsonSerializerDefaults.Web, UseStringEnumConverter = true, WriteIndented = true)]

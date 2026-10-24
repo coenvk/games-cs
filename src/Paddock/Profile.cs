@@ -47,11 +47,23 @@ public sealed class Profile
     public string ToJson() => System.Text.Json.JsonSerializer.Serialize(this, PaddockJson.Default.Profile);
 
     /// <summary>Reads a saved profile: cars whose model is no longer in the roster are dropped, missing fields get defaults.</summary>
+    /// <exception cref="InvalidDataException">The text isn't a profile (the app then sets the file aside and starts fresh).</exception>
     public static Profile FromJson(string json, Roster roster)
     {
         ArgumentNullException.ThrowIfNull(roster);
-        var profile = System.Text.Json.JsonSerializer.Deserialize(json, PaddockJson.Default.Profile) ?? new Profile();
-        profile.Garage = [.. (profile.Garage ?? []).Where(c => c is not null && roster.Find(c.ModelId) is not null)];
+        Profile profile;
+        try
+        {
+            profile = System.Text.Json.JsonSerializer.Deserialize(json, PaddockJson.Default.Profile) ?? new Profile();
+        }
+        catch (System.Text.Json.JsonException e)
+        {
+            throw new InvalidDataException("The profile is not valid JSON.", e);
+        }
+
+        profile.Garage = [.. (profile.Garage ?? [])
+            .Where(c => c?.ModelId is not null && roster.Find(c.ModelId) is not null)
+            .Select(c => c with { Stage = Math.Clamp(c.Stage, 1, Upgrades.MaxStage) })];
         var owned = profile.Garage.Select(c => c.Id).ToHashSet();
         profile.LastHand = [.. (profile.LastHand ?? []).Where(owned.Contains)];
         profile.Level = Math.Max(1, profile.Level);

@@ -178,3 +178,31 @@ public class ProfileTests
         back.LastHand.Should().BeEmpty();
     }
 }
+
+public class CorruptSaveTests
+{
+    private static readonly Roster Cars = Roster.FromJson(GameData.Read("cars.json"));
+
+    [Theory]
+    [InlineData("not json at all")]
+    [InlineData("[]")]
+    [InlineData("""{ "cash": "lots" }""")]
+    public void FromJson_Corrupt_ThrowsInvalidData(string json)
+    {
+        var load = () => Profile.FromJson(json, Cars);
+
+        load.Should().Throw<InvalidDataException>();
+    }
+
+    [Fact]
+    public void FromJson_CarWithoutModel_IsDropped_AndStagesAreClamped()
+    {
+        var id = Cars.All[0].Id;
+        var json = $$"""{ "garage": [ { "id": "{{Guid.NewGuid()}}", "modelId": null, "stage": 1 }, { "id": "{{Guid.NewGuid()}}", "modelId": "{{id}}" }, { "id": "{{Guid.NewGuid()}}", "modelId": "{{id}}", "stage": 9 } ] }""";
+
+        var profile = Profile.FromJson(json, Cars);
+
+        profile.Garage.Should().HaveCount(2);
+        profile.Garage.Select(c => c.Stage).Should().Equal(1, 3);
+    }
+}
