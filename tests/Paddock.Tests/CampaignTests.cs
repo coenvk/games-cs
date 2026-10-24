@@ -122,3 +122,39 @@ public class CampaignTests
         throw new InvalidOperationException("Could not win with the strongest cars.");
     }
 }
+
+public class CampaignLevelTests
+{
+    private static readonly Roster Cars = Roster.FromJson(GameData.Read("cars.json"));
+    private static readonly IReadOnlyList<RegionDef> Regions = RegionDef.ListFromJson(GameData.Read("campaign.json"));
+
+    [Fact]
+    public void HandLimit_IsTheStagesOrTheLevelsWhicheverIsLower()
+    {
+        var late = Regions.SelectMany(r => r.Stages).First(s => s.HandRqLimit > Progression.RqLimit(1));
+        var profile = Profile.New(Cars);
+
+        CampaignPlay.HandLimit(profile, late).Should().Be(Progression.RqLimit(1));
+        CampaignPlay.HandLimit(profile, Regions[0].Stages[0]).Should().Be(Regions[0].Stages[0].HandRqLimit);
+        profile.Level = 50;
+        CampaignPlay.HandLimit(profile, late).Should().Be(late.HandRqLimit);
+    }
+
+    [Fact]
+    public void Race_RejectsAHandOverTheLevelsLimit()
+    {
+        var late = Regions.SelectMany(r => r.Stages).First(s => s.HandRqLimit >= 200);
+        var profile = Profile.New(Cars);
+        foreach (var stage in Regions.SelectMany(r => r.Stages).TakeWhile(s => s != late))
+        {
+            profile.Campaign.PrizesWon[stage.Id] = 1;
+        }
+
+        var strong = Cars.All.Where(m => Cars.Rq(m.Id) is >= 30 and <= 40).Take(5).Select(m => CarInstance.New(m.Id)).ToList();
+        profile.Garage.AddRange(strong);
+
+        var race = () => CampaignPlay.Race(profile, Regions, late, [.. strong.Select(c => c.Id)], Cars, GameData.Tracks);
+
+        race.Should().Throw<InvalidOperationException>();
+    }
+}

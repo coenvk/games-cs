@@ -52,6 +52,14 @@ public static class CampaignPlay
         return index == 0 || (index > 0 && profile.Campaign.Won(all[index - 1]) > 0);
     }
 
+    /// <summary>The hand's RQ limit here: the stage's, or the player's level's if that is lower, so levelling up opens later stages fully.</summary>
+    public static int HandLimit(Profile profile, StageDef stage)
+    {
+        ArgumentNullException.ThrowIfNull(profile);
+        ArgumentNullException.ThrowIfNull(stage);
+        return Math.Min(stage.HandRqLimit, Progression.RqLimit(profile.Level));
+    }
+
     /// <summary>The stage's match: always the same, with an opponent at 85% of the limit, upgraded more in later stages.</summary>
     public static MatchSetup Setup(StageDef stage, Roster roster, IReadOnlyList<TrackDef> tracks)
     {
@@ -76,7 +84,7 @@ public static class CampaignPlay
         }
 
         var hand = order.Select(profile.Car).ToList();
-        if (hand.Any(c => c is null) || !Hands.Fits(hand!, roster, stage.HandRqLimit))
+        if (hand.Any(c => c is null) || !Hands.Fits(hand!, roster, HandLimit(profile, stage)))
         {
             throw new InvalidOperationException("This hand may not enter.");
         }

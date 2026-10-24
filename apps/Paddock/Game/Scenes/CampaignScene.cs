@@ -71,7 +71,7 @@ internal sealed class CampaignScene : Scene
                 var open = CampaignPlay.IsOpen(Profile, Regions, stage);
                 var won = Profile.Campaign.Won(stage);
                 var label = open
-                    ? T("{0} · RQ {1} · prizes {2}/{3}", StageName(stage), stage.HandRqLimit, won, stage.PrizeCarIds.Count)
+                    ? T("{0} · RQ {1} · prizes {2}/{3}", StageName(stage), CampaignPlay.HandLimit(Profile, stage), won, stage.PrizeCarIds.Count)
                     : T("{0} · locked", StageName(stage));
                 items.Add(new MenuItem(label, () => Race(stage)));
             }
@@ -99,7 +99,7 @@ internal sealed class CampaignScene : Scene
 
         var data = _context.PaddockData;
         var setup = CampaignPlay.Setup(stage, data.Roster, data.Tracks);
-        Scenes.Push(new MatchSetupScene(_context, StageName(stage), setup, stage.HandRqLimit, _ => true, order =>
+        Scenes.Push(new MatchSetupScene(_context, StageName(stage), setup, CampaignPlay.HandLimit(Profile, stage), _ => true, order =>
         {
             var cars = order.Select(id => Profile.Car(id)!).ToList();
             var outcome = CampaignPlay.Race(Profile, Regions, stage, order, data.Roster, data.Tracks);
