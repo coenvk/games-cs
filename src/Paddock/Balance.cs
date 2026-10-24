@@ -113,6 +113,9 @@ public static class Balance
     /// <summary>Experience for a lost match.</summary>
     public const int LossXp = 4;
 
+    /// <summary>A campaign opponent's hand uses this share of the stage's RQ limit.</summary>
+    public const double CampaignStrength = 0.85;
+
     /// <summary>Braking as a share of cornering grip.</summary>
     public const double Braking = 0.9;
 }

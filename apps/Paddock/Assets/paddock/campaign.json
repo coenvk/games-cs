@@ -1,0 +1,544 @@
+{
+  "regions": [
+    {
+      "id": "riverside",
+      "name": "Riverside",
+      "stages": [
+        {
+          "id": "riverside-1",
+          "name": "Riverside 1",
+          "handRqLimit": 100,
+          "trackIds": [
+            "drag-402",
+            "harbour-ring",
+            "old-town",
+            "valley-road",
+            "coast-road"
+          ],
+          "prizeCarIds": [
+            "kestrel-wren",
+            "vantelli-corvo-sprint",
+            "brenner-1600-tl"
+          ]
+        },
+        {
+          "id": "riverside-2",
+          "name": "Riverside 2",
+          "handRqLimit": 110,
+          "trackIds": [
+            "drag-402",
+            "harbour-ring",
+            "old-town",
+            "valley-road",
+            "coast-road"
+          ],
+          "prizeCarIds": [
+            "moreau-alouette",
+            "calder-sundowner",
+            "aurelio-brisa-gt"
+          ]
+        },
+        {
+          "id": "riverside-3",
+          "name": "Riverside 3",
+          "handRqLimit": 120,
+          "trackIds": [
+            "drag-402",
+            "harbour-ring",
+            "old-town",
+            "valley-road",
+            "coast-road"
+          ],
+          "prizeCarIds": [
+            "kovar-sokol",
+            "brannock-haulmaster",
+            "kestrel-swallow"
+          ]
+        },
+        {
+          "id": "riverside-4",
+          "name": "Riverside 4",
+          "handRqLimit": 140,
+          "trackIds": [
+            "drag-402",
+            "harbour-ring",
+            "old-town",
+            "valley-road",
+            "coast-road"
+          ],
+          "prizeCarIds": [
+            "brenner-2-0-turbo",
+            "moreau-mistral",
+            "nakamori-kaze"
+          ]
+        },
+        {
+          "id": "riverside-5",
+          "name": "Riverside 5",
+          "handRqLimit": 150,
+          "trackIds": [
+            "drag-402",
+            "harbour-ring",
+            "old-town",
+            "valley-road",
+            "coast-road"
+          ],
+          "prizeCarIds": [
+            "vantelli-saetta-2000",
+            "hoshiro-spirit-gti",
+            "kohlmann-reise-v6"
+          ]
+        },
+        {
+          "id": "riverside-6",
+          "name": "Riverside 6",
+          "handRqLimit": 160,
+          "trackIds": [
+            "drag-402",
+            "harbour-ring",
+            "old-town",
+            "valley-road",
+            "coast-road"
+          ],
+          "prizeCarIds": [
+            "halvard-760-turbo",
+            "kestrel-merlin",
+            "ashford-sterling"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "highlands",
+      "name": "Highlands",
+      "stages": [
+        {
+          "id": "highlands-1",
+          "name": "Highlands 1",
+          "handRqLimit": 170,
+          "trackIds": [
+            "pine-climb",
+            "valley-road",
+            "forest-stage",
+            "quarry-run",
+            "drag-402"
+          ],
+          "prizeCarIds": [
+            "bellcourt-rallye-5",
+            "calder-vortex-454",
+            "brannock-outlaw"
+          ]
+        },
+        {
+          "id": "highlands-2",
+          "name": "Highlands 2",
+          "handRqLimit": 180,
+          "trackIds": [
+            "pine-climb",
+            "valley-road",
+            "forest-stage",
+            "quarry-run",
+            "drag-402"
+          ],
+          "prizeCarIds": [
+            "lindqvist-ljus-t6",
+            "bellcourt-rallye-16s",
+            "kovar-vrchol-rs"
+          ]
+        },
+        {
+          "id": "highlands-3",
+          "name": "Highlands 3",
+          "handRqLimit": 200,
+          "trackIds": [
+            "pine-climb",
+            "valley-road",
+            "forest-stage",
+            "quarry-run",
+            "drag-402"
+          ],
+          "prizeCarIds": [
+            "brenner-3-2-cs",
+            "hoshiro-raijin",
+            "bellcourt-tempete"
+          ]
+        },
+        {
+          "id": "highlands-4",
+          "name": "Highlands 4",
+          "handRqLimit": 210,
+          "trackIds": [
+            "pine-climb",
+            "valley-road",
+            "forest-stage",
+            "quarry-run",
+            "drag-402"
+          ],
+          "prizeCarIds": [
+            "kovar-blesk",
+            "brannock-badlands",
+            "ashford-ardent"
+          ]
+        },
+        {
+          "id": "highlands-5",
+          "name": "Highlands 5",
+          "handRqLimit": 220,
+          "trackIds": [
+            "pine-climb",
+            "valley-road",
+            "forest-stage",
+            "quarry-run",
+            "drag-402"
+          ],
+          "prizeCarIds": [
+            "calder-cobalt-ss",
+            "brenner-5-0-v8-touring",
+            "strale-brezza-2-5"
+          ]
+        },
+        {
+          "id": "highlands-6",
+          "name": "Highlands 6",
+          "handRqLimit": 230,
+          "trackIds": [
+            "pine-climb",
+            "valley-road",
+            "forest-stage",
+            "quarry-run",
+            "drag-402"
+          ],
+          "prizeCarIds": [
+            "kohlmann-gipfel-rs",
+            "bellcourt-mirage-gt",
+            "nakamori-tsubasa-r"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "coastline",
+      "name": "Coastline",
+      "stages": [
+        {
+          "id": "coastline-1",
+          "name": "Coastline 1",
+          "handRqLimit": 240,
+          "trackIds": [
+            "coast-road",
+            "dock-streets",
+            "harbour-ring",
+            "drag-805",
+            "drag-sand"
+          ],
+          "prizeCarIds": [
+            "ashford-vanguard",
+            "vantelli-saetta-evo",
+            "hoshiro-raijin-type-s"
+          ]
+        },
+        {
+          "id": "coastline-2",
+          "name": "Coastline 2",
+          "handRqLimit": 260,
+          "trackIds": [
+            "coast-road",
+            "dock-streets",
+            "harbour-ring",
+            "drag-805",
+            "drag-sand"
+          ],
+          "prizeCarIds": [
+            "vantelli-furia-3-5",
+            "lindqvist-viking-r",
+            "aurelio-corrida"
+          ]
+        },
+        {
+          "id": "coastline-3",
+          "name": "Coastline 3",
+          "handRqLimit": 270,
+          "trackIds": [
+            "coast-road",
+            "dock-streets",
+            "harbour-ring",
+            "drag-805",
+            "drag-sand"
+          ],
+          "prizeCarIds": [
+            "kestrel-harrier",
+            "nakamori-tsubasa-r",
+            "kohlmann-gipfel-rs"
+          ]
+        },
+        {
+          "id": "coastline-4",
+          "name": "Coastline 4",
+          "handRqLimit": 280,
+          "trackIds": [
+            "coast-road",
+            "dock-streets",
+            "harbour-ring",
+            "drag-805",
+            "drag-sand"
+          ],
+          "prizeCarIds": [
+            "calder-inferno",
+            "vantelli-saetta-evo",
+            "hoshiro-raijin-type-s"
+          ]
+        },
+        {
+          "id": "coastline-5",
+          "name": "Coastline 5",
+          "handRqLimit": 290,
+          "trackIds": [
+            "coast-road",
+            "dock-streets",
+            "harbour-ring",
+            "drag-805",
+            "drag-sand"
+          ],
+          "prizeCarIds": [
+            "nakamori-tsubasa-evo",
+            "aurelio-corrida",
+            "kohlmann-matterhorn"
+          ]
+        },
+        {
+          "id": "coastline-6",
+          "name": "Coastline 6",
+          "handRqLimit": 310,
+          "trackIds": [
+            "coast-road",
+            "dock-streets",
+            "harbour-ring",
+            "drag-805",
+            "drag-sand"
+          ],
+          "prizeCarIds": [
+            "ashford-sovereign",
+            "kestrel-gyrfalcon",
+            "vantelli-furia-gt"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "desert",
+      "name": "Desert",
+      "stages": [
+        {
+          "id": "desert-1",
+          "name": "Desert 1",
+          "handRqLimit": 320,
+          "trackIds": [
+            "dune-trail",
+            "quarry-run",
+            "drag-sand",
+            "grand-loop",
+            "drag-805"
+          ],
+          "prizeCarIds": [
+            "brenner-4-4-turbo",
+            "calder-inferno",
+            "lindqvist-norrsken"
+          ]
+        },
+        {
+          "id": "desert-2",
+          "name": "Desert 2",
+          "handRqLimit": 330,
+          "trackIds": [
+            "dune-trail",
+            "quarry-run",
+            "drag-sand",
+            "grand-loop",
+            "drag-805"
+          ],
+          "prizeCarIds": [
+            "hoshiro-kensei",
+            "moreau-eclair",
+            "nakamori-tsubasa-evo"
+          ]
+        },
+        {
+          "id": "desert-3",
+          "name": "Desert 3",
+          "handRqLimit": 340,
+          "trackIds": [
+            "dune-trail",
+            "quarry-run",
+            "drag-sand",
+            "grand-loop",
+            "drag-805"
+          ],
+          "prizeCarIds": [
+            "vantelli-furia-gt",
+            "strale-tempesta",
+            "kestrel-gyrfalcon"
+          ]
+        },
+        {
+          "id": "desert-4",
+          "name": "Desert 4",
+          "handRqLimit": 350,
+          "trackIds": [
+            "dune-trail",
+            "quarry-run",
+            "drag-sand",
+            "grand-loop",
+            "drag-805"
+          ],
+          "prizeCarIds": [
+            "lindqvist-norrsken",
+            "brenner-4-4-turbo",
+            "vantelli-furia-corsa"
+          ]
+        },
+        {
+          "id": "desert-5",
+          "name": "Desert 5",
+          "handRqLimit": 370,
+          "trackIds": [
+            "dune-trail",
+            "quarry-run",
+            "drag-sand",
+            "grand-loop",
+            "drag-805"
+          ],
+          "prizeCarIds": [
+            "nakamori-arashi-wr",
+            "calder-apex-1000",
+            "hoshiro-kensei"
+          ]
+        },
+        {
+          "id": "desert-6",
+          "name": "Desert 6",
+          "handRqLimit": 380,
+          "trackIds": [
+            "dune-trail",
+            "quarry-run",
+            "drag-sand",
+            "grand-loop",
+            "drag-805"
+          ],
+          "prizeCarIds": [
+            "strale-tempesta",
+            "moreau-eclair",
+            "strale-fulmine"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "alpine",
+      "name": "Alpine",
+      "stages": [
+        {
+          "id": "alpine-1",
+          "name": "Alpine 1",
+          "handRqLimit": 390,
+          "trackIds": [
+            "ice-lake",
+            "pine-climb",
+            "forest-stage",
+            "grand-loop",
+            "valley-road"
+          ],
+          "prizeCarIds": [
+            "vantelli-furia-corsa",
+            "kestrel-ascent",
+            "hoshiro-ryujin"
+          ]
+        },
+        {
+          "id": "alpine-2",
+          "name": "Alpine 2",
+          "handRqLimit": 400,
+          "trackIds": [
+            "ice-lake",
+            "pine-climb",
+            "forest-stage",
+            "grand-loop",
+            "valley-road"
+          ],
+          "prizeCarIds": [
+            "nakamori-arashi-wr",
+            "calder-apex-1000",
+            "bellcourt-orage"
+          ]
+        },
+        {
+          "id": "alpine-3",
+          "name": "Alpine 3",
+          "handRqLimit": 410,
+          "trackIds": [
+            "ice-lake",
+            "pine-climb",
+            "forest-stage",
+            "grand-loop",
+            "valley-road"
+          ],
+          "prizeCarIds": [
+            "strale-fulmine",
+            "brenner-e-blitz",
+            "halvard-midnatt"
+          ]
+        },
+        {
+          "id": "alpine-4",
+          "name": "Alpine 4",
+          "handRqLimit": 430,
+          "trackIds": [
+            "ice-lake",
+            "pine-climb",
+            "forest-stage",
+            "grand-loop",
+            "valley-road"
+          ],
+          "prizeCarIds": [
+            "hoshiro-ryujin",
+            "kestrel-ascent",
+            "vantelli-furia-corsa"
+          ]
+        },
+        {
+          "id": "alpine-5",
+          "name": "Alpine 5",
+          "handRqLimit": 440,
+          "trackIds": [
+            "ice-lake",
+            "pine-climb",
+            "forest-stage",
+            "grand-loop",
+            "valley-road"
+          ],
+          "prizeCarIds": [
+            "bellcourt-orage",
+            "nakamori-arashi-wr",
+            "calder-apex-1000"
+          ]
+        },
+        {
+          "id": "alpine-6",
+          "name": "Alpine 6",
+          "handRqLimit": 450,
+          "trackIds": [
+            "ice-lake",
+            "pine-climb",
+            "forest-stage",
+            "grand-loop",
+            "valley-road"
+          ],
+          "prizeCarIds": [
+            "brenner-e-blitz",
+            "halvard-midnatt",
+            "strale-fulmine"
+          ]
+        }
+      ]
+    }
+  ]
+}

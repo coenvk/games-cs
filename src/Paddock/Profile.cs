@@ -21,6 +21,9 @@ public sealed class Profile
     /// <summary>Progress per run of an event (by <see cref="LiveEvent.InstanceId"/>).</summary>
     public Dictionary<string, EventProgress> Events { get; set; } = [];
 
+    /// <summary>Campaign progress.</summary>
+    public CampaignProgress Campaign { get; set; } = new();
+
     /// <summary>A new player's profile: 5 000 cash and eight starter cars of classes F and E.</summary>
     public static Profile New(Roster roster)
     {
@@ -53,6 +56,8 @@ public sealed class Profile
         profile.LastHand = [.. (profile.LastHand ?? []).Where(owned.Contains)];
         profile.Level = Math.Max(1, profile.Level);
         profile.Events ??= [];
+        profile.Campaign ??= new();
+        profile.Campaign.PrizesWon ??= [];
         return profile;
     }
 }
