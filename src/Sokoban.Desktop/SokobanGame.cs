@@ -56,7 +56,7 @@ internal sealed class SokobanGame : JentlGame
     protected override void LoadContent()
     {
         base.LoadContent();
-        _tileset = new Tileset(GraphicsDevice);
+        _tileset = new Tileset(GraphicsDevice, Assets);
         _fonts = new Fonts(GameFiles.ReadAllBytes("Assets/fonts/LilitaOne-Regular.ttf"));
         Scenes.Debug.Text = new FontTextDrawer(_fonts);
         Scenes.Debug.IsVisible = _options.Debug;
@@ -68,7 +68,20 @@ internal sealed class SokobanGame : JentlGame
 
         var store = _store;
         var settings = SavedFile<Settings>.Load(store, "settings.json", Settings.FromJson, s => s.ToJson(), () => new Settings());
-        Tr.Use(settings.Value.Language);
+        if (_options.Watch is { } watched)
+        {
+            Assets.Watch(watched);
+        }
+
+        // Language files are read by Tr, not kept by the store: edits are picked up here.
+        Tr.Use(settings.Value.Language, Assets.ReadText);
+        Assets.Changed += path =>
+        {
+            if (path.StartsWith("Assets/lang/", StringComparison.Ordinal))
+            {
+                Tr.Use(settings.Value.Language, Assets.ReadText);
+            }
+        };
         _sounds = SoundPlayer.Load("Assets/sounds", Sound.Navigate, Sound.Completed);
         _sounds.Enabled = settings.Value.Sound;
         _sounds.Volume = Math.Clamp(settings.Value.Volume, 0f, 1f);
@@ -94,6 +107,7 @@ internal sealed class SokobanGame : JentlGame
             new CardRenderer(_cardArt = new CardArt(GraphicsDevice), new FontTextDrawer(_fonts)),
             new AdventureSaves(store),
             new CodeLockStore(store),
+            Assets,
             _options.Deal,
             _options.Server);
 

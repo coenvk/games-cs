@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using Jentl.Core.Graphics;
 using Jentl.Core.Input;
 using Jentl.Core.Scenes;
 using Microsoft.Xna.Framework;

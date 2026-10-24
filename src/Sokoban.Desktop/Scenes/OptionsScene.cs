@@ -69,7 +69,7 @@ internal sealed class OptionsScene : Scene
             index =>
             {
                 settings.Language = languages[index];
-                Tr.Use(settings.Language);
+                Tr.Use(settings.Language, context.Assets.ReadText);
                 Save();
                 Scenes.Replace(new OptionsScene(context));
             }));

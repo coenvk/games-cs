@@ -35,6 +35,7 @@ A C# rewrite of [coenvk/Sokoban](https://github.com/coenvk/Sokoban), with engine
 | `tools/LevelConverter` | One-shot converter from the old Java level format to XSB |
 | `tools/SolverBench` | `solve`: run the solver over a pack; `generate`: print generated levels as XSB |
 | `tools/RpgArt` | Draws the RPG tileset (`tiles.png` and `tiles.tsx`) in code |
+| `tools/Assets` | `atlas`: pack a folder of sprites into a texture atlas; `check`: validate a game's assets |
 | `levels/original.xsb` | The 100 levels from the Java version |
 | `levels/ice.xsb` | 20 ice levels: three hand-made tutorials, then generated levels from easy to hard |
 
@@ -60,6 +61,7 @@ Command-line options (handy for checking screens without playing):
   `VirtualScreen`); the app normally lays out for the window itself
 - `--debug true` starts with the debug overlay showing (F3 toggles it, as does Options > Debug overlay)
 - `--server <url>` uses this game server for online play (default `ws://localhost:5080/play`, or `JENTL_SERVER`)
+- `--watch <folder>` reloads assets from this source folder as they change, e.g. `--watch src/Sokoban.Desktop` (see the asset tooling in [docs/kits.md](docs/kits.md))
 
 ```bash
 dotnet run --project src/Sokoban.Desktop -- --keys "Down Enter Wait" --screenshot select.png

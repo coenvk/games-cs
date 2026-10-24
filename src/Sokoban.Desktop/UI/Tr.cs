@@ -28,16 +28,17 @@ internal static class Tr
 
     /// <summary>
     /// Switches to <paramref name="language"/>: a code, or "auto" for the system's (the browser's) language. A
-    /// language whose file is missing or broken falls back to English.
+    /// language whose file is missing or broken falls back to English. <paramref name="read"/> reads the file
+    /// (the asset store, to see edits while the game runs).
     /// </summary>
-    public static void Use(string language)
+    public static void Use(string language, Func<string, string>? read = null)
     {
         var code = language == "auto"
             ? Localizer.Pick(CultureInfo.CurrentUICulture, Languages.Select(l => l.Code))
             : language;
         try
         {
-            Current = code == "en" ? Localizer.English : Localizer.Load(code, GameFiles.ReadAllText($"Assets/lang/{code}.json"));
+            Current = code == "en" ? Localizer.English : Localizer.Load(code, (read ?? GameFiles.ReadAllText)($"Assets/lang/{code}.json"));
         }
         catch (Exception e) when (e is IOException or System.Text.Json.JsonException)
         {

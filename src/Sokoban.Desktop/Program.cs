@@ -15,6 +15,7 @@ using Sokoban.Desktop;
 //   --virtual <w>x<h>[:fit|pixel|expand]  render at a fixed design resolution, scaled to the window
 //   --debug true         start with the debug overlay (F3) showing
 //   --server <url>       the game server for online play (default ws://localhost:5080/play, or JENTL_SERVER)
+//   --watch <folder>     reload assets from this source folder as they change (e.g. src/Sokoban.Desktop)
 var options = new GameOptions();
 for (var i = 0; i + 1 < args.Length; i += 2)
 {
@@ -41,6 +42,9 @@ for (var i = 0; i + 1 < args.Length; i += 2)
         case "--size":
             var size = args[i + 1].Split('x');
             options = options with { Size = new Microsoft.Xna.Framework.Point(int.Parse(size[0], CultureInfo.InvariantCulture), int.Parse(size[1], CultureInfo.InvariantCulture)) };
+            break;
+        case "--watch":
+            options = options with { Watch = args[i + 1] };
             break;
         case "--server":
             options = options with { Server = new Uri(args[i + 1]) };

@@ -1,0 +1,285 @@
+{
+  "image": "sprites.png",
+  "width": 512,
+  "height": 512,
+  "sprites": {
+    "areas/area1": {
+      "x": 2,
+      "y": 2,
+      "width": 56,
+      "height": 56
+    },
+    "areas/area2": {
+      "x": 62,
+      "y": 2,
+      "width": 56,
+      "height": 56
+    },
+    "areas/area3": {
+      "x": 122,
+      "y": 2,
+      "width": 56,
+      "height": 56
+    },
+    "areas/area4": {
+      "x": 182,
+      "y": 2,
+      "width": 56,
+      "height": 56
+    },
+    "areas/area5": {
+      "x": 242,
+      "y": 2,
+      "width": 56,
+      "height": 56
+    },
+    "areas/area6": {
+      "x": 302,
+      "y": 2,
+      "width": 56,
+      "height": 56
+    },
+    "areas/area7": {
+      "x": 362,
+      "y": 2,
+      "width": 56,
+      "height": 56
+    },
+    "areas/area8": {
+      "x": 422,
+      "y": 2,
+      "width": 56,
+      "height": 56
+    },
+    "crates/crate1": {
+      "x": 2,
+      "y": 62,
+      "width": 56,
+      "height": 56
+    },
+    "crates/crate10": {
+      "x": 62,
+      "y": 62,
+      "width": 56,
+      "height": 56
+    },
+    "crates/crate11": {
+      "x": 122,
+      "y": 62,
+      "width": 56,
+      "height": 56
+    },
+    "crates/crate12": {
+      "x": 182,
+      "y": 62,
+      "width": 56,
+      "height": 56
+    },
+    "crates/crate13": {
+      "x": 242,
+      "y": 62,
+      "width": 56,
+      "height": 56
+    },
+    "crates/crate14": {
+      "x": 302,
+      "y": 62,
+      "width": 56,
+      "height": 56
+    },
+    "crates/crate15": {
+      "x": 362,
+      "y": 62,
+      "width": 56,
+      "height": 56
+    },
+    "crates/crate16": {
+      "x": 422,
+      "y": 62,
+      "width": 56,
+      "height": 56
+    },
+    "crates/crate2": {
+      "x": 2,
+      "y": 122,
+      "width": 56,
+      "height": 56
+    },
+    "crates/crate3": {
+      "x": 62,
+      "y": 122,
+      "width": 56,
+      "height": 56
+    },
+    "crates/crate4": {
+      "x": 122,
+      "y": 122,
+      "width": 56,
+      "height": 56
+    },
+    "crates/crate5": {
+      "x": 182,
+      "y": 122,
+      "width": 56,
+      "height": 56
+    },
+    "crates/crate6": {
+      "x": 242,
+      "y": 122,
+      "width": 56,
+      "height": 56
+    },
+    "crates/crate7": {
+      "x": 302,
+      "y": 122,
+      "width": 56,
+      "height": 56
+    },
+    "crates/crate8": {
+      "x": 362,
+      "y": 122,
+      "width": 56,
+      "height": 56
+    },
+    "crates/crate9": {
+      "x": 422,
+      "y": 122,
+      "width": 56,
+      "height": 56
+    },
+    "floors/floor1": {
+      "x": 2,
+      "y": 182,
+      "width": 56,
+      "height": 56
+    },
+    "floors/floor2": {
+      "x": 62,
+      "y": 182,
+      "width": 56,
+      "height": 56
+    },
+    "floors/floor3": {
+      "x": 122,
+      "y": 182,
+      "width": 56,
+      "height": 56
+    },
+    "floors/floor4": {
+      "x": 182,
+      "y": 182,
+      "width": 56,
+      "height": 56
+    },
+    "floors/floor5": {
+      "x": 242,
+      "y": 182,
+      "width": 56,
+      "height": 56
+    },
+    "floors/floor6": {
+      "x": 302,
+      "y": 182,
+      "width": 56,
+      "height": 56
+    },
+    "floors/floor7": {
+      "x": 362,
+      "y": 182,
+      "width": 56,
+      "height": 56
+    },
+    "floors/floor8": {
+      "x": 422,
+      "y": 182,
+      "width": 56,
+      "height": 56
+    },
+    "players/player1": {
+      "x": 2,
+      "y": 242,
+      "width": 56,
+      "height": 56
+    },
+    "players/player10": {
+      "x": 62,
+      "y": 242,
+      "width": 56,
+      "height": 56
+    },
+    "players/player2": {
+      "x": 122,
+      "y": 242,
+      "width": 56,
+      "height": 56
+    },
+    "players/player3": {
+      "x": 182,
+      "y": 242,
+      "width": 56,
+      "height": 56
+    },
+    "players/player4": {
+      "x": 242,
+      "y": 242,
+      "width": 56,
+      "height": 56
+    },
+    "players/player5": {
+      "x": 302,
+      "y": 242,
+      "width": 56,
+      "height": 56
+    },
+    "players/player6": {
+      "x": 362,
+      "y": 242,
+      "width": 56,
+      "height": 56
+    },
+    "players/player7": {
+      "x": 422,
+      "y": 242,
+      "width": 56,
+      "height": 56
+    },
+    "players/player8": {
+      "x": 2,
+      "y": 302,
+      "width": 56,
+      "height": 56
+    },
+    "players/player9": {
+      "x": 62,
+      "y": 302,
+      "width": 56,
+      "height": 56
+    },
+    "walls/wall1": {
+      "x": 122,
+      "y": 302,
+      "width": 56,
+      "height": 56
+    },
+    "walls/wall2": {
+      "x": 182,
+      "y": 302,
+      "width": 56,
+      "height": 56
+    },
+    "walls/wall3": {
+      "x": 242,
+      "y": 302,
+      "width": 56,
+      "height": 56
+    },
+    "walls/wall4": {
+      "x": 302,
+      "y": 302,
+      "width": 56,
+      "height": 56
+    }
+  },
+  "source": "../Art/sprites",
+  "fingerprint": "20d46960af0375d3"
+}

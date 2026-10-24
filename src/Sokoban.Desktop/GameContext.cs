@@ -1,5 +1,6 @@
 ﻿using Jentl.Core.Audio;
 using Jentl.Core.Cards;
+using Jentl.Core.Content;
 using Jentl.Core.Input;
 using Sokoban.Desktop.Input;
 using Sokoban.Desktop.Rendering;
@@ -57,6 +58,7 @@ internal sealed record GameContext(
     CardRenderer Cards,
     AdventureSaves Adventures,
     CodeLockStore Locks,
+    AssetStore Assets,
     int? Deal = null,
     Uri? Server = null)
 {

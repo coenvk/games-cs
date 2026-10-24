@@ -13,6 +13,7 @@ namespace Sokoban.Desktop;
 /// <param name="Virtual">Render at this design resolution, scaled to the window (Jentl's <c>VirtualScreen</c>).</param>
 /// <param name="Debug">Start with the debug overlay (F3) showing.</param>
 /// <param name="Server">The game server for online play (<c>ws://</c> or <c>wss://</c>).</param>
+/// <param name="Watch">The game's source folder, to reload assets from as they are edited (hot reload).</param>
 internal sealed record GameOptions(
     int? StartLevel = null,
     string? ScreenshotPath = null,
@@ -23,4 +24,5 @@ internal sealed record GameOptions(
     Point? Size = null,
     VirtualScreen? Virtual = null,
     bool Debug = false,
-    Uri? Server = null);
+    Uri? Server = null,
+    string? Watch = null);

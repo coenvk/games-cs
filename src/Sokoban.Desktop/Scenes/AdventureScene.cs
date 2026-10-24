@@ -41,7 +41,6 @@ internal sealed class AdventureScene : Scene
     private readonly GameContext _context;
     private readonly MapView _view;
     private readonly ButtonBar _buttons;
-    private readonly Dictionary<string, Texture2D> _textures = new(StringComparer.Ordinal);
     private readonly Queue<Cell> _walk = new();
     private readonly ActionRepeater<GameAction> _repeater = new(
         RepeatDelay,
@@ -358,12 +357,6 @@ internal sealed class AdventureScene : Scene
     {
         if (disposing)
         {
-            foreach (var texture in _textures.Values)
-            {
-                texture.Dispose();
-            }
-
-            _textures.Clear();
             _lights.Dispose();
         }
 
@@ -376,16 +369,8 @@ internal sealed class AdventureScene : Scene
 
     private static string Read(string name) => GameFiles.ReadAllText($"{Folder}/{name}");
 
-    private Texture2D Texture(Tileset tileset)
-    {
-        if (!_textures.TryGetValue(tileset.Image, out var texture))
-        {
-            texture = GameFiles.LoadTexture(_device!, $"{Folder}/{tileset.Image}");
-            _textures[tileset.Image] = texture;
-        }
-
-        return texture;
-    }
+    // Through the asset store, so editing the tileset image shows up straight away with hot reload on.
+    private Texture2D Texture(Tileset tileset) => _context.Assets.Texture($"{Folder}/{tileset.Image}");
 
     private void Step(GridDirection direction)
     {
