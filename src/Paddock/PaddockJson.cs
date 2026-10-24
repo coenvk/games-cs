@@ -8,4 +8,5 @@ namespace Paddock;
 [JsonSerializable(typeof(RosterFile))]
 [JsonSerializable(typeof(TracksFile))]
 [JsonSerializable(typeof(Profile))]
+[JsonSerializable(typeof(EventsFile))]
 internal sealed partial class PaddockJson : JsonSerializerContext;

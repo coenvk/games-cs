@@ -18,6 +18,9 @@ public sealed class Profile
     /// <summary>The cars of the last hand raced, in order, to start the next hand from.</summary>
     public List<Guid> LastHand { get; set; } = [];
 
+    /// <summary>Progress per run of an event (by <see cref="LiveEvent.InstanceId"/>).</summary>
+    public Dictionary<string, EventProgress> Events { get; set; } = [];
+
     /// <summary>A new player's profile: 5 000 cash and eight starter cars of classes F and E.</summary>
     public static Profile New(Roster roster)
     {
@@ -49,6 +52,7 @@ public sealed class Profile
         var owned = profile.Garage.Select(c => c.Id).ToHashSet();
         profile.LastHand = [.. (profile.LastHand ?? []).Where(owned.Contains)];
         profile.Level = Math.Max(1, profile.Level);
+        profile.Events ??= [];
         return profile;
     }
 }
