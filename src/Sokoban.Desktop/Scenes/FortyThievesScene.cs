@@ -2,6 +2,7 @@
 using Jentl.Cards;
 using Jentl.Core.Cards;
 using Microsoft.Xna.Framework;
+using static Sokoban.Desktop.UI.Tr;
 
 namespace Sokoban.Desktop.Scenes;
 
@@ -23,7 +24,7 @@ internal sealed class FortyThievesScene : CardGameScene
             && (pile.Name == FortyThievesRules.Waste || pile.Name.StartsWith("column", StringComparison.Ordinal));
     }
 
-    protected override string Help => "Build down in suit, one card at a time; tap the stock for a new card";
+    protected override string Help => T("Build down in suit, one card at a time; tap the stock for a new card");
 
     protected override void LayOut(Rectangle area)
     {
@@ -53,8 +54,8 @@ internal sealed class FortyThievesScene : CardGameScene
     }
 
     protected override string? DescribeRejected(CardInput input) =>
-        input is ClickPile { Pile.Name: FortyThievesRules.Stock } ? "The stock is empty" : null;
+        input is ClickPile { Pile.Name: FortyThievesRules.Stock } ? T("The stock is empty") : null;
 
     protected override string DescribeHint(CardInput hint) =>
-        hint is ClickPile { Pile.Name: FortyThievesRules.Stock } ? "Turn over a card from the stock" : base.DescribeHint(hint);
+        hint is ClickPile { Pile.Name: FortyThievesRules.Stock } ? T("Turn over a card from the stock") : base.DescribeHint(hint);
 }

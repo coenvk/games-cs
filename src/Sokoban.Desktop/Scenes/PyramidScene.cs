@@ -2,6 +2,7 @@
 using Jentl.Core.Cards;
 using Microsoft.Xna.Framework;
 using Pyramid;
+using static Sokoban.Desktop.UI.Tr;
 
 namespace Sokoban.Desktop.Scenes;
 
@@ -26,7 +27,7 @@ internal sealed class PyramidScene : CardGameScene
         View.EmptyLabel = pile => pile.Name == PyramidRules.Stock ? RedealsLeft() : null;
     }
 
-    protected override string Help => "Pair cards that add up to 13: drag one onto the other, or tap both";
+    protected override string Help => T("Pair cards that add up to 13: drag one onto the other, or tap both");
 
     protected override void LayOut(Rectangle area)
     {
@@ -90,9 +91,9 @@ internal sealed class PyramidScene : CardGameScene
 
     protected override string? DescribeRejected(CardInput input) => input switch
     {
-        ClickPile { Pile.Name: PyramidRules.Stock } => "The stock has been gone through three times",
+        ClickPile { Pile.Name: PyramidRules.Stock } => T("The stock has been gone through three times"),
         DragCards { From: var from, To: var to } when from.Top is { } a && to.Top is { } b && a.Card.Rank + b.Card.Rank != PyramidRules.Pair =>
-            $"{a.Card.RankLabel} and {b.Card.RankLabel} add up to {a.Card.Rank + b.Card.Rank}, not 13",
+            T("{0} and {1} add up to {2}, not 13", a.Card.RankLabel, b.Card.RankLabel, a.Card.Rank + b.Card.Rank),
         _ => null,
     };
 
@@ -101,10 +102,10 @@ internal sealed class PyramidScene : CardGameScene
         _selected = null; // the hint outline replaces the selection outline
         return hint switch
         {
-            ClickPile { Pile.Name: PyramidRules.Stock } when Game.Table[PyramidRules.Stock].IsEmpty => "Turn the waste over for another pass",
-            ClickPile { Pile.Name: PyramidRules.Stock } => "Turn over a card from the stock",
-            ClickPile { Pile: var king } => $"Remove the {CardName(king.Top!.Value.Card)}",
-            DragCards drag => $"Pair the {CardName(drag.From.Top!.Value.Card)} with the {CardName(drag.To.Top!.Value.Card)}",
+            ClickPile { Pile.Name: PyramidRules.Stock } when Game.Table[PyramidRules.Stock].IsEmpty => T("Turn the waste over for another pass"),
+            ClickPile { Pile.Name: PyramidRules.Stock } => T("Turn over a card from the stock"),
+            ClickPile { Pile: var king } => T("Remove the {0}", CardName(king.Top!.Value.Card)),
+            DragCards drag => T("Pair the {0} with the {1}", CardName(drag.From.Top!.Value.Card), CardName(drag.To.Top!.Value.Card)),
             _ => base.DescribeHint(hint),
         };
     }

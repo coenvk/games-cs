@@ -10,6 +10,7 @@ using Sokoban.Desktop.UI;
 using Sokoban.Model;
 using Sokoban.Solver;
 using Jentl.Core.UI;
+using static Sokoban.Desktop.UI.Tr;
 
 namespace Sokoban.Desktop.Scenes;
 
@@ -84,11 +85,11 @@ internal sealed class PlayScene : Scene
         _solver = new Solver.Solver(level.Board);
         _hints = new HintRunner(_solver, context.Platform.HintTime);
         _buttons = new ButtonBar(
-            new Button("Undo", () => TakeOver(Undo)),
-            new Button("Redo", () => TakeOver(Redo)),
-            new Button("Restart", Restart),
-            new Button("Hint", RequestHint),
-            new Button("Menu", () => Scenes.Push(new PauseScene(_context, this))));
+            new Button(T("Undo"), () => TakeOver(Undo)),
+            new Button(T("Redo"), () => TakeOver(Redo)),
+            new Button(T("Restart"), Restart),
+            new Button(T("Hint"), RequestHint),
+            new Button(T("Menu"), () => Scenes.Push(new PauseScene(_context, this))));
     }
 
     /// <summary>Where the level sits in the packs, or null for a generated level.</summary>
@@ -102,7 +103,7 @@ internal sealed class PlayScene : Scene
     /// <summary>Whether there is a next level: always for generated levels, which can generate another.</summary>
     public bool HasNextLevel => Where is not { } w || w.Index < _context.Packs[w.Pack].Levels.Count - 1;
 
-    public string Title => Where is { } w ? _context.TitleOf(w) : "Random level";
+    public string Title => Where is { } w ? _context.TitleOf(w) : T("Random level");
 
     /// <summary>Time spent on the current attempt. Only runs while this scene is on top and unsolved.</summary>
     public TimeSpan Time { get; private set; }
@@ -177,9 +178,7 @@ internal sealed class PlayScene : Scene
         var fonts = _context.Fonts;
         var margin = fonts.Px(Margin);
         var record = _context.Progress.Progress.Get(Session.Level);
-        var stats = string.Create(
-            CultureInfo.InvariantCulture,
-            $"Moves {Session.MoveCount}    Pushes {Session.PushCount}    {Format.Duration(Time)}");
+        var stats = T("Moves {0}    Pushes {1}    {2}", Session.MoveCount, Session.PushCount, Format.Duration(Time));
         var statsColor = Session.IsSolved ? Palette.Accent : Palette.Text;
 
         // Landscape: title and best on the left, stats on the right. Portrait: stacked, stats below.
@@ -221,12 +220,12 @@ internal sealed class PlayScene : Scene
         var buttons = new Rectangle(viewport.X + margin, viewport.Bottom - buttonsHeight, viewport.Width - 2 * margin, buttonsHeight);
         var status = new Rectangle(viewport.X, buttons.Top - statusHeight, viewport.Width, statusHeight);
         var (statusText, statusColor) = _hints.IsThinking
-            ? ("Thinking...", Palette.Accent)
+            ? (T("Thinking..."), Palette.Accent)
             : _message is not null && _messageFor > TimeSpan.Zero
                 ? (_message, Palette.Accent)
                 : fonts.IsPortrait && record is not null
                     ? (Format.Best(record), Palette.Muted)
-                    : ("Tap a cell to walk there, swipe to step", Palette.Muted);
+                    : (T("Tap a cell to walk there, swipe to step"), Palette.Muted);
         batch.DrawText(fonts.Small, statusText, status, statusColor, shadow: false);
         _buttons.Draw(batch, buttonFont, buttons);
 
@@ -291,7 +290,7 @@ internal sealed class PlayScene : Scene
 
         if (_solver.Deadlocks.DeadCrates(Session).Count > 0)
         {
-            ShowMessage("A crate is stuck (shown in red). Undo or restart.");
+            ShowMessage(T("A crate is stuck (shown in red). Undo or restart."));
             return;
         }
 
@@ -312,10 +311,10 @@ internal sealed class PlayScene : Scene
                 Queue(result.Moves.TakeWhile((_, i) => i == 0 || !result.Moves[i - 1].IsPush).Select(m => m.Direction), HintStepInterval);
                 break;
             case SolveStatus.Unsolvable:
-                ShowMessage("This position can't be solved any more. Undo or restart.");
+                ShowMessage(T("This position can't be solved any more. Undo or restart."));
                 break;
             case SolveStatus.LimitReached:
-                ShowMessage("No hint found: this position is too tricky to work out quickly.");
+                ShowMessage(T("No hint found: this position is too tricky to work out quickly."));
                 break;
         }
     }

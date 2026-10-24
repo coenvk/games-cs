@@ -2,6 +2,7 @@
 using Jentl.Cards;
 using Jentl.Core.Cards;
 using Microsoft.Xna.Framework;
+using static Sokoban.Desktop.UI.Tr;
 
 namespace Sokoban.Desktop.Scenes;
 
@@ -25,7 +26,7 @@ internal sealed class FreeCellScene : CardGameScene
         View.CanDrag = (pile, index) => !pile.Name.StartsWith("foundation", StringComparison.Ordinal) && FreeCellRules.IsRun(pile, index);
     }
 
-    protected override string Help => "Drag cards or runs; tap a card to send it where it fits";
+    protected override string Help => T("Drag cards or runs; tap a card to send it where it fits");
 
     protected override void LayOut(Rectangle area)
     {
@@ -55,6 +56,6 @@ internal sealed class FreeCellScene : CardGameScene
 
     protected override string DescribeHint(CardInput hint) =>
         hint is DragCards { To.Name: var to } drag && to.StartsWith("freecell", StringComparison.Ordinal)
-            ? $"Park the {CardName(drag.From[drag.Index].Card)} in a free cell"
+            ? T("Park the {0} in a free cell", CardName(drag.From[drag.Index].Card))
             : base.DescribeHint(hint);
 }

@@ -10,6 +10,7 @@ using Microsoft.Xna.Framework.Input;
 using Sokoban.Desktop.Input;
 using Sokoban.Desktop.UI;
 using Uno;
+using static Sokoban.Desktop.UI.Tr;
 
 namespace Sokoban.Desktop.Scenes;
 
@@ -44,7 +45,7 @@ internal sealed class UnoOnlineScene : PanelScene
 
     public Uri Server { get; }
 
-    protected override string Title => _room is { } room ? $"Room {room.Code}" : "Uno online";
+    protected override string Title => _room is { } room ? T("Room {0}", room.Code) : T("Uno online");
 
     protected override IReadOnlyList<PanelLine> Lines
     {
@@ -54,18 +55,18 @@ internal sealed class UnoOnlineScene : PanelScene
             switch (_stage)
             {
                 case Stage.Connecting:
-                    lines.Add(new($"Connecting to {Server.Host}…", Palette.Muted));
+                    lines.Add(new(T("Connecting to {0}…", Server.Host), Palette.Muted));
                     break;
                 case Stage.Choosing:
-                    lines.Add(new("Make a room and share its code, or join a friend's.", Palette.Muted));
+                    lines.Add(new(T("Make a room and share its code, or join a friend's."), Palette.Muted));
                     break;
                 case Stage.Waiting:
-                    lines.Add(new("One moment…", Palette.Muted));
+                    lines.Add(new(T("One moment…"), Palette.Muted));
                     break;
                 case Stage.InRoom:
-                    lines.Add(new(_room!.IsHost ? "Share the code; start when everyone is in." : "Waiting for the host to start.", Palette.Muted));
+                    lines.Add(new(_room!.IsHost ? T("Share the code; start when everyone is in.") : T("Waiting for the host to start."), Palette.Muted));
                     lines.AddRange(_seats.Select(s => new PanelLine(
-                        s.Kind == SeatKind.Open ? "(open: a bot plays if nobody joins)" : s.Seat == _room.Seat ? $"{s.Name} (you)" : s.Name,
+                        s.Kind == SeatKind.Open ? T("(open: a bot plays if nobody joins)") : s.Seat == _room.Seat ? T("{0} (you)", s.Name) : s.Name,
                         s.Kind == SeatKind.Open ? Palette.Muted : Palette.Text)));
                     break;
             }
@@ -116,8 +117,8 @@ internal sealed class UnoOnlineScene : PanelScene
 
         if (_client.Status == NetStatus.Closed && _problem != _client.Error)
         {
-            _problem = $"{_client.Error} Is the server at {Server} running?";
-            Menu = new Menu(Context.Sounds, new MenuItem("Back", () => Scenes.Pop()));
+            _problem = T("{0} Is the server at {1} running?", _client.Error, Server);
+            Menu = new Menu(Context.Sounds, new MenuItem(T("Back"), () => Scenes.Pop()));
         }
 
         while (!_handedOver && _client.TryReceive(out var message))
@@ -170,18 +171,18 @@ internal sealed class UnoOnlineScene : PanelScene
     private Menu BuildMenu()
     {
         var sounds = Context.Sounds;
-        var back = new MenuItem("Back", () => Scenes.Pop());
+        var back = new MenuItem(T("Back"), () => Scenes.Pop());
         return _stage switch
         {
             Stage.Choosing => new Menu(
                 sounds,
-                new MenuItem("New room for 2", () => Create(2)),
-                new MenuItem("New room for 3", () => Create(3)),
-                new MenuItem("New room for 4", () => Create(4)),
-                new MenuItem("Join a room", () => Scenes.Push(new UnoJoinScene(Context, this))),
+                new MenuItem(T("New room for 2"), () => Create(2)),
+                new MenuItem(T("New room for 3"), () => Create(3)),
+                new MenuItem(T("New room for 4"), () => Create(4)),
+                new MenuItem(T("Join a room"), () => Scenes.Push(new UnoJoinScene(Context, this))),
                 back),
-            Stage.InRoom when _room!.IsHost => new Menu(sounds, new MenuItem("Start", Start), new MenuItem("Leave", Leave)),
-            Stage.InRoom => new Menu(sounds, new MenuItem("Leave", Leave)),
+            Stage.InRoom when _room!.IsHost => new Menu(sounds, new MenuItem(T("Start"), Start), new MenuItem(T("Leave"), Leave)),
+            Stage.InRoom => new Menu(sounds, new MenuItem(T("Leave"), Leave)),
             _ => new Menu(sounds, back),
         };
     }
@@ -293,7 +294,7 @@ internal sealed class UnoJoinScene(GameContext context, UnoOnlineScene lobby) : 
         var height = fonts.Px(190) + 4 * key + 3 * gap;
         var panel = new Rectangle(viewport.Center.X - width / 2, viewport.Center.Y - height / 2, width, height);
         batch.FillRectangle(panel, Palette.Panel);
-        batch.DrawText(fonts.Heading, "Room code", new Vector2(panel.Center.X, panel.Y + fonts.Px(16)), Palette.Text, Align.Center);
+        batch.DrawText(fonts.Heading, T("Room code"), new Vector2(panel.Center.X, panel.Y + fonts.Px(16)), Palette.Text, Align.Center);
         var shown = string.Join(" ", _code.PadRight(Length, '_').ToCharArray());
         batch.DrawText(fonts.Heading, shown, new Vector2(panel.Center.X, panel.Y + fonts.Px(84)), Palette.Accent, Align.Center);
 
@@ -305,7 +306,7 @@ internal sealed class UnoJoinScene(GameContext context, UnoOnlineScene lobby) : 
             _buttons[i] = bounds;
             var enabled = Keys[i] != "Join" || _code.Length == Length;
             batch.FillRectangle(bounds, i == _focus ? Palette.Accent : Palette.PanelLight);
-            batch.DrawText(Keys[i].Length > 1 ? fonts.Small : fonts.Body, Keys[i], bounds, i == _focus ? Palette.Ink : enabled ? Palette.Text : Palette.Muted, shadow: false);
+            batch.DrawText(Keys[i].Length > 1 ? fonts.Small : fonts.Body, Keys[i] switch { "Del" => T("Del"), "Join" => T("Join"), var digit => digit }, bounds, i == _focus ? Palette.Ink : enabled ? Palette.Text : Palette.Muted, shadow: false);
         }
     }
 

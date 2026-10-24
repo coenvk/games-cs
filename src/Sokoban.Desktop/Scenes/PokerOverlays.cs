@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using Sokoban.Desktop.UI;
 using Jentl.Core.UI;
+using static Sokoban.Desktop.UI.Tr;
 
 namespace Sokoban.Desktop.Scenes;
 
@@ -12,12 +13,12 @@ internal sealed class PokerSetupScene : PanelScene
         : base(context)
     {
         PokerSetup[] setups = [PokerSetup.VersusBots(3), PokerSetup.VersusBots(5), PokerSetup.VersusBots(1), PokerSetup.PassAndPlay(2), PokerSetup.PassAndPlay(3), PokerSetup.PassAndPlay(4)];
-        Menu = new Menu(context.Sounds, [.. setups.Select(s => new MenuItem(s.Name, () => Scenes.Replace(new PokerScene(context, s), Navigation.Fade()))), new MenuItem("Back", () => Scenes.Pop())]);
+        Menu = new Menu(context.Sounds, [.. setups.Select(s => new MenuItem(s.Name, () => Scenes.Replace(new PokerScene(context, s), Navigation.Fade()))), new MenuItem(T("Back"), () => Scenes.Pop())]);
     }
 
     protected override string Title => "Texas Hold'em";
 
-    protected override IReadOnlyList<PanelLine> Lines => [new("No limit. 1,000 chips each; last one with chips wins.", Palette.Muted)];
+    protected override IReadOnlyList<PanelLine> Lines => [new(T("No limit. 1,000 chips each; last one with chips wins."), Palette.Muted)];
 }
 
 /// <summary>Hides the table until the next person has the device.</summary>
@@ -29,16 +30,16 @@ internal sealed class PokerHandoverScene : PanelScene
         : base(context)
     {
         _name = name;
-        Menu = new Menu(context.Sounds, new MenuItem($"I'm {name}", () =>
+        Menu = new Menu(context.Sounds, new MenuItem(T("I'm {0}", name), () =>
         {
             game.ConfirmHandover();
             Scenes.Pop();
         }));
     }
 
-    protected override string Title => "Pass the device";
+    protected override string Title => T("Pass the device");
 
-    protected override IReadOnlyList<PanelLine> Lines => [new($"It's {_name}'s turn.", Palette.Text), new("Others, look away!", Palette.Muted)];
+    protected override IReadOnlyList<PanelLine> Lines => [new(T("It's {0}'s turn.", _name), Palette.Text), new(T("Others, look away!"), Palette.Muted)];
 
     protected override void OnBack()
     {
@@ -56,21 +57,21 @@ internal sealed class PokerEndScene : PanelScene
         _game = game;
         Menu = new Menu(
             context.Sounds,
-            new MenuItem("New game", () =>
+            new MenuItem(T("New game"), () =>
             {
                 Scenes.Pop();
                 game.NewGame();
             }),
-            new MenuItem("Main menu", () => Navigation.ToMainMenu(Scenes, context)));
+            new MenuItem(T("Main menu"), () => Navigation.ToMainMenu(Scenes, context)));
     }
 
     protected override string Title => _game.Table.Champion is { } champion
-        ? _game.Players[champion].Name == "You" ? "You win the table!" : $"{_game.Players[champion].Name} wins the table"
-        : "You're out";
+        ? _game.Players[champion].Name == T("You") ? T("You win the table!") : T("{0} wins the table", _game.Players[champion].Name)
+        : T("You're out");
 
     protected override IReadOnlyList<PanelLine> Lines =>
     [
-        new(string.Create(CultureInfo.InvariantCulture, $"After {_game.Table.HandNumber} hands"), Palette.Muted),
+        new(N(_game.Table.HandNumber, "After {0} hand", "After {0} hands"), Palette.Muted),
         .. _game.Players.OrderByDescending(p => _game.Table.Stacks[p.Seat])
             .Select(p => new PanelLine(string.Create(CultureInfo.InvariantCulture, $"{p.Name}  {_game.Table.Stacks[p.Seat]}"), Palette.Text)),
     ];
@@ -88,17 +89,17 @@ internal sealed class PokerPauseScene : PanelScene
         _game = game;
         Menu = new Menu(
             context.Sounds,
-            new MenuItem("Resume", () => Scenes.Pop()),
-            new MenuItem("New game", () =>
+            new MenuItem(T("Resume"), () => Scenes.Pop()),
+            new MenuItem(T("New game"), () =>
             {
                 Scenes.Pop();
                 game.NewGame();
             }),
-            new MenuItem("Options", () => Scenes.Push(new OptionsScene(context))),
-            new MenuItem("Main menu", () => Navigation.ToMainMenu(Scenes, context)));
+            new MenuItem(T("Options"), () => Scenes.Push(new OptionsScene(context))),
+            new MenuItem(T("Main menu"), () => Navigation.ToMainMenu(Scenes, context)));
     }
 
-    protected override string Title => "Paused";
+    protected override string Title => T("Paused");
 
     protected override IReadOnlyList<PanelLine> Lines => [new(_game.Setup.Name, Palette.Muted)];
 }

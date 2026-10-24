@@ -2,6 +2,7 @@
 using Jentl.Cards;
 using Jentl.Core.Cards;
 using Microsoft.Xna.Framework;
+using static Sokoban.Desktop.UI.Tr;
 
 namespace Sokoban.Desktop.Scenes;
 
@@ -22,7 +23,7 @@ internal sealed class EasthavenScene : CardGameScene
         View.CanDrag = (pile, index) => pile.Name.StartsWith("column", StringComparison.Ordinal) && EasthavenRules.IsRun(pile, index);
     }
 
-    protected override string Help => "Build down in alternating colours; tap the stock to deal a card onto every column";
+    protected override string Help => T("Build down in alternating colours; tap the stock to deal a card onto every column");
 
     protected override void LayOut(Rectangle area)
     {
@@ -53,8 +54,8 @@ internal sealed class EasthavenScene : CardGameScene
     }
 
     protected override string? DescribeRejected(CardInput input) =>
-        input is ClickPile { Pile.Name: EasthavenRules.Stock } ? "The stock is empty" : null;
+        input is ClickPile { Pile.Name: EasthavenRules.Stock } ? T("The stock is empty") : null;
 
     protected override string DescribeHint(CardInput hint) =>
-        hint is ClickPile { Pile.Name: EasthavenRules.Stock } ? "Deal a card onto every column" : base.DescribeHint(hint);
+        hint is ClickPile { Pile.Name: EasthavenRules.Stock } ? T("Deal a card onto every column") : base.DescribeHint(hint);
 }

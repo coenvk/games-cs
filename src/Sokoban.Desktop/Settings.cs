@@ -18,6 +18,9 @@ internal sealed class Settings
 
     public bool Fullscreen { get; set; }
 
+    /// <summary>A language code ("en", "nl"), or "auto" to follow the system.</summary>
+    public string Language { get; set; } = "auto";
+
     /// <summary>Glow, scanlines and a vignette over everything.</summary>
     public bool Retro { get; set; }
 

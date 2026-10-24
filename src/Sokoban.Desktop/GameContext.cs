@@ -91,5 +91,5 @@ internal sealed record GameContext(
     public Level LevelAt(LevelRef where) => Packs[where.Pack].Levels[where.Index];
 
     public string TitleOf(LevelRef where) =>
-        LevelAt(where).Title ?? $"{Packs[where.Pack].Prefix} {where.Index + 1}";
+        LevelAt(where).Title ?? $"{Tr.T(Packs[where.Pack].Prefix)} {where.Index + 1}";
 }

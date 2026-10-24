@@ -2,6 +2,7 @@
 using Jentl.Core.Cards;
 using Microsoft.Xna.Framework;
 using Yukon;
+using static Sokoban.Desktop.UI.Tr;
 
 namespace Sokoban.Desktop.Scenes;
 
@@ -24,7 +25,7 @@ internal sealed class YukonScene : CardGameScene
         View.CanDrag = (pile, index) => pile.Name.StartsWith("column", StringComparison.Ordinal) && pile[index].FaceUp;
     }
 
-    protected override string Help => "Move any face-up card with the cards on it; build down in alternating colours";
+    protected override string Help => T("Move any face-up card with the cards on it; build down in alternating colours");
 
     protected override void LayOut(Rectangle area)
     {

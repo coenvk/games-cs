@@ -11,6 +11,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Sokoban.Desktop.Input;
 using Sokoban.Desktop.UI;
 using Vector2 = Microsoft.Xna.Framework.Vector2;
+using static Sokoban.Desktop.UI.Tr;
 
 namespace Sokoban.Desktop.Scenes;
 
@@ -38,7 +39,7 @@ internal sealed class BricksScene : Scene
         _context = context;
         Seed = seed ?? context.Deal ?? Random.Shared.Next(1, 1_000_000);
         Game = new BricksGame(Seed);
-        _buttons = new ButtonBar(new Button("Menu", () => Scenes.Push(new BricksPauseScene(_context, this))));
+        _buttons = new ButtonBar(new Button(T("Menu"), () => Scenes.Push(new BricksPauseScene(_context, this))));
     }
 
     public int Seed { get; }
@@ -107,8 +108,8 @@ internal sealed class BricksScene : Scene
         batch.FillRectangle(hud, Palette.Panel);
         var text = hud;
         text.Inflate(-margin, 0);
-        batch.DrawText(fonts.Body, string.Create(CultureInfo.InvariantCulture, $"Bricks  level {Game.Level + 1}"), text, Palette.Text, Align.Left);
-        batch.DrawText(fonts.Body, string.Create(CultureInfo.InvariantCulture, $"{Game.Score:N0}"), text, Palette.Accent, Align.Right);
+        batch.DrawText(fonts.Body, T("Bricks  level {0}", Game.Level + 1), text, Palette.Text, Align.Left);
+        batch.DrawText(fonts.Body, Game.Score.ToString("N0", Culture), text, Palette.Accent, Align.Right);
 
         var buttonsHeight = ButtonBar.Height(fonts.Small) + fonts.Px(16);
         var buttons = new Rectangle(viewport.X + margin, viewport.Bottom - buttonsHeight, viewport.Width - 2 * margin, buttonsHeight);
@@ -151,7 +152,7 @@ internal sealed class BricksScene : Scene
             batch.FillCircle(Screen(new System.Numerics.Vector2(BricksGame.WallThickness + 16 + i * 22, BricksGame.Height - 14)), 6 * _scale, Palette.Muted);
         }
 
-        var hint = Game.HasStuckBall ? "Tap or press Enter to launch" : "";
+        var hint = Game.HasStuckBall ? T("Tap or press Enter to launch") : "";
         if (hint.Length > 0)
         {
             batch.DrawText(fonts.Small, hint, Rect(new System.Numerics.Vector2(BricksGame.Width / 2, BricksGame.PaddleY - 70), BricksGame.Width, 40), Palette.Muted);
@@ -280,20 +281,20 @@ internal sealed class BricksPauseScene : PanelScene
         _game = game;
         Menu = new Menu(
             context.Sounds,
-            new MenuItem("Resume", () => Scenes.Pop()),
-            new MenuItem("New game", () =>
+            new MenuItem(T("Resume"), () => Scenes.Pop()),
+            new MenuItem(T("New game"), () =>
             {
                 Scenes.Pop();
                 _game.NewGame();
             }),
-            new MenuItem("Main menu", () => Navigation.ToMainMenu(Scenes, context)));
+            new MenuItem(T("Main menu"), () => Navigation.ToMainMenu(Scenes, context)));
     }
 
-    protected override string Title => "Bricks";
+    protected override string Title => T("Bricks");
 
     protected override IReadOnlyList<PanelLine> Lines =>
     [
-        new(string.Create(CultureInfo.InvariantCulture, $"Level {_game.Game.Level + 1}, score {_game.Game.Score:N0}"), Palette.Muted),
+        new(T("Level {0}, score {1:N0}", _game.Game.Level + 1, _game.Game.Score), Palette.Muted),
     ];
 }
 
@@ -307,20 +308,20 @@ internal sealed class BricksOverScene : PanelScene
         _game = game;
         Menu = new Menu(
             context.Sounds,
-            new MenuItem("New game", () =>
+            new MenuItem(T("New game"), () =>
             {
                 Scenes.Pop();
                 _game.NewGame();
             }),
-            new MenuItem("Main menu", () => Navigation.ToMainMenu(Scenes, context)));
+            new MenuItem(T("Main menu"), () => Navigation.ToMainMenu(Scenes, context)));
     }
 
-    protected override string Title => "Game over";
+    protected override string Title => T("Game over");
 
     protected override IReadOnlyList<PanelLine> Lines =>
     [
-        new(string.Create(CultureInfo.InvariantCulture, $"Score {_game.Game.Score:N0}"), Palette.Text),
-        new(string.Create(CultureInfo.InvariantCulture, $"Reached level {_game.Game.Level + 1}"), Palette.Muted),
+        new(T("Score {0:N0}", _game.Game.Score), Palette.Text),
+        new(T("Reached level {0}", _game.Game.Level + 1), Palette.Muted),
     ];
 
     protected override void OnBack() => Navigation.ToMainMenu(Scenes, Context);

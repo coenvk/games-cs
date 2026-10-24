@@ -11,6 +11,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Sokoban.Desktop.Input;
 using Sokoban.Desktop.UI;
 using Jentl.Core.UI;
+using static Sokoban.Desktop.UI.Tr;
 
 namespace Sokoban.Desktop.Scenes;
 
@@ -82,7 +83,7 @@ internal sealed class DialogueScene : Scene
         var node = _talk.Current;
         if (_talk.Choices.Count == 0)
         {
-            return new Menu(_context.Sounds, new MenuItem(node?.Next is null ? "Goodbye" : "Continue", () => Advance(_talk.Continue)));
+            return new Menu(_context.Sounds, new MenuItem(node?.Next is null ? T("Goodbye") : T("Continue"), () => Advance(_talk.Continue)));
         }
 
         return new Menu(_context.Sounds, [.. _talk.Choices.Select((c, i) => new MenuItem(c.Text, () => Advance(() => _talk.Choose(i))))]);
@@ -139,8 +140,8 @@ internal sealed class BagScene : Scene
         var player = World.Player;
         var lines = new List<PanelLine>
         {
-            new(string.Create(CultureInfo.InvariantCulture, $"Health {player.Hp}/{player.MaxHp}   Attack {World.AttackOf(player)}   Defense {World.DefenseOf(player)}"), Palette.Text),
-            new(string.Create(CultureInfo.InvariantCulture, $"Level {player.Level}, {player.Xp}/{World.XpForNextLevel} xp"), Palette.Muted),
+            new(T("Health {0}/{1}   Attack {2}   Defense {3}", player.Hp, player.MaxHp, World.AttackOf(player), World.DefenseOf(player)), Palette.Text),
+            new(T("Level {0}, {1}/{2} xp", player.Level, player.Xp, World.XpForNextLevel), Palette.Muted),
         };
         var description = _menu.Selected < _descriptions.Count ? _descriptions[_menu.Selected] : null;
         foreach (var line in fonts.Body.Wrap(description ?? " ", OverlayPanel.TextWidth(viewport, fonts)))
@@ -148,7 +149,7 @@ internal sealed class BagScene : Scene
             lines.Add(new PanelLine(line, Palette.Accent));
         }
 
-        OverlayPanel.Draw(batch, viewport, fonts, "Bag", lines, _menu);
+        OverlayPanel.Draw(batch, viewport, fonts, T("Bag"), lines, _menu);
     }
 
     private Menu BuildMenu(int selected = 0)
@@ -157,7 +158,7 @@ internal sealed class BagScene : Scene
         _descriptions = [];
         foreach (var (slot, item) in World.State.Equipment.Slots.OrderBy(s => s.Key, StringComparer.Ordinal))
         {
-            items.Add(new MenuItem($"Take off {item.Name}", () => Act(World.Unequip(slot))));
+            items.Add(new MenuItem(T("Take off {0}", item.Name), () => Act(World.Unequip(slot))));
             _descriptions.Add(item.Description);
         }
 
@@ -165,18 +166,18 @@ internal sealed class BagScene : Scene
         {
             var item = stack.Item;
             var label = stack.Count > 1 ? $"{item.Name} x{stack.Count}" : item.Name;
-            items.Add(item.IsUsable ? new MenuItem($"Use {label}", () => Act(World.Use(item.Id)))
-                : item.IsEquippable ? new MenuItem($"Equip {label}", () => Act(World.Equip(item.Id)))
+            items.Add(item.IsUsable ? new MenuItem(T("Use {0}", label), () => Act(World.Use(item.Id)))
+                : item.IsEquippable ? new MenuItem(T("Equip {0}", label), () => Act(World.Equip(item.Id)))
                 : new MenuItem(label, () => { }));
             _descriptions.Add(item.Description);
         }
 
         if (items.Count == 0)
         {
-            _descriptions.Add("Your bag is empty.");
+            _descriptions.Add(T("Your bag is empty."));
         }
 
-        items.Add(new MenuItem("Back", () => Scenes.Pop()));
+        items.Add(new MenuItem(T("Back"), () => Scenes.Pop()));
         _descriptions.Add(null);
         return new Menu(_context.Sounds, [.. items]) { Selected = Math.Min(selected, items.Count - 1) };
     }
@@ -205,7 +206,7 @@ internal sealed class JournalScene : Scene
     {
         _context = context;
         _world = world;
-        _menu = new Menu(context.Sounds, new MenuItem("Back", () => Scenes.Pop()));
+        _menu = new Menu(context.Sounds, new MenuItem(T("Back"), () => Scenes.Pop()));
     }
 
     public override bool IsOverlay => true;
@@ -234,7 +235,7 @@ internal sealed class JournalScene : Scene
         {
             if (quest.Status == QuestStatus.Completed)
             {
-                Add($"Done: {quest.Definition.Title}", Palette.Muted);
+                Add(T("Done: {0}", quest.Definition.Title), Palette.Muted);
                 continue;
             }
 
@@ -248,10 +249,10 @@ internal sealed class JournalScene : Scene
 
         if (started.Length == 0)
         {
-            Add("No quests yet. Talk to the villagers.", Palette.Muted);
+            Add(T("No quests yet. Talk to the villagers."), Palette.Muted);
         }
 
-        OverlayPanel.Draw(batch, viewport, fonts, "Journal", lines, _menu);
+        OverlayPanel.Draw(batch, viewport, fonts, T("Journal"), lines, _menu);
     }
 }
 
@@ -265,15 +266,15 @@ internal sealed class AdventurePauseScene : Scene
         _context = context;
         _menu = new Menu(
             context.Sounds,
-            new MenuItem("Resume", () => Scenes.Pop()),
-            new MenuItem("Journal", () => Scenes.Push(new JournalScene(context, game.World))),
-            new MenuItem("New adventure", () =>
+            new MenuItem(T("Resume"), () => Scenes.Pop()),
+            new MenuItem(T("Journal"), () => Scenes.Push(new JournalScene(context, game.World))),
+            new MenuItem(T("New adventure"), () =>
             {
                 Scenes.Pop();
                 game.NewAdventure();
             }),
-            new MenuItem("Options", () => Scenes.Push(new OptionsScene(context))),
-            new MenuItem("Main menu", () => Navigation.ToMainMenu(Scenes, context)));
+            new MenuItem(T("Options"), () => Scenes.Push(new OptionsScene(context))),
+            new MenuItem(T("Main menu"), () => Navigation.ToMainMenu(Scenes, context)));
     }
 
     public override bool IsOverlay => true;
@@ -290,7 +291,7 @@ internal sealed class AdventurePauseScene : Scene
     }
 
     public override void Draw(SpriteBatch batch, Rectangle viewport) =>
-        OverlayPanel.Draw(batch, viewport, _context.Fonts, "Paused", [new PanelLine("Mossbrook", Palette.Muted)], _menu);
+        OverlayPanel.Draw(batch, viewport, _context.Fonts, T("Paused"), [new PanelLine("Mossbrook", Palette.Muted)], _menu);
 }
 
 /// <summary>The amulet is home, or the player has fallen.</summary>
@@ -309,15 +310,15 @@ internal sealed class AdventureEndScene : Scene
         var items = new List<MenuItem>();
         if (won)
         {
-            items.Add(new MenuItem("Keep exploring", () => Scenes.Pop()));
+            items.Add(new MenuItem(T("Keep exploring"), () => Scenes.Pop()));
         }
 
-        items.Add(new MenuItem(won ? "New adventure" : "Try again", () =>
+        items.Add(new MenuItem(won ? T("New adventure") : T("Try again"), () =>
         {
             Scenes.Pop();
             game.NewAdventure();
         }));
-        items.Add(new MenuItem("Main menu", () => Navigation.ToMainMenu(Scenes, context)));
+        items.Add(new MenuItem(T("Main menu"), () => Navigation.ToMainMenu(Scenes, context)));
         _menu = new Menu(context.Sounds, [.. items]);
     }
 
@@ -330,15 +331,13 @@ internal sealed class AdventureEndScene : Scene
         var world = _game.World;
         var quests = world.State.Quests;
         var done = quests.All.Count(q => q.Status == QuestStatus.Completed);
-        var summary = string.Create(
-            CultureInfo.InvariantCulture,
-            $"Level {world.Player.Level}, {world.Turn} turns, {done} of {quests.All.Count()} quests");
+        var summary = T("Level {0}, {1} turns, {2} of {3} quests", world.Player.Level, world.Turn, done, quests.All.Count());
         OverlayPanel.Draw(
             batch,
             viewport,
             _context.Fonts,
-            _won ? "Mossbrook is saved!" : "You have fallen",
-            [new PanelLine(_won ? "The amulet is home again." : "The cellar claims another adventurer.", Palette.Text), new PanelLine(summary, Palette.Muted)],
+            _won ? T("Mossbrook is saved!") : T("You have fallen"),
+            [new PanelLine(_won ? T("The amulet is home again.") : T("The cellar claims another adventurer."), Palette.Text), new PanelLine(summary, Palette.Muted)],
             _menu);
     }
 }
@@ -354,9 +353,9 @@ internal sealed class AdventureMenuScene : Scene
         _context = context;
         _menu = new Menu(
             context.Sounds,
-            new MenuItem("Continue", () => Scenes.Replace(AdventureScene.Continue(context) ?? AdventureScene.New(context), Navigation.Fade())),
-            new MenuItem("New adventure", () => Scenes.Replace(AdventureScene.New(context), Navigation.Fade())),
-            new MenuItem("Back", () => Scenes.Pop()));
+            new MenuItem(T("Continue"), () => Scenes.Replace(AdventureScene.Continue(context) ?? AdventureScene.New(context), Navigation.Fade())),
+            new MenuItem(T("New adventure"), () => Scenes.Replace(AdventureScene.New(context), Navigation.Fade())),
+            new MenuItem(T("Back"), () => Scenes.Pop()));
     }
 
     public override bool IsOverlay => true;
@@ -373,5 +372,5 @@ internal sealed class AdventureMenuScene : Scene
     }
 
     public override void Draw(SpriteBatch batch, Rectangle viewport) =>
-        OverlayPanel.Draw(batch, viewport, _context.Fonts, "Mossbrook", [new PanelLine("A new adventure replaces your saved one.", Palette.Muted)], _menu);
+        OverlayPanel.Draw(batch, viewport, _context.Fonts, "Mossbrook", [new PanelLine(T("A new adventure replaces your saved one."), Palette.Muted)], _menu);
 }

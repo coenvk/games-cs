@@ -11,6 +11,7 @@ using Poker;
 using Sokoban.Desktop.Input;
 using Sokoban.Desktop.UI;
 using Jentl.Core.UI;
+using static Sokoban.Desktop.UI.Tr;
 
 namespace Sokoban.Desktop.Scenes;
 
@@ -20,12 +21,12 @@ internal sealed record PokerSetup(string Name, IReadOnlyList<Player> Players)
     private static readonly string[] BotNames = ["Ruby", "Otto", "Mila", "Hugo", "Iris"];
 
     public static PokerSetup VersusBots(int bots) => new(
-        bots == 1 ? "Heads-up vs 1 bot" : $"You vs {bots} bots",
-        [new Player(0, "You", PlayerKind.Human), .. Enumerable.Range(1, bots).Select(i => new Player(i, BotNames[i - 1], PlayerKind.Bot))]);
+        bots == 1 ? T("Heads-up vs 1 bot") : T("You vs {0} bots", bots),
+        [new Player(0, T("You"), PlayerKind.Human), .. Enumerable.Range(1, bots).Select(i => new Player(i, BotNames[i - 1], PlayerKind.Bot))]);
 
     public static PokerSetup PassAndPlay(int people) => new(
-        $"Pass and play: {people} players",
-        [.. Enumerable.Range(0, people).Select(i => new Player(i, $"Player {i + 1}", PlayerKind.Human))]);
+        T("Pass and play: {0} players", people),
+        [.. Enumerable.Range(0, people).Select(i => new Player(i, T("Player {0}", i + 1), PlayerKind.Human))]);
 }
 
 /// <summary>
@@ -160,15 +161,15 @@ internal sealed class PokerScene : Scene
         batch.FillRectangle(hud, Palette.Panel);
         var text = hud;
         text.Inflate(-margin, 0);
-        batch.DrawText(fonts.Body, string.Create(CultureInfo.InvariantCulture, $"Hold'em: hand {Table.HandNumber}"), text, Palette.Text, Align.Left);
-        batch.DrawText(fonts.Small, string.Create(CultureInfo.InvariantCulture, $"blinds {Table.SmallBlind}/{Table.BigBlind}, rising every {Table.HandsPerLevel} hands"), text, Palette.Muted, Align.Right, shadow: false);
+        batch.DrawText(fonts.Body, T("Hold'em: hand {0}", Table.HandNumber), text, Palette.Text, Align.Left);
+        batch.DrawText(fonts.Small, T("blinds {0}/{1}, rising every {2} hands", Table.SmallBlind, Table.BigBlind, Table.HandsPerLevel), text, Palette.Muted, Align.Right, shadow: false);
 
         // Footer: messages, then the buttons.
         if (!_runner.IsHumansTurn)
         {
             _buttons.Set(hand.IsOver && !_endShown
-                ? [new Button(Table.Champion is null ? "Next hand" : "Results", NextHand, Highlight: true), new Button("Menu", Pause)]
-                : [new Button("Menu", Pause)]);
+                ? [new Button(Table.Champion is null ? T("Next hand") : T("Results"), NextHand, Highlight: true), new Button(T("Menu"), Pause)]
+                : [new Button(T("Menu"), Pause)]);
         }
 
         var buttonFont = _buttons.Width(fonts.Body) <= viewport.Width - 2 * margin ? fonts.Body : fonts.Small;
@@ -210,7 +211,7 @@ internal sealed class PokerScene : Scene
             }
         }
 
-        batch.DrawText(fonts.Body, string.Create(CultureInfo.InvariantCulture, $"Pot {hand.Pot}"), new Vector2(felt.Center.X, boardTop - fonts.Body.LineHeight - fonts.Px(4)), Palette.Accent, Align.Center);
+        batch.DrawText(fonts.Body, T("Pot {0}", hand.Pot), new Vector2(felt.Center.X, boardTop - fonts.Body.LineHeight - fonts.Px(4)), Palette.Accent, Align.Center);
 
         var viewer = _runner.Viewer ?? (_runner.Current.IsHuman ? _runner.Current.Seat : Players.First(p => p.IsHuman).Seat);
         for (var k = 0; k < Players.Count; k++)
@@ -271,7 +272,7 @@ internal sealed class PokerScene : Scene
         _lastAction.Clear();
         _shown.Clear();
         var runner = new Match<HoldemHand, PokerAction>(hand, Players, s => _bots[s], unchecked(_seed + Table.HandNumber)) { BotDelay = BotDelay };
-        Say($"Hand {Table.HandNumber}, dealer: {Players[hand.Button].Name}");
+        Say(T("Hand {0}, dealer: {1}", Table.HandNumber, Players[hand.Button].Name));
         foreach (var e in hand.TakeEvents())
         {
             Describe(e);
@@ -291,25 +292,25 @@ internal sealed class PokerScene : Scene
         var buttons = new List<Button>();
         if (toCall > 0)
         {
-            buttons.Add(new Button("Fold", () => Act(Fold.Instance)));
+            buttons.Add(new Button(T("Fold"), () => Act(Fold.Instance)));
         }
 
-        buttons.Add(toCall == 0 ? new Button("Check", () => Act(Check.Instance), Highlight: true)
-            : moves.Contains(CallBet.Instance) ? new Button(string.Create(CultureInfo.InvariantCulture, $"Call {toCall}"), () => Act(CallBet.Instance), Highlight: true)
-            : new Button(string.Create(CultureInfo.InvariantCulture, $"Call all in {toCall}"), () => Act(AllIn.Instance), Highlight: true));
+        buttons.Add(toCall == 0 ? new Button(T("Check"), () => Act(Check.Instance), Highlight: true)
+            : moves.Contains(CallBet.Instance) ? new Button(T("Call {0}", toCall), () => Act(CallBet.Instance), Highlight: true)
+            : new Button(T("Call all in {0}", toCall), () => Act(AllIn.Instance), Highlight: true));
         if (canRaise)
         {
             buttons.Add(new Button("-", () => Step(-1)));
-            buttons.Add(new Button(string.Create(CultureInfo.InvariantCulture, $"{(hand.CurrentBet == 0 ? "Bet" : "Raise to")} {_raiseTo}"), Raise));
+            buttons.Add(new Button(hand.CurrentBet == 0 ? T("Bet {0}", _raiseTo) : T("Raise to {0}", _raiseTo), Raise));
             buttons.Add(new Button("+", () => Step(1)));
         }
 
         if (moves.Contains(AllIn.Instance) && max > toCall + hand.Bet(seat))
         {
-            buttons.Add(new Button("All in", () => Act(AllIn.Instance)));
+            buttons.Add(new Button(T("All in"), () => Act(AllIn.Instance)));
         }
 
-        buttons.Add(new Button("Menu", Pause));
+        buttons.Add(new Button(T("Menu"), Pause));
         return [.. buttons];
     }
 
@@ -398,7 +399,7 @@ internal sealed class PokerScene : Scene
         switch (e)
         {
             case BlindPosted b:
-                _lastAction[b.Seat] = string.Create(CultureInfo.InvariantCulture, $"{(b.Big ? "Big" : "Small")} blind");
+                _lastAction[b.Seat] = b.Big ? T("Big blind") : T("Small blind");
                 break;
             case Acted a:
                 if (a.Amount > 0)
@@ -408,33 +409,33 @@ internal sealed class PokerScene : Scene
 
                 var label = a.Action switch
                 {
-                    Fold => "Fold",
-                    Check => "Check",
-                    CallBet => string.Create(CultureInfo.InvariantCulture, $"Call {a.Amount}"),
-                    AllIn => string.Create(CultureInfo.InvariantCulture, $"All in {a.Total}"),
-                    _ when a.Opened => string.Create(CultureInfo.InvariantCulture, $"Bet {a.Total}"),
-                    _ => string.Create(CultureInfo.InvariantCulture, $"Raise to {a.Total}"),
+                    Fold => T("Fold"),
+                    Check => T("Check"),
+                    CallBet => T("Call {0}", a.Amount),
+                    AllIn => T("All in {0}", a.Total),
+                    _ when a.Opened => T("Bet {0}", a.Total),
+                    _ => T("Raise to {0}", a.Total),
                 };
                 _lastAction[a.Seat] = label;
                 Say($"{Name(a.Seat)}: {label}");
                 break;
             case StreetDealt d:
-                foreach (var seat in _lastAction.Keys.Where(s => _lastAction[s] != "Fold" && !_lastAction[s].StartsWith("All in", StringComparison.Ordinal)).ToArray())
+                foreach (var seat in _lastAction.Keys.Where(s => _lastAction[s] != T("Fold") && !_lastAction[s].StartsWith(T("All in"), StringComparison.Ordinal)).ToArray())
                 {
                     _lastAction.Remove(seat);
                 }
 
-                Say($"{d.Street}: {string.Join(" ", d.Cards)}");
+                Say(T("{0}: {1}", StreetName(d.Street), string.Join(" ", d.Cards)));
                 break;
             case HandShown s:
                 _shown.Add(s.Seat);
-                _lastAction[s.Seat] = s.Value.Describe();
+                _lastAction[s.Seat] = Describe(s.Value);
                 break;
             case PotWon w:
                 _context.Sounds.Play(Sound.Chips);
                 Say(w.Value is { } value
-                    ? string.Create(CultureInfo.InvariantCulture, $"{Name(w.Seat)} wins {w.Amount} with {value.Describe().ToLowerInvariant()}")
-                    : string.Create(CultureInfo.InvariantCulture, $"{Name(w.Seat)} takes {w.Amount}"));
+                    ? T("{0} wins {1}: {2}", Name(w.Seat), w.Amount, Describe(value))
+                    : T("{0} takes {1}", Name(w.Seat), w.Amount));
                 break;
         }
     }
@@ -466,7 +467,7 @@ internal sealed class PokerScene : Scene
             }
         }
 
-        var status = isOut ? "Out" : _lastAction.GetValueOrDefault(seat) ?? (hand.IsAllIn(seat) ? "All in" : "");
+        var status = isOut ? T("Out") : _lastAction.GetValueOrDefault(seat) ?? (hand.IsAllIn(seat) ? T("All in") : "");
         batch.DrawText(fonts.Small, status, new Vector2(box.Center.X, box.Bottom - fonts.Small.LineHeight - fonts.Px(4)), Palette.Muted, Align.Center, shadow: false);
 
         // The bet in front of the seat, towards the middle, and the dealer button.
@@ -484,6 +485,67 @@ internal sealed class PokerScene : Scene
             batch.DrawText(fonts.Sized(size * 0.6f), "D", at, Palette.Ink, shadow: false);
         }
     }
+
+    /// <summary>A poker hand in words, in the player's language: "Two pair, kings and fives".</summary>
+    private static string Describe(HandValue value)
+    {
+        var r = value.Ranks;
+        return value.Category switch
+        {
+            HandCategory.StraightFlush when r[0] == 14 => T("Royal flush"),
+            HandCategory.StraightFlush => T("Straight flush, {0} high", RankName(r[0])),
+            HandCategory.FourOfAKind => T("Four {0}", RankNames(r[0])),
+            HandCategory.FullHouse => T("Full house, {0} over {1}", RankNames(r[0]), RankNames(r[1])),
+            HandCategory.Flush => T("Flush, {0} high", RankName(r[0])),
+            HandCategory.Straight => T("Straight, {0} high", RankName(r[0])),
+            HandCategory.ThreeOfAKind => T("Three {0}", RankNames(r[0])),
+            HandCategory.TwoPair => T("Two pair, {0} and {1}", RankNames(r[0]), RankNames(r[1])),
+            HandCategory.Pair => T("Pair of {0}", RankNames(r[0])),
+            _ => T("{0} high", RankName(r[0])),
+        };
+    }
+
+    private static string RankName(int rank) => rank switch
+    {
+        14 => T("ace"),
+        13 => T("king"),
+        12 => T("queen"),
+        11 => T("jack"),
+        10 => T("ten"),
+        9 => T("nine"),
+        8 => T("eight"),
+        7 => T("seven"),
+        6 => T("six"),
+        5 => T("five"),
+        4 => T("four"),
+        3 => T("three"),
+        _ => T("two"),
+    };
+
+    private static string RankNames(int rank) => rank switch
+    {
+        14 => T("aces"),
+        13 => T("kings"),
+        12 => T("queens"),
+        11 => T("jacks"),
+        10 => T("tens"),
+        9 => T("nines"),
+        8 => T("eights"),
+        7 => T("sevens"),
+        6 => T("sixes"),
+        5 => T("fives"),
+        4 => T("fours"),
+        3 => T("threes"),
+        _ => T("twos"),
+    };
+
+    private static string StreetName(Street street) => street switch
+    {
+        Street.Flop => T("Flop"),
+        Street.Turn => T("Turn"),
+        Street.River => T("River"),
+        _ => street.ToString(),
+    };
 
     private void Say(string message)
     {

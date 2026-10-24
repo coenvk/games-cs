@@ -2,6 +2,7 @@
 using Jentl.Core.Cards;
 using Microsoft.Xna.Framework;
 using Spider;
+using static Sokoban.Desktop.UI.Tr;
 
 namespace Sokoban.Desktop.Scenes;
 
@@ -16,13 +17,13 @@ internal sealed class SpiderScene : CardGameScene
     }
 
     private SpiderScene(GameContext context, int suits, int deal)
-        : base(context, suits == 1 ? "Spider (1 suit)" : $"Spider ({suits} suits)", deal, new CardGame(SpiderRules.Deal(deal, suits), new SpiderRules()), SpiderRules.CompleteTag)
+        : base(context, N(suits, "Spider ({0} suit)", "Spider ({0} suits)"), deal, new CardGame(SpiderRules.Deal(deal, suits), new SpiderRules()), SpiderRules.CompleteTag)
     {
         _suits = suits;
         View.CanDrag = (pile, index) => pile.Name.StartsWith("column", StringComparison.Ordinal) && SpiderRules.IsMovableRun(pile, index);
     }
 
-    protected override string Help => "Build runs of one suit from king to ace; tap the stock to deal";
+    protected override string Help => T("Build runs of one suit from king to ace; tap the stock to deal");
 
     protected override void LayOut(Rectangle area)
     {
@@ -54,9 +55,9 @@ internal sealed class SpiderScene : CardGameScene
 
     protected override string? DescribeRejected(CardInput input) =>
         input is ClickPile { Pile.Name: SpiderRules.Stock } && !Game.Table[SpiderRules.Stock].IsEmpty
-            ? "Fill every column before dealing"
+            ? T("Fill every column before dealing")
             : null;
 
     protected override string DescribeHint(CardInput hint) =>
-        hint is ClickPile { Pile.Name: SpiderRules.Stock } ? "Deal a new row from the stock" : base.DescribeHint(hint);
+        hint is ClickPile { Pile.Name: SpiderRules.Stock } ? T("Deal a new row from the stock") : base.DescribeHint(hint);
 }

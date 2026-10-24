@@ -2,6 +2,7 @@
 using Jentl.Core.Cards;
 using Microsoft.Xna.Framework;
 using TriPeaks;
+using static Sokoban.Desktop.UI.Tr;
 
 namespace Sokoban.Desktop.Scenes;
 
@@ -23,7 +24,7 @@ internal sealed class TriPeaksScene : CardGameScene
         View.HasSlot = pile => !pile.Name.StartsWith("peak", StringComparison.Ordinal);
     }
 
-    protected override string Help => "Play cards one higher or lower than the waste";
+    protected override string Help => T("Play cards one higher or lower than the waste");
 
     protected override void LayOut(Rectangle area)
     {
@@ -56,17 +57,17 @@ internal sealed class TriPeaksScene : CardGameScene
         var table = Game.Table;
         return input switch
         {
-            ClickPile { Pile.Name: TriPeaksRules.Stock } => "The stock is empty",
+            ClickPile { Pile.Name: TriPeaksRules.Stock } => T("The stock is empty"),
             ClickPile { Pile: var pile } when TriPeaksRules.IsFree(table, pile) && table[TriPeaksRules.Waste].Top is { } top =>
-                $"Play a card one higher or lower than the {CardName(top.Card)}",
+                T("Play a card one higher or lower than the {0}", CardName(top.Card)),
             DragCards { From: var from, To.Name: TriPeaksRules.Waste } when table[TriPeaksRules.Waste].Top is { } top && from.Top is not null =>
-                $"Play a card one higher or lower than the {CardName(top.Card)}",
+                T("Play a card one higher or lower than the {0}", CardName(top.Card)),
             _ => null,
         };
     }
 
     protected override string DescribeHint(CardInput hint) =>
-        hint is ClickPile { Pile.Name: TriPeaksRules.Stock } ? "Turn over a card from the stock"
-        : hint is ClickPile { Pile: var pile } ? $"Play the {CardName(pile.Top!.Value.Card)}"
+        hint is ClickPile { Pile.Name: TriPeaksRules.Stock } ? T("Turn over a card from the stock")
+        : hint is ClickPile { Pile: var pile } ? T("Play the {0}", CardName(pile.Top!.Value.Card))
         : base.DescribeHint(hint);
 }

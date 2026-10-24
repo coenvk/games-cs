@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Sokoban.Desktop.Input;
 using Sokoban.Desktop.UI;
 using Jentl.Core.UI;
+using static Sokoban.Desktop.UI.Tr;
 
 namespace Sokoban.Desktop.Scenes;
 
@@ -20,15 +21,15 @@ internal sealed class PauseScene : Scene
         _play = play;
         _menu = new Menu(
             context.Sounds,
-            new MenuItem("Resume", () => Scenes.Pop()),
-            new MenuItem("Restart level", () =>
+            new MenuItem(T("Resume"), () => Scenes.Pop()),
+            new MenuItem(T("Restart level"), () =>
             {
                 play.Restart();
                 Scenes.Pop();
             }),
-            new MenuItem("Select level", () => Navigation.ToLevelSelect(Scenes, context, play.SelectTarget)),
-            new MenuItem("Options", () => Scenes.Push(new OptionsScene(context))),
-            new MenuItem("Main menu", () => Navigation.ToMainMenu(Scenes, context)));
+            new MenuItem(T("Select level"), () => Navigation.ToLevelSelect(Scenes, context, play.SelectTarget)),
+            new MenuItem(T("Options"), () => Scenes.Push(new OptionsScene(context))),
+            new MenuItem(T("Main menu"), () => Navigation.ToMainMenu(Scenes, context)));
     }
 
     public override bool IsOverlay => true;
@@ -45,5 +46,5 @@ internal sealed class PauseScene : Scene
     }
 
     public override void Draw(SpriteBatch batch, Rectangle viewport) =>
-        OverlayPanel.Draw(batch, viewport, _context.Fonts, "Paused", [new PanelLine(_play.Title, Palette.Muted)], _menu);
+        OverlayPanel.Draw(batch, viewport, _context.Fonts, T("Paused"), [new PanelLine(_play.Title, Palette.Muted)], _menu);
 }

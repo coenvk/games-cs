@@ -10,6 +10,7 @@ using Sokoban.Desktop.Rendering;
 using Sokoban.Desktop.UI;
 using Uno;
 using Jentl.Core.UI;
+using static Sokoban.Desktop.UI.Tr;
 
 namespace Sokoban.Desktop.Scenes;
 
@@ -20,13 +21,13 @@ internal sealed record UnoSetup(string Name, IReadOnlyList<Player> Players)
 
     /// <summary>You in seat 0 and <paramref name="bots"/> computer opponents.</summary>
     public static UnoSetup VersusBots(int bots) => new(
-        bots == 1 ? "You vs 1 bot" : $"You vs {bots} bots",
-        [new Player(0, "You", PlayerKind.Human), .. Enumerable.Range(1, bots).Select(i => new Player(i, BotNames[i - 1], PlayerKind.Bot))]);
+        N(bots, "You vs {0} bot", "You vs {0} bots"),
+        [new Player(0, T("You"), PlayerKind.Human), .. Enumerable.Range(1, bots).Select(i => new Player(i, BotNames[i - 1], PlayerKind.Bot))]);
 
     /// <summary>People sharing the device.</summary>
     public static UnoSetup PassAndPlay(int people) => new(
-        $"Pass and play: {people} players",
-        [.. Enumerable.Range(0, people).Select(i => new Player(i, $"Player {i + 1}", PlayerKind.Human))]);
+        T("Pass and play: {0} players", people),
+        [.. Enumerable.Range(0, people).Select(i => new Player(i, T("Player {0}", i + 1), PlayerKind.Human))]);
 }
 
 /// <summary>
@@ -70,9 +71,9 @@ internal sealed class UnoScene : Scene
         _context = context;
         Table = table;
         _buttons = new ButtonBar(
-            new Button("Draw", DrawOrKeep),
-            new Button("Uno!", () => _callUno = !_callUno),
-            new Button("Menu", () => Scenes.Push(new UnoPauseScene(context, this))));
+            new Button(T("Draw"), DrawOrKeep),
+            new Button(T("Uno!"), () => _callUno = !_callUno),
+            new Button(T("Menu"), () => Scenes.Push(new UnoPauseScene(context, this))));
         Say(Table.TakeEvents());
     }
 
@@ -146,7 +147,7 @@ internal sealed class UnoScene : Scene
         if (Table.IsGone && !_problemShown)
         {
             _problemShown = true;
-            Scenes.Push(new UnoGoneScene(_context, this, Table.Problem ?? "The game has ended."));
+            Scenes.Push(new UnoGoneScene(_context, this, Table.Problem ?? T("The game has ended.")));
             return;
         }
 
@@ -250,13 +251,13 @@ internal sealed class UnoScene : Scene
         if (Table.View is not { } game)
         {
             batch.DrawText(fonts.Body, Table.Name, text, Palette.Text, Align.Left);
-            batch.DrawText(fonts.Body, Table.Problem ?? "Waiting for the deal…", viewport, Palette.Muted);
+            batch.DrawText(fonts.Body, Table.Problem ?? T("Waiting for the deal…"), viewport, Palette.Muted);
             return;
         }
 
-        var title = Table.IsOnline ? $"{Table.Name}, round {game.RoundNumber}" : $"Uno: round {game.RoundNumber}";
+        var title = Table.IsOnline ? T("{0}, round {1}", Table.Name, game.RoundNumber) : T("Uno: round {0}", game.RoundNumber);
         batch.DrawText(fonts.Body, title, text, Palette.Text, Align.Left);
-        batch.DrawText(fonts.Small, string.Create(CultureInfo.InvariantCulture, $"first to {game.Target}"), text, Palette.Muted, Align.Right, shadow: false);
+        batch.DrawText(fonts.Small, T("first to {0}", game.Target), text, Palette.Muted, Align.Right, shadow: false);
 
         // The others along the top, in turn order starting after whoever sits at the bottom.
         var players = game.Players;
@@ -275,9 +276,9 @@ internal sealed class UnoScene : Scene
 
         // Footer: messages above the buttons.
         _buttons.Set(
-            new Button(game.Drawn is null ? "Draw" : "Keep", DrawOrKeep),
-            new Button(_callUno ? "Uno! (on)" : "Uno!", () => _callUno = !_callUno, Highlight: _callUno),
-            new Button("Menu", () => Scenes.Push(new UnoPauseScene(_context, this))));
+            new Button(game.Drawn is null ? T("Draw") : T("Keep"), DrawOrKeep),
+            new Button(_callUno ? T("Uno! (on)") : T("Uno!"), () => _callUno = !_callUno, Highlight: _callUno),
+            new Button(T("Menu"), () => Scenes.Push(new UnoPauseScene(_context, this))));
         var buttonFont = _buttons.Width(fonts.Body) <= viewport.Width - 2 * margin ? fonts.Body : fonts.Small;
         var buttonsHeight = ButtonBar.Height(buttonFont) + fonts.Px(20);
         var lineHeight = (int)fonts.Small.LineHeight;
@@ -313,7 +314,10 @@ internal sealed class UnoScene : Scene
         batch.FillRectangle(swatch, UnoArt.ColorOf(game.Color) * 0.55f);
         _art.Draw(batch, game.Top, _discard);
         var next = Name((game.CurrentSeat + game.Direction + players) % players);
-        var turn = game.IsOver ? "" : $"{Name(game.CurrentSeat)} to play, then {next}   ({game.Color}, {(game.Direction > 0 ? "clockwise" : "counter-clockwise")})";
+        var direction = game.Direction > 0 ? T("clockwise") : T("counter-clockwise");
+        var turn = game.IsOver ? ""
+            : IsYou(game.CurrentSeat) ? T("You to play, then {0}   ({1}, {2})", next, ColorName(game.Color), direction)
+            : T("{0} to play, then {1}   ({2}, {3})", Name(game.CurrentSeat), next, ColorName(game.Color), direction);
         batch.DrawText(fonts.Small, turn, new Vector2(viewport.Center.X, _drawPile.Bottom + fonts.Px(10)), Palette.Muted, Align.Center, shadow: false);
 
         foreach (var flight in _flights)
@@ -344,10 +348,34 @@ internal sealed class UnoScene : Scene
         base.Dispose(disposing);
     }
 
-    private string Name(int seat) => seat < Names.Count ? Names[seat] : $"Player {seat + 1}";
+    /// <summary>A colour in the player's language.</summary>
+    public static string ColorName(UnoColor color) => color switch
+    {
+        UnoColor.Red => T("Red"),
+        UnoColor.Yellow => T("Yellow"),
+        UnoColor.Green => T("Green"),
+        _ => T("Blue"),
+    };
 
-    /// <summary>"Ruby plays", but "You play".</summary>
-    private string Does(int seat, string verb, string youVerb) => Name(seat) == "You" ? $"You {youVerb}" : $"{Name(seat)} {verb}";
+    /// <summary>"Red 7", "Blue Skip", "Wild +4", in the player's language.</summary>
+    public static string CardName(UnoCard card) => card.Value switch
+    {
+        UnoValue.Wild => T("Wild"),
+        UnoValue.WildDrawFour => T("Wild +4"),
+        _ => T("{0} {1}", ColorName(card.Color!.Value), Label(card)),
+    };
+
+    private static string Label(UnoCard card) => card.Value switch
+    {
+        UnoValue.Skip => T("Skip"),
+        UnoValue.Reverse => T("Reverse"),
+        _ => card.Label,
+    };
+
+    private string Name(int seat) => seat < Names.Count ? Names[seat] : T("Player {0}", seat + 1);
+
+    /// <summary>Whether <paramref name="seat"/> is the person at this device (sentences about them read "You ...").</summary>
+    private bool IsYou(int seat) => Name(seat) == T("You");
 
     private void DrawBadge(SpriteBatch batch, UnoView game, Rectangle badge, int seat)
     {
@@ -412,7 +440,7 @@ internal sealed class UnoScene : Scene
 
         if (!visible && count > 0)
         {
-            batch.DrawText(fonts.Body, $"{Name(game.Seat)}'s hand", new Vector2(viewport.Center.X, top + height / 2 - fonts.Body.LineHeight / 2), Palette.Text, Align.Center);
+            batch.DrawText(fonts.Body, T("{0}'s hand", Name(game.Seat)), new Vector2(viewport.Center.X, top + height / 2 - fonts.Body.LineHeight / 2), Palette.Text, Align.Center);
         }
     }
 
@@ -425,15 +453,15 @@ internal sealed class UnoScene : Scene
 
         if (game.Drawn is { } drawn && drawn != card)
         {
-            Say("Play the card you drew, or keep it");
+            Say(T("Play the card you drew, or keep it"));
             return;
         }
 
         if (!game.CanPlay(card))
         {
             Say(card.Value == UnoValue.WildDrawFour
-                ? "A Wild +4 only goes when you have nothing in the current colour"
-                : $"That doesn't match the {game.Color} {game.Top.Label}");
+                ? T("A Wild +4 only goes when you have nothing in the current colour")
+                : T("That doesn't match the {0} {1}", ColorName(game.Color), Label(game.Top)));
             return;
         }
 
@@ -499,15 +527,19 @@ internal sealed class UnoScene : Scene
         {
             Say(e switch
             {
-                CardPlayed { Card.IsWild: true } p => $"{Does(p.Seat, "plays", "play")} {p.Card} and {(Name(p.Seat) == "You" ? "pick" : "picks")} {p.Color}",
-                CardPlayed p => $"{Does(p.Seat, "plays", "play")} {p.Card}",
-                CardsDrawn d => d.Count == 1 ? $"{Does(d.Seat, "draws", "draw")} a card" : $"{Does(d.Seat, "draws", "draw")} {d.Count}",
-                PlayerSkipped s => $"{Does(s.Seat, "is", "are")} skipped",
-                DirectionReversed => "Play turns around",
-                UnoCalled u => $"{Name(u.Seat)}: Uno!",
-                UnoForgotten u => $"{Name(u.Seat)} forgot to call Uno: two cards",
-                DrawPileReshuffled => "The discards are shuffled into a new draw pile",
-                RoundWon w => $"{Does(w.Seat, "wins", "win")} the round!",
+                CardPlayed { Card.IsWild: true } p => IsYou(p.Seat)
+                    ? T("You play {0} and pick {1}", CardName(p.Card), ColorName(p.Color))
+                    : T("{0} plays {1} and picks {2}", Name(p.Seat), CardName(p.Card), ColorName(p.Color)),
+                CardPlayed p => IsYou(p.Seat) ? T("You play {0}", CardName(p.Card)) : T("{0} plays {1}", Name(p.Seat), CardName(p.Card)),
+                CardsDrawn d => IsYou(d.Seat)
+                    ? N(d.Count, "You draw a card", "You draw {0} cards")
+                    : N(d.Count, "{1} draws a card", "{1} draws {0} cards", Name(d.Seat)),
+                PlayerSkipped s => IsYou(s.Seat) ? T("You are skipped") : T("{0} is skipped", Name(s.Seat)),
+                DirectionReversed => T("Play turns around"),
+                UnoCalled u => T("{0}: Uno!", Name(u.Seat)),
+                UnoForgotten u => IsYou(u.Seat) ? T("You forgot to call Uno: two cards") : T("{0} forgot to call Uno: two cards", Name(u.Seat)),
+                DrawPileReshuffled => T("The discards are shuffled into a new draw pile"),
+                RoundWon w => IsYou(w.Seat) ? T("You win the round!") : T("{0} wins the round!", Name(w.Seat)),
                 _ => e.ToString(),
             });
         }

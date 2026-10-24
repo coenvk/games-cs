@@ -2,6 +2,7 @@
 using Jentl.Core.Cards;
 using Klondike;
 using Microsoft.Xna.Framework;
+using static Sokoban.Desktop.UI.Tr;
 
 namespace Sokoban.Desktop.Scenes;
 
@@ -51,5 +52,5 @@ internal sealed class KlondikeScene : CardGameScene
     }
 
     protected override string DescribeHint(CardInput hint) =>
-        hint is ClickPile { Pile.Name: KlondikeRules.Stock } ? "Turn over a card from the stock" : base.DescribeHint(hint);
+        hint is ClickPile { Pile.Name: KlondikeRules.Stock } ? T("Turn over a card from the stock") : base.DescribeHint(hint);
 }

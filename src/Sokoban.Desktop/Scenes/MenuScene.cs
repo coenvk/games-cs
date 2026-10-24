@@ -7,6 +7,7 @@ using Sokoban.Desktop.Input;
 using Sokoban.Desktop.UI;
 using Sokoban.Model;
 using Jentl.Core.UI;
+using static Sokoban.Desktop.UI.Tr;
 
 namespace Sokoban.Desktop.Scenes;
 
@@ -50,8 +51,11 @@ internal sealed class MenuScene : Scene
         var gap = fonts.Px(24);
         var titleHeight = (int)fonts.Title.LineHeight;
         var mascotHeight = fonts.Px(64);
-        var menuHeight = _menu.Height(fonts.Body);
         var countHeight = (int)fonts.Small.LineHeight;
+
+        // Whatever doesn't fit between the mascot and the footer scrolls.
+        var room = footerTop - gap - (viewport.Y + titleHeight + mascotHeight + 2 * gap) - (gap / 2 + countHeight);
+        var menuHeight = _menu.Height(fonts.Body, room);
         var column = titleHeight + mascotHeight + 2 * gap + menuHeight + gap / 2 + countHeight;
         var top = viewport.Y + Math.Max(0, (footerTop - viewport.Y - column) / 2);
 
@@ -59,7 +63,7 @@ internal sealed class MenuScene : Scene
         DrawMascot(batch, centerX, top + titleHeight);
 
         var menuTop = top + titleHeight + mascotHeight + 2 * gap;
-        _menu.Draw(batch, fonts.Body, centerX, menuTop);
+        _menu.Draw(batch, fonts.Body, centerX, menuTop, room);
 
         var total = _context.AllLevels.Count();
         var solved = _context.Progress.Progress.SolvedCount(_context.AllLevels);
@@ -67,7 +71,7 @@ internal sealed class MenuScene : Scene
         {
             batch.DrawText(
                 fonts.Small,
-                string.Create(CultureInfo.InvariantCulture, $"{solved} of {total} levels solved"),
+                T("{0} of {1} levels solved", solved, total),
                 new Vector2(centerX, menuTop + menuHeight + gap / 2),
                 Palette.Muted,
                 Align.Center,
@@ -76,7 +80,7 @@ internal sealed class MenuScene : Scene
 
         batch.DrawText(
             fonts.Small,
-            "Tap, or use the arrow keys and Enter",
+            T("Tap, or use the arrow keys and Enter"),
             new Vector2(centerX, footerTop),
             Palette.Muted,
             Align.Center,
@@ -99,18 +103,18 @@ internal sealed class MenuScene : Scene
         var started = context.Progress.Progress.SolvedCount(context.AllLevels) > 0;
         List<MenuItem> items =
         [
-            new(started ? "Continue" : "Play", () => Scenes.Push(new PlayScene(context, context.Continue), Navigation.Fade())),
-            new("Select level", () => Scenes.Push(new LevelSelectScene(context, context.Continue), Navigation.Fade())),
-            new("Random level", () => Scenes.Push(new GenerateScene(context), Navigation.Fade())),
-            new("Card games", () => Scenes.Push(new CardGamesScene(context))),
-            new("Adventure", () => Scenes.Push(context.Adventures.Exists ? new AdventureMenuScene(context) : AdventureScene.New(context), Navigation.Fade())),
-            new("Code lock", () => Scenes.Push(new CodeLockLevelsScene(context))),
-            new("Bricks", () => Scenes.Push(new BricksScene(context), Navigation.Fade())),
-            new("Options", () => Scenes.Push(new OptionsScene(context))),
+            new(started ? T("Continue") : T("Play"), () => Scenes.Push(new PlayScene(context, context.Continue), Navigation.Fade())),
+            new(T("Select level"), () => Scenes.Push(new LevelSelectScene(context, context.Continue), Navigation.Fade())),
+            new(T("Random level"), () => Scenes.Push(new GenerateScene(context), Navigation.Fade())),
+            new(T("Card games"), () => Scenes.Push(new CardGamesScene(context))),
+            new(T("Adventure"), () => Scenes.Push(context.Adventures.Exists ? new AdventureMenuScene(context) : AdventureScene.New(context), Navigation.Fade())),
+            new(T("Code lock"), () => Scenes.Push(new CodeLockLevelsScene(context))),
+            new(T("Bricks"), () => Scenes.Push(new BricksScene(context), Navigation.Fade())),
+            new(T("Options"), () => Scenes.Push(new OptionsScene(context))),
         ];
         if (context.Platform.CanQuit)
         {
-            items.Add(new MenuItem("Quit", () => Scenes.Pop(Navigation.Fade())));
+            items.Add(new MenuItem(T("Quit"), () => Scenes.Pop(Navigation.Fade())));
         }
 
         return new Menu(context.Sounds, [.. items])

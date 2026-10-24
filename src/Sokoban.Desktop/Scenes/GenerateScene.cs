@@ -7,6 +7,7 @@ using Sokoban.Desktop.UI;
 using Sokoban.Model;
 using Sokoban.Solver;
 using Jentl.Core.UI;
+using static Sokoban.Desktop.UI.Tr;
 
 namespace Sokoban.Desktop.Scenes;
 
@@ -35,10 +36,10 @@ internal sealed class GenerateScene : Scene
     {
         _context = context;
         _seed = seed;
-        _buildingButtons = new ButtonBar(new Button("Cancel", () => Scenes.Pop(Navigation.Fade())));
+        _buildingButtons = new ButtonBar(new Button(T("Cancel"), () => Scenes.Pop(Navigation.Fade())));
         _failedButtons = new ButtonBar(
-            new Button("Back", () => Scenes.Pop(Navigation.Fade())),
-            new Button("Try again", Retry, Highlight: true));
+            new Button(T("Back"), () => Scenes.Pop(Navigation.Fade())),
+            new Button(T("Try again"), Retry, Highlight: true));
     }
 
     protected override void OnEnter()
@@ -99,7 +100,7 @@ internal sealed class GenerateScene : Scene
     {
         var fonts = _context.Fonts;
         var center = new Vector2(viewport.Center.X, viewport.Center.Y - fonts.Heading.LineHeight);
-        var title = _failed ? "Couldn't make a good level" : "Building a level...";
+        var title = _failed ? T("Couldn't make a good level") : T("Building a level...");
         batch.DrawText(fonts.Heading, title, center, Palette.Text, Align.Center);
         var buttons = new Rectangle(viewport.X, (int)(center.Y + fonts.Heading.LineHeight + fonts.Px(24)), viewport.Width, ButtonBar.Height(fonts.Body));
         (_failed ? _failedButtons : _buildingButtons).Draw(batch, fonts.Body, buttons);

@@ -3,6 +3,7 @@ using Golf;
 using Jentl.Cards;
 using Jentl.Core.Cards;
 using Microsoft.Xna.Framework;
+using static Sokoban.Desktop.UI.Tr;
 
 namespace Sokoban.Desktop.Scenes;
 
@@ -22,7 +23,7 @@ internal sealed class GolfScene : CardGameScene
 
     // Like golf, the score is what is left: shown as the game goes.
     protected override string Help =>
-        string.Create(CultureInfo.InvariantCulture, $"Play cards one higher or lower than the waste ({GolfRules.CardsLeft(Game.Table)} left)");
+        T("Play cards one higher or lower than the waste ({0} left)", GolfRules.CardsLeft(Game.Table));
 
     protected override void LayOut(Rectangle area)
     {
@@ -53,15 +54,15 @@ internal sealed class GolfScene : CardGameScene
         var waste = Game.Table[GolfRules.Waste].Top?.Card;
         return input switch
         {
-            ClickPile { Pile.Name: GolfRules.Stock } => "The stock is empty",
-            ClickPile or DragCards when waste is { Rank: Card.King } => "Nothing goes on a king: turn over a card from the stock",
-            ClickPile { Pile: var pile } when waste is { } top && !pile.IsEmpty => $"Play a card one higher or lower than the {CardName(top)}",
+            ClickPile { Pile.Name: GolfRules.Stock } => T("The stock is empty"),
+            ClickPile or DragCards when waste is { Rank: Card.King } => T("Nothing goes on a king: turn over a card from the stock"),
+            ClickPile { Pile: var pile } when waste is { } top && !pile.IsEmpty => T("Play a card one higher or lower than the {0}", CardName(top)),
             _ => null,
         };
     }
 
     protected override string DescribeHint(CardInput hint) =>
-        hint is ClickPile { Pile.Name: GolfRules.Stock } ? "Turn over a card from the stock"
-        : hint is ClickPile { Pile: var pile } ? $"Play the {CardName(pile.Top!.Value.Card)}"
+        hint is ClickPile { Pile.Name: GolfRules.Stock } ? T("Turn over a card from the stock")
+        : hint is ClickPile { Pile: var pile } ? T("Play the {0}", CardName(pile.Top!.Value.Card))
         : base.DescribeHint(hint);
 }

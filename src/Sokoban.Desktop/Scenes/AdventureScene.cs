@@ -15,6 +15,7 @@ using Mossbrook;
 using Sokoban.Desktop.Input;
 using Sokoban.Desktop.UI;
 using Jentl.Core.UI;
+using static Sokoban.Desktop.UI.Tr;
 
 namespace Sokoban.Desktop.Scenes;
 
@@ -70,10 +71,10 @@ internal sealed class AdventureScene : Scene
         _savedTurn = adventure.World.Turn;
         _view = new MapView(Texture, new FontTextDrawer(context.Fonts));
         _buttons = new ButtonBar(
-            new Button("Bag", OpenBag),
-            new Button("Journal", OpenJournal),
-            new Button("Wait", () => Process(World.Wait())),
-            new Button("Menu", () => Scenes.Push(new AdventurePauseScene(context, this))));
+            new Button(T("Bag"), OpenBag),
+            new Button(T("Journal"), OpenJournal),
+            new Button(T("Wait"), () => Process(World.Wait())),
+            new Button(T("Menu"), () => Scenes.Push(new AdventurePauseScene(context, this))));
     }
 
     public Adventure Adventure { get; }
@@ -104,7 +105,7 @@ internal sealed class AdventureScene : Scene
         {
             context.Adventures.Discard(e.Message);
             var scene = New(context);
-            scene.World.Log("Your saved adventure could not be loaded, so a new one begins.");
+            scene.World.Log(T("Your saved adventure could not be loaded, so a new one begins."));
             return scene;
         }
     }
@@ -286,9 +287,7 @@ internal sealed class AdventureScene : Scene
         batch.FillRectangle(hud, Palette.Panel);
         var text = hud;
         text.Inflate(-margin, 0);
-        var stats = string.Create(
-            CultureInfo.InvariantCulture,
-            $"Lv {player.Level}   {World.State.Inventory.Count("coins")} coins");
+        var stats = T("Lv {0}   {1} coins", player.Level, World.State.Inventory.Count("coins"));
         var statsWidth = (int)fonts.Body.MeasureString(stats).X;
         var barWidth = Math.Min(fonts.Px(200), Math.Max(fonts.Px(80), text.Width - statsWidth - margin * 2 - (int)fonts.Body.MeasureString(World.Area.Name).X));
         if (!fonts.IsPortrait)

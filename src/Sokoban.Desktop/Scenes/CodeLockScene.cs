@@ -10,6 +10,7 @@ using Microsoft.Xna.Framework.Input;
 using Sokoban.Desktop.Input;
 using Sokoban.Desktop.UI;
 using Jentl.Core.UI;
+using static Sokoban.Desktop.UI.Tr;
 
 namespace Sokoban.Desktop.Scenes;
 
@@ -62,9 +63,9 @@ internal sealed class CodeLockScene : Scene
         _down = new Rectangle[rules.Length];
         _faces = new Rectangle[rules.Length];
         _buttons = new ButtonBar(
-            new Button("Try", TryCode, Highlight: true),
-            new Button("Hint", ShowHint),
-            new Button("Menu", () => Scenes.Push(new CodeLockPauseScene(context, this))));
+            new Button(T("Try"), TryCode, Highlight: true),
+            new Button(T("Hint"), ShowHint),
+            new Button(T("Menu"), () => Scenes.Push(new CodeLockPauseScene(context, this))));
     }
 
     public LockGame Game { get; }
@@ -73,7 +74,7 @@ internal sealed class CodeLockScene : Scene
 
     public int HintsUsed { get; private set; }
 
-    public string Name => Game.Rules == LockRules.Easy ? "Easy" : Game.Rules == LockRules.Hard ? "Hard" : "Normal";
+    public string Name => Game.Rules == LockRules.Easy ? T("Easy") : Game.Rules == LockRules.Hard ? T("Hard") : T("Normal");
 
     /// <summary>Which record this lock counts for.</summary>
     public string Difficulty => Key(Game.Rules);
@@ -196,8 +197,8 @@ internal sealed class CodeLockScene : Scene
         batch.FillRectangle(hud, Palette.Panel);
         var text = hud;
         text.Inflate(-margin, 0);
-        batch.DrawText(fonts.Body, string.Create(CultureInfo.InvariantCulture, $"Code lock ({Name}) #{Seed}"), text, Palette.Text, Align.Left);
-        batch.DrawText(fonts.Body, Game.AttemptsLeft == 1 ? "1 try left" : string.Create(CultureInfo.InvariantCulture, $"{Game.AttemptsLeft} tries left"), text, Game.AttemptsLeft <= 2 ? Misplaced : Palette.Accent, Align.Right);
+        batch.DrawText(fonts.Body, T("Code lock ({0}) #{1}", Name, Seed), text, Palette.Text, Align.Left);
+        batch.DrawText(fonts.Body, N(Game.AttemptsLeft, "{0} try left", "{0} tries left"), text, Game.AttemptsLeft <= 2 ? Misplaced : Palette.Accent, Align.Right);
 
         var buttonFont = _buttons.Width(fonts.Body) <= viewport.Width - 2 * margin ? fonts.Body : fonts.Small;
         var buttonsHeight = ButtonBar.Height(buttonFont) + fonts.Px(20);
@@ -246,8 +247,8 @@ internal sealed class CodeLockScene : Scene
         var (message, color) = _message is not null && _messageFor > TimeSpan.Zero
             ? (_message, Palette.Accent)
             : Game.Attempts.Count == 0
-                ? ("Green: right digit, right place. Amber: right digit, wrong place.", Palette.Muted)
-                : (string.Create(CultureInfo.InvariantCulture, $"{Format.Count(Game.PossibleCodes, "code")} still fit"), Palette.Muted);
+                ? (T("Green: right digit, right place. Amber: right digit, wrong place."), Palette.Muted)
+                : (N(Game.PossibleCodes, "{0} code still fits", "{0} codes still fit"), Palette.Muted);
         batch.DrawText(fonts.Small, message, status, color, shadow: false);
         _buttons.Draw(batch, buttonFont, buttons);
     }
@@ -280,7 +281,7 @@ internal sealed class CodeLockScene : Scene
 
         if (Game.Attempts.Any(a => a.Code.SequenceEqual(_wheels)))
         {
-            Say("You tried that code already");
+            Say(T("You tried that code already"));
             _context.Sounds.Play(Sound.Error);
             return;
         }
@@ -334,8 +335,8 @@ internal sealed class CodeLockScene : Scene
 
         HintsUsed++;
         Say(Game.Attempts.Count == 0
-            ? "Any code is as good as another for a first try"
-            : string.Create(CultureInfo.InvariantCulture, $"This fits every answer so far ({Format.Count(Game.PossibleCodes, "code")} {(Game.PossibleCodes == 1 ? "does" : "do")})"));
+            ? T("Any code is as good as another for a first try")
+            : N(Game.PossibleCodes, "This fits every answer so far ({0} code does)", "This fits every answer so far ({0} codes do)"));
     }
 
     private void Say(string message)

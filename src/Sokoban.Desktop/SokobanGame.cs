@@ -68,6 +68,7 @@ internal sealed class SokobanGame : JentlGame
 
         var store = _store;
         var settings = SavedFile<Settings>.Load(store, "settings.json", Settings.FromJson, s => s.ToJson(), () => new Settings());
+        Tr.Use(settings.Value.Language);
         _sounds = SoundPlayer.Load("Assets/sounds", Sound.Navigate, Sound.Completed);
         _sounds.Enabled = settings.Value.Sound;
         _sounds.Volume = Math.Clamp(settings.Value.Volume, 0f, 1f);

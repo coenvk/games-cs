@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Sokoban.Desktop.Input;
 using Sokoban.Desktop.UI;
 using Jentl.Core.UI;
+using static Sokoban.Desktop.UI.Tr;
 
 namespace Sokoban.Desktop.Scenes;
 
@@ -30,7 +31,7 @@ internal sealed class CardGamesScene : Scene
             new MenuItem("Yukon", () => Scenes.Replace(new YukonScene(context), Navigation.Fade())),
             new MenuItem("Texas Hold'em", () => Scenes.Replace(new PokerSetupScene(context))),
             new MenuItem("Uno", () => Scenes.Replace(new UnoSetupScene(context))),
-            new MenuItem("Back", () => Scenes.Pop()));
+            new MenuItem(T("Back"), () => Scenes.Pop()));
     }
 
     public override bool IsOverlay => true;
@@ -47,7 +48,7 @@ internal sealed class CardGamesScene : Scene
     }
 
     public override void Draw(SpriteBatch batch, Rectangle viewport) =>
-        OverlayPanel.Draw(batch, viewport, _context.Fonts, "Card games", [], _menu);
+        OverlayPanel.Draw(batch, viewport, _context.Fonts, T("Card games"), [], _menu);
 }
 
 internal sealed class CardPauseScene : Scene
@@ -62,19 +63,19 @@ internal sealed class CardPauseScene : Scene
         _game = game;
         _menu = new Menu(
             context.Sounds,
-            new MenuItem("Resume", () => Scenes.Pop()),
-            new MenuItem("Restart this deal", () =>
+            new MenuItem(T("Resume"), () => Scenes.Pop()),
+            new MenuItem(T("Restart this deal"), () =>
             {
                 game.RestartDeal();
                 Scenes.Pop();
             }),
-            new MenuItem("New deal", () =>
+            new MenuItem(T("New deal"), () =>
             {
                 Scenes.Pop();
                 game.NewDeal();
             }),
-            new MenuItem("Options", () => Scenes.Push(new OptionsScene(context))),
-            new MenuItem("Main menu", () => Navigation.ToMainMenu(Scenes, context)));
+            new MenuItem(T("Options"), () => Scenes.Push(new OptionsScene(context))),
+            new MenuItem(T("Main menu"), () => Navigation.ToMainMenu(Scenes, context)));
     }
 
     public override bool IsOverlay => true;
@@ -91,7 +92,7 @@ internal sealed class CardPauseScene : Scene
     }
 
     public override void Draw(SpriteBatch batch, Rectangle viewport) =>
-        OverlayPanel.Draw(batch, viewport, _context.Fonts, "Paused", [new PanelLine($"{_game.Name} #{_game.Deal}", Palette.Muted)], _menu);
+        OverlayPanel.Draw(batch, viewport, _context.Fonts, T("Paused"), [new PanelLine($"{_game.Name} #{_game.Deal}", Palette.Muted)], _menu);
 }
 
 internal sealed class CardWonScene : Scene
@@ -106,12 +107,12 @@ internal sealed class CardWonScene : Scene
         _game = game;
         _menu = new Menu(
             context.Sounds,
-            new MenuItem("New deal", () =>
+            new MenuItem(T("New deal"), () =>
             {
                 Scenes.Pop();
                 game.NewDeal();
             }),
-            new MenuItem("Main menu", () => Navigation.ToMainMenu(Scenes, context)));
+            new MenuItem(T("Main menu"), () => Navigation.ToMainMenu(Scenes, context)));
     }
 
     public override bool IsOverlay => true;
@@ -132,8 +133,8 @@ internal sealed class CardWonScene : Scene
             batch,
             viewport,
             _context.Fonts,
-            "You won!",
-            [new PanelLine($"{_game.Name} #{_game.Deal}: {Format.Count(_game.MoveCount, "move")}, {Format.Duration(_game.Time)}", Palette.Text)],
+            T("You won!"),
+            [new PanelLine($"{_game.Name} #{_game.Deal}: {Format.Moves(_game.MoveCount)}, {Format.Duration(_game.Time)}", Palette.Text)],
             _menu);
 }
 
@@ -148,10 +149,10 @@ internal sealed class SpiderSuitsScene : Scene
         _context = context;
         _menu = new Menu(
             context.Sounds,
-            new MenuItem("1 suit (easy)", () => Start(1)),
-            new MenuItem("2 suits (medium)", () => Start(2)),
-            new MenuItem("4 suits (hard)", () => Start(4)),
-            new MenuItem("Back", Back));
+            new MenuItem(T("1 suit (easy)"), () => Start(1)),
+            new MenuItem(T("2 suits (medium)"), () => Start(2)),
+            new MenuItem(T("4 suits (hard)"), () => Start(4)),
+            new MenuItem(T("Back"), Back));
     }
 
     public override bool IsOverlay => true;
@@ -168,7 +169,7 @@ internal sealed class SpiderSuitsScene : Scene
     }
 
     public override void Draw(SpriteBatch batch, Rectangle viewport) =>
-        OverlayPanel.Draw(batch, viewport, _context.Fonts, "Spider", [new PanelLine("How many suits?", Palette.Muted)], _menu);
+        OverlayPanel.Draw(batch, viewport, _context.Fonts, "Spider", [new PanelLine(T("How many suits?"), Palette.Muted)], _menu);
 
     private void Start(int suits) => Scenes.Replace(new SpiderScene(_context, suits), Navigation.Fade());
 

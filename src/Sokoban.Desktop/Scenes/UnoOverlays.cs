@@ -7,6 +7,7 @@ using Sokoban.Desktop.Input;
 using Sokoban.Desktop.UI;
 using Uno;
 using Jentl.Core.UI;
+using static Sokoban.Desktop.UI.Tr;
 
 namespace Sokoban.Desktop.Scenes;
 
@@ -17,12 +18,12 @@ internal sealed class UnoSetupScene : PanelScene
         : base(context)
     {
         UnoSetup[] setups = [UnoSetup.VersusBots(3), UnoSetup.VersusBots(2), UnoSetup.VersusBots(1), UnoSetup.PassAndPlay(2), UnoSetup.PassAndPlay(3), UnoSetup.PassAndPlay(4)];
-        Menu = new Menu(context.Sounds, [.. setups.Select(s => new MenuItem(s.Name, () => Scenes.Replace(new UnoScene(context, s), Navigation.Fade()))), new MenuItem("Play online", () => Scenes.Replace(new UnoOnlineScene(context))), new MenuItem("Back", () => Scenes.Pop())]);
+        Menu = new Menu(context.Sounds, [.. setups.Select(s => new MenuItem(s.Name, () => Scenes.Replace(new UnoScene(context, s), Navigation.Fade()))), new MenuItem(T("Play online"), () => Scenes.Replace(new UnoOnlineScene(context))), new MenuItem(T("Back"), () => Scenes.Pop())]);
     }
 
-    protected override string Title => "Uno";
+    protected override string Title => T("Uno");
 
-    protected override IReadOnlyList<PanelLine> Lines => [new("Match colour or number; first to 500 points wins.", Palette.Muted)];
+    protected override IReadOnlyList<PanelLine> Lines => [new(T("Match colour or number; first to 500 points wins."), Palette.Muted)];
 }
 
 /// <summary>The colour a wild calls.</summary>
@@ -31,14 +32,14 @@ internal sealed class UnoColourScene : UnoPanel
     public UnoColourScene(GameContext context, UnoScene game, UnoCard card)
         : base(context, game)
     {
-        Menu = new Menu(context.Sounds, [.. Enum.GetValues<UnoColor>().Select(c => new MenuItem(c.ToString(), () =>
+        Menu = new Menu(context.Sounds, [.. Enum.GetValues<UnoColor>().Select(c => new MenuItem(UnoScene.ColorName(c), () =>
         {
             Scenes.Pop();
             game.PlayWild(card, c);
-        })), new MenuItem("Cancel", () => Scenes.Pop())]);
+        })), new MenuItem(T("Cancel"), () => Scenes.Pop())]);
     }
 
-    protected override string Title => "Pick a colour";
+    protected override string Title => T("Pick a colour");
 }
 
 /// <summary>Hides the table until the next person has the device.</summary>
@@ -50,16 +51,16 @@ internal sealed class UnoHandoverScene : PanelScene
         : base(context)
     {
         _name = name;
-        Menu = new Menu(context.Sounds, new MenuItem($"I'm {name}", () =>
+        Menu = new Menu(context.Sounds, new MenuItem(T("I'm {0}", name), () =>
         {
             game.ConfirmHandover();
             Scenes.Pop();
         }));
     }
 
-    protected override string Title => "Pass the device";
+    protected override string Title => T("Pass the device");
 
-    protected override IReadOnlyList<PanelLine> Lines => [new($"It's {_name}'s turn.", Palette.Text), new("Others, look away!", Palette.Muted)];
+    protected override IReadOnlyList<PanelLine> Lines => [new(T("It's {0}'s turn.", _name), Palette.Text), new(T("Others, look away!"), Palette.Muted)];
 
     // There is no backing out of a handover; the menu is the only way on.
     protected override void OnBack()
@@ -80,7 +81,7 @@ internal sealed class UnoRoundScene : UnoPanel
         var over = view.Champion is not null;
         Menu = new Menu(
             context.Sounds,
-            new MenuItem(over ? "New match" : "Next round", () =>
+            new MenuItem(over ? T("New match") : T("Next round"), () =>
             {
                 Scenes.Pop();
                 if (over)
@@ -92,12 +93,12 @@ internal sealed class UnoRoundScene : UnoPanel
                     game.NextRound();
                 }
             }),
-            new MenuItem("Main menu", () => game.Leave()));
+            new MenuItem(T("Main menu"), () => game.Leave()));
     }
 
     protected override string Title => Game.Table.View is { Champion: { } champion } view
-        ? (champion == view.Seat && Game.Table.IsOnline) || Name(champion) == "You" ? "You win the match!" : $"{Name(champion)} wins the match!"
-        : "Round over";
+        ? (champion == view.Seat && Game.Table.IsOnline) || Name(champion) == T("You") ? T("You win the match!") : T("{0} wins the match!", Name(champion))
+        : T("Round over");
 
     protected override IReadOnlyList<PanelLine> Lines
     {
@@ -110,7 +111,7 @@ internal sealed class UnoRoundScene : UnoPanel
 
             var lines = new List<PanelLine>
             {
-                new(string.Create(CultureInfo.InvariantCulture, $"{Name(winner)}: +{view.RoundPoints} points"), Palette.Accent),
+                new(T("{0}: +{1} points", Name(winner), view.RoundPoints), Palette.Accent),
             };
             lines.AddRange(Enumerable.Range(0, view.Players).OrderByDescending(s => view.Scores[s])
                 .Select(s => new PanelLine(string.Create(CultureInfo.InvariantCulture, $"{Name(s)}  {view.Scores[s]}"), Palette.Text)));
@@ -138,26 +139,26 @@ internal sealed class UnoPauseScene : UnoPanel
         Menu = game.Table.IsOnline
             ? new Menu(
                 context.Sounds,
-                new MenuItem("Resume", () => Scenes.Pop()),
-                new MenuItem("Options", () => Scenes.Push(new OptionsScene(context))),
-                new MenuItem("Leave the room", () => game.Leave()))
+                new MenuItem(T("Resume"), () => Scenes.Pop()),
+                new MenuItem(T("Options"), () => Scenes.Push(new OptionsScene(context))),
+                new MenuItem(T("Leave the room"), () => game.Leave()))
             : new Menu(
                 context.Sounds,
-                new MenuItem("Resume", () => Scenes.Pop()),
-                new MenuItem("New match", () =>
+                new MenuItem(T("Resume"), () => Scenes.Pop()),
+                new MenuItem(T("New match"), () =>
                 {
                     Scenes.Pop();
                     game.NewMatch();
                 }),
-                new MenuItem("Options", () => Scenes.Push(new OptionsScene(context))),
-                new MenuItem("Main menu", () => game.Leave()));
+                new MenuItem(T("Options"), () => Scenes.Push(new OptionsScene(context))),
+                new MenuItem(T("Main menu"), () => game.Leave()));
     }
 
-    protected override string Title => "Paused";
+    protected override string Title => T("Paused");
 
     protected override IReadOnlyList<PanelLine> Lines =>
         Game.Table.IsOnline
-            ? [new(Game.Table.Name, Palette.Muted), new("The game goes on without you while you're here.", Palette.Muted)]
+            ? [new(Game.Table.Name, Palette.Muted), new(T("The game goes on without you while you're here."), Palette.Muted)]
             : [new(Game.Table.Name, Palette.Muted)];
 }
 
@@ -170,10 +171,10 @@ internal sealed class UnoGoneScene : UnoPanel
         : base(context, game)
     {
         _reason = reason;
-        Menu = new Menu(context.Sounds, new MenuItem("Main menu", () => game.Leave()));
+        Menu = new Menu(context.Sounds, new MenuItem(T("Main menu"), () => game.Leave()));
     }
 
-    protected override string Title => "Game interrupted";
+    protected override string Title => T("Game interrupted");
 
     protected override IReadOnlyList<PanelLine> Lines => [new(_reason, Palette.Text)];
 
@@ -191,5 +192,5 @@ internal abstract class UnoPanel(GameContext context, UnoScene game) : PanelScen
         base.Update(elapsed, input);
     }
 
-    protected string Name(int seat) => seat < Game.Names.Count ? Game.Names[seat] : $"Player {seat + 1}";
+    protected string Name(int seat) => seat < Game.Names.Count ? Game.Names[seat] : T("Player {0}", seat + 1);
 }

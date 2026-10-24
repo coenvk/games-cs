@@ -9,6 +9,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Sokoban.Desktop.Input;
 using Sokoban.Desktop.UI;
 using Jentl.Core.UI;
+using static Sokoban.Desktop.UI.Tr;
 
 namespace Sokoban.Desktop.Scenes;
 
@@ -50,10 +51,10 @@ internal abstract class CardGameScene : Scene
         Game = game;
         _homeTag = homeTag;
         _buttons = new ButtonBar(
-            new Button("New deal", NewDeal),
-            new Button("Undo", Undo),
-            new Button("Hint", ShowHint),
-            new Button("Menu", () => Scenes.Push(new CardPauseScene(Context, this))));
+            new Button(T("New deal"), NewDeal),
+            new Button(T("Undo"), Undo),
+            new Button(T("Hint"), ShowHint),
+            new Button(T("Menu"), () => Scenes.Push(new CardPauseScene(Context, this))));
     }
 
     public string Name { get; }
@@ -71,7 +72,7 @@ internal abstract class CardGameScene : Scene
     protected TableView View { get; } = new();
 
     /// <summary>The line under the table when there is nothing else to say.</summary>
-    protected virtual string Help => "Drag cards, or tap one to send it where it fits";
+    protected virtual string Help => T("Drag cards, or tap one to send it where it fits");
 
     protected override void OnEnter() => Context.Sounds.PlayMusic(Music.Cards);
 
@@ -138,7 +139,7 @@ internal abstract class CardGameScene : Scene
         text.Inflate(-margin, 0);
         var title = fonts.IsPortrait ? Name : string.Create(CultureInfo.InvariantCulture, $"{Name}  #{Deal}");
         batch.DrawText(fonts.Heading, title, text, Palette.Text, Align.Left);
-        var stats = string.Create(CultureInfo.InvariantCulture, $"Moves {MoveCount}    {Format.Duration(Time)}");
+        var stats = T("Moves {0}    {1}", MoveCount, Format.Duration(Time));
         batch.DrawText(fonts.Body, stats, text, Game.IsWon ? Palette.Accent : Palette.Text, Align.Right);
 
         // Bottom: a status line above the buttons.
@@ -200,9 +201,9 @@ internal abstract class CardGameScene : Scene
 
     protected virtual string DescribeHint(CardInput hint) => hint switch
     {
-        DragCards drag => $"Try moving the {CardName(drag.From[drag.Index].Card)}",
-        ClickPile click when click.Index >= 0 => $"Try the {CardName(click.Pile[click.Index].Card)}",
-        _ => "Try that pile",
+        DragCards drag => T("Try moving the {0}", CardName(drag.From[drag.Index].Card)),
+        ClickPile click when click.Index >= 0 => T("Try the {0}", CardName(click.Pile[click.Index].Card)),
+        _ => T("Try that pile"),
     };
 
     /// <summary>A drag or tap on the table; plays it by default. Pyramid overrides it to pair cards with two taps.</summary>
@@ -244,14 +245,24 @@ internal abstract class CardGameScene : Scene
         }
     }
 
-    protected static string CardName(Card card) => card.Rank switch
-    {
-        Card.Ace => "ace",
-        Card.Jack => "jack",
-        Card.Queen => "queen",
-        Card.King => "king",
-        _ => card.Rank.ToString(CultureInfo.InvariantCulture),
-    } + " of " + card.Suit.ToString().ToLowerInvariant();
+    /// <summary>"ace of spades", in the player's language.</summary>
+    protected static string CardName(Card card) => T(
+        "{0} of {1}",
+        card.Rank switch
+        {
+            Card.Ace => T("ace"),
+            Card.Jack => T("jack"),
+            Card.Queen => T("queen"),
+            Card.King => T("king"),
+            _ => card.Rank.ToString(CultureInfo.InvariantCulture),
+        },
+        card.Suit switch
+        {
+            Suit.Clubs => T("clubs"),
+            Suit.Diamonds => T("diamonds"),
+            Suit.Hearts => T("hearts"),
+            _ => T("spades"),
+        });
 
     private void Undo()
     {
@@ -279,7 +290,7 @@ internal abstract class CardGameScene : Scene
         }
         else
         {
-            _message = "No moves left. Undo, or start a new deal.";
+            _message = T("No moves left. Undo, or start a new deal.");
         }
 
         _messageFor = MessageDuration;

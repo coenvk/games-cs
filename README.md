@@ -84,6 +84,12 @@ a theme for the menu, calm music for the puzzles, a lounge tune for solitaire, a
 folk tune for Mossbrook's village and a dark one for its cellar. Options has a switch and a volume for music and for
 sound effects.
 
+## Languages
+
+The game speaks English and Dutch. **Options > Language** picks one, or "Automatic" follows the system (the browser's
+language on the web). Translations live in `src/Sokoban.Desktop/Assets/lang`; see [docs/kits.md](docs/kits.md) for
+how to add one. The adventure's story text (dialogue, quests, items) is in English only.
+
 ## Controls
 
 On a touchscreen or with a mouse: tap or click menu items and level tiles (a selected tile again to play), tap a

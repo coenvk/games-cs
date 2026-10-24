@@ -9,6 +9,7 @@ using Sokoban.Desktop.Rendering;
 using Sokoban.Desktop.UI;
 using Sokoban.Model;
 using Jentl.Core.UI;
+using static Sokoban.Desktop.UI.Tr;
 
 namespace Sokoban.Desktop.Scenes;
 
@@ -46,8 +47,8 @@ internal sealed class LevelSelectScene : Scene
         _selected = selected;
         _previewSession = new LevelSession(context.LevelAt(selected));
         _buttons = new ButtonBar(
-            new Button("Back", Back),
-            new Button("Play", Play, Highlight: true));
+            new Button(T("Back"), Back),
+            new Button(T("Play"), Play, Highlight: true));
     }
 
     private LevelPack Pack => _context.Packs[_selected.Pack];
@@ -104,15 +105,15 @@ internal sealed class LevelSelectScene : Scene
         // Header: title, then one tab per pack (the current one underlined), then the solved count.
         // In portrait the tabs and count get their own row under the title.
         var headingHeight = (int)fonts.Heading.LineHeight;
-        batch.DrawText(fonts.Heading, "Select level", new Vector2(viewport.X, viewport.Y), Palette.Text);
+        batch.DrawText(fonts.Heading, T("Select level"), new Vector2(viewport.X, viewport.Y), Palette.Text);
         var tabRow = fonts.IsPortrait
             ? new Rectangle(viewport.X, viewport.Y + headingHeight, viewport.Width, (int)fonts.Body.LineHeight + fonts.Px(12))
             : new Rectangle(viewport.X, viewport.Y, viewport.Width, headingHeight);
-        var tabX = fonts.IsPortrait ? tabRow.X : tabRow.X + (int)fonts.Heading.MeasureString("Select level").X + 2 * fonts.Px(TabGap);
+        var tabX = fonts.IsPortrait ? tabRow.X : tabRow.X + (int)fonts.Heading.MeasureString(T("Select level")).X + 2 * fonts.Px(TabGap);
         _tabs = new Rectangle[_context.Packs.Count];
         for (var p = 0; p < _context.Packs.Count; p++)
         {
-            var name = _context.Packs[p].Name;
+            var name = T(_context.Packs[p].Name);
             var tab = new Rectangle(tabX, tabRow.Y, (int)fonts.Body.MeasureString(name).X, tabRow.Height);
             _tabs[p] = tab;
             batch.DrawText(fonts.Body, name, tab, p == _selected.Pack ? Palette.Accent : Palette.Muted, Align.Left, shadow: false);
@@ -126,7 +127,7 @@ internal sealed class LevelSelectScene : Scene
 
         batch.DrawText(
             fonts.Body,
-            string.Create(CultureInfo.InvariantCulture, $"{progress.SolvedCount(levels)} / {levels.Count} solved"),
+            T("{0} / {1} solved", progress.SolvedCount(levels), levels.Count),
             tabRow,
             Palette.Muted,
             Align.Right,
@@ -168,7 +169,7 @@ internal sealed class LevelSelectScene : Scene
         var record = progress.Get(level);
         batch.DrawText(
             fonts.Small,
-            record is null ? $"{Format.Count(level.Board.Goals.Count, "crate")}, not solved yet" : Format.Best(record),
+            record is null ? N(level.Board.Goals.Count, "{0} crate, not solved yet", "{0} crates, not solved yet") : Format.Best(record),
             new Vector2(preview.Center.X, preview.Y + fonts.Body.LineHeight + 4),
             record is null ? Palette.Muted : Palette.Accent,
             Align.Center,

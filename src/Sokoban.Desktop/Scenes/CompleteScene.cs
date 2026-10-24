@@ -6,6 +6,7 @@ using Sokoban.Desktop.Input;
 using Sokoban.Desktop.UI;
 using Sokoban.Model;
 using Jentl.Core.UI;
+using static Sokoban.Desktop.UI.Tr;
 
 namespace Sokoban.Desktop.Scenes;
 
@@ -24,20 +25,20 @@ internal sealed class CompleteScene : Scene
         var items = new List<MenuItem>();
         if (play.HasNextLevel)
         {
-            items.Add(new MenuItem("Next level", () =>
+            items.Add(new MenuItem(T("Next level"), () =>
             {
                 Scenes.Pop();
                 play.NextLevel();
             }));
         }
 
-        items.Add(new MenuItem("Replay", () =>
+        items.Add(new MenuItem(T("Replay"), () =>
         {
             play.Restart();
             Scenes.Pop();
         }));
-        items.Add(new MenuItem("Select level", () => Navigation.ToLevelSelect(Scenes, context, play.SelectTarget)));
-        items.Add(new MenuItem("Main menu", () => Navigation.ToMainMenu(Scenes, context)));
+        items.Add(new MenuItem(T("Select level"), () => Navigation.ToLevelSelect(Scenes, context, play.SelectTarget)));
+        items.Add(new MenuItem(T("Main menu"), () => Navigation.ToMainMenu(Scenes, context)));
         _menu = new Menu(context.Sounds, [.. items]);
     }
 
@@ -57,7 +58,7 @@ internal sealed class CompleteScene : Scene
     public override void Draw(SpriteBatch batch, Rectangle viewport)
     {
         var session = _play.Session;
-        var title = _play.HasNextLevel ? "Level complete!" : "Last level done!";
+        var title = _play.HasNextLevel ? T("Level complete!") : T("Last level done!");
         var lines = new List<PanelLine>
         {
             new(Format.Result(session.MoveCount, session.PushCount, _play.Time), Palette.Text),

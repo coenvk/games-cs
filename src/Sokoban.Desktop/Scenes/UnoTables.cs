@@ -1,6 +1,7 @@
 ﻿using Jentl.Multiplayer;
 using Jentl.Net;
 using Uno;
+using static Sokoban.Desktop.UI.Tr;
 
 namespace Sokoban.Desktop.Scenes;
 
@@ -163,7 +164,7 @@ internal sealed class OnlineUnoTable(NetClient client, string code, int seat) : 
 
     public int Seat { get; } = seat;
 
-    public string Name => $"Online room {Code}";
+    public string Name => T("Online room {0}", Code);
 
     public IReadOnlyList<string> Names { get; private set; } = [];
 
@@ -177,7 +178,7 @@ internal sealed class OnlineUnoTable(NetClient client, string code, int seat) : 
 
     public bool IsOnline => true;
 
-    public string? Problem => client.Status == NetStatus.Closed ? client.Error ?? "Connection lost." : _problem;
+    public string? Problem => client.Status == NetStatus.Closed ? client.Error ?? T("Connection lost.") : _problem;
 
     public bool IsGone => _closed || client.Status == NetStatus.Closed;
 
@@ -201,7 +202,7 @@ internal sealed class OnlineUnoTable(NetClient client, string code, int seat) : 
             {
                 case GameState { State: var json } when UnoOnline.ReadState(json) is { } state:
                     View = state.View;
-                    Names = [.. state.Names.Select((name, s) => s == Seat ? "You" : name)];
+                    Names = [.. state.Names.Select((name, s) => s == Seat ? T("You") : name)];
                     _events.AddRange(state.Events);
                     _problem = null;
                     break;
