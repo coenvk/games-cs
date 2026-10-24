@@ -122,7 +122,7 @@ public static class RaceSimulator
         }
 
         // Braking: never arrive at a metre faster than the car can slow down for it.
-        var braking = grip * Balance.G * Balance.Braking;
+        var braking = grip * Balance.G * Balance.Braking * Math.Sqrt(Math.Sqrt(Balance.ReferenceWeight / car.WeightKg));
         for (var m = metres - 1; m > 0; m--)
         {
             speeds[m] = Math.Min(speeds[m], Math.Sqrt((speeds[m + 1] * speeds[m + 1]) + (2 * braking)));

@@ -80,6 +80,9 @@ public static class Balance
         _ => 12_000,
     };
 
+    /// <summary>A car of this weight (kg) brakes as its grip allows; lighter cars brake harder, heavier ones less.</summary>
+    public const double ReferenceWeight = 1300;
+
     /// <summary>Braking as a share of cornering grip.</summary>
     public const double Braking = 0.9;
 }

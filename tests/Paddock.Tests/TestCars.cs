@@ -27,4 +27,22 @@ internal static class TestCars
     public static RaceRun Run(Stats car, TrackDef track, Condition condition) => RaceSimulator.Run(car, track, condition);
 
     public static double Time(Stats car, TrackDef track, Condition condition) => Run(car, track, condition).Time;
+
+    /// <summary>A roster of the three test cars, RQ muscle 60, rally 45, hatch 20.</summary>
+    public static Roster TestRoster { get; } = MakeRoster();
+
+    public static CarInstance Car(string model) => CarInstance.New(model);
+
+    private static Roster MakeRoster()
+    {
+        static string Entry(string id, Body body, Stats s) => $$"""
+            { "id": "{{id}}", "name": "{{id}}", "maker": "Test", "country": "Nowhere", "year": 2000, "body": "{{body}}",
+              "paint": "#ff0000", "trim": "#000000",
+              "stats": { "topSpeedKmh": {{s.TopSpeedKmh}}, "zeroTo100": {{s.ZeroTo100.ToString(System.Globalization.CultureInfo.InvariantCulture)}},
+                         "handling": {{s.Handling}}, "weightKg": {{s.WeightKg}}, "drive": "{{s.Drive}}", "tyres": "{{s.Tyres}}",
+                         "clearance": "{{s.Clearance}}" } }
+            """;
+        var json = $$"""{ "cars": [ {{Entry("muscle", Body.Muscle, Muscle)}}, {{Entry("rally", Body.Rally, Rally)}}, {{Entry("hatch", Body.Hatchback, Hatch)}} ] }""";
+        return Paddock.Roster.FromJson(json, s => s == Muscle ? 60 : s == Rally ? 45 : 20);
+    }
 }
