@@ -23,6 +23,7 @@
     <Project Path="src/Golf/Golf.csproj" />
     <Project Path="src/Klondike/Klondike.csproj" />
     <Project Path="src/Mossbrook/Mossbrook.csproj" />
+    <Project Path="src/Paddock/Paddock.csproj" />
     <Project Path="src/Poker/Poker.csproj" />
     <Project Path="src/Pyramid/Pyramid.csproj" />
     <Project Path="src/Sokoban.Model/Sokoban.Model.csproj" />
@@ -43,6 +44,7 @@
     <Project Path="tests/Golf.Tests/Golf.Tests.csproj" />
     <Project Path="tests/Klondike.Tests/Klondike.Tests.csproj" />
     <Project Path="tests/Mossbrook.Tests/Mossbrook.Tests.csproj" />
+    <Project Path="tests/Paddock.Tests/Paddock.Tests.csproj" />
     <Project Path="tests/Poker.Tests/Poker.Tests.csproj" />
     <Project Path="tests/Pyramid.Tests/Pyramid.Tests.csproj" />
     <Project Path="tests/Sokoban.Model.Tests/Sokoban.Model.Tests.csproj" />

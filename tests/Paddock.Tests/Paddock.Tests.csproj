@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\..\test.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Paddock\Paddock.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\apps\Paddock\Assets\paddock\*" Link="paddock\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>
