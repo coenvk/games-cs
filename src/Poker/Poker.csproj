@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Texas Hold'em: hand evaluation, betting with side pots, a tournament table and bots. Framework-free. -->
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Poker.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Jentl.Cards\Jentl.Cards.csproj" />
+    <ProjectReference Include="..\Jentl.Multiplayer\Jentl.Multiplayer.csproj" />
+  </ItemGroup>
+
+</Project>

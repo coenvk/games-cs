@@ -55,6 +55,7 @@
     <ProjectReference Include="..\Yukon\Yukon.csproj" />
     <ProjectReference Include="..\Easthaven\Easthaven.csproj" />
     <ProjectReference Include="..\Uno\Uno.csproj" />
+    <ProjectReference Include="..\Poker\Poker.csproj" />
     <ProjectReference Include="..\Golf\Golf.csproj" />
     <ProjectReference Include="..\Mossbrook\Mossbrook.csproj" />
     <ProjectReference Include="..\CodeLock\CodeLock.csproj" />

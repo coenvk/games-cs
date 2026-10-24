@@ -15,6 +15,7 @@
     <Project Path="src/Sokoban.Model/Sokoban.Model.csproj" />
     <Project Path="src/Sokoban.Solver/Sokoban.Solver.csproj" />
     <Project Path="src/Sokoban.Web/Sokoban.Web.csproj" />
+    <Project Path="src/Poker/Poker.csproj" />
     <Project Path="src/Pyramid/Pyramid.csproj" />
     <Project Path="src/Spider/Spider.csproj" />
     <Project Path="src/TriPeaks/TriPeaks.csproj" />
@@ -37,6 +38,7 @@
     <Project Path="tests/Mossbrook.Tests/Mossbrook.Tests.csproj" />
     <Project Path="tests/Sokoban.Model.Tests/Sokoban.Model.Tests.csproj" />
     <Project Path="tests/Sokoban.Solver.Tests/Sokoban.Solver.Tests.csproj" />
+    <Project Path="tests/Poker.Tests/Poker.Tests.csproj" />
     <Project Path="tests/Pyramid.Tests/Pyramid.Tests.csproj" />
     <Project Path="tests/Spider.Tests/Spider.Tests.csproj" />
     <Project Path="tests/TriPeaks.Tests/TriPeaks.Tests.csproj" />

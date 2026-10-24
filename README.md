@@ -18,6 +18,7 @@ A C# rewrite of [coenvk/Sokoban](https://github.com/coenvk/Sokoban), with engine
 | `src/CodeLock` | Code lock: Mastermind with a combination lock's digits, and a minimax hint solver |
 | `src/Jentl.Multiplayer` | Turn-based multiplayer: players, turn order, bots, and a match runner with pass-the-device handovers (see `docs/kits.md`) |
 | `src/Uno` | Uno: rules, scoring and bots on the multiplayer layer |
+| `src/Poker` | Texas Hold'em: a 7-card hand evaluator, betting with side pots, a sit-and-go table and Monte Carlo bots |
 | `src/Mossbrook` | Mossbrook, the RPG demo: starting a game and generating the cellar floors; its content is in `src/Sokoban.Desktop/Assets/rpg` |
 | `src/Klondike`, `src/Easthaven`, `src/FortyThieves`, `src/FreeCell`, `src/Golf`, `src/Pyramid`, `src/Spider`, `src/TriPeaks`, `src/Yukon` | The solitaire games' rules on the card kit |
 | `src/Sokoban.Solver` | Solver (A* over pushes, matching heuristic, dead-square and frozen-block pruning) and level generator (reverse play) |
@@ -29,7 +30,7 @@ A C# rewrite of [coenvk/Sokoban](https://github.com/coenvk/Sokoban), with engine
 | `tests/Jentl.Puzzle.Tests`, `tests/Jentl.Cards.Tests`, `tests/Klondike.Tests`, `tests/FreeCell.Tests`, `tests/Pyramid.Tests`, `tests/Spider.Tests`, `tests/TriPeaks.Tests`, `tests/Golf.Tests`, `tests/Yukon.Tests`, `tests/FortyThieves.Tests`, `tests/Easthaven.Tests` | xUnit tests for the kits and card games |
 | `tests/Fluffy.Tests` | xUnit tests for Fluffy |
 | `tests/CodeLock.Tests` | xUnit tests for the code lock rules and solver |
-| `tests/Jentl.Multiplayer.Tests`, `tests/Uno.Tests` | xUnit tests for the multiplayer layer, and Uno's rules and bots |
+| `tests/Jentl.Multiplayer.Tests`, `tests/Uno.Tests`, `tests/Poker.Tests` | xUnit tests for the multiplayer layer, Uno and poker |
 | `tests/Jentl.Rpg.Tests`, `tests/Mossbrook.Tests` | xUnit tests for the RPG kit, and checks of the shipped Mossbrook content |
 | `tools/LevelConverter` | One-shot converter from the old Java level format to XSB |
 | `tools/SolverBench` | `solve`: run the solver over a pack; `generate`: print generated levels as XSB |
@@ -236,3 +237,15 @@ wins the match. On a keyboard: Left/Right pick a card, Enter plays it, Down draw
 
 The bots match colour before number, keep wilds for when nothing else fits, and attack with Skip, Reverse and Draw
 Two when the next player is close to going out; in the tests they beat a random player well over half the time.
+
+## Texas Hold'em
+
+**Card games > Texas Hold'em** is No-Limit Hold'em as a sit-and-go: 1,000 chips each, blinds from 10/20 doubling
+every ten hands, and the last player with chips wins. Play against 1, 3 or 5 bots, or pass the device around between
+2 to 4 people (hole cards stay hidden between turns). Fold, Check or Call, Bet or Raise (- and + step the amount by
+the big blind), or All in; on a keyboard Enter checks or calls, Up raises, Left/Right change the amount and F folds.
+Showdowns name the hands ("Two pair, sevens and threes"), and all-ins for different amounts make side pots.
+
+The bots deal out the unknown cards a hundred and fifty times to estimate their chances, then weigh that against
+the pot odds; each seat plays its own style, from tight and careful to loose and pushy, with the odd bluff. The
+engine (`src/Poker`) is framework-free and runs on the same multiplayer layer as Uno.

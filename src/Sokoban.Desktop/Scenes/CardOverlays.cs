@@ -27,6 +27,7 @@ internal sealed class CardGamesScene : Scene
             new MenuItem("Spider", () => Scenes.Replace(new SpiderSuitsScene(context))),
             new MenuItem("TriPeaks", () => Scenes.Replace(new TriPeaksScene(context), Navigation.Fade())),
             new MenuItem("Yukon", () => Scenes.Replace(new YukonScene(context), Navigation.Fade())),
+            new MenuItem("Texas Hold'em", () => Scenes.Replace(new PokerSetupScene(context))),
             new MenuItem("Uno", () => Scenes.Replace(new UnoSetupScene(context))),
             new MenuItem("Back", () => Scenes.Pop()));
     }

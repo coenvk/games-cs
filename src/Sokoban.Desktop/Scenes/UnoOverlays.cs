@@ -9,37 +9,8 @@ using Uno;
 
 namespace Sokoban.Desktop.Scenes;
 
-/// <summary>Base for the Uno panels: a title, some lines and a menu over the table; Back does <see cref="OnBack"/>.</summary>
-internal abstract class UnoPanelScene(GameContext context) : Scene
-{
-    protected GameContext Context { get; } = context;
-
-    protected Menu Menu { get; set; } = null!;
-
-    public override bool IsOverlay => true;
-
-    protected abstract string Title { get; }
-
-    protected virtual IReadOnlyList<PanelLine> Lines => [];
-
-    public override void Update(TimeSpan elapsed, InputState input)
-    {
-        if (Context.Actions.WasPressed(input, GameAction.Back))
-        {
-            OnBack();
-            return;
-        }
-
-        Menu.Update(input, Context.Actions, elapsed);
-    }
-
-    public override void Draw(SpriteBatch batch, Rectangle viewport) => OverlayPanel.Draw(batch, viewport, Context.Fonts, Title, Lines, Menu);
-
-    protected virtual void OnBack() => Scenes.Pop();
-}
-
 /// <summary>Who plays, from the Card games menu.</summary>
-internal sealed class UnoSetupScene : UnoPanelScene
+internal sealed class UnoSetupScene : PanelScene
 {
     public UnoSetupScene(GameContext context)
         : base(context)
@@ -54,7 +25,7 @@ internal sealed class UnoSetupScene : UnoPanelScene
 }
 
 /// <summary>The colour a wild calls.</summary>
-internal sealed class UnoColourScene : UnoPanelScene
+internal sealed class UnoColourScene : PanelScene
 {
     public UnoColourScene(GameContext context, UnoScene game, UnoCard card)
         : base(context)
@@ -70,7 +41,7 @@ internal sealed class UnoColourScene : UnoPanelScene
 }
 
 /// <summary>Hides the table until the next person has the device.</summary>
-internal sealed class UnoHandoverScene : UnoPanelScene
+internal sealed class UnoHandoverScene : PanelScene
 {
     private readonly string _name;
 
@@ -96,7 +67,7 @@ internal sealed class UnoHandoverScene : UnoPanelScene
 }
 
 /// <summary>The round's winner and points, and the scores so far.</summary>
-internal sealed class UnoRoundScene : UnoPanelScene
+internal sealed class UnoRoundScene : PanelScene
 {
     private readonly UnoScene _game;
 
@@ -143,7 +114,7 @@ internal sealed class UnoRoundScene : UnoPanelScene
     }
 }
 
-internal sealed class UnoPauseScene : UnoPanelScene
+internal sealed class UnoPauseScene : PanelScene
 {
     private readonly UnoScene _game;
 
