@@ -30,7 +30,7 @@ jobs:
       # The engine is public; building its packages here needs no token for GitHub Packages.
       - uses: actions/checkout@v4
         with:
-          repository: coenvk/jentl
+          repository: coenvk/jentl-cs
           ref: v${{ env.JENTL_VERSION }}
           path: jentl
 

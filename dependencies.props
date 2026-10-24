@@ -1,6 +1,6 @@
 <Project>
   <PropertyGroup>
-    <!-- The engine: github.com/coenvk/jentl. build/jentl.sh packs this version. -->
+    <!-- The engine: github.com/coenvk/jentl-cs. build/jentl.sh packs this version. -->
     <JentlVersion>0.1.0</JentlVersion>
     <!-- Game -->
     <MonoGameVersion>3.8.4.1</MonoGameVersion>

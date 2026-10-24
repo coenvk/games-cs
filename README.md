@@ -2,7 +2,7 @@
 
 **Play in your browser: https://coenvk.github.io/sokoban-cs/**
 
-Six small games made with [Jentl](https://github.com/coenvk/jentl), a C# game engine on MonoGame (desktop) and KNI (the
+Six small games made with [Jentl](https://github.com/coenvk/jentl-cs), a C# game engine on MonoGame (desktop) and KNI (the
 browser). It started as a C# rewrite of [coenvk/Sokoban](https://github.com/coenvk/Sokoban), and the engine grew alongside;
 the engine now lives in its own repository and comes in here as packages.
 
@@ -92,7 +92,7 @@ sound effects.
 ## Languages
 
 The games speak English and Dutch. **Options > Language** picks one, or "Automatic" follows the system (the browser's
-language on the web). Translations live in `shell/Assets/lang` (one file for all the games); see [Jentl's guide](https://github.com/coenvk/jentl/blob/main/docs/kits.md) for
+language on the web). Translations live in `shell/Assets/lang` (one file for all the games); see [Jentl's guide](https://github.com/coenvk/jentl-cs/blob/main/docs/kits.md) for
 how to add one. The adventure's story text (dialogue, quests, items) is in English only.
 
 ## Controls
@@ -218,7 +218,7 @@ empty columns take anything), Forty Thieves (two decks, build down in suit one c
 columns onto the waste; the score is the cards left), Pyramid, Spider (1, 2 or 4 suits), TriPeaks and Yukon (move any
 face-up card with everything on it). Drag cards or tap one to send it where it fits,
 with undo, hints and automatic moves home. FreeCell deal numbers match Microsoft FreeCell (deal 1 is the classic deal 1).
-[Jentl's guide](https://github.com/coenvk/jentl/blob/main/docs/kits.md) explains how to build a new puzzle or card game with the kits.
+[Jentl's guide](https://github.com/coenvk/jentl-cs/blob/main/docs/kits.md) explains how to build a new puzzle or card game with the kits.
 
 ## Mossbrook
 
@@ -263,7 +263,7 @@ end screen points out a new best. Only finished locks count; one left half-crack
 ## Bricks
 
 **Bricks** is a brick breaker built on Jentl's entity component system and physics (see
-[Jentl's guide](https://github.com/coenvk/jentl/blob/main/docs/kits.md)). Steer the paddle with the mouse, a finger, the arrow keys or a gamepad, and launch with a
+[Jentl's guide](https://github.com/coenvk/jentl-cs/blob/main/docs/kits.md)). Steer the paddle with the mouse, a finger, the arrow keys or a gamepad, and launch with a
 tap, Enter or A. Where the ball lands on the paddle sets its angle. Bricks come in one-hit, two-hit (they crack) and
 unbreakable kinds, over four walls that come round again faster; one brick in six drops a power-up to catch: **W**
 widens the paddle, **M** splits each ball into three, **+** is an extra life. Three lives. `--deal` picks the seed,
@@ -284,7 +284,7 @@ to 4 players and share the four-digit code it shows, or "Join a room" and type a
 bots fill any empty seats (and take over for anyone who leaves). Run a server with `dotnet run --project
 src/GameServer` (port 5080); the app connects to `ws://localhost:5080/play` unless told otherwise: `--server
 wss://example.org/play` or the `JENTL_SERVER` variable on the desktop, `?server=wss://example.org/play` in the page
-address in the browser. See [Jentl's guide](https://github.com/coenvk/jentl/blob/main/docs/kits.md) for how it works and how to host it.
+address in the browser. See [Jentl's guide](https://github.com/coenvk/jentl-cs/blob/main/docs/kits.md) for how it works and how to host it.
 
 The bots match colour before number, keep wilds for when nothing else fits, and attack with Skip, Reverse and Draw
 Two when the next player is close to going out; in the tests they beat a random player well over half the time.
