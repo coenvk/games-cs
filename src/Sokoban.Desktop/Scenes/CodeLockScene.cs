@@ -3,6 +3,7 @@ using CodeLock;
 using Jentl.Core.Graphics;
 using Jentl.Core.Input;
 using Jentl.Core.Scenes;
+using Jentl.Core.Timing;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -24,6 +25,7 @@ internal sealed class CodeLockScene : Scene
     private static readonly TimeSpan MessageDuration = TimeSpan.FromSeconds(3);
     private static readonly TimeSpan OpenTime = TimeSpan.FromMilliseconds(500);
     private static readonly TimeSpan EndDelay = TimeSpan.FromMilliseconds(900);
+    private static readonly TimeSpan SecondSparks = TimeSpan.FromMilliseconds(350);
     private static readonly Color Exact = new(86, 196, 110);
     private static readonly Color Misplaced = new(240, 176, 48);
     private static readonly Color Unlit = new(58, 64, 84);
@@ -47,8 +49,6 @@ internal sealed class CodeLockScene : Scene
     private int _selected;
     private string? _message;
     private TimeSpan _messageFor;
-    private TimeSpan _endIn;
-    private bool _endShown;
     private Rectangle _padlock;
     private Tween _shackle = Tween.At(Vector2.Zero);
 
@@ -94,13 +94,6 @@ internal sealed class CodeLockScene : Scene
         _messageFor -= elapsed;
         if (Game.IsOver)
         {
-            _endIn -= elapsed;
-            if (!_endShown && _endIn <= TimeSpan.Zero)
-            {
-                _endShown = true;
-                Scenes.Push(new CodeLockEndScene(_context, this));
-            }
-
             return;
         }
 
@@ -298,9 +291,26 @@ internal sealed class CodeLockScene : Scene
 
         if (Game.IsOver)
         {
-            _endIn = EndDelay;
             Result = _context.Locks.Record(Difficulty, Game.IsSolved, Game.Attempts.Count);
+            Timers.Start(Ending());
         }
+    }
+
+    /// <summary>A beat to see the last try (and, when solved, a second puff of sparks as the shackle springs), then the end panel.</summary>
+    private IEnumerable<Wait?> Ending()
+    {
+        if (Game.IsSolved)
+        {
+            yield return Wait.For(SecondSparks);
+            Celebration.Sparkle(Scenes, _padlock.Center.ToVector2(), ParticleEffects.Rise);
+            yield return Wait.For(EndDelay - SecondSparks);
+        }
+        else
+        {
+            yield return Wait.For(EndDelay);
+        }
+
+        Scenes.Push(new CodeLockEndScene(_context, this));
     }
 
     private void ShowHint()
