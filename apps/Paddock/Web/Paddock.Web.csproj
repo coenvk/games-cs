@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <!-- Paddock in the browser. -->
+
+  <PropertyGroup>
+    <AppName>Paddock.Game</AppName>
+    <AppTitle>Paddock</AppTitle>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\shell\Web.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Paddock\Paddock.csproj" />
+  </ItemGroup>
+
+</Project>

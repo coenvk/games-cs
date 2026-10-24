@@ -1,5 +1,7 @@
 <Solution>
   <Folder Name="/apps/">
+    <Project Path="apps/Paddock/Desktop/Paddock.Desktop.csproj" />
+    <Project Path="apps/Paddock/Web/Paddock.Web.csproj" />
     <Project Path="apps/Sokoban/Desktop/Sokoban.Desktop.csproj" />
     <Project Path="apps/Sokoban/Web/Sokoban.Web.csproj" />
     <Project Path="apps/Solitaire/Desktop/Solitaire.Desktop.csproj" />

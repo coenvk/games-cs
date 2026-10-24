@@ -81,6 +81,7 @@ internal sealed class OptionsScene : Scene
         }));
         // Not saved: a tool for the session (F3 does the same).
         rows.Add(new ToggleRow(T("Debug overlay"), () => Scenes.Debug.IsVisible, on => Scenes.Debug.IsVisible = on));
+        rows.AddRange(context.App.Options(context));
         rows.Add(new ButtonRow(T("Back"), () => Scenes.Pop()));
         _form = new Form(context.Sounds, [.. rows]);
     }

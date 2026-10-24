@@ -56,6 +56,9 @@ internal interface IGameApp
 
     /// <summary>The scenes to start with, bottom first: the title screen, perhaps with a game on top (<c>--level</c>).</summary>
     IReadOnlyList<Scene> Start(GameContext context) => [MainMenu(context)];
+
+    /// <summary>The game's own rows in the Options panel, shown above Back.</summary>
+    IEnumerable<FormRow> Options(GameContext context) => [];
 }
 
 /// <summary>
