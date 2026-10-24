@@ -60,7 +60,7 @@ public sealed record RaceRun(double Time, IReadOnlyList<double> TimeAtMetre)
 
 /// <summary>
 /// Works out how a car runs a track, metre by metre, from its stats and the condition. Deterministic: only
-/// arithmetic, <see cref="Math.Sqrt"/> and <see cref="Math.Log"/>, so every platform gets the same bits.
+/// arithmetic, <see cref="Math.Sqrt"/> (exactly rounded by IEEE 754) and <see cref="Arith.Log"/>, so every platform gets the same bits.
 /// </summary>
 public static class RaceSimulator
 {
@@ -128,7 +128,7 @@ public static class RaceSimulator
 
         // Engine pull falls off towards top speed: a(v) = A (1 - v / top), with A set so 0-100 km/h takes the stat's time.
         // A car that cannot reach 100 km/h takes the stat's time to reach 90% of its top speed instead.
-        var pull = -(engineTop / car.ZeroTo100) * Math.Log(1 - (Math.Min(27.78, 0.9 * engineTop) / engineTop));
+        var pull = -(engineTop / car.ZeroTo100) * Arith.Log(1 - (Math.Min(27.78, 0.9 * engineTop) / engineTop));
         var traction = Balance.TyreGrip(car.Tyres, condition) * rough * Balance.G * Balance.DriveTraction(car.Drive);
         var speeds = new double[metres + 1];
         for (var m = 0; m < metres; m++)

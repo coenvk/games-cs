@@ -105,9 +105,9 @@
       "paint": "#3c7a4a",
       "trim": "#2a2a2a",
       "stats": {
-        "topSpeedKmh": 135,
+        "topSpeedKmh": 127,
         "zeroTo100": 15,
-        "handling": 45,
+        "handling": 52,
         "weightKg": 1007,
         "drive": "Fwd",
         "tyres": "Standard",
@@ -300,7 +300,7 @@
         "handling": 34,
         "weightKg": 1976,
         "drive": "Awd",
-        "tyres": "OffRoad",
+        "tyres": "AllSurface",
         "clearance": "High"
       }
     },
@@ -352,10 +352,10 @@
       "paint": "#c25a8a",
       "trim": "#c8c8c8",
       "stats": {
-        "topSpeedKmh": 131,
+        "topSpeedKmh": 121,
         "zeroTo100": 15.7,
-        "handling": 44,
-        "weightKg": 1242,
+        "handling": 52,
+        "weightKg": 1118,
         "drive": "Rwd",
         "tyres": "Standard",
         "clearance": "Mid"
@@ -448,9 +448,9 @@
       "trim": "#2a2a2a",
       "stats": {
         "topSpeedKmh": 158,
-        "zeroTo100": 14.3,
+        "zeroTo100": 13.2,
         "handling": 46,
-        "weightKg": 1449,
+        "weightKg": 1623,
         "drive": "Rwd",
         "tyres": "Standard",
         "clearance": "Mid"
@@ -470,7 +470,7 @@
         "zeroTo100": 13.2,
         "handling": 53,
         "weightKg": 1319,
-        "drive": "Fwd",
+        "drive": "Rwd",
         "tyres": "Standard",
         "clearance": "Mid"
       }
@@ -485,10 +485,10 @@
       "paint": "#4b4c55",
       "trim": "#c8c8c8",
       "stats": {
-        "topSpeedKmh": 154,
+        "topSpeedKmh": 166,
         "zeroTo100": 13.6,
-        "handling": 47,
-        "weightKg": 1209,
+        "handling": 41,
+        "weightKg": 1427,
         "drive": "Rwd",
         "tyres": "Standard",
         "clearance": "Mid"
@@ -941,9 +941,9 @@
       "paint": "#e86a1c",
       "trim": "#2a2a2a",
       "stats": {
-        "topSpeedKmh": 198,
+        "topSpeedKmh": 188,
         "zeroTo100": 11.8,
-        "handling": 54,
+        "handling": 62,
         "weightKg": 1007,
         "drive": "Fwd",
         "tyres": "Performance",
@@ -1283,10 +1283,10 @@
       "paint": "#1c1c22",
       "trim": "#2a2a2a",
       "stats": {
-        "topSpeedKmh": 213,
+        "topSpeedKmh": 200,
         "zeroTo100": 9.6,
-        "handling": 67,
-        "weightKg": 1087,
+        "handling": 73,
+        "weightKg": 957,
         "drive": "Rwd",
         "tyres": "Performance",
         "clearance": "Low"
@@ -1302,9 +1302,9 @@
       "paint": "#2b4a7a",
       "trim": "#2a2a2a",
       "stats": {
-        "topSpeedKmh": 227,
+        "topSpeedKmh": 245,
         "zeroTo100": 9.2,
-        "handling": 64,
+        "handling": 58,
         "weightKg": 1002,
         "drive": "Fwd",
         "tyres": "Performance",
@@ -1568,9 +1568,9 @@
       "paint": "#c25a8a",
       "trim": "#2a2a2a",
       "stats": {
-        "topSpeedKmh": 307,
+        "topSpeedKmh": 335,
         "zeroTo100": 5.3,
-        "handling": 80,
+        "handling": 72,
         "weightKg": 1537,
         "drive": "Rwd",
         "tyres": "Performance",
@@ -1644,10 +1644,10 @@
       "paint": "#7a1f2b",
       "trim": "#2a2a2a",
       "stats": {
-        "topSpeedKmh": 289,
+        "topSpeedKmh": 272,
         "zeroTo100": 5.6,
-        "handling": 76,
-        "weightKg": 1494,
+        "handling": 83,
+        "weightKg": 1345,
         "drive": "Rwd",
         "tyres": "Performance",
         "clearance": "Low"
@@ -1702,10 +1702,10 @@
       "trim": "#2a2a2a",
       "stats": {
         "topSpeedKmh": 292,
-        "zeroTo100": 5.3,
+        "zeroTo100": 4.8,
         "handling": 80,
         "weightKg": 1501,
-        "drive": "Rwd",
+        "drive": "Awd",
         "tyres": "Performance",
         "clearance": "Low"
       }
@@ -1721,9 +1721,9 @@
       "trim": "#2a2a2a",
       "stats": {
         "topSpeedKmh": 288,
-        "zeroTo100": 5.5,
+        "zeroTo100": 4.8,
         "handling": 74,
-        "weightKg": 1372,
+        "weightKg": 1537,
         "drive": "Awd",
         "tyres": "Performance",
         "clearance": "Low"
@@ -1796,9 +1796,9 @@
       "paint": "#e0a030",
       "trim": "#2a2a2a",
       "stats": {
-        "topSpeedKmh": 340,
+        "topSpeedKmh": 316,
         "zeroTo100": 2.8,
-        "handling": 85,
+        "handling": 92,
         "weightKg": 1538,
         "drive": "Rwd",
         "tyres": "Performance",
@@ -1815,10 +1815,10 @@
       "paint": "#b8b8c0",
       "trim": "#2a2a2a",
       "stats": {
-        "topSpeedKmh": 354,
-        "zeroTo100": 2.9,
+        "topSpeedKmh": 333,
+        "zeroTo100": 2.5,
         "handling": 82,
-        "weightKg": 1568,
+        "weightKg": 1756,
         "drive": "Awd",
         "tyres": "Performance",
         "clearance": "Low"

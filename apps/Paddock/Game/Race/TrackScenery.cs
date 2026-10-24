@@ -14,7 +14,7 @@ internal static class TrackScenery
 
     public static void Decorate(Color[] pixels, Rectangle bounds, RoadStyle style, TrackDef track, Condition condition)
     {
-        var random = new Random(Seed(track.Id));
+        var random = new Random(Jentl.Collect.StableSeed.Of(track.Id));
         var (width, height) = (bounds.Width, bounds.Height);
         bool IsGround(int x, int y) => x >= 0 && y >= 0 && x < width && y < height && pixels[(y * width) + x] == style.Ground;
 
@@ -132,15 +132,4 @@ internal static class TrackScenery
     private static Color Darker(Color c, float t) => Color.Lerp(c, Color.Black, t);
 
     private static Color Lighter(Color c, float t) => Color.Lerp(c, Color.White, t);
-
-    private static int Seed(string text)
-    {
-        var hash = 2166136261u;
-        foreach (var ch in text)
-        {
-            hash = (hash ^ ch) * 16777619u;
-        }
-
-        return (int)(hash & 0x7fffffff);
-    }
 }

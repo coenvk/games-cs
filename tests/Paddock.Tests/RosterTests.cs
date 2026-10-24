@@ -56,7 +56,7 @@ public class RosterTests
         ids.Select(Cars.Rq).Should().Equal(Snapshot);
     }
 
-    private static readonly int[] Snapshot = [19, 21, 53, 70, 82];
+    private static readonly int[] Snapshot = [19, 21, 53, 73, 82];
 
     [Fact]
     public void Roster_NoRealMakers()

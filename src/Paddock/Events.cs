@@ -154,6 +154,18 @@ public static class EventPlay
         return progress with { Tickets = Tickets.Current(progress.Tickets, now) };
     }
 
+    /// <summary>Forgets progress in events that are no longer running, so the save doesn't grow by one a day.</summary>
+    public static void Prune(Profile profile, IReadOnlyList<LiveEvent> live)
+    {
+        ArgumentNullException.ThrowIfNull(profile);
+        ArgumentNullException.ThrowIfNull(live);
+        var running = live.Select(e => e.InstanceId).ToHashSet();
+        foreach (var gone in profile.Events.Keys.Where(k => !running.Contains(k)).ToList())
+        {
+            profile.Events.Remove(gone);
+        }
+    }
+
     /// <summary>The cars of the garage that may enter.</summary>
     public static IEnumerable<CarInstance> Eligible(Profile profile, LiveEvent ev, Roster roster)
     {
@@ -168,7 +180,8 @@ public static class EventPlay
     {
         var progress = Progress(profile, ev, now);
         var cheapest = Eligible(profile, ev, roster).Select(c => roster.Rq(c.ModelId)).Order().Take(Hands.Size).ToList();
-        why = progress.Rung >= Rungs ? "Event finished"
+        why = now >= ev.Ends ? "Event ended"
+            : progress.Rung >= Rungs ? "Event finished"
             : cheapest.Count < Hands.Size || cheapest.Sum() > ev.Def.Rules.HandRqLimit ? "Not enough cars that may enter"
             : progress.Tickets.Count <= 0 ? "No tickets left"
             : null;
@@ -181,7 +194,7 @@ public static class EventPlay
         ArgumentNullException.ThrowIfNull(ev);
         ArgumentNullException.ThrowIfNull(roster);
         ArgumentNullException.ThrowIfNull(tracks);
-        var random = new Random(Seed($"{ev.InstanceId}#{rung}"));
+        var random = new Random(StableSeed.Of($"{ev.InstanceId}#{rung}"));
         var rules = ev.Def.Rules;
         var strength = 0.6 + (0.4 * Math.Min(rung, Rungs - 1) / (Rungs - 1));
         var opponent = Opponents.Pick(roster, m => rules.Allows(m, roster.Rq(m.Id)), rules.HandRqLimit, strength, upgrades: Math.Min(rung, Upgrades.PointsPerStage), random);
@@ -242,18 +255,6 @@ public static class EventPlay
         profile.LastHand = [.. order];
         return new EventOutcome(result, newCars, cash, xp);
     }
-
-    // A seed that is the same on every platform and every run (string.GetHashCode is not).
-    internal static int Seed(string text)
-    {
-        var hash = 2166136261u;
-        foreach (var c in text)
-        {
-            hash = (hash ^ c) * 16777619u;
-        }
-
-        return (int)(hash & 0x7fffffff);
-    }
 }
 
 /// <summary>Opponents for events and the campaign.</summary>
@@ -276,6 +277,10 @@ public static class Opponents
         }
 
         var cheapest = roster.Rq(pool[0].Id);
+        if (cheapest * Hands.Size > rqLimit)
+        {
+            throw new InvalidOperationException($"Five cars can't fit an RQ limit of {rqLimit}.");
+        }
         var left = rqLimit;
         var target = rqLimit * strength;
         var hand = new List<CarInstance>();

@@ -52,6 +52,18 @@ public static class CampaignPlay
         return index == 0 || (index > 0 && profile.Campaign.Won(all[index - 1]) > 0);
     }
 
+    /// <summary>Whether the player can race <paramref name="stage"/>: it is open, and five cars fit its limit. If not, <paramref name="why"/> says why (English, for translation).</summary>
+    public static bool CanEnter(Profile profile, IReadOnlyList<RegionDef> regions, StageDef stage, Roster roster, out string? why)
+    {
+        ArgumentNullException.ThrowIfNull(profile);
+        ArgumentNullException.ThrowIfNull(roster);
+        var cheapest = profile.Garage.Where(c => roster.Find(c.ModelId) is not null).Select(c => roster.Rq(c.ModelId)).Order().Take(Hands.Size).ToList();
+        why = !IsOpen(profile, regions, stage) ? "Win the stage before this one first."
+            : cheapest.Count < Hands.Size || cheapest.Sum() > HandLimit(profile, stage) ? "Not enough cars that may enter"
+            : null;
+        return why is null;
+    }
+
     /// <summary>The hand's RQ limit here: the stage's, or the player's level's if that is lower, so levelling up opens later stages fully.</summary>
     public static int HandLimit(Profile profile, StageDef stage)
     {
@@ -64,7 +76,7 @@ public static class CampaignPlay
     public static MatchSetup Setup(StageDef stage, Roster roster, IReadOnlyList<TrackDef> tracks)
     {
         ArgumentNullException.ThrowIfNull(stage);
-        var random = new Random(EventPlay.Seed(stage.Id));
+        var random = new Random(Jentl.Collect.StableSeed.Of(stage.Id));
         var upgrades = Math.Min(Upgrades.PointsPerStage, (stage.HandRqLimit - Balance.FirstRqLimit) / 50);
         var opponent = Opponents.Pick(roster, _ => true, stage.HandRqLimit, Balance.CampaignStrength, upgrades, random);
         return new MatchSetup(Opponents.Rounds(stage.TrackIds, tracks, random), opponent);
