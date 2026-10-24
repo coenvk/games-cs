@@ -34,6 +34,9 @@ internal sealed class RaceScene : Scene
     private Phase _phase;
     private CircuitView? _circuit;
     private DragView? _drag;
+
+    // Painted tracks, kept for the match: a track and condition that come round again are not painted twice.
+    private readonly Dictionary<(string Track, Condition Condition), TrackArt> _arts = [];
     private Menu? _menu;
 
     /// <param name="player">The player's cars in round order.</param>
@@ -119,13 +122,16 @@ internal sealed class RaceScene : Scene
 
     protected override void Dispose(bool disposing)
     {
-        _circuit?.Art.Dispose();
+        foreach (var art in _arts.Values)
+        {
+            art.Dispose();
+        }
+
         base.Dispose(disposing);
     }
 
     private void StartRound(int round)
     {
-        _circuit?.Art.Dispose();
         (_circuit, _drag) = (null, null);
         _round = round;
         _seconds = 0;
@@ -142,7 +148,10 @@ internal sealed class RaceScene : Scene
         }
         else
         {
-            var art = TrackArt.Build(_context.PaddockData.Cars.Texture.GraphicsDevice, track, condition);
+            if (!_arts.TryGetValue((track.Id, condition), out var art))
+            {
+                art = _arts[(track.Id, condition)] = TrackArt.Build(_context.PaddockData.Cars.Texture.GraphicsDevice, track, condition);
+            }
             _circuit = new CircuitView(art, mine, theirs, _context.Paddock.Settings.Value.RaceCamera);
         }
 
