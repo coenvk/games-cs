@@ -11,6 +11,7 @@ internal static class Music
     public const string Table = "music-table";
     public const string Village = "music-village";
     public const string Cellar = "music-cellar";
+    public const string Race = "music-race";
 }
 
 /// <summary>
@@ -89,6 +90,20 @@ internal static class GameAudio
             new Voice(Flute with { Volume = 0.2f }, ". . F4 - E4 . . . | D4 - - - . . . . | . . F4 - G4 . A4 . | E4 - - - . . . . | . . . . . . . . | . . . . . . . . | . . A4 - Bb4 . A4 . | D4 - - - . . . ."),
             new Voice(Pad with { Volume = 0.22f }, Twice("D2 - - - - - - - | D2 - - - - - - - | Bb1 - - - - - - - | A1 - - - - - - -")),
             new Voice(Hat with { Volume = 0.04f }, Repeat("x . . . . . . . . . . . . . . . ", 4))));
+
+        // Paddock's races: driving rock in E minor, a riff over pumping eighths, then a lift into the chorus.
+        var snare = new Instrument(Wave.Noise, Volume: 0.11f, Decay: 0.09f, Sustain: 0, Release: 0.03f);
+        yield return (Music.Race, new Tune(
+            150,
+            new Voice(Lead, "E5 . E5 G5 . E5 D5 . | B4 - - - . . A4 B4 | C5 . C5 E5 . C5 B4 . | D5 - - - F#5 - G5 A5 | "
+                + "B5 - A5 G5 - E5 D5 E5 | G5 - F#5 E5 - D5 B4 - | C5 - E5 G5 - A5 G5 E5 | F#5 - - - D5 - F#5 - | "
+                + "E5 . E5 G5 . E5 D5 . | B4 - - - . . D5 E5 | C5 . C5 E5 . G5 F#5 . | D5 - - - A4 - B4 D5 | "
+                + "E5 - G5 B5 - A5 G5 F#5 | G5 - E5 D5 - B4 A4 B4 | C5 - - E5 - - G5 - | E5 - - - . . . ."),
+            new Voice(Arp, Twice(Twice("E4 G4 B4 G4 E4 G4 B4 G4 | E4 G4 B4 G4 E4 G4 B4 G4 | C4 E4 G4 E4 C4 E4 G4 E4 | D4 F#4 A4 F#4 D4 F#4 A4 F#4"))),
+            new Voice(Bass, Twice(Twice("E2 E2 E3 E2 E2 E2 D3 E2 | E2 E2 E3 E2 G2 G2 A2 B2 | C2 C2 C3 C2 C2 C2 B2 C3 | D2 D2 D3 D2 D2 D2 F#2 A2"))),
+            new Voice(Kick, Repeat("C2 . . C2 C2 . . . ", 16)),
+            new Voice(snare, Repeat(". . x . . . x . ", 16)),
+            new Voice(Hat, Repeat("x x x x x x x x ", 16))));
     }
 
     public static IEnumerable<(string Name, Tune Tune)> Effects()
