@@ -251,6 +251,15 @@ Each difficulty keeps its record in `codelock.json`, next to `progress.json` (in
 played and won, the fewest tries, and the current and longest winning streak. The difficulty menu shows them, and the
 end screen points out a new best. Only finished locks count; one left half-cracked is neither a win nor a loss.
 
+## Bricks
+
+**Bricks** on the main menu is a brick breaker built on Jentl's entity component system and physics (see
+[docs/kits.md](docs/kits.md)). Steer the paddle with the mouse, a finger, the arrow keys or a gamepad, and launch with a
+tap, Enter or A. Where the ball lands on the paddle sets its angle. Bricks come in one-hit, two-hit (they crack) and
+unbreakable kinds, over four walls that come round again faster; one brick in six drops a power-up to catch: **W**
+widens the paddle, **M** splits each ball into three, **+** is an extra life. Three lives. `--deal` picks the seed,
+and the debug overlay (F3) outlines every physics body.
+
 ## Uno
 
 **Card games > Uno** plays Uno against computer opponents (you and 1 to 3 bots) or with 2 to 4 people passing the

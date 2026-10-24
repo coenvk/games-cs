@@ -24,6 +24,9 @@
     <Project Path="src/Uno/Uno.csproj" />
     <Project Path="src/Easthaven/Easthaven.csproj" />
     <Project Path="src/Golf/Golf.csproj" />
+    <Project Path="src/Jentl.Ecs/Jentl.Ecs.csproj" />
+    <Project Path="src/Jentl.Physics/Jentl.Physics.csproj" />
+    <Project Path="src/Bricks/Bricks.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/CodeLock.Tests/CodeLock.Tests.csproj" />
@@ -47,6 +50,9 @@
     <Project Path="tests/Uno.Tests/Uno.Tests.csproj" />
     <Project Path="tests/Easthaven.Tests/Easthaven.Tests.csproj" />
     <Project Path="tests/Golf.Tests/Golf.Tests.csproj" />
+    <Project Path="tests/Jentl.Ecs.Tests/Jentl.Ecs.Tests.csproj" />
+    <Project Path="tests/Jentl.Physics.Tests/Jentl.Physics.Tests.csproj" />
+    <Project Path="tests/Bricks.Tests/Bricks.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/">
     <Project Path="tools/LevelConverter/LevelConverter.csproj" />

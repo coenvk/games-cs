@@ -105,6 +105,7 @@ internal sealed class MenuScene : Scene
             new("Card games", () => Scenes.Push(new CardGamesScene(context))),
             new("Adventure", () => Scenes.Push(context.Adventures.Exists ? new AdventureMenuScene(context) : AdventureScene.New(context), Navigation.Fade())),
             new("Code lock", () => Scenes.Push(new CodeLockLevelsScene(context))),
+            new("Bricks", () => Scenes.Push(new BricksScene(context), Navigation.Fade())),
             new("Options", () => Scenes.Push(new OptionsScene(context))),
         ];
         if (context.Platform.CanQuit)

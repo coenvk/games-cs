@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Brick-breaking rules on the Jentl ECS and physics; framework-free like them. -->
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Bricks.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Jentl.Ecs\Jentl.Ecs.csproj" />
+    <ProjectReference Include="..\Jentl.Physics\Jentl.Physics.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -30,6 +30,7 @@
     <ProjectReference Include="..\Golf\Golf.csproj" />
     <ProjectReference Include="..\Mossbrook\Mossbrook.csproj" />
     <ProjectReference Include="..\CodeLock\CodeLock.csproj" />
+    <ProjectReference Include="..\Bricks\Bricks.csproj" />
   </ItemGroup>
 
   <ItemGroup>
