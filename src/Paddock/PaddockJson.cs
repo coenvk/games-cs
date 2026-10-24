@@ -7,4 +7,5 @@ namespace Paddock;
 [JsonSourceGenerationOptions(JsonSerializerDefaults.Web, UseStringEnumConverter = true, WriteIndented = true)]
 [JsonSerializable(typeof(RosterFile))]
 [JsonSerializable(typeof(TracksFile))]
+[JsonSerializable(typeof(Profile))]
 internal sealed partial class PaddockJson : JsonSerializerContext;

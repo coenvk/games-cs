@@ -89,6 +89,30 @@ public static class Balance
         (0.70, 1), (0.845, 20), (0.8855, 30), (0.932, 40), (1.0, 50), (1.059, 65), (1.158, 80), (1.40, 110),
     ];
 
+    /// <summary>A new player's cash.</summary>
+    public const long StartingCash = 5_000;
+
+    /// <summary>The hand's RQ limit at level 1.</summary>
+    public const int FirstRqLimit = 100;
+
+    /// <summary>The RQ limit gained per level.</summary>
+    public const int RqLimitPerLevel = 20;
+
+    /// <summary>The highest RQ limit.</summary>
+    public const int MaxRqLimit = 500;
+
+    /// <summary>Experience to the next level is this times the level.</summary>
+    public const int XpPerLevel = 50;
+
+    /// <summary>Cash for a win against cars of RQ 0; scaled up by the opponent's average RQ. A loss pays a third.</summary>
+    public const double WinCash = 150;
+
+    /// <summary>Experience for a won match.</summary>
+    public const int WinXp = 10;
+
+    /// <summary>Experience for a lost match.</summary>
+    public const int LossXp = 4;
+
     /// <summary>Braking as a share of cornering grip.</summary>
     public const double Braking = 0.9;
 }
