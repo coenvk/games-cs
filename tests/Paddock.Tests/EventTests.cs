@@ -236,3 +236,15 @@ public class EventTests
         throw new InvalidOperationException("Could not win with the strongest cars.");
     }
 }
+
+public class RulesWordingTests
+{
+    [Fact]
+    public void Describe_NamesValuesThroughTheNamer()
+    {
+        var rules = new EntryRules(HandRqLimit: 150, Tyres: [Tyres.AllSurface, Tyres.OffRoad], Bodies: [Body.Suv]);
+
+        rules.Describe(s => s, value => value is Tyres.AllSurface ? "All-surface" : value is Tyres.OffRoad ? "Off-road" : value.ToString()!)
+            .Should().Equal("Hand RQ up to 150", "Tyres: All-surface, Off-road", "Bodies: Suv");
+    }
+}

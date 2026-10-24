@@ -29,10 +29,12 @@ public sealed record EntryRules(
             && (Countries is null || Countries.Contains(model.Country));
     }
 
-    /// <summary>The rules as lines for the screen, each made from an English template passed through <paramref name="translate"/>.</summary>
-    public IReadOnlyList<string> Describe(Func<string, string> translate)
+    /// <summary>The rules as lines for the screen, each made from an English template passed through <paramref name="translate"/>; values (tyres, bodies, classes, countries) are named by <paramref name="name"/>.</summary>
+    public IReadOnlyList<string> Describe(Func<string, string> translate, Func<object, string>? name = null)
     {
         ArgumentNullException.ThrowIfNull(translate);
+        name ??= value => value.ToString() ?? string.Empty;
+        string Names<T>(IEnumerable<T> values) => string.Join(", ", values.Select(v => name(v!)));
         string Line(string template, params object[] values) => string.Format(CultureInfo.InvariantCulture, translate(template), values);
         var lines = new List<string> { Line("Hand RQ up to {0}", HandRqLimit) };
         if (MaxCarRq is { } max)
@@ -42,7 +44,7 @@ public sealed record EntryRules(
 
         if (Classes is not null)
         {
-            lines.Add(Line("Classes: {0}", string.Join(", ", Classes)));
+            lines.Add(Line("Classes: {0}", Names(Classes)));
         }
 
         lines.Add((YearFrom, YearTo) switch
@@ -54,17 +56,17 @@ public sealed record EntryRules(
         });
         if (Tyres is not null)
         {
-            lines.Add(Line("Tyres: {0}", string.Join(", ", Tyres)));
+            lines.Add(Line("Tyres: {0}", Names(Tyres)));
         }
 
         if (Bodies is not null)
         {
-            lines.Add(Line("Bodies: {0}", string.Join(", ", Bodies)));
+            lines.Add(Line("Bodies: {0}", Names(Bodies)));
         }
 
         if (Countries is not null)
         {
-            lines.Add(Line("From: {0}", string.Join(", ", Countries)));
+            lines.Add(Line("From: {0}", Names(Countries)));
         }
 
         return [.. lines.Where(l => l.Length > 0)];

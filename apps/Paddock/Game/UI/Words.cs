@@ -61,6 +61,31 @@ internal static class Words
         _ => T("Clearance"),
     };
 
+    public static string Of(Body body) => body switch
+    {
+        Body.Hatchback => T("Hatchback"),
+        Body.Saloon => T("Saloon"),
+        Body.Estate => T("Estate"),
+        Body.Coupe => T("Coupé"),
+        Body.Roadster => T("Roadster"),
+        Body.Muscle => T("Muscle car"),
+        Body.Suv => T("SUV"),
+        Body.Pickup => T("Pickup"),
+        Body.Rally => T("Rally car"),
+        Body.Supercar => T("Supercar"),
+        Body.Hypercar => T("Hypercar"),
+        _ => T("Van"),
+    };
+
+    /// <summary>A rule's value as shown (tyres, bodies and countries translated, classes as letters).</summary>
+    public static string Name(object value) => value switch
+    {
+        Tyres tyres => Of(tyres),
+        Body body => Of(body),
+        string country => T(country),
+        _ => value.ToString() ?? string.Empty,
+    };
+
     public static string Of(Area area) => area switch
     {
         Area.Engine => T("Engine"),
