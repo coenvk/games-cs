@@ -13,6 +13,15 @@ internal static class Sound
 {
     public const string Navigate = "navigate";
     public const string Completed = "completed";
+    public const string Card = "card";
+    public const string Error = "error";
+    public const string Hit = "hit";
+    public const string Pickup = "pickup";
+    public const string LevelUp = "levelup";
+    public const string Fanfare = "fanfare";
+    public const string Chips = "chips";
+    public const string Click = "click";
+    public const string Lose = "lose";
 }
 
 /// <param name="Name">Shown on the level select tab.</param>

@@ -110,6 +110,8 @@ internal sealed class PlayScene : Scene
     /// <summary>What the most recent solve improved on.</summary>
     public Improvement LastImprovement { get; private set; }
 
+    protected override void OnEnter() => _context.Sounds.PlayMusic(Music.Puzzle);
+
     public override void Update(TimeSpan elapsed, InputState input)
     {
         var actions = _context.Actions;

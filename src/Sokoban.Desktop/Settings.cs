@@ -8,8 +8,13 @@ internal sealed class Settings
 {
     public bool Sound { get; set; } = true;
 
-    /// <summary>Sound volume from 0 to 1.</summary>
+    /// <summary>Sound effects volume from 0 to 1.</summary>
     public float Volume { get; set; } = 1f;
+
+    public bool Music { get; set; } = true;
+
+    /// <summary>Music volume from 0 to 1.</summary>
+    public float MusicVolume { get; set; } = 0.6f;
 
     public bool Fullscreen { get; set; }
 

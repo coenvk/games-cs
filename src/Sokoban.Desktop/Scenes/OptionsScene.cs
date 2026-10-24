@@ -8,7 +8,7 @@ using Sokoban.Desktop.Input;
 
 namespace Sokoban.Desktop.Scenes;
 
-/// <summary>Sound, volume and fullscreen, shown over the menu or a paused game. Changes save immediately.</summary>
+/// <summary>Music and sound effects (each with a volume) and fullscreen, shown over the menu or a paused game. Changes save immediately.</summary>
 internal sealed class OptionsScene : Scene
 {
     private readonly GameContext _context;
@@ -18,20 +18,34 @@ internal sealed class OptionsScene : Scene
     {
         _context = context;
         var settings = context.Settings.Value;
+        static string Percent(float v) => string.Create(CultureInfo.InvariantCulture, $"{v * 100:0}%");
         List<FormRow> rows =
         [
-            new ToggleRow("Sound", () => settings.Sound, on =>
+            new ToggleRow("Music", () => settings.Music, on =>
+            {
+                settings.Music = on;
+                context.Sounds.MusicEnabled = on;
+                Save();
+            }),
+            new SliderRow("Music volume", () => settings.MusicVolume, volume =>
+            {
+                settings.MusicVolume = volume;
+                context.Sounds.MusicVolume = volume;
+                Save();
+            }, step: 0.1f, format: Percent),
+            new ToggleRow("Sound effects", () => settings.Sound, on =>
             {
                 settings.Sound = on;
                 context.Sounds.Enabled = on;
                 Save();
             }),
-            new SliderRow("Volume", () => settings.Volume, volume =>
+            new SliderRow("Effects volume", () => settings.Volume, volume =>
             {
                 settings.Volume = volume;
                 context.Sounds.Volume = volume;
+                context.Sounds.Play(Sound.Click);
                 Save();
-            }, step: 0.1f, format: v => string.Create(CultureInfo.InvariantCulture, $"{v * 100:0}%")),
+            }, step: 0.1f, format: Percent),
         ];
         if (context.Platform.CanFullscreen)
         {

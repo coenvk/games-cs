@@ -67,6 +67,9 @@ internal sealed class SokobanGame : JentlGame
         _sounds = SoundPlayer.Load("Assets/sounds", Sound.Navigate, Sound.Completed);
         _sounds.Enabled = settings.Value.Sound;
         _sounds.Volume = Math.Clamp(settings.Value.Volume, 0f, 1f);
+        _sounds.MusicEnabled = settings.Value.Music;
+        _sounds.MusicVolume = settings.Value.MusicVolume;
+        GameAudio.Register(_sounds);
         if (_platform.CanFullscreen)
         {
             SetFullscreen(settings.Value.Fullscreen);
@@ -117,6 +120,7 @@ internal sealed class SokobanGame : JentlGame
     protected override void Update(GameTime gameTime)
     {
         _fonts?.Fit(GraphicsDevice.Viewport.Bounds);
+        _sounds?.Update(gameTime.ElapsedGameTime);
         base.Update(gameTime);
     }
 

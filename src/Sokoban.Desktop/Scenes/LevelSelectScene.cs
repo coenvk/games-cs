@@ -52,6 +52,8 @@ internal sealed class LevelSelectScene : Scene
 
     private LevelPack Pack => _context.Packs[_selected.Pack];
 
+    protected override void OnEnter() => _context.Sounds.PlayMusic(Music.Puzzle);
+
     public override void Update(TimeSpan elapsed, InputState input)
     {
         var actions = _context.Actions;

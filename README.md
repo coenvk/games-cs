@@ -72,6 +72,13 @@ Settings (sound, fullscreen) live next to it in `settings.json`.
 
 Levels are keyed by a hash of their layout, so reordering or retitling a pack keeps progress. An unreadable file is renamed to `progress.json.corrupt-<timestamp>` and the game starts fresh.
 
+## Music and sound
+
+All the music and most sound effects are composed in code for the engine's synthesizer (`src/Sokoban.Desktop/GameAudio.cs`):
+a theme for the menu, calm music for the puzzles, a lounge tune for solitaire, a livelier one for Uno and poker, a
+folk tune for Mossbrook's village and a dark one for its cellar. Options has a switch and a volume for music and for
+sound effects.
+
 ## Controls
 
 On a touchscreen or with a mouse: tap or click menu items and level tiles (a selected tile again to play), tap a

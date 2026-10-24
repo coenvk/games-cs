@@ -102,6 +102,8 @@ internal sealed class UnoScene : Scene
     /// <summary>Plays the chosen colour for a wild picked from the hand.</summary>
     public void PlayWild(UnoCard card, UnoColor colour) => PlayHuman(new PlayCard(card, colour, _callUno));
 
+    protected override void OnEnter() => _context.Sounds.PlayMusic(Music.Table);
+
     public override void Update(TimeSpan elapsed, InputState input)
     {
         foreach (var flight in _flights)
@@ -118,7 +120,7 @@ internal sealed class UnoScene : Scene
             {
                 _roundShown = true;
                 Match.ScoreRound();
-                _context.Sounds.Play(Sound.Completed);
+                _context.Sounds.Play(Sound.Fanfare);
                 Scenes.Push(new UnoRoundScene(_context, this));
             }
 
@@ -428,6 +430,7 @@ internal sealed class UnoScene : Scene
             switch (e)
             {
                 case CardPlayed played:
+                    _context.Sounds.Play(Sound.Card);
                     Fly(played.Card, Centre(played.Seat), _discard.Center.ToVector2());
                     break;
                 case CardsDrawn drawn:

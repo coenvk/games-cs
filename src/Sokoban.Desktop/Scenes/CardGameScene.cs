@@ -73,6 +73,8 @@ internal abstract class CardGameScene : Scene
     /// <summary>The line under the table when there is nothing else to say.</summary>
     protected virtual string Help => "Drag cards, or tap one to send it where it fits";
 
+    protected override void OnEnter() => Context.Sounds.PlayMusic(Music.Cards);
+
     public override void Update(TimeSpan elapsed, InputState input)
     {
         _cursor = input.Cursor.Position;
@@ -207,16 +209,14 @@ internal abstract class CardGameScene : Scene
             if (DescribeRejected(input) is { } reason)
             {
                 ShowMessage(reason);
+                Context.Sounds.Play(Sound.Error);
             }
 
             return;
         }
 
         _autoMovesPaused = false;
-        if (turn.Has(_homeTag))
-        {
-            Context.Sounds.Play(Sound.Navigate);
-        }
+        Context.Sounds.Play(turn.Has(_homeTag) ? Sound.Navigate : Sound.Card);
     }
 
     protected static string CardName(Card card) => card.Rank switch
@@ -297,7 +297,7 @@ internal abstract class CardGameScene : Scene
         if (!_winShown && _wonFor >= WinDelay)
         {
             _winShown = true;
-            Context.Sounds.Play(Sound.Completed);
+            Context.Sounds.Play(Sound.Fanfare);
             Scenes.Push(new CardWonScene(Context, this));
         }
     }

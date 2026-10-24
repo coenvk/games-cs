@@ -84,6 +84,8 @@ internal sealed class CodeLockScene : Scene
 
     public void NewLock() => Scenes.Replace(new CodeLockScene(_context, Game.Rules), Navigation.Fade());
 
+    protected override void OnEnter() => _context.Sounds.PlayMusic(Music.Puzzle);
+
     public override void Update(TimeSpan elapsed, InputState input)
     {
         var actions = _context.Actions;
@@ -257,6 +259,7 @@ internal sealed class CodeLockScene : Scene
         {
             _selected = wheel;
             _wheels[wheel] = (_wheels[wheel] + by + Game.Rules.Digits) % Game.Rules.Digits;
+            _context.Sounds.Play(Sound.Click);
         }
     }
 
@@ -270,18 +273,20 @@ internal sealed class CodeLockScene : Scene
         if (Game.Rules.Problem(_wheels) is { } problem)
         {
             Say(problem);
+            _context.Sounds.Play(Sound.Error);
             return;
         }
 
         if (Game.Attempts.Any(a => a.Code.SequenceEqual(_wheels)))
         {
             Say("You tried that code already");
+            _context.Sounds.Play(Sound.Error);
             return;
         }
 
         Game.Try(_wheels);
         _selected = 0;
-        _context.Sounds.Play(Game.IsSolved ? Sound.Completed : Sound.Navigate);
+        _context.Sounds.Play(Game.IsSolved ? Sound.Fanfare : Game.IsOver ? Sound.Lose : Sound.Navigate);
         if (Game.IsSolved)
         {
             _shackle = new Tween(Vector2.Zero, Vector2.One, OpenTime, Easing.CubicOut);

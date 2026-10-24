@@ -133,9 +133,22 @@ internal sealed class AdventureScene : Scene
             _walk.Clear();
         }
 
-        if (result.Events.OfType<ItemPickedUp>().Any() || result.Events.OfType<LevelGained>().Any())
+        if (result.Events.OfType<LevelGained>().Any())
         {
-            _context.Sounds.Play(Sound.Navigate);
+            _context.Sounds.Play(Sound.LevelUp);
+        }
+        else if (result.Events.OfType<ItemPickedUp>().Any())
+        {
+            _context.Sounds.Play(Sound.Pickup);
+        }
+        else if (result.Events.OfType<ActorAttacked>().Any())
+        {
+            _context.Sounds.Play(Sound.Hit);
+        }
+
+        if (result.Events.Any(e => e is AreaEntered))
+        {
+            PlayAreaMusic();
         }
 
         if (result.TalkTo is { } someone)
@@ -287,7 +300,11 @@ internal sealed class AdventureScene : Scene
     }
 
     // A new game takes the save slot straight away, so "New adventure" really does start over.
-    protected override void OnEnter() => SaveGame();
+    protected override void OnEnter()
+    {
+        SaveGame();
+        PlayAreaMusic();
+    }
 
     // After a conversation, the bag or the pause menu: whatever they changed is kept.
     protected override void OnUncovered() => SaveGame();
@@ -308,6 +325,10 @@ internal sealed class AdventureScene : Scene
 
         base.Dispose(disposing);
     }
+
+    /// <summary>The village tune above ground and in the houses, the dark one in the cellar.</summary>
+    private void PlayAreaMusic() =>
+        _context.Sounds.PlayMusic(World.Area.Id.StartsWith("cellar", StringComparison.Ordinal) ? Music.Cellar : Music.Village);
 
     private static string Read(string name) => GameFiles.ReadAllText($"{Folder}/{name}");
 
@@ -398,7 +419,7 @@ internal sealed class AdventureScene : Scene
         if (Adventure.IsWon)
         {
             _endShown = true;
-            _context.Sounds.Play(Sound.Completed);
+            _context.Sounds.Play(Sound.Fanfare);
             Scenes.Push(new AdventureEndScene(_context, this, won: true));
             return true;
         }
@@ -411,6 +432,7 @@ internal sealed class AdventureScene : Scene
             {
                 _endShown = true;
                 SaveGame();
+                _context.Sounds.Play(Sound.Lose);
                 Scenes.Push(new AdventureEndScene(_context, this, won: false));
             }
 

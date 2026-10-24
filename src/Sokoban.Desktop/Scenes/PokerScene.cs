@@ -83,6 +83,8 @@ internal sealed class PokerScene : Scene
 
     public void ConfirmHandover() => _runner.ConfirmHandover();
 
+    protected override void OnEnter() => _context.Sounds.PlayMusic(Music.Table);
+
     public override void Update(TimeSpan elapsed, InputState input)
     {
         var actions = _context.Actions;
@@ -369,7 +371,7 @@ internal sealed class PokerScene : Scene
         if (Table.Champion is not null || humansLeft.Length == 0)
         {
             _endShown = true;
-            _context.Sounds.Play(Sound.Completed);
+            _context.Sounds.Play(Table.Champion is { } champion && Players[champion].IsHuman ? Sound.Fanfare : Sound.Lose);
             Scenes.Push(new PokerEndScene(_context, this));
             return;
         }
@@ -394,6 +396,11 @@ internal sealed class PokerScene : Scene
                 _lastAction[b.Seat] = string.Create(CultureInfo.InvariantCulture, $"{(b.Big ? "Big" : "Small")} blind");
                 break;
             case Acted a:
+                if (a.Amount > 0)
+                {
+                    _context.Sounds.Play(Sound.Chips);
+                }
+
                 var label = a.Action switch
                 {
                     Fold => "Fold",
@@ -419,7 +426,7 @@ internal sealed class PokerScene : Scene
                 _lastAction[s.Seat] = s.Value.Describe();
                 break;
             case PotWon w:
-                _context.Sounds.Play(Sound.Navigate);
+                _context.Sounds.Play(Sound.Chips);
                 Say(w.Value is { } value
                     ? string.Create(CultureInfo.InvariantCulture, $"{Name(w.Seat)} wins {w.Amount} with {value.Describe().ToLowerInvariant()}")
                     : string.Create(CultureInfo.InvariantCulture, $"{Name(w.Seat)} takes {w.Amount}"));

@@ -41,7 +41,11 @@ internal sealed class GenerateScene : Scene
             new Button("Try again", Retry, Highlight: true));
     }
 
-    protected override void OnEnter() => Start();
+    protected override void OnEnter()
+    {
+        _context.Sounds.PlayMusic(Music.Puzzle);
+        Start();
+    }
 
     protected override void Dispose(bool disposing)
     {
