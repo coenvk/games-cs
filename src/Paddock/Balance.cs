@@ -83,6 +83,12 @@ public static class Balance
     /// <summary>A car of this weight (kg) brakes as its grip allows; lighter cars brake harder, heavier ones less.</summary>
     public const double ReferenceWeight = 1300;
 
+    /// <summary>Score (see <see cref="Rating.Score"/>) to RQ, straight lines between these points; calibrated so the roster spreads over the classes as intended.</summary>
+    internal static readonly (double Score, double Rq)[] RqCurve =
+    [
+        (0.70, 1), (0.845, 20), (0.8855, 30), (0.932, 40), (1.0, 50), (1.059, 65), (1.158, 80), (1.40, 110),
+    ];
+
     /// <summary>Braking as a share of cornering grip.</summary>
     public const double Braking = 0.9;
 }

@@ -1,0 +1,1904 @@
+{
+  "cars": [
+    {
+      "id": "vantelli-corvo-1300",
+      "name": "Corvo 1300",
+      "maker": "Vantelli",
+      "country": "Italy",
+      "year": 1972,
+      "body": "Hatchback",
+      "paint": "#d8342c",
+      "trim": "#c8c8c8",
+      "stats": {
+        "topSpeedKmh": 124,
+        "zeroTo100": 16,
+        "handling": 40,
+        "weightKg": 879,
+        "drive": "Fwd",
+        "tyres": "Standard",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "kovar-lesk-105",
+      "name": "Lesk 105",
+      "maker": "Kovar",
+      "country": "Czechia",
+      "year": 1979,
+      "body": "Saloon",
+      "paint": "#e86a1c",
+      "trim": "#c8c8c8",
+      "stats": {
+        "topSpeedKmh": 129,
+        "zeroTo100": 15.3,
+        "handling": 44,
+        "weightKg": 1229,
+        "drive": "Rwd",
+        "tyres": "Standard",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "moreau-petit-4",
+      "name": "Petit 4",
+      "maker": "Moreau",
+      "country": "France",
+      "year": 1961,
+      "body": "Hatchback",
+      "paint": "#c25a8a",
+      "trim": "#c8c8c8",
+      "stats": {
+        "topSpeedKmh": 134,
+        "zeroTo100": 15.8,
+        "handling": 40,
+        "weightKg": 917,
+        "drive": "Fwd",
+        "tyres": "Standard",
+        "clearance": "High"
+      }
+    },
+    {
+      "id": "brenner-kombi-1200",
+      "name": "Kombi 1200",
+      "maker": "Brenner",
+      "country": "Germany",
+      "year": 1966,
+      "body": "Van",
+      "paint": "#1c1c22",
+      "trim": "#c8c8c8",
+      "stats": {
+        "topSpeedKmh": 91,
+        "zeroTo100": 17.6,
+        "handling": 27,
+        "weightKg": 1535,
+        "drive": "Rwd",
+        "tyres": "Standard",
+        "clearance": "High"
+      }
+    },
+    {
+      "id": "ashford-minster",
+      "name": "Minster",
+      "maker": "Ashford",
+      "country": "United Kingdom",
+      "year": 1958,
+      "body": "Saloon",
+      "paint": "#2b4a7a",
+      "trim": "#c8c8c8",
+      "stats": {
+        "topSpeedKmh": 130,
+        "zeroTo100": 15.7,
+        "handling": 41,
+        "weightKg": 1235,
+        "drive": "Rwd",
+        "tyres": "Standard",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "nakamori-bento",
+      "name": "Bento",
+      "maker": "Nakamori",
+      "country": "Japan",
+      "year": 1983,
+      "body": "Hatchback",
+      "paint": "#3c7a4a",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 135,
+        "zeroTo100": 15,
+        "handling": 45,
+        "weightKg": 1007,
+        "drive": "Fwd",
+        "tyres": "Standard",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "calder-homestead",
+      "name": "Homestead",
+      "maker": "Calder",
+      "country": "United States",
+      "year": 1954,
+      "body": "Pickup",
+      "paint": "#7a1f2b",
+      "trim": "#c8c8c8",
+      "stats": {
+        "topSpeedKmh": 102,
+        "zeroTo100": 17,
+        "handling": 29,
+        "weightKg": 1870,
+        "drive": "Rwd",
+        "tyres": "AllSurface",
+        "clearance": "High"
+      }
+    },
+    {
+      "id": "aurelio-paseo",
+      "name": "Paseo",
+      "maker": "Aurelio",
+      "country": "Spain",
+      "year": 1975,
+      "body": "Hatchback",
+      "paint": "#2f6fe0",
+      "trim": "#c8c8c8",
+      "stats": {
+        "topSpeedKmh": 131,
+        "zeroTo100": 16,
+        "handling": 43,
+        "weightKg": 907,
+        "drive": "Fwd",
+        "tyres": "Standard",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "halvard-140",
+      "name": "140",
+      "maker": "Halvard",
+      "country": "Sweden",
+      "year": 1968,
+      "body": "Estate",
+      "paint": "#5fb8d8",
+      "trim": "#c8c8c8",
+      "stats": {
+        "topSpeedKmh": 137,
+        "zeroTo100": 15.8,
+        "handling": 38,
+        "weightKg": 1365,
+        "drive": "Rwd",
+        "tyres": "Standard",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "bellcourt-ondine",
+      "name": "Ondine",
+      "maker": "Bellcourt",
+      "country": "France",
+      "year": 1988,
+      "body": "Hatchback",
+      "paint": "#4b4c55",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 127,
+        "zeroTo100": 15.8,
+        "handling": 43,
+        "weightKg": 979,
+        "drive": "Fwd",
+        "tyres": "Standard",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "kohlmann-pendler",
+      "name": "Pendler",
+      "maker": "Kohlmann",
+      "country": "Germany",
+      "year": 1990,
+      "body": "Van",
+      "paint": "#8a2be2",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 97,
+        "zeroTo100": 17.6,
+        "handling": 30,
+        "weightKg": 1733,
+        "drive": "Fwd",
+        "tyres": "Standard",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "hoshiro-kei-trek",
+      "name": "Kei Trek",
+      "maker": "Hoshiro",
+      "country": "Japan",
+      "year": 1995,
+      "body": "Suv",
+      "paint": "#6fae5a",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 105,
+        "zeroTo100": 16.7,
+        "handling": 34,
+        "weightKg": 1929,
+        "drive": "Awd",
+        "tyres": "OffRoad",
+        "clearance": "High"
+      }
+    },
+    {
+      "id": "kestrel-wren",
+      "name": "Wren",
+      "maker": "Kestrel",
+      "country": "United Kingdom",
+      "year": 1962,
+      "body": "Roadster",
+      "paint": "#f2eee4",
+      "trim": "#c8c8c8",
+      "stats": {
+        "topSpeedKmh": 124,
+        "zeroTo100": 15,
+        "handling": 48,
+        "weightKg": 992,
+        "drive": "Rwd",
+        "tyres": "Standard",
+        "clearance": "Low"
+      }
+    },
+    {
+      "id": "lindqvist-fjord",
+      "name": "Fjord",
+      "maker": "Lindqvist",
+      "country": "Sweden",
+      "year": 1971,
+      "body": "Estate",
+      "paint": "#e8c040",
+      "trim": "#c8c8c8",
+      "stats": {
+        "topSpeedKmh": 134,
+        "zeroTo100": 16,
+        "handling": 38,
+        "weightKg": 1351,
+        "drive": "Fwd",
+        "tyres": "Standard",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "brannock-prairie",
+      "name": "Prairie",
+      "maker": "Brannock",
+      "country": "United States",
+      "year": 1961,
+      "body": "Pickup",
+      "paint": "#e0a030",
+      "trim": "#c8c8c8",
+      "stats": {
+        "topSpeedKmh": 101,
+        "zeroTo100": 17.5,
+        "handling": 28,
+        "weightKg": 1860,
+        "drive": "Rwd",
+        "tyres": "OffRoad",
+        "clearance": "High"
+      }
+    },
+    {
+      "id": "kovar-horal-4x4",
+      "name": "Horal 4x4",
+      "maker": "Kovar",
+      "country": "Czechia",
+      "year": 1985,
+      "body": "Suv",
+      "paint": "#b8b8c0",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 110,
+        "zeroTo100": 16.3,
+        "handling": 34,
+        "weightKg": 1976,
+        "drive": "Awd",
+        "tyres": "OffRoad",
+        "clearance": "High"
+      }
+    },
+    {
+      "id": "strale-cinquanta",
+      "name": "Cinquanta",
+      "maker": "Strale",
+      "country": "Italy",
+      "year": 1957,
+      "body": "Hatchback",
+      "paint": "#d8342c",
+      "trim": "#c8c8c8",
+      "stats": {
+        "topSpeedKmh": 135,
+        "zeroTo100": 15.8,
+        "handling": 40,
+        "weightKg": 922,
+        "drive": "Rwd",
+        "tyres": "Standard",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "moreau-camionette",
+      "name": "Camionette",
+      "maker": "Moreau",
+      "country": "France",
+      "year": 1978,
+      "body": "Van",
+      "paint": "#e86a1c",
+      "trim": "#c8c8c8",
+      "stats": {
+        "topSpeedKmh": 92,
+        "zeroTo100": 17.6,
+        "handling": 30,
+        "weightKg": 1543,
+        "drive": "Fwd",
+        "tyres": "Standard",
+        "clearance": "High"
+      }
+    },
+    {
+      "id": "nakamori-haru",
+      "name": "Haru",
+      "maker": "Nakamori",
+      "country": "Japan",
+      "year": 1977,
+      "body": "Saloon",
+      "paint": "#c25a8a",
+      "trim": "#c8c8c8",
+      "stats": {
+        "topSpeedKmh": 131,
+        "zeroTo100": 15.7,
+        "handling": 44,
+        "weightKg": 1242,
+        "drive": "Rwd",
+        "tyres": "Standard",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "aurelio-mula",
+      "name": "Mula",
+      "maker": "Aurelio",
+      "country": "Spain",
+      "year": 1969,
+      "body": "Pickup",
+      "paint": "#1c1c22",
+      "trim": "#c8c8c8",
+      "stats": {
+        "topSpeedKmh": 110,
+        "zeroTo100": 16.5,
+        "handling": 30,
+        "weightKg": 1950,
+        "drive": "Rwd",
+        "tyres": "AllSurface",
+        "clearance": "High"
+      }
+    },
+    {
+      "id": "vantelli-corvo-sprint",
+      "name": "Corvo Sprint",
+      "maker": "Vantelli",
+      "country": "Italy",
+      "year": 1976,
+      "body": "Hatchback",
+      "paint": "#2b4a7a",
+      "trim": "#c8c8c8",
+      "stats": {
+        "topSpeedKmh": 157,
+        "zeroTo100": 13.5,
+        "handling": 50,
+        "weightKg": 893,
+        "drive": "Fwd",
+        "tyres": "Performance",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "brenner-1600-tl",
+      "name": "1600 TL",
+      "maker": "Brenner",
+      "country": "Germany",
+      "year": 1973,
+      "body": "Saloon",
+      "paint": "#3c7a4a",
+      "trim": "#c8c8c8",
+      "stats": {
+        "topSpeedKmh": 163,
+        "zeroTo100": 13.9,
+        "handling": 46,
+        "weightKg": 1248,
+        "drive": "Rwd",
+        "tyres": "Standard",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "kestrel-swallow",
+      "name": "Swallow",
+      "maker": "Kestrel",
+      "country": "United Kingdom",
+      "year": 1965,
+      "body": "Roadster",
+      "paint": "#7a1f2b",
+      "trim": "#c8c8c8",
+      "stats": {
+        "topSpeedKmh": 147,
+        "zeroTo100": 13.4,
+        "handling": 54,
+        "weightKg": 971,
+        "drive": "Rwd",
+        "tyres": "Standard",
+        "clearance": "Low"
+      }
+    },
+    {
+      "id": "halvard-240-kombi",
+      "name": "240 Kombi",
+      "maker": "Halvard",
+      "country": "Sweden",
+      "year": 1984,
+      "body": "Estate",
+      "paint": "#2f6fe0",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 158,
+        "zeroTo100": 14.3,
+        "handling": 46,
+        "weightKg": 1449,
+        "drive": "Rwd",
+        "tyres": "Standard",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "hoshiro-lark",
+      "name": "Lark",
+      "maker": "Hoshiro",
+      "country": "Japan",
+      "year": 1989,
+      "body": "Coupe",
+      "paint": "#5fb8d8",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 165,
+        "zeroTo100": 13.2,
+        "handling": 53,
+        "weightKg": 1319,
+        "drive": "Fwd",
+        "tyres": "Standard",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "calder-sundowner",
+      "name": "Sundowner",
+      "maker": "Calder",
+      "country": "United States",
+      "year": 1966,
+      "body": "Saloon",
+      "paint": "#4b4c55",
+      "trim": "#c8c8c8",
+      "stats": {
+        "topSpeedKmh": 154,
+        "zeroTo100": 13.6,
+        "handling": 47,
+        "weightKg": 1209,
+        "drive": "Rwd",
+        "tyres": "Standard",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "bellcourt-rallye-5",
+      "name": "Rallye 5",
+      "maker": "Bellcourt",
+      "country": "France",
+      "year": 1982,
+      "body": "Rally",
+      "paint": "#8a2be2",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 145,
+        "zeroTo100": 13.1,
+        "handling": 60,
+        "weightKg": 1300,
+        "drive": "Fwd",
+        "tyres": "AllSurface",
+        "clearance": "High"
+      }
+    },
+    {
+      "id": "ashford-mariner",
+      "name": "Mariner",
+      "maker": "Ashford",
+      "country": "United Kingdom",
+      "year": 1980,
+      "body": "Estate",
+      "paint": "#6fae5a",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 166,
+        "zeroTo100": 14,
+        "handling": 47,
+        "weightKg": 1484,
+        "drive": "Rwd",
+        "tyres": "Standard",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "kohlmann-taiga",
+      "name": "Taiga",
+      "maker": "Kohlmann",
+      "country": "Germany",
+      "year": 1992,
+      "body": "Suv",
+      "paint": "#f2eee4",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 136,
+        "zeroTo100": 14.9,
+        "handling": 39,
+        "weightKg": 1948,
+        "drive": "Awd",
+        "tyres": "AllSurface",
+        "clearance": "High"
+      }
+    },
+    {
+      "id": "nakamori-pathway",
+      "name": "Pathway",
+      "maker": "Nakamori",
+      "country": "Japan",
+      "year": 1987,
+      "body": "Pickup",
+      "paint": "#e8c040",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 136,
+        "zeroTo100": 14.9,
+        "handling": 38,
+        "weightKg": 2090,
+        "drive": "Awd",
+        "tyres": "OffRoad",
+        "clearance": "High"
+      }
+    },
+    {
+      "id": "aurelio-brisa-gt",
+      "name": "Brisa GT",
+      "maker": "Aurelio",
+      "country": "Spain",
+      "year": 1981,
+      "body": "Coupe",
+      "paint": "#e0a030",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 168,
+        "zeroTo100": 13.8,
+        "handling": 51,
+        "weightKg": 1331,
+        "drive": "Fwd",
+        "tyres": "Standard",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "lindqvist-polar",
+      "name": "Polar",
+      "maker": "Lindqvist",
+      "country": "Sweden",
+      "year": 1979,
+      "body": "Saloon",
+      "paint": "#b8b8c0",
+      "trim": "#c8c8c8",
+      "stats": {
+        "topSpeedKmh": 157,
+        "zeroTo100": 13.2,
+        "handling": 51,
+        "weightKg": 1222,
+        "drive": "Fwd",
+        "tyres": "Standard",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "moreau-alouette",
+      "name": "Alouette",
+      "maker": "Moreau",
+      "country": "France",
+      "year": 1970,
+      "body": "Coupe",
+      "paint": "#d8342c",
+      "trim": "#c8c8c8",
+      "stats": {
+        "topSpeedKmh": 163,
+        "zeroTo100": 13.6,
+        "handling": 49,
+        "weightKg": 1200,
+        "drive": "Fwd",
+        "tyres": "Standard",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "brannock-drifter-v8",
+      "name": "Drifter V8",
+      "maker": "Brannock",
+      "country": "United States",
+      "year": 1964,
+      "body": "Muscle",
+      "paint": "#e86a1c",
+      "trim": "#c8c8c8",
+      "stats": {
+        "topSpeedKmh": 157,
+        "zeroTo100": 13.1,
+        "handling": 39,
+        "weightKg": 1480,
+        "drive": "Rwd",
+        "tyres": "Standard",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "kovar-sokol",
+      "name": "Sokol",
+      "maker": "Kovar",
+      "country": "Czechia",
+      "year": 1993,
+      "body": "Hatchback",
+      "paint": "#c25a8a",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 158,
+        "zeroTo100": 13.5,
+        "handling": 50,
+        "weightKg": 983,
+        "drive": "Fwd",
+        "tyres": "Standard",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "strale-vespina",
+      "name": "Vespina",
+      "maker": "Strale",
+      "country": "Italy",
+      "year": 1968,
+      "body": "Roadster",
+      "paint": "#1c1c22",
+      "trim": "#c8c8c8",
+      "stats": {
+        "topSpeedKmh": 160,
+        "zeroTo100": 13.9,
+        "handling": 51,
+        "weightKg": 1013,
+        "drive": "Rwd",
+        "tyres": "Standard",
+        "clearance": "Low"
+      }
+    },
+    {
+      "id": "calder-freighter",
+      "name": "Freighter",
+      "maker": "Calder",
+      "country": "United States",
+      "year": 1998,
+      "body": "Van",
+      "paint": "#2b4a7a",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 120,
+        "zeroTo100": 15.8,
+        "handling": 35,
+        "weightKg": 1683,
+        "drive": "Rwd",
+        "tyres": "Standard",
+        "clearance": "High"
+      }
+    },
+    {
+      "id": "halvard-terra-xr",
+      "name": "Terra XR",
+      "maker": "Halvard",
+      "country": "Sweden",
+      "year": 1994,
+      "body": "Suv",
+      "paint": "#3c7a4a",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 140,
+        "zeroTo100": 14.8,
+        "handling": 39,
+        "weightKg": 1976,
+        "drive": "Awd",
+        "tyres": "OffRoad",
+        "clearance": "High"
+      }
+    },
+    {
+      "id": "vantelli-saetta-2000",
+      "name": "Saetta 2000",
+      "maker": "Vantelli",
+      "country": "Italy",
+      "year": 1985,
+      "body": "Coupe",
+      "paint": "#7a1f2b",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 198,
+        "zeroTo100": 11.3,
+        "handling": 59,
+        "weightKg": 1325,
+        "drive": "Rwd",
+        "tyres": "Performance",
+        "clearance": "Low"
+      }
+    },
+    {
+      "id": "brenner-2-0-turbo",
+      "name": "2.0 Turbo",
+      "maker": "Brenner",
+      "country": "Germany",
+      "year": 1974,
+      "body": "Saloon",
+      "paint": "#2f6fe0",
+      "trim": "#c8c8c8",
+      "stats": {
+        "topSpeedKmh": 184,
+        "zeroTo100": 11.6,
+        "handling": 52,
+        "weightKg": 1216,
+        "drive": "Rwd",
+        "tyres": "Performance",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "kestrel-merlin",
+      "name": "Merlin",
+      "maker": "Kestrel",
+      "country": "United Kingdom",
+      "year": 1969,
+      "body": "Roadster",
+      "paint": "#5fb8d8",
+      "trim": "#c8c8c8",
+      "stats": {
+        "topSpeedKmh": 187,
+        "zeroTo100": 11.2,
+        "handling": 61,
+        "weightKg": 1003,
+        "drive": "Rwd",
+        "tyres": "Performance",
+        "clearance": "Low"
+      }
+    },
+    {
+      "id": "hoshiro-spirit-gti",
+      "name": "Spirit GTi",
+      "maker": "Hoshiro",
+      "country": "Japan",
+      "year": 1991,
+      "body": "Hatchback",
+      "paint": "#4b4c55",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 200,
+        "zeroTo100": 11.5,
+        "handling": 56,
+        "weightKg": 1012,
+        "drive": "Fwd",
+        "tyres": "Performance",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "bellcourt-rallye-16s",
+      "name": "Rallye 16S",
+      "maker": "Bellcourt",
+      "country": "France",
+      "year": 1987,
+      "body": "Rally",
+      "paint": "#8a2be2",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 172,
+        "zeroTo100": 11.8,
+        "handling": 62,
+        "weightKg": 1288,
+        "drive": "Fwd",
+        "tyres": "AllSurface",
+        "clearance": "High"
+      }
+    },
+    {
+      "id": "calder-thunder-350",
+      "name": "Thunder 350",
+      "maker": "Calder",
+      "country": "United States",
+      "year": 1969,
+      "body": "Muscle",
+      "paint": "#6fae5a",
+      "trim": "#c8c8c8",
+      "stats": {
+        "topSpeedKmh": 199,
+        "zeroTo100": 11.4,
+        "handling": 44,
+        "weightKg": 1536,
+        "drive": "Rwd",
+        "tyres": "Standard",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "nakamori-kaze",
+      "name": "Kaze",
+      "maker": "Nakamori",
+      "country": "Japan",
+      "year": 1993,
+      "body": "Coupe",
+      "paint": "#f2eee4",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 181,
+        "zeroTo100": 11.7,
+        "handling": 57,
+        "weightKg": 1269,
+        "drive": "Rwd",
+        "tyres": "Performance",
+        "clearance": "Low"
+      }
+    },
+    {
+      "id": "kohlmann-reise-v6",
+      "name": "Reise V6",
+      "maker": "Kohlmann",
+      "country": "Germany",
+      "year": 1996,
+      "body": "Estate",
+      "paint": "#e8c040",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 188,
+        "zeroTo100": 11.8,
+        "handling": 54,
+        "weightKg": 1449,
+        "drive": "Awd",
+        "tyres": "Standard",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "lindqvist-aurora-t5",
+      "name": "Aurora T5",
+      "maker": "Lindqvist",
+      "country": "Sweden",
+      "year": 1995,
+      "body": "Estate",
+      "paint": "#e0a030",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 196,
+        "zeroTo100": 12.1,
+        "handling": 52,
+        "weightKg": 1477,
+        "drive": "Fwd",
+        "tyres": "Performance",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "aurelio-toro-4x4",
+      "name": "Toro 4x4",
+      "maker": "Aurelio",
+      "country": "Spain",
+      "year": 1990,
+      "body": "Suv",
+      "paint": "#b8b8c0",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 163,
+        "zeroTo100": 12.1,
+        "handling": 47,
+        "weightKg": 1938,
+        "drive": "Awd",
+        "tyres": "OffRoad",
+        "clearance": "High"
+      }
+    },
+    {
+      "id": "brannock-haulmaster",
+      "name": "Haulmaster",
+      "maker": "Brannock",
+      "country": "United States",
+      "year": 2003,
+      "body": "Pickup",
+      "paint": "#d8342c",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 165,
+        "zeroTo100": 13,
+        "handling": 44,
+        "weightKg": 2080,
+        "drive": "Awd",
+        "tyres": "AllSurface",
+        "clearance": "High"
+      }
+    },
+    {
+      "id": "moreau-mistral",
+      "name": "Mistral",
+      "maker": "Moreau",
+      "country": "France",
+      "year": 1984,
+      "body": "Hatchback",
+      "paint": "#e86a1c",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 198,
+        "zeroTo100": 11.8,
+        "handling": 54,
+        "weightKg": 1007,
+        "drive": "Fwd",
+        "tyres": "Performance",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "ashford-sterling",
+      "name": "Sterling",
+      "maker": "Ashford",
+      "country": "United Kingdom",
+      "year": 1999,
+      "body": "Saloon",
+      "paint": "#c25a8a",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 184,
+        "zeroTo100": 11.4,
+        "handling": 57,
+        "weightKg": 1333,
+        "drive": "Rwd",
+        "tyres": "Performance",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "kovar-vrchol-rs",
+      "name": "Vrchol RS",
+      "maker": "Kovar",
+      "country": "Czechia",
+      "year": 2005,
+      "body": "Rally",
+      "paint": "#1c1c22",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 177,
+        "zeroTo100": 11.7,
+        "handling": 63,
+        "weightKg": 1306,
+        "drive": "Awd",
+        "tyres": "AllSurface",
+        "clearance": "High"
+      }
+    },
+    {
+      "id": "strale-delfino",
+      "name": "Delfino",
+      "maker": "Strale",
+      "country": "Italy",
+      "year": 1979,
+      "body": "Coupe",
+      "paint": "#2b4a7a",
+      "trim": "#c8c8c8",
+      "stats": {
+        "topSpeedKmh": 200,
+        "zeroTo100": 11.3,
+        "handling": 59,
+        "weightKg": 1219,
+        "drive": "Rwd",
+        "tyres": "Performance",
+        "clearance": "Low"
+      }
+    },
+    {
+      "id": "halvard-760-turbo",
+      "name": "760 Turbo",
+      "maker": "Halvard",
+      "country": "Sweden",
+      "year": 1988,
+      "body": "Saloon",
+      "paint": "#3c7a4a",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 186,
+        "zeroTo100": 11.6,
+        "handling": 55,
+        "weightKg": 1339,
+        "drive": "Rwd",
+        "tyres": "Standard",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "vantelli-saetta-evo",
+      "name": "Saetta Evo",
+      "maker": "Vantelli",
+      "country": "Italy",
+      "year": 1992,
+      "body": "Rally",
+      "paint": "#7a1f2b",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 209,
+        "zeroTo100": 9.2,
+        "handling": 72,
+        "weightKg": 1313,
+        "drive": "Awd",
+        "tyres": "AllSurface",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "brenner-3-2-cs",
+      "name": "3.2 CS",
+      "maker": "Brenner",
+      "country": "Germany",
+      "year": 1998,
+      "body": "Coupe",
+      "paint": "#2f6fe0",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 209,
+        "zeroTo100": 9.5,
+        "handling": 64,
+        "weightKg": 1269,
+        "drive": "Rwd",
+        "tyres": "Performance",
+        "clearance": "Low"
+      }
+    },
+    {
+      "id": "calder-vortex-454",
+      "name": "Vortex 454",
+      "maker": "Calder",
+      "country": "United States",
+      "year": 1970,
+      "body": "Muscle",
+      "paint": "#5fb8d8",
+      "trim": "#c8c8c8",
+      "stats": {
+        "topSpeedKmh": 223,
+        "zeroTo100": 9.8,
+        "handling": 49,
+        "weightKg": 1512,
+        "drive": "Rwd",
+        "tyres": "Performance",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "hoshiro-raijin",
+      "name": "Raijin",
+      "maker": "Hoshiro",
+      "country": "Japan",
+      "year": 1997,
+      "body": "Coupe",
+      "paint": "#4b4c55",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 227,
+        "zeroTo100": 9.4,
+        "handling": 65,
+        "weightKg": 1319,
+        "drive": "Awd",
+        "tyres": "Performance",
+        "clearance": "Low"
+      }
+    },
+    {
+      "id": "kestrel-hawk-3-0",
+      "name": "Hawk 3.0",
+      "maker": "Kestrel",
+      "country": "United Kingdom",
+      "year": 1975,
+      "body": "Coupe",
+      "paint": "#8a2be2",
+      "trim": "#c8c8c8",
+      "stats": {
+        "topSpeedKmh": 211,
+        "zeroTo100": 9.7,
+        "handling": 63,
+        "weightKg": 1163,
+        "drive": "Rwd",
+        "tyres": "Performance",
+        "clearance": "Low"
+      }
+    },
+    {
+      "id": "nakamori-tsubasa-r",
+      "name": "Tsubasa R",
+      "maker": "Nakamori",
+      "country": "Japan",
+      "year": 2001,
+      "body": "Rally",
+      "paint": "#6fae5a",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 205,
+        "zeroTo100": 9.3,
+        "handling": 71,
+        "weightKg": 1300,
+        "drive": "Awd",
+        "tyres": "AllSurface",
+        "clearance": "High"
+      }
+    },
+    {
+      "id": "bellcourt-tempete",
+      "name": "Tempete",
+      "maker": "Bellcourt",
+      "country": "France",
+      "year": 2006,
+      "body": "Hatchback",
+      "paint": "#f2eee4",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 229,
+        "zeroTo100": 9.6,
+        "handling": 61,
+        "weightKg": 1007,
+        "drive": "Fwd",
+        "tyres": "Performance",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "kohlmann-nordkap",
+      "name": "Nordkap",
+      "maker": "Kohlmann",
+      "country": "Germany",
+      "year": 2008,
+      "body": "Suv",
+      "paint": "#e8c040",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 194,
+        "zeroTo100": 10.2,
+        "handling": 54,
+        "weightKg": 1948,
+        "drive": "Awd",
+        "tyres": "AllSurface",
+        "clearance": "High"
+      }
+    },
+    {
+      "id": "lindqvist-ljus-t6",
+      "name": "Ljus T6",
+      "maker": "Lindqvist",
+      "country": "Sweden",
+      "year": 2012,
+      "body": "Estate",
+      "paint": "#e0a030",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 222,
+        "zeroTo100": 10,
+        "handling": 59,
+        "weightKg": 1463,
+        "drive": "Awd",
+        "tyres": "Performance",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "aurelio-sol-roadster",
+      "name": "Sol Roadster",
+      "maker": "Aurelio",
+      "country": "Spain",
+      "year": 2004,
+      "body": "Roadster",
+      "paint": "#b8b8c0",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 226,
+        "zeroTo100": 9.8,
+        "handling": 66,
+        "weightKg": 1118,
+        "drive": "Rwd",
+        "tyres": "Performance",
+        "clearance": "Low"
+      }
+    },
+    {
+      "id": "brannock-outlaw",
+      "name": "Outlaw",
+      "maker": "Brannock",
+      "country": "United States",
+      "year": 2010,
+      "body": "Pickup",
+      "paint": "#d8342c",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 191,
+        "zeroTo100": 10.9,
+        "handling": 51,
+        "weightKg": 2060,
+        "drive": "Awd",
+        "tyres": "OffRoad",
+        "clearance": "High"
+      }
+    },
+    {
+      "id": "moreau-cirrus-v6",
+      "name": "Cirrus V6",
+      "maker": "Moreau",
+      "country": "France",
+      "year": 2003,
+      "body": "Saloon",
+      "paint": "#e86a1c",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 224,
+        "zeroTo100": 9.7,
+        "handling": 61,
+        "weightKg": 1365,
+        "drive": "Fwd",
+        "tyres": "Performance",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "ashford-ardent",
+      "name": "Ardent",
+      "maker": "Ashford",
+      "country": "United Kingdom",
+      "year": 1989,
+      "body": "Saloon",
+      "paint": "#c25a8a",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 209,
+        "zeroTo100": 9.3,
+        "handling": 63,
+        "weightKg": 1320,
+        "drive": "Rwd",
+        "tyres": "Performance",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "strale-brezza-2-5",
+      "name": "Brezza 2.5",
+      "maker": "Strale",
+      "country": "Italy",
+      "year": 1983,
+      "body": "Roadster",
+      "paint": "#1c1c22",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 213,
+        "zeroTo100": 9.6,
+        "handling": 67,
+        "weightKg": 1087,
+        "drive": "Rwd",
+        "tyres": "Performance",
+        "clearance": "Low"
+      }
+    },
+    {
+      "id": "kovar-blesk",
+      "name": "Blesk",
+      "maker": "Kovar",
+      "country": "Czechia",
+      "year": 2014,
+      "body": "Hatchback",
+      "paint": "#2b4a7a",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 227,
+        "zeroTo100": 9.2,
+        "handling": 64,
+        "weightKg": 1002,
+        "drive": "Fwd",
+        "tyres": "Performance",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "vantelli-furia-3-5",
+      "name": "Furia 3.5",
+      "maker": "Vantelli",
+      "country": "Italy",
+      "year": 1996,
+      "body": "Supercar",
+      "paint": "#3c7a4a",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 254,
+        "zeroTo100": 7.5,
+        "handling": 72,
+        "weightKg": 1479,
+        "drive": "Rwd",
+        "tyres": "Performance",
+        "clearance": "Low"
+      }
+    },
+    {
+      "id": "brenner-5-0-v8-touring",
+      "name": "5.0 V8 Touring",
+      "maker": "Brenner",
+      "country": "Germany",
+      "year": 2005,
+      "body": "Saloon",
+      "paint": "#7a1f2b",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 250,
+        "zeroTo100": 7.7,
+        "handling": 66,
+        "weightKg": 1352,
+        "drive": "Rwd",
+        "tyres": "Performance",
+        "clearance": "Low"
+      }
+    },
+    {
+      "id": "calder-cobalt-ss",
+      "name": "Cobalt SS",
+      "maker": "Calder",
+      "country": "United States",
+      "year": 2009,
+      "body": "Muscle",
+      "paint": "#2f6fe0",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 265,
+        "zeroTo100": 7.4,
+        "handling": 60,
+        "weightKg": 1696,
+        "drive": "Rwd",
+        "tyres": "Performance",
+        "clearance": "Low"
+      }
+    },
+    {
+      "id": "hoshiro-raijin-type-s",
+      "name": "Raijin Type S",
+      "maker": "Hoshiro",
+      "country": "Japan",
+      "year": 2004,
+      "body": "Coupe",
+      "paint": "#5fb8d8",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 243,
+        "zeroTo100": 7.7,
+        "handling": 69,
+        "weightKg": 1281,
+        "drive": "Awd",
+        "tyres": "Performance",
+        "clearance": "Low"
+      }
+    },
+    {
+      "id": "kestrel-harrier",
+      "name": "Harrier",
+      "maker": "Kestrel",
+      "country": "United Kingdom",
+      "year": 2001,
+      "body": "Roadster",
+      "paint": "#4b4c55",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 247,
+        "zeroTo100": 7.4,
+        "handling": 75,
+        "weightKg": 1097,
+        "drive": "Rwd",
+        "tyres": "Performance",
+        "clearance": "Low"
+      }
+    },
+    {
+      "id": "nakamori-tsubasa-evo",
+      "name": "Tsubasa Evo",
+      "maker": "Nakamori",
+      "country": "Japan",
+      "year": 2008,
+      "body": "Rally",
+      "paint": "#8a2be2",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 247,
+        "zeroTo100": 7.6,
+        "handling": 75,
+        "weightKg": 1331,
+        "drive": "Awd",
+        "tyres": "AllSurface",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "kohlmann-gipfel-rs",
+      "name": "Gipfel RS",
+      "maker": "Kohlmann",
+      "country": "Germany",
+      "year": 2015,
+      "body": "Suv",
+      "paint": "#6fae5a",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 225,
+        "zeroTo100": 8.2,
+        "handling": 60,
+        "weightKg": 1957,
+        "drive": "Awd",
+        "tyres": "AllSurface",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "lindqvist-viking-r",
+      "name": "Viking R",
+      "maker": "Lindqvist",
+      "country": "Sweden",
+      "year": 2017,
+      "body": "Saloon",
+      "paint": "#f2eee4",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 255,
+        "zeroTo100": 7.5,
+        "handling": 68,
+        "weightKg": 1365,
+        "drive": "Awd",
+        "tyres": "Performance",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "bellcourt-mirage-gt",
+      "name": "Mirage GT",
+      "maker": "Bellcourt",
+      "country": "France",
+      "year": 2011,
+      "body": "Coupe",
+      "paint": "#e8c040",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 238,
+        "zeroTo100": 7.7,
+        "handling": 68,
+        "weightKg": 1269,
+        "drive": "Rwd",
+        "tyres": "Performance",
+        "clearance": "Low"
+      }
+    },
+    {
+      "id": "brannock-badlands",
+      "name": "Badlands",
+      "maker": "Brannock",
+      "country": "United States",
+      "year": 2018,
+      "body": "Pickup",
+      "paint": "#e0a030",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 223,
+        "zeroTo100": 8.9,
+        "handling": 57,
+        "weightKg": 2070,
+        "drive": "Awd",
+        "tyres": "OffRoad",
+        "clearance": "High"
+      }
+    },
+    {
+      "id": "ashford-vanguard",
+      "name": "Vanguard",
+      "maker": "Ashford",
+      "country": "United Kingdom",
+      "year": 2013,
+      "body": "Coupe",
+      "paint": "#b8b8c0",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 258,
+        "zeroTo100": 7.7,
+        "handling": 69,
+        "weightKg": 1319,
+        "drive": "Rwd",
+        "tyres": "Performance",
+        "clearance": "Low"
+      }
+    },
+    {
+      "id": "aurelio-corrida",
+      "name": "Corrida",
+      "maker": "Aurelio",
+      "country": "Spain",
+      "year": 2016,
+      "body": "Hatchback",
+      "paint": "#d8342c",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 240,
+        "zeroTo100": 7.4,
+        "handling": 69,
+        "weightKg": 969,
+        "drive": "Awd",
+        "tyres": "Performance",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "vantelli-furia-gt",
+      "name": "Furia GT",
+      "maker": "Vantelli",
+      "country": "Italy",
+      "year": 2008,
+      "body": "Supercar",
+      "paint": "#e86a1c",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 295,
+        "zeroTo100": 5.6,
+        "handling": 77,
+        "weightKg": 1508,
+        "drive": "Rwd",
+        "tyres": "Performance",
+        "clearance": "Low"
+      }
+    },
+    {
+      "id": "strale-tempesta",
+      "name": "Tempesta",
+      "maker": "Strale",
+      "country": "Italy",
+      "year": 1998,
+      "body": "Supercar",
+      "paint": "#c25a8a",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 307,
+        "zeroTo100": 5.3,
+        "handling": 80,
+        "weightKg": 1537,
+        "drive": "Rwd",
+        "tyres": "Performance",
+        "clearance": "Low"
+      }
+    },
+    {
+      "id": "brenner-4-4-turbo",
+      "name": "4.4 Turbo",
+      "maker": "Brenner",
+      "country": "Germany",
+      "year": 2019,
+      "body": "Saloon",
+      "paint": "#1c1c22",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 272,
+        "zeroTo100": 5.5,
+        "handling": 74,
+        "weightKg": 1333,
+        "drive": "Awd",
+        "tyres": "Performance",
+        "clearance": "Low"
+      }
+    },
+    {
+      "id": "calder-inferno",
+      "name": "Inferno",
+      "maker": "Calder",
+      "country": "United States",
+      "year": 2017,
+      "body": "Muscle",
+      "paint": "#2b4a7a",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 288,
+        "zeroTo100": 5.7,
+        "handling": 63,
+        "weightKg": 1672,
+        "drive": "Rwd",
+        "tyres": "Performance",
+        "clearance": "Low"
+      }
+    },
+    {
+      "id": "hoshiro-kensei",
+      "name": "Kensei",
+      "maker": "Hoshiro",
+      "country": "Japan",
+      "year": 2014,
+      "body": "Coupe",
+      "paint": "#3c7a4a",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 294,
+        "zeroTo100": 5.4,
+        "handling": 77,
+        "weightKg": 1331,
+        "drive": "Awd",
+        "tyres": "Performance",
+        "clearance": "Low"
+      }
+    },
+    {
+      "id": "kestrel-gyrfalcon",
+      "name": "Gyrfalcon",
+      "maker": "Kestrel",
+      "country": "United Kingdom",
+      "year": 2012,
+      "body": "Supercar",
+      "paint": "#7a1f2b",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 289,
+        "zeroTo100": 5.6,
+        "handling": 76,
+        "weightKg": 1494,
+        "drive": "Rwd",
+        "tyres": "Performance",
+        "clearance": "Low"
+      }
+    },
+    {
+      "id": "nakamori-arashi-wr",
+      "name": "Arashi WR",
+      "maker": "Nakamori",
+      "country": "Japan",
+      "year": 2019,
+      "body": "Rally",
+      "paint": "#2f6fe0",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 270,
+        "zeroTo100": 5.4,
+        "handling": 84,
+        "weightKg": 1313,
+        "drive": "Awd",
+        "tyres": "AllSurface",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "kohlmann-matterhorn",
+      "name": "Matterhorn",
+      "maker": "Kohlmann",
+      "country": "Germany",
+      "year": 2021,
+      "body": "Suv",
+      "paint": "#5fb8d8",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 247,
+        "zeroTo100": 6.6,
+        "handling": 63,
+        "weightKg": 1929,
+        "drive": "Awd",
+        "tyres": "AllSurface",
+        "clearance": "Mid"
+      }
+    },
+    {
+      "id": "moreau-eclair",
+      "name": "Eclair",
+      "maker": "Moreau",
+      "country": "France",
+      "year": 2018,
+      "body": "Supercar",
+      "paint": "#4b4c55",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 292,
+        "zeroTo100": 5.3,
+        "handling": 80,
+        "weightKg": 1501,
+        "drive": "Rwd",
+        "tyres": "Performance",
+        "clearance": "Low"
+      }
+    },
+    {
+      "id": "lindqvist-norrsken",
+      "name": "Norrsken",
+      "maker": "Lindqvist",
+      "country": "Sweden",
+      "year": 2022,
+      "body": "Saloon",
+      "paint": "#8a2be2",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 288,
+        "zeroTo100": 5.5,
+        "handling": 74,
+        "weightKg": 1372,
+        "drive": "Awd",
+        "tyres": "Performance",
+        "clearance": "Low"
+      }
+    },
+    {
+      "id": "ashford-sovereign",
+      "name": "Sovereign",
+      "maker": "Ashford",
+      "country": "United Kingdom",
+      "year": 2016,
+      "body": "Coupe",
+      "paint": "#6fae5a",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 269,
+        "zeroTo100": 5.7,
+        "handling": 74,
+        "weightKg": 1275,
+        "drive": "Rwd",
+        "tyres": "Performance",
+        "clearance": "Low"
+      }
+    },
+    {
+      "id": "strale-fulmine",
+      "name": "Fulmine",
+      "maker": "Strale",
+      "country": "Italy",
+      "year": 2019,
+      "body": "Hypercar",
+      "paint": "#f2eee4",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 350,
+        "zeroTo100": 2.9,
+        "handling": 84,
+        "weightKg": 1560,
+        "drive": "Rwd",
+        "tyres": "Performance",
+        "clearance": "Low"
+      }
+    },
+    {
+      "id": "vantelli-furia-corsa",
+      "name": "Furia Corsa",
+      "maker": "Vantelli",
+      "country": "Italy",
+      "year": 2021,
+      "body": "Supercar",
+      "paint": "#e8c040",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 338,
+        "zeroTo100": 3.6,
+        "handling": 82,
+        "weightKg": 1537,
+        "drive": "Rwd",
+        "tyres": "Slick",
+        "clearance": "Low"
+      }
+    },
+    {
+      "id": "kestrel-ascent",
+      "name": "Ascent",
+      "maker": "Kestrel",
+      "country": "United Kingdom",
+      "year": 2020,
+      "body": "Hypercar",
+      "paint": "#e0a030",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 340,
+        "zeroTo100": 2.8,
+        "handling": 85,
+        "weightKg": 1538,
+        "drive": "Rwd",
+        "tyres": "Performance",
+        "clearance": "Low"
+      }
+    },
+    {
+      "id": "brenner-e-blitz",
+      "name": "E-Blitz",
+      "maker": "Brenner",
+      "country": "Germany",
+      "year": 2023,
+      "body": "Hypercar",
+      "paint": "#b8b8c0",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 354,
+        "zeroTo100": 2.9,
+        "handling": 82,
+        "weightKg": 1568,
+        "drive": "Awd",
+        "tyres": "Performance",
+        "clearance": "Low"
+      }
+    },
+    {
+      "id": "hoshiro-ryujin",
+      "name": "Ryujin",
+      "maker": "Hoshiro",
+      "country": "Japan",
+      "year": 2022,
+      "body": "Supercar",
+      "paint": "#d8342c",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 341,
+        "zeroTo100": 3.4,
+        "handling": 87,
+        "weightKg": 1544,
+        "drive": "Awd",
+        "tyres": "Performance",
+        "clearance": "Low"
+      }
+    },
+    {
+      "id": "calder-apex-1000",
+      "name": "Apex 1000",
+      "maker": "Calder",
+      "country": "United States",
+      "year": 2024,
+      "body": "Hypercar",
+      "paint": "#e86a1c",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 343,
+        "zeroTo100": 2.9,
+        "handling": 83,
+        "weightKg": 1545,
+        "drive": "Rwd",
+        "tyres": "Slick",
+        "clearance": "Low"
+      }
+    },
+    {
+      "id": "bellcourt-orage",
+      "name": "Orage",
+      "maker": "Bellcourt",
+      "country": "France",
+      "year": 2017,
+      "body": "Hypercar",
+      "paint": "#c25a8a",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 357,
+        "zeroTo100": 3,
+        "handling": 81,
+        "weightKg": 1575,
+        "drive": "Awd",
+        "tyres": "Performance",
+        "clearance": "Low"
+      }
+    },
+    {
+      "id": "halvard-midnatt",
+      "name": "Midnatt",
+      "maker": "Halvard",
+      "country": "Sweden",
+      "year": 2021,
+      "body": "Hypercar",
+      "paint": "#1c1c22",
+      "trim": "#2a2a2a",
+      "stats": {
+        "topSpeedKmh": 333,
+        "zeroTo100": 2.9,
+        "handling": 84,
+        "weightKg": 1523,
+        "drive": "Awd",
+        "tyres": "Performance",
+        "clearance": "Low"
+      }
+    }
+  ]
+}

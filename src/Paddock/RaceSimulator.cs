@@ -110,7 +110,8 @@ public static class RaceSimulator
         }
 
         // Engine pull falls off towards top speed: a(v) = A (1 - v / top), with A set so 0-100 km/h takes the stat's time.
-        var pull = -(engineTop / car.ZeroTo100) * Math.Log(1 - (27.78 / engineTop));
+        // A car that cannot reach 100 km/h takes the stat's time to reach 90% of its top speed instead.
+        var pull = -(engineTop / car.ZeroTo100) * Math.Log(1 - (Math.Min(27.78, 0.9 * engineTop) / engineTop));
         var traction = Balance.TyreGrip(car.Tyres, condition) * rough * Balance.G * Balance.DriveTraction(car.Drive);
         var speeds = new double[metres + 1];
         for (var m = 0; m < metres; m++)

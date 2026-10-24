@@ -87,3 +87,17 @@ public class RaceSimulatorTests
         path.Length.Should().BeApproximately(Circuit.Length, 1e-6);
     }
 }
+
+public class SlowCarTests
+{
+    [Fact]
+    public void CarSlowerThan100_StillFinishes_NearItsTopSpeed()
+    {
+        var van = new Stats(90, 30, 30, 1700, Drive.Rwd, Tyres.Standard, Clearance.High);
+
+        var time = TestCars.Time(van, TestCars.Drag402, Condition.Dry);
+
+        double.IsFinite(time).Should().BeTrue();
+        time.Should().BeInRange(402 / (90 / 3.6), 60);
+    }
+}
