@@ -87,6 +87,12 @@ internal sealed class CodeLockScene : Scene
 
     protected override void OnEnter() => _context.Sounds.PlayMusic(Music.Puzzle);
 
+    public override IEnumerable<string> DebugInfo =>
+    [
+        string.Create(CultureInfo.InvariantCulture, $"Seed {Seed}  secret {string.Concat(Game.Secret)}"),
+        string.Create(CultureInfo.InvariantCulture, $"Codes still fitting {Game.PossibleCodes}  tries left {Game.AttemptsLeft}"),
+    ];
+
     public override void Update(TimeSpan elapsed, InputState input)
     {
         var actions = _context.Actions;

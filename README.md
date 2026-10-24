@@ -58,6 +58,7 @@ Command-line options (handy for checking screens without playing):
 - `--deal <n>` deals card game n; `--size <w>x<h>` sets the window size (e.g. `390x844` for a phone layout)
 - `--virtual <w>x<h>[:fit|pixel|expand]` renders at a fixed design resolution scaled into the window (Jentl's
   `VirtualScreen`); the app normally lays out for the window itself
+- `--debug true` starts with the debug overlay showing (F3 toggles it, as does Options > Debug overlay)
 
 ```bash
 dotnet run --project src/Sokoban.Desktop -- --keys "Down Enter Wait" --screenshot select.png

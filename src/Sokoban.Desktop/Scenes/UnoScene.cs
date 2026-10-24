@@ -104,6 +104,11 @@ internal sealed class UnoScene : Scene
 
     protected override void OnEnter() => _context.Sounds.PlayMusic(Music.Table);
 
+    public override IEnumerable<string> DebugInfo =>
+    [
+        string.Create(CultureInfo.InvariantCulture, $"Seed {_seed}  round {Match.RoundNumber}"),
+    ];
+
     public override void Update(TimeSpan elapsed, InputState input)
     {
         foreach (var flight in _flights)

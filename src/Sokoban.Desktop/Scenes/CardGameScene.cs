@@ -75,6 +75,15 @@ internal abstract class CardGameScene : Scene
 
     protected override void OnEnter() => Context.Sounds.PlayMusic(Music.Cards);
 
+    public override IEnumerable<string> DebugInfo =>
+    [
+        string.Create(CultureInfo.InvariantCulture, $"{Name} deal {Deal}"),
+        string.Create(CultureInfo.InvariantCulture, $"Moves {MoveCount}  hints {Game.Hints.Count()}{(Game.IsWon ? "  won" : "")}"),
+        string.Create(CultureInfo.InvariantCulture, $"Auto moves {(_autoMovesPaused ? "paused" : "on")}{(View.IsDragging ? "  dragging" : "")}"),
+    ];
+
+    public override void DrawDebug(SpriteBatch batch, Rectangle viewport) => View.DrawDebug(batch, _cursor);
+
     public override void Update(TimeSpan elapsed, InputState input)
     {
         _cursor = input.Cursor.Position;

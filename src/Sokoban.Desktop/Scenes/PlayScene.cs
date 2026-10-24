@@ -112,6 +112,13 @@ internal sealed class PlayScene : Scene
 
     protected override void OnEnter() => _context.Sounds.PlayMusic(Music.Puzzle);
 
+    public override IEnumerable<string> DebugInfo =>
+    [
+        Where is { } where ? string.Create(CultureInfo.InvariantCulture, $"Pack {where.Pack}, level {where.Index + 1}") : "Generated level",
+        string.Create(CultureInfo.InvariantCulture, $"Moves {Session.MoveCount}  pushes {Session.PushCount}  {(Session.IsSolved ? "solved" : "unsolved")}"),
+        string.Create(CultureInfo.InvariantCulture, $"Player at {Session.Player}  queued steps {_queuedMoves.Count}"),
+    ];
+
     public override void Update(TimeSpan elapsed, InputState input)
     {
         var actions = _context.Actions;

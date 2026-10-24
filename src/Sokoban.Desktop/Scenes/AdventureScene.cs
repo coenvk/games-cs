@@ -53,6 +53,7 @@ internal sealed class AdventureScene : Scene
 
     private GraphicsDevice? _device;
     private Rectangle _mapArea;
+    private Vector2 _pointer;
     private TimeSpan _untilWalk;
     private TimeSpan _overFor;
     private bool _endShown;
@@ -163,8 +164,26 @@ internal sealed class AdventureScene : Scene
         }
     }
 
+    public override IEnumerable<string> DebugInfo
+    {
+        get
+        {
+            var player = World.Player;
+            yield return string.Create(CultureInfo.InvariantCulture, $"Area {World.Area.Id}  turn {World.Turn}  seed {World.Seed}");
+            yield return string.Create(CultureInfo.InvariantCulture, $"Player at {player.Position.X},{player.Position.Y}  hp {player.Hp}/{player.MaxHp}  level {player.Level}");
+            yield return string.Create(CultureInfo.InvariantCulture, $"Actors {World.Area.Actors.Count(a => a.IsAlive)}  walk queue {_walk.Count}{(_view.IsAnimating ? "  animating" : "")}");
+            if (_view.CellAt(_pointer) is { } cell)
+            {
+                yield return string.Create(CultureInfo.InvariantCulture, $"Pointer cell {cell.X},{cell.Y}");
+            }
+        }
+    }
+
+    public override void DrawDebug(SpriteBatch batch, Rectangle viewport) => _view.DrawDebug(batch, World.Area, _pointer);
+
     public override void Update(TimeSpan elapsed, InputState input)
     {
+        _pointer = input.Cursor.Position;
         var actions = _context.Actions;
         _view.Update(elapsed);
         if (CheckEnd(elapsed))

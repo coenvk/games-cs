@@ -11,6 +11,7 @@ namespace Sokoban.Desktop;
 /// <param name="Deal">Solitaire deal number to use instead of a random one, for reproducible runs.</param>
 /// <param name="Size">Window size in pixels instead of the default 1280x800, e.g. to check a phone-shaped layout.</param>
 /// <param name="Virtual">Render at this design resolution, scaled to the window (Jentl's <c>VirtualScreen</c>).</param>
+/// <param name="Debug">Start with the debug overlay (F3) showing.</param>
 internal sealed record GameOptions(
     int? StartLevel = null,
     string? ScreenshotPath = null,
@@ -19,4 +20,5 @@ internal sealed record GameOptions(
     int SettleFrames = 60,
     int? Deal = null,
     Point? Size = null,
-    VirtualScreen? Virtual = null);
+    VirtualScreen? Virtual = null,
+    bool Debug = false);

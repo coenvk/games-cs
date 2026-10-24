@@ -58,6 +58,8 @@ internal sealed class SokobanGame : JentlGame
         base.LoadContent();
         _tileset = new Tileset(GraphicsDevice);
         _fonts = new Fonts(GameFiles.ReadAllBytes("Assets/fonts/LilitaOne-Regular.ttf"));
+        Scenes.Debug.Text = new FontTextDrawer(_fonts);
+        Scenes.Debug.IsVisible = _options.Debug;
         LevelPack[] packs =
         [
             new("Classic", "Level", LoadPack("original.xsb")),
@@ -125,7 +127,11 @@ internal sealed class SokobanGame : JentlGame
 
     protected override void Update(GameTime gameTime)
     {
-        _fonts?.Fit(ScreenBounds);
+        if (_fonts is not null)
+        {
+            _fonts.Fit(ScreenBounds);
+            Scenes.Debug.TextSize = MathF.Max(13, 17 * _fonts.Scale);
+        }
         _sounds?.Update(gameTime.ElapsedGameTime);
         base.Update(gameTime);
     }

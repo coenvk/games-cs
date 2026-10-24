@@ -13,6 +13,7 @@ using Sokoban.Desktop;
 //   --deal <n>           deal solitaire game n instead of a random one
 //   --size <w>x<h>       window size in pixels (default 1280x800)
 //   --virtual <w>x<h>[:fit|pixel|expand]  render at a fixed design resolution, scaled to the window
+//   --debug true         start with the debug overlay (F3) showing
 var options = new GameOptions();
 for (var i = 0; i + 1 < args.Length; i += 2)
 {
@@ -39,6 +40,9 @@ for (var i = 0; i + 1 < args.Length; i += 2)
         case "--size":
             var size = args[i + 1].Split('x');
             options = options with { Size = new Microsoft.Xna.Framework.Point(int.Parse(size[0], CultureInfo.InvariantCulture), int.Parse(size[1], CultureInfo.InvariantCulture)) };
+            break;
+        case "--debug":
+            options = options with { Debug = bool.Parse(args[i + 1]) };
             break;
         case "--virtual":
             var parts = args[i + 1].Split(':');
