@@ -137,12 +137,19 @@ public static class Workshop
         return true;
     }
 
+    /// <summary>Whether a fuse would still leave a full hand of cars (without one the player could never race again).</summary>
+    public static bool CanFuseKeepingAHand(Profile profile)
+    {
+        ArgumentNullException.ThrowIfNull(profile);
+        return profile.Garage.Count > Hands.Size;
+    }
+
     /// <summary>Fuses <paramref name="donorId"/> into <paramref name="targetId"/> if allowed; the donor leaves the garage (and the last hand).</summary>
     public static bool Fuse(Profile profile, Guid targetId, Guid donorId, Roster roster)
     {
         ArgumentNullException.ThrowIfNull(profile);
         ArgumentNullException.ThrowIfNull(roster);
-        if (profile.Car(targetId) is not { } target || profile.Car(donorId) is not { } donor
+        if (!CanFuseKeepingAHand(profile) || profile.Car(targetId) is not { } target || profile.Car(donorId) is not { } donor
             || !Upgrades.CanFuse(target, donor, roster.Class(target.ModelId), roster.Class(donor.ModelId)))
         {
             return false;

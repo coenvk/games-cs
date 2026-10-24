@@ -206,3 +206,23 @@ public class CorruptSaveTests
         profile.Garage.Select(c => c.Stage).Should().Equal(1, 3);
     }
 }
+
+public class FuseLockTests
+{
+    private static readonly Roster Cars = Roster.FromJson(GameData.Read("cars.json"));
+
+    [Fact]
+    public void Fuse_RefusedWhenTheGarageWouldDropBelowAHand()
+    {
+        var profile = Profile.New(Cars);
+        var model = profile.Garage[0].ModelId;
+        profile.Garage = [.. profile.Garage.Take(3)];
+        var target = CarInstance.New(model) with { Tune = new Tune(3, 3, 2) };
+        var donor = CarInstance.New(model);
+        profile.Garage.AddRange([target, donor]);
+
+        Workshop.Fuse(profile, target.Id, donor.Id, Cars).Should().BeFalse();
+        profile.Garage.Should().HaveCount(Hands.Size);
+        Workshop.CanFuseKeepingAHand(profile).Should().BeFalse();
+    }
+}

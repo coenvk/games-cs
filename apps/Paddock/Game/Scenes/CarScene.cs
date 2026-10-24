@@ -156,6 +156,10 @@ internal sealed class CarScene : Scene
         {
             Scenes.Push(new MessageScene(_context, T("Fuse"), T("Spend all of this stage's points first, then fuse another car into it.")));
         }
+        else if (!Workshop.CanFuseKeepingAHand(Profile))
+        {
+            Scenes.Push(new MessageScene(_context, T("Fuse"), T("You need more than five cars to fuse one away, or you couldn't race any more.")));
+        }
         else
         {
             Scenes.Push(new FuseScene(_context, _carId));
