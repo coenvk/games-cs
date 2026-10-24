@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <None Include="..\..\apps\Paddock\Assets\paddock\*" Link="paddock\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\apps\Paddock\Assets\cars.*" Link="paddock\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Draws Paddock's cars in code: a side view and a top view of every car, packed into one atlas. -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Jentl.Assets" Version="$(JentlVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Paddock\Paddock.csproj" />
+  </ItemGroup>
+
+</Project>
