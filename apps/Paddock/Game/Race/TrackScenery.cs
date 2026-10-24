@@ -62,16 +62,25 @@ internal static class TrackScenery
             }
         }
 
-        // Puddles on a wet road.
-        if (condition == Condition.Wet)
+        // Puddles: on a wet track, sky-blue pools with a shine on the road, the verge and the grass; on dirt, brown mud.
+        if (condition is Condition.Wet or Condition.Dirt)
         {
-            for (var i = 0; i < width * height / 900; i++)
+            var road = condition == Condition.Wet ? new Color(98, 126, 168) : new Color(96, 70, 46);
+            var shine = condition == Condition.Wet ? new Color(170, 196, 230) : new Color(140, 110, 80);
+            var ground = condition == Condition.Wet ? new Color(70, 104, 120) : new Color(84, 64, 44);
+            for (var i = 0; i < width * height / 700; i++)
             {
                 var (x, y) = (random.Next(width), random.Next(height));
-                if (pixels[(y * width) + x] == style.Surface)
+                var here = pixels[(y * width) + x];
+                var onRoad = here == style.Surface || here == style.Verge;
+                if (!onRoad && (here != style.Ground || random.Next(3) != 0))
                 {
-                    Blob(pixels, width, height, x, y, 4 + random.Next(4), 2, new Color(96, 120, 156));
+                    continue;
                 }
+
+                var (rx, ry) = (5 + random.Next(7), 2 + random.Next(3));
+                Blob(pixels, width, height, x, y, rx, ry, onRoad ? road : ground);
+                Fill(pixels, width, height, x - (rx / 2), y - (ry / 2), Math.Max(2, rx / 2), 1, shine);
             }
         }
     }

@@ -72,10 +72,45 @@ internal sealed class DragView(double length, Sprite player, Sprite opponent, Co
             }
         }
 
+        // Puddles along a wet strip, every few metres in each lane, with a glint.
+        if (condition == Condition.Wet)
+        {
+            for (var m = 0; m <= length; m += 7)
+            {
+                var x = X(m + ((m * 13) % 5));
+                if (x < viewport.X - 60 || x > viewport.Right)
+                {
+                    continue;
+                }
+
+                var y = road.Y + 10 + (((m * 37) % 9) * (road.Height - 20) / 9);
+                var w = (int)(perMetre * (1.5f + ((m * 7) % 4 * 0.5f)));
+                batch.FillRectangle(new Rectangle((int)x, y, w, Math.Max(2, road.Height / 40)), new Color(98, 126, 168));
+                batch.FillRectangle(new Rectangle((int)x + 2, y, Math.Max(2, w / 3), 1), new Color(170, 196, 230));
+            }
+        }
+
         // The cars: the opponent in the far lane, the player in the near one, fronts at their distance.
         var scale = Math.Max(1, (int)MathF.Round(perMetre * 4.6f / 48));
-        DrawCar(batch, opponent, X(opponentMetres), laneY - (road.Height / 10), scale);
-        DrawCar(batch, player, X(playerMetres), laneY + (road.Height * 3 / 10), scale);
+        DrawCar(batch, opponent, X(opponentMetres), laneY - (road.Height / 10), scale, opponentMetres);
+        DrawCar(batch, player, X(playerMetres), laneY + (road.Height * 3 / 10), scale, playerMetres);
+    }
+
+    private void DrawCar(SpriteBatch batch, Sprite sprite, float front, int bottom, int scale, double metres)
+    {
+        // On a wet strip a moving car throws a fan of spray off its rear wheel.
+        if (condition == Condition.Wet && metres > 0.5)
+        {
+            var rear = front - (sprite.Source.Width * scale * 0.8f);
+            for (var i = 0; i < 6; i++)
+            {
+                var spread = (float)(((metres * 3) + (i * 1.7)) % 1.0);
+                var at = new Vector2(rear - (i * 5 * scale) - (spread * 8 * scale), bottom - (2 * scale) - (i * scale * spread * 2));
+                batch.FillRectangle(new Rectangle((int)at.X, (int)at.Y, 3 * scale, 2 * scale), new Color((byte)200, (byte)215, (byte)235, (byte)(150 - (i * 22))));
+            }
+        }
+
+        DrawCar(batch, sprite, front, bottom, scale);
     }
 
     private static void DrawCar(SpriteBatch batch, Sprite sprite, float front, int bottom, int scale)

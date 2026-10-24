@@ -119,7 +119,7 @@ internal sealed class RaceScene : Scene
             Condition.Wet => Precipitation.Rain,
             Condition.Snow or Condition.Ice => Precipitation.Snow,
             _ => Precipitation.None,
-        }, _seconds);
+        }, _seconds, Jentl.Core.Graphics.Weather.Gust(_seconds, Wind(condition)));
         Hud(batch, viewport, time, mine, theirs);
         if (_phase == Phase.Racing)
         {
@@ -241,6 +241,18 @@ internal sealed class RaceScene : Scene
             var map = _circuit.Art.Map;
             _circuit.DrawMap(batch, new Point(viewport.Right - map.Width - pad, viewport.Y + pad), mine, theirs, Mine, Theirs);
         }
+    }
+
+    // Rain comes with a stiff wind, snow with a breeze; each track has its own side the wind blows from.
+    private float Wind(Condition condition)
+    {
+        var strength = condition switch
+        {
+            Condition.Wet => 0.55f,
+            Condition.Snow or Condition.Ice => 0.35f,
+            _ => 0,
+        };
+        return Jentl.Collect.StableSeed.Of(Track.Id) % 2 == 0 ? strength : -strength;
     }
 
     // The race time on screen, and how far each car has come.
