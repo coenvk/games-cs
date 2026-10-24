@@ -1,5 +1,6 @@
 ﻿// Procedurally draws the pixel-art tileset for the RPG demo and writes it as a PNG
-// plus a Tiled tileset (.tsx) carrying each tile's name, solid and opaque flags.
+// plus a Tiled tileset (.tsx) carrying each tile's name, solid and opaque flags, the
+// characters' walk frames and the in-place tile animations.
 // The output is deterministic: every tile is drawn with its own fixed seed.
 //
 // Usage: RpgArt <output-dir> [--preview <path>]
@@ -25,8 +26,13 @@ const int height = Tiles.Rows * size;
 var sheet = new Rgba[width * height];
 for (var id = 0; id < Tiles.All.Count; id++)
 {
+    if (Tiles.All[id] is not { } tile)
+    {
+        continue;
+    }
+
     var sprite = new Sprite();
-    Tiles.All[id].Draw(sprite, new Rng(1000 + id));
+    tile.Draw(sprite, Tiles.Seed(id));
     var (left, top) = (id % Tiles.Columns * size, id / Tiles.Columns * size);
     for (var y = 0; y < size; y++)
     {
@@ -40,7 +46,7 @@ for (var id = 0; id < Tiles.All.Count; id++)
 Directory.CreateDirectory(outputDir);
 File.WriteAllBytes(Path.Combine(outputDir, "tiles.png"), Png.Encode(width, height, sheet));
 File.WriteAllText(Path.Combine(outputDir, "tiles.tsx"), Tsx(width, height), new UTF8Encoding(false));
-Console.WriteLine($"Wrote {Tiles.All.Count} tiles to {outputDir}.");
+Console.WriteLine($"Wrote {Tiles.All.Count(tile => tile is not null)} tiles to {outputDir}.");
 
 if (previewPath is not null)
 {
@@ -59,7 +65,11 @@ static string Tsx(int width, int height)
     xml.Append(c, $" <image source=\"tiles.png\" width=\"{width}\" height=\"{height}\"/>\n");
     for (var id = 0; id < Tiles.All.Count; id++)
     {
-        var tile = Tiles.All[id];
+        if (Tiles.All[id] is not { } tile)
+        {
+            continue;
+        }
+
         xml.Append(c, $" <tile id=\"{id}\">\n  <properties>\n");
         xml.Append(c, $"   <property name=\"name\" value=\"{tile.Name}\"/>\n");
         if (tile.Solid)
@@ -72,7 +82,25 @@ static string Tsx(int width, int height)
             xml.Append("   <property name=\"opaque\" type=\"bool\" value=\"true\"/>\n");
         }
 
-        xml.Append("  </properties>\n </tile>\n");
+        if (tile.Walk is { } walk)
+        {
+            _ = Tiles.Id(walk); // Fails on a typo rather than writing a dangling name.
+            xml.Append(c, $"   <property name=\"walk\" value=\"{walk}\"/>\n");
+        }
+
+        xml.Append("  </properties>\n");
+        if (tile.Animation is { } frames)
+        {
+            xml.Append("  <animation>\n");
+            foreach (var (frame, duration) in frames)
+            {
+                xml.Append(c, $"   <frame tileid=\"{Tiles.Id(frame)}\" duration=\"{duration}\"/>\n");
+            }
+
+            xml.Append("  </animation>\n");
+        }
+
+        xml.Append(" </tile>\n");
     }
 
     xml.Append("</tileset>\n");

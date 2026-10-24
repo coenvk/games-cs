@@ -372,6 +372,11 @@ internal sealed class PokerScene : Scene
         {
             _endShown = true;
             _context.Sounds.Play(Table.Champion is { } champion && Players[champion].IsHuman ? Sound.Fanfare : Sound.Lose);
+            if (Table.Champion is { } winner && Players[winner].IsHuman)
+            {
+                Celebration.Confetti(Scenes);
+            }
+
             Scenes.Push(new PokerEndScene(_context, this));
             return;
         }

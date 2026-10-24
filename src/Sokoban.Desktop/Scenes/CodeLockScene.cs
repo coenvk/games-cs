@@ -49,6 +49,7 @@ internal sealed class CodeLockScene : Scene
     private TimeSpan _messageFor;
     private TimeSpan _endIn;
     private bool _endShown;
+    private Rectangle _padlock;
     private Tween _shackle = Tween.At(Vector2.Zero);
 
     public CodeLockScene(GameContext context, LockRules rules, int? seed = null)
@@ -230,7 +231,8 @@ internal sealed class CodeLockScene : Scene
 
         // The padlock, then as many past tries as fit between it and the wheels (the latest ones).
         var lockHeight = Math.Min(fonts.Px(110), (wheelsTop - hud.Bottom) / 3);
-        DrawPadlock(batch, new Rectangle(viewport.Center.X - lockHeight / 2, hud.Bottom + fonts.Px(10), lockHeight, lockHeight));
+        _padlock = new Rectangle(viewport.Center.X - lockHeight / 2, hud.Bottom + fonts.Px(10), lockHeight, lockHeight);
+        DrawPadlock(batch, _padlock);
         var historyTop = hud.Bottom + fonts.Px(20) + lockHeight;
         // Rows shrink as tries pile up, so all of them fit; only on a very short screen do the oldest scroll away.
         var room = wheelsTop - fonts.Px(12) - historyTop;
@@ -290,6 +292,8 @@ internal sealed class CodeLockScene : Scene
         if (Game.IsSolved)
         {
             _shackle = new Tween(Vector2.Zero, Vector2.One, OpenTime, Easing.CubicOut);
+            Celebration.Confetti(Scenes);
+            Celebration.Sparkle(Scenes, _padlock.Center.ToVector2(), ParticleEffects.Rise);
         }
 
         if (Game.IsOver)

@@ -368,12 +368,12 @@ internal static partial class Tiles
         s.HLine(2, 13, 14, FloorDark.Mix(Ink, 0.3));
     }
 
-    private static void OldWoman(Sprite s, Rng r)
+    private static void OldWoman(Sprite s, Rng r, bool walk)
     {
         var grey = Rgba.Hex(0xb8b8c4);
         var dress = Rgba.Hex(0x5a4a6a);
         var shawl = Rgba.Hex(0xa83e4a);
-        var hands = Figure(s, Skin, grey, dress, dress, dress, top: 2, bodyHeight: 4, robe: true);
+        var hands = Figure(s, Skin, grey, dress, dress, dress, top: 2, bodyHeight: 4, robe: true, stride: walk);
         s.Ellipse(8, 1.5, 2, 1.5, grey);
         s[7, 1] = grey.Mix(White, 0.35);
         s.HLine(6, 9, 2, grey.Mix(Ink, 0.2));
@@ -390,7 +390,7 @@ internal static partial class Tiles
         s.Outline(Ink);
     }
 
-    private static void Cat(Sprite s, Rng r)
+    private static void Cat(Sprite s, Rng r, bool walk)
     {
         var (dark, mid, light) = (Rgba.Hex(0xb05a1c), Rgba.Hex(0xe0843a), Rgba.Hex(0xf4ac64));
         s.Ball(8, 11.5, 3.5, 3.5, dark, mid, light);
@@ -405,12 +405,25 @@ internal static partial class Tiles
             s.HLine(9, 10, y, dark);
         }
 
-        s.HLine(6, 7, 14, light);
-        s.HLine(9, 10, 14, light);
-        s.Line(12, 14, 13, 13, mid);
-        s.Line(13, 12, 13, 10, mid);
-        s[14, 9] = dark;
-        s[13, 14] = dark;
+        if (walk)
+        {
+            // Paws in the other stride and the tail swished outwards.
+            s.HLine(5, 6, 14, light);
+            s.HLine(9, 10, 13, light);
+            s.Line(12, 14, 14, 12, mid);
+            s.Line(14, 11, 14, 9, mid);
+            s[15, 8] = dark;
+            s[13, 14] = dark;
+        }
+        else
+        {
+            s.HLine(6, 7, 14, light);
+            s.HLine(9, 10, 14, light);
+            s.Line(12, 14, 13, 13, mid);
+            s.Line(13, 12, 13, 10, mid);
+            s[14, 9] = dark;
+            s[13, 14] = dark;
+        }
         s.Outline(Ink);
     }
 }

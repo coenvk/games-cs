@@ -217,6 +217,22 @@ internal abstract class CardGameScene : Scene
 
         _autoMovesPaused = false;
         Context.Sounds.Play(turn.Has(_homeTag) ? Sound.Navigate : Sound.Card);
+        SparkleHome(turn);
+    }
+
+    /// <summary>Sparkles where a card has just gone home.</summary>
+    private void SparkleHome(CardTurn turn)
+    {
+        if (!turn.Has(_homeTag))
+        {
+            return;
+        }
+
+        // Wherever the game sends cards home: a foundation, a completed run, Pyramid's discards, the waste in TriPeaks.
+        foreach (var move in turn.Changes.OfType<CardsMoved>().Where(m => !m.To.IsEmpty).DistinctBy(m => m.To))
+        {
+            Celebration.Sparkle(Scenes, View.CardBounds(move.To, move.To.Count - 1).Center.ToVector2());
+        }
     }
 
     protected static string CardName(Card card) => card.Rank switch
@@ -281,6 +297,7 @@ internal abstract class CardGameScene : Scene
             if (turn.Has(_homeTag))
             {
                 Context.Sounds.Play(Sound.Navigate);
+                SparkleHome(turn);
             }
         }
     }
@@ -298,6 +315,7 @@ internal abstract class CardGameScene : Scene
         {
             _winShown = true;
             Context.Sounds.Play(Sound.Fanfare);
+            Celebration.Confetti(Scenes);
             Scenes.Push(new CardWonScene(Context, this));
         }
     }

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<tileset version="1.10" tiledversion="1.10.2" name="tiles" tilewidth="16" tileheight="16" tilecount="64" columns="8">
- <image source="tiles.png" width="128" height="128"/>
+<tileset version="1.10" tiledversion="1.10.2" name="tiles" tilewidth="16" tileheight="16" tilecount="80" columns="8">
+ <image source="tiles.png" width="128" height="160"/>
  <tile id="0">
   <properties>
    <property name="name" value="grass"/>
@@ -31,6 +31,10 @@
    <property name="name" value="water"/>
    <property name="solid" type="bool" value="true"/>
   </properties>
+  <animation>
+   <frame tileid="5" duration="600"/>
+   <frame tileid="64" duration="600"/>
+  </animation>
  </tile>
  <tile id="6">
   <properties>
@@ -128,6 +132,10 @@
    <property name="solid" type="bool" value="true"/>
    <property name="opaque" type="bool" value="true"/>
   </properties>
+  <animation>
+   <frame tileid="21" duration="180"/>
+   <frame tileid="65" duration="140"/>
+  </animation>
  </tile>
  <tile id="22">
   <properties>
@@ -144,51 +152,61 @@
  <tile id="24">
   <properties>
    <property name="name" value="player"/>
+   <property name="walk" value="player_walk"/>
   </properties>
  </tile>
  <tile id="25">
   <properties>
    <property name="name" value="elder"/>
+   <property name="walk" value="elder_walk"/>
   </properties>
  </tile>
  <tile id="26">
   <properties>
    <property name="name" value="herbalist"/>
+   <property name="walk" value="herbalist_walk"/>
   </properties>
  </tile>
  <tile id="27">
   <properties>
    <property name="name" value="smith"/>
+   <property name="walk" value="smith_walk"/>
   </properties>
  </tile>
  <tile id="28">
   <properties>
    <property name="name" value="villager"/>
+   <property name="walk" value="villager_walk"/>
   </properties>
  </tile>
  <tile id="29">
   <properties>
    <property name="name" value="child"/>
+   <property name="walk" value="child_walk"/>
   </properties>
  </tile>
  <tile id="30">
   <properties>
    <property name="name" value="rat"/>
+   <property name="walk" value="rat_walk"/>
   </properties>
  </tile>
  <tile id="31">
   <properties>
    <property name="name" value="slime"/>
+   <property name="walk" value="slime_walk"/>
   </properties>
  </tile>
  <tile id="32">
   <properties>
    <property name="name" value="skeleton"/>
+   <property name="walk" value="skeleton_walk"/>
   </properties>
  </tile>
  <tile id="33">
   <properties>
    <property name="name" value="spider"/>
+   <property name="walk" value="spider_walk"/>
   </properties>
  </tile>
  <tile id="34">
@@ -200,6 +218,10 @@
   <properties>
    <property name="name" value="glowcap"/>
   </properties>
+  <animation>
+   <frame tileid="35" duration="500"/>
+   <frame tileid="66" duration="500"/>
+  </animation>
  </tile>
  <tile id="36">
   <properties>
@@ -336,11 +358,91 @@
  <tile id="59">
   <properties>
    <property name="name" value="old_woman"/>
+   <property name="walk" value="old_woman_walk"/>
   </properties>
  </tile>
  <tile id="60">
   <properties>
    <property name="name" value="cat"/>
+   <property name="walk" value="cat_walk"/>
+  </properties>
+ </tile>
+ <tile id="64">
+  <properties>
+   <property name="name" value="water_2"/>
+   <property name="solid" type="bool" value="true"/>
+  </properties>
+ </tile>
+ <tile id="65">
+  <properties>
+   <property name="name" value="torch_wall_2"/>
+   <property name="solid" type="bool" value="true"/>
+   <property name="opaque" type="bool" value="true"/>
+  </properties>
+ </tile>
+ <tile id="66">
+  <properties>
+   <property name="name" value="glowcap_2"/>
+  </properties>
+ </tile>
+ <tile id="67">
+  <properties>
+   <property name="name" value="player_walk"/>
+  </properties>
+ </tile>
+ <tile id="68">
+  <properties>
+   <property name="name" value="elder_walk"/>
+  </properties>
+ </tile>
+ <tile id="69">
+  <properties>
+   <property name="name" value="herbalist_walk"/>
+  </properties>
+ </tile>
+ <tile id="70">
+  <properties>
+   <property name="name" value="smith_walk"/>
+  </properties>
+ </tile>
+ <tile id="71">
+  <properties>
+   <property name="name" value="villager_walk"/>
+  </properties>
+ </tile>
+ <tile id="72">
+  <properties>
+   <property name="name" value="child_walk"/>
+  </properties>
+ </tile>
+ <tile id="73">
+  <properties>
+   <property name="name" value="rat_walk"/>
+  </properties>
+ </tile>
+ <tile id="74">
+  <properties>
+   <property name="name" value="slime_walk"/>
+  </properties>
+ </tile>
+ <tile id="75">
+  <properties>
+   <property name="name" value="skeleton_walk"/>
+  </properties>
+ </tile>
+ <tile id="76">
+  <properties>
+   <property name="name" value="spider_walk"/>
+  </properties>
+ </tile>
+ <tile id="77">
+  <properties>
+   <property name="name" value="old_woman_walk"/>
+  </properties>
+ </tile>
+ <tile id="78">
+  <properties>
+   <property name="name" value="cat_walk"/>
   </properties>
  </tile>
 </tileset>

@@ -16,7 +16,8 @@ internal static partial class Tiles
         s.Outline(Ink);
     }
 
-    private static void Glowcap(Sprite s, Rng r)
+    // The pulse frame has a smaller, fainter halo.
+    private static void Glowcap(Sprite s, Rng r, bool dim)
     {
         var (dark, mid, light) = (Rgba.Hex(0x1a9aa8), Rgba.Hex(0x40e0e8), Rgba.Hex(0xb0ffff));
         s.Ball(8, 8.5, 5.5, 5, dark, mid, light);
@@ -28,7 +29,7 @@ internal static partial class Tiles
         s.VLine(8, 9, 13, Rgba.Hex(0xb8c8b8));
         s.HLine(6, 9, 13, stem);
         s.Outline(Ink);
-        s.Glow(8, 7.5, 8, Rgba.Hex(0x60ffff), 90);
+        s.Glow(8, 7.5, dim ? 6.5 : 8, Rgba.Hex(0x60ffff), dim ? 55 : 90);
     }
 
     private static void Amulet(Sprite s, Rng r)

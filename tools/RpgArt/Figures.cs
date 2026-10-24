@@ -5,8 +5,11 @@ namespace RpgArt;
 // Characters and creatures. People share one humanoid routine; accessories are drawn on top.
 internal static partial class Tiles
 {
-    /// <summary>Draws a front-facing person without outline and returns the row of the hands.</summary>
-    private static int Figure(Sprite s, Rgba skin, Rgba? hair, Rgba shirt, Rgba legs, Rgba boots, int top = 1, int bodyHeight = 5, int legHeight = 3, bool robe = false)
+    /// <summary>
+    /// Draws a front-facing person without outline and returns the row of the hands. With
+    /// <paramref name="stride"/> the right foot (or robe hem) is lifted for the walk frame.
+    /// </summary>
+    private static int Figure(Sprite s, Rgba skin, Rgba? hair, Rgba shirt, Rgba legs, Rgba boots, int top = 1, int bodyHeight = 5, int legHeight = 3, bool robe = false, bool stride = false)
     {
         var t = top;
         s.Rect(5, t + 1, 6, 4, skin);
@@ -32,12 +35,31 @@ internal static partial class Tiles
         s.HLine(5, 10, hands, shirt.Mix(Ink, 0.5));
 
         var feet = hands + legHeight;
-        if (robe)
+        if (robe && stride)
+        {
+            s.Rect(5, hands + 1, 6, legHeight - 1, shirt);
+            s.HLine(4, 7, feet, shirt);
+            s.HLine(8, 11, feet - 1, shirt);
+            s.VLine(10, hands + 1, feet - 1, shirtDark);
+            s.HLine(5, 7, feet, shirtDark);
+            s.HLine(8, 10, feet - 1, shirtDark);
+            s.HLine(8, 9, feet, shirtDark.Mix(Ink, 0.5));
+        }
+        else if (robe)
         {
             s.Rect(5, hands + 1, 6, legHeight, shirt);
             s.HLine(4, 11, feet, shirt);
             s.VLine(10, hands + 1, feet, shirtDark);
             s.HLine(5, 10, feet, shirtDark);
+        }
+        else if (stride)
+        {
+            s.Rect(6, hands + 1, 2, legHeight - 1, legs);
+            s.HLine(5, 7, feet, boots);
+            s.Rect(8, hands + 1, 2, legHeight - 2, legs);
+            s.VLine(8, hands + 1, feet - 2, legs.Mix(Ink, 0.35));
+            s.HLine(8, 10, feet - 1, boots);
+            s[8, feet - 1] = boots.Mix(Ink, 0.4);
         }
         else
         {
@@ -50,9 +72,9 @@ internal static partial class Tiles
         return hands;
     }
 
-    private static void Player(Sprite s, Rng r)
+    private static void Player(Sprite s, Rng r, bool walk)
     {
-        var hands = Figure(s, Skin, Rgba.Hex(0x7a4420), Rgba.Hex(0x3a6ad0), Rgba.Hex(0x6a4a30), Rgba.Hex(0x3a2414));
+        var hands = Figure(s, Skin, Rgba.Hex(0x7a4420), Rgba.Hex(0x3a6ad0), Rgba.Hex(0x6a4a30), Rgba.Hex(0x3a2414), stride: walk);
         s[7, 3] = Rgba.Hex(0x7a4420);
         s.HLine(5, 10, 7, Rgba.Hex(0x5a8ae8));
         s.VLine(12, 3, hands - 2, Steel);
@@ -63,10 +85,10 @@ internal static partial class Tiles
         s.Outline(Ink);
     }
 
-    private static void Elder(Sprite s, Rng r)
+    private static void Elder(Sprite s, Rng r, bool walk)
     {
         var robe = Rgba.Hex(0x6a3aa2);
-        var hands = Figure(s, Skin, Rgba.Hex(0xe4e4ec), robe, robe, robe, robe: true);
+        var hands = Figure(s, Skin, Rgba.Hex(0xe4e4ec), robe, robe, robe, robe: true, stride: walk);
         s.Rect(6, 5, 4, 3, White);
         s.HLine(7, 8, 8, White);
         s.HLine(5, 10, hands, Gold);
@@ -78,10 +100,10 @@ internal static partial class Tiles
         s.Outline(Ink);
     }
 
-    private static void Herbalist(Sprite s, Rng r)
+    private static void Herbalist(Sprite s, Rng r, bool walk)
     {
         var hood = Rgba.Hex(0x2f6e34);
-        var hands = Figure(s, Skin, hood, Rgba.Hex(0x4a9a48), hood, hood, robe: true);
+        var hands = Figure(s, Skin, hood, Rgba.Hex(0x4a9a48), hood, hood, robe: true, stride: walk);
         s.HLine(5, 10, 2, hood.Mix(White, 0.15));
         s.VLine(4, 3, 7, hood);
         s.VLine(11, 3, 7, hood.Mix(Ink, 0.3));
@@ -95,10 +117,10 @@ internal static partial class Tiles
         s.Outline(Ink);
     }
 
-    private static void Smith(Sprite s, Rng r)
+    private static void Smith(Sprite s, Rng r, bool walk)
     {
         var tan = Rgba.Hex(0xd89a6a);
-        var hands = Figure(s, tan, Rgba.Hex(0x2a2024), Rgba.Hex(0xb0aca4), Rgba.Hex(0x4a3a30), Rgba.Hex(0x2a1a10));
+        var hands = Figure(s, tan, Rgba.Hex(0x2a2024), Rgba.Hex(0xb0aca4), Rgba.Hex(0x4a3a30), Rgba.Hex(0x2a1a10), stride: walk);
         var leather = Rgba.Hex(0x7a4a24);
         s.Rect(6, 7, 4, hands - 5, leather);
         s.VLine(9, 7, hands + 1, leather.Mix(Ink, 0.3));
@@ -110,9 +132,9 @@ internal static partial class Tiles
         s.Outline(Ink);
     }
 
-    private static void Villager(Sprite s, Rng r)
+    private static void Villager(Sprite s, Rng r, bool walk)
     {
-        Figure(s, Skin, Rgba.Hex(0x8a5a2a), Rgba.Hex(0xc8b080), Rgba.Hex(0x6a5a3e), Rgba.Hex(0x3a2a1a));
+        Figure(s, Skin, Rgba.Hex(0x8a5a2a), Rgba.Hex(0xc8b080), Rgba.Hex(0x6a5a3e), Rgba.Hex(0x3a2a1a), stride: walk);
         var straw = Rgba.Hex(0xe8c860);
         s.HLine(6, 9, 1, straw);
         s.HLine(3, 12, 2, straw.Mix(Ink, 0.15));
@@ -122,37 +144,47 @@ internal static partial class Tiles
         s.Outline(Ink);
     }
 
-    private static void Child(Sprite s, Rng r)
+    private static void Child(Sprite s, Rng r, bool walk)
     {
-        Figure(s, Skin, Rgba.Hex(0xe8c050), Rgba.Hex(0xd23c3c), Rgba.Hex(0x3a5a9a), Rgba.Hex(0x3a2414), top: 4, bodyHeight: 3, legHeight: 2);
+        Figure(s, Skin, Rgba.Hex(0xe8c050), Rgba.Hex(0xd23c3c), Rgba.Hex(0x3a5a9a), Rgba.Hex(0x3a2414), top: 4, bodyHeight: 3, legHeight: 2, stride: walk);
         s[9, 6] = Rgba.Hex(0xe8c050);
         s.Outline(Ink);
     }
 
-    private static void Rat(Sprite s, Rng r)
+    private static void Rat(Sprite s, Rng r, bool walk)
     {
         var pink = Rgba.Hex(0xf0a0b0);
         s.Ball(8.5, 11, 4.5, 3, Rgba.Hex(0x5a5a66), Rgba.Hex(0x8a8a96), Rgba.Hex(0xacacb6));
         s.Ball(4.5, 10.5, 2.5, 2, Rgba.Hex(0x6a6a76), Rgba.Hex(0x8a8a96), Rgba.Hex(0xacacb6));
         s.Ellipse(5.5, 8, 1.5, 1.5, Rgba.Hex(0x8a8a96));
         (s[5, 8], s[2, 11], s[3, 10]) = (pink, pink, Ink);
-        (s[6, 14], s[11, 14]) = (pink.Mix(Ink, 0.3), pink.Mix(Ink, 0.3));
-        (s[13, 12], s[14, 11], s[14, 10], s[14, 9], s[13, 8]) = (pink, pink, pink, pink, pink);
+        if (walk)
+        {
+            (s[7, 14], s[10, 14], s[5, 13]) = (pink.Mix(Ink, 0.3), pink.Mix(Ink, 0.3), pink.Mix(Ink, 0.3));
+            (s[13, 12], s[14, 12], s[15, 11], s[15, 10], s[14, 9]) = (pink, pink, pink, pink, pink);
+        }
+        else
+        {
+            (s[6, 14], s[11, 14]) = (pink.Mix(Ink, 0.3), pink.Mix(Ink, 0.3));
+            (s[13, 12], s[14, 11], s[14, 10], s[14, 9], s[13, 8]) = (pink, pink, pink, pink, pink);
+        }
         s.Outline(Ink);
     }
 
-    private static void Slime(Sprite s, Rng r)
+    private static void Slime(Sprite s, Rng r, bool walk)
     {
         var (dark, mid, light) = (Rgba.Hex(0x2a8a3a), Rgba.Hex(0x5cc85a), Rgba.Hex(0x9ce88a));
-        s.Ball(8, 11, 6, 5, dark, mid, light);
-        s.Rect(2, 11, 12, 4, Rgba.Clear);
-        s.Ball(8, 11, 6, 4, dark, mid, light);
-        s.Ellipse(8, 12, 3.5, 1.5, mid.Mix(dark, 0.35));
-        s.HLine(3, 12, 14, dark);
-        (s[5, 8], s[6, 7], s[5, 9]) = (Rgba.Hex(0xe0ffe0), Rgba.Hex(0xe0ffe0), light);
-        foreach (var x in (int[])[6, 9])
+        // The walk frame is squashed: one pixel lower and two wider.
+        var (rx, ry, lift) = walk ? (7, 4, 1) : (6, 5, 0);
+        s.Ball(8, 11, rx, ry, dark, mid, light);
+        s.Rect(1, 11, 14, 4, Rgba.Clear);
+        s.Ball(8, 11, rx, 4, dark, mid, light);
+        s.Ellipse(8, 12, 3.5 + lift, 1.5, mid.Mix(dark, 0.35));
+        s.HLine(3 - lift, 12 + lift, 14, dark);
+        (s[5 - lift, 8 + lift], s[6 - lift, 7 + lift], s[5 - lift, 9 + lift]) = (Rgba.Hex(0xe0ffe0), Rgba.Hex(0xe0ffe0), light);
+        foreach (var x in walk ? (int[])[5, 10] : [6, 9])
         {
-            (s[x, 10], s[x, 11]) = (Ink, Ink);
+            (s[x, 10 + lift], s[x, 11 + lift]) = (Ink, Ink);
         }
 
         (s[7, 12], s[8, 12]) = (dark, dark);
@@ -169,11 +201,11 @@ internal static partial class Tiles
         }
     }
 
-    private static void Skeleton(Sprite s, Rng r)
+    private static void Skeleton(Sprite s, Rng r, bool walk)
     {
         var bone = Rgba.Hex(0xe8e4d4);
         var boneDark = Rgba.Hex(0xb0aa98);
-        var hands = Figure(s, bone, null, bone, bone, bone);
+        var hands = Figure(s, bone, null, bone, bone, bone, stride: walk);
         (s[6, 4], s[9, 4], s[6, 3], s[9, 3]) = (Ink, Ink, Ink, Ink);
         (s[7, 6], s[9, 6]) = (boneDark, boneDark);
         s.Rect(4, 7, 8, 5, Rgba.Clear);
@@ -186,23 +218,30 @@ internal static partial class Tiles
         s.VLine(11, 7, hands, boneDark);
         s.Rect(6, hands + 1, 4, 3, Rgba.Clear);
         s.VLine(6, hands + 1, 14, bone);
-        s.VLine(9, hands + 1, 14, boneDark);
+        s.VLine(9, hands + 1, walk ? 13 : 14, boneDark);
+        if (walk)
+        {
+            (s[5, 14], s[10, 13]) = (bone, boneDark);
+        }
         s.Outline(Ink);
     }
 
-    private static void Spider(Sprite s, Rng r)
+    private static void Spider(Sprite s, Rng r, bool walk)
     {
         var leg = Rgba.Hex(0x7a5a96);
         (int X0, int Y0, int X1, int Y1, int X2, int Y2)[] legs =
         [
             (6, 7, 3, 4, 1, 6), (5, 9, 2, 7, 1, 10), (5, 10, 2, 11, 1, 14), (6, 12, 4, 13, 3, 15),
         ];
-        foreach (var (x0, y0, x1, y1, x2, y2) in legs)
+        for (var i = 0; i < legs.Length; i++)
         {
-            s.Line(x0, y0, x1, y1, leg);
-            s.Line(x1, y1, x2, y2, leg);
-            s.Line(15 - x0, y0, 15 - x1, y1, leg);
-            s.Line(15 - x1, y1, 15 - x2, y2, leg);
+            // Walking moves alternate legs up and down, opposite on the two sides.
+            var (x0, y0, x1, y1, x2, y2) = legs[i];
+            var step = walk ? (i % 2 == 0 ? -1 : 1) : 0;
+            s.Line(x0, y0, x1, y1 + step, leg);
+            s.Line(x1, y1 + step, x2, y2 + step, leg);
+            s.Line(15 - x0, y0, 15 - x1, y1 - step, leg);
+            s.Line(15 - x1, y1 - step, 15 - x2, y2 - step, leg);
         }
 
         s.Ball(8, 10.5, 3.5, 3, Rgba.Hex(0x2a1838), Rgba.Hex(0x4c2c66), Rgba.Hex(0x7050a0));

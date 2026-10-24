@@ -136,10 +136,12 @@ internal sealed class AdventureScene : Scene
         if (result.Events.OfType<LevelGained>().Any())
         {
             _context.Sounds.Play(Sound.LevelUp);
+            _view.Burst(World.Player.Position, ParticleEffects.Rise);
         }
         else if (result.Events.OfType<ItemPickedUp>().Any())
         {
             _context.Sounds.Play(Sound.Pickup);
+            _view.Burst(World.Player.Position, ParticleEffects.Sparkles);
         }
         else if (result.Events.OfType<ActorAttacked>().Any())
         {
@@ -420,6 +422,7 @@ internal sealed class AdventureScene : Scene
         {
             _endShown = true;
             _context.Sounds.Play(Sound.Fanfare);
+            Celebration.Confetti(Scenes);
             Scenes.Push(new AdventureEndScene(_context, this, won: true));
             return true;
         }

@@ -121,6 +121,7 @@ internal sealed class UnoScene : Scene
                 _roundShown = true;
                 Match.ScoreRound();
                 _context.Sounds.Play(Sound.Fanfare);
+                Celebration.Confetti(Scenes);
                 Scenes.Push(new UnoRoundScene(_context, this));
             }
 

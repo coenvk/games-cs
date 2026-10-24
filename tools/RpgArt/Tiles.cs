@@ -4,25 +4,29 @@ namespace RpgArt;
 
 /// <param name="Solid">Blocks movement.</param>
 /// <param name="Opaque">Blocks line of sight.</param>
-internal sealed record TileDef(string Name, bool Solid, bool Opaque, Action<Sprite, Rng> Draw);
+/// <param name="Walk">Name of the tile holding this character's walk frame.</param>
+/// <param name="Animation">In-place animation as (tile name, duration in ms) frames.</param>
+internal sealed record TileDef(string Name, bool Solid, bool Opaque, Action<Sprite, Rng> Draw, string? Walk = null, IReadOnlyList<(string Tile, int Duration)>? Animation = null);
 
 /// <summary>
 /// The tiles in sheet order (row-major); the index is the Tiled local tile id. Terrain is
 /// drawn as full squares, decor, characters and items on a transparent background.
+/// Null entries are empty slots. Animation frames are appended after the original tiles so
+/// existing ids never move; a frame redraws its base tile with the base tile's seed.
 /// </summary>
 internal static partial class Tiles
 {
     public const int Columns = 8;
-    public const int Rows = 8;
+    public const int Rows = 10;
 
-    public static readonly IReadOnlyList<TileDef> All =
+    public static readonly IReadOnlyList<TileDef?> All =
     [
         new("grass", false, false, GrassTile),
         new("grass_tall", false, false, GrassTall),
         new("flowers", false, false, Flowers),
         new("path", false, false, Path),
         new("bridge", false, false, Bridge),
-        new("water", true, false, WaterTile),
+        new("water", true, false, (s, r) => WaterTile(s, r, 0), Animation: [("water", 600), ("water_2", 600)]),
         new("tree", true, true, Tree),
         new("bush", true, false, Bush),
         new("fence", true, false, Fence),
@@ -38,21 +42,21 @@ internal static partial class Tiles
         new("stairs_down", false, false, StairsDown),
         new("stairs_up", false, false, StairsUp),
         new("rubble", false, false, Rubble),
-        new("torch_wall", true, true, TorchWall),
+        new("torch_wall", true, true, (s, r) => TorchWall(s, r, false), Animation: [("torch_wall", 180), ("torch_wall_2", 140)]),
         new("crate", true, false, Crate),
         new("barrel", true, false, Barrel),
-        new("player", false, false, Player),
-        new("elder", false, false, Elder),
-        new("herbalist", false, false, Herbalist),
-        new("smith", false, false, Smith),
-        new("villager", false, false, Villager),
-        new("child", false, false, Child),
-        new("rat", false, false, Rat),
-        new("slime", false, false, Slime),
-        new("skeleton", false, false, Skeleton),
-        new("spider", false, false, Spider),
+        new("player", false, false, (s, r) => Player(s, r, false), Walk: "player_walk"),
+        new("elder", false, false, (s, r) => Elder(s, r, false), Walk: "elder_walk"),
+        new("herbalist", false, false, (s, r) => Herbalist(s, r, false), Walk: "herbalist_walk"),
+        new("smith", false, false, (s, r) => Smith(s, r, false), Walk: "smith_walk"),
+        new("villager", false, false, (s, r) => Villager(s, r, false), Walk: "villager_walk"),
+        new("child", false, false, (s, r) => Child(s, r, false), Walk: "child_walk"),
+        new("rat", false, false, (s, r) => Rat(s, r, false), Walk: "rat_walk"),
+        new("slime", false, false, (s, r) => Slime(s, r, false), Walk: "slime_walk"),
+        new("skeleton", false, false, (s, r) => Skeleton(s, r, false), Walk: "skeleton_walk"),
+        new("spider", false, false, (s, r) => Spider(s, r, false), Walk: "spider_walk"),
         new("potion", false, false, Potion),
-        new("glowcap", false, false, Glowcap),
+        new("glowcap", false, false, (s, r) => Glowcap(s, r, false), Animation: [("glowcap", 500), ("glowcap_2", 500)]),
         new("amulet", false, false, Amulet),
         new("sword", false, false, Sword),
         new("shield", false, false, Shield),
@@ -76,9 +80,44 @@ internal static partial class Tiles
         new("hay", true, false, Hay),
         new("sack", true, false, Sack),
         new("doormat", false, false, Doormat),
-        new("old_woman", false, false, OldWoman),
-        new("cat", false, false, Cat),
+        new("old_woman", false, false, (s, r) => OldWoman(s, r, false), Walk: "old_woman_walk"),
+        new("cat", false, false, (s, r) => Cat(s, r, false), Walk: "cat_walk"),
+        null,
+        null,
+        null,
+        new("water_2", true, false, (s, _) => WaterTile(s, SeedOf("water"), 2)),
+        new("torch_wall_2", true, true, (s, _) => TorchWall(s, SeedOf("torch_wall"), true)),
+        new("glowcap_2", false, false, (s, _) => Glowcap(s, SeedOf("glowcap"), true)),
+        new("player_walk", false, false, (s, _) => Player(s, SeedOf("player"), true)),
+        new("elder_walk", false, false, (s, _) => Elder(s, SeedOf("elder"), true)),
+        new("herbalist_walk", false, false, (s, _) => Herbalist(s, SeedOf("herbalist"), true)),
+        new("smith_walk", false, false, (s, _) => Smith(s, SeedOf("smith"), true)),
+        new("villager_walk", false, false, (s, _) => Villager(s, SeedOf("villager"), true)),
+        new("child_walk", false, false, (s, _) => Child(s, SeedOf("child"), true)),
+        new("rat_walk", false, false, (s, _) => Rat(s, SeedOf("rat"), true)),
+        new("slime_walk", false, false, (s, _) => Slime(s, SeedOf("slime"), true)),
+        new("skeleton_walk", false, false, (s, _) => Skeleton(s, SeedOf("skeleton"), true)),
+        new("spider_walk", false, false, (s, _) => Spider(s, SeedOf("spider"), true)),
+        new("old_woman_walk", false, false, (s, _) => OldWoman(s, SeedOf("old_woman"), true)),
+        new("cat_walk", false, false, (s, _) => Cat(s, SeedOf("cat"), true)),
     ];
+
+    public static Rng Seed(int id) => new(1000 + id);
+
+    public static int Id(string name)
+    {
+        for (var id = 0; id < All.Count; id++)
+        {
+            if (All[id]?.Name == name)
+            {
+                return id;
+            }
+        }
+
+        throw new ArgumentException($"Unknown tile '{name}'.", nameof(name));
+    }
+
+    private static Rng SeedOf(string name) => Seed(Id(name));
 
     private static void GrassTile(Sprite s, Rng r)
     {
@@ -148,16 +187,22 @@ internal static partial class Tiles
         }
     }
 
-    private static void WaterTile(Sprite s, Rng r)
+    // Shifting the ripples sideways (wrapping, so tiles still join) gives the second frame.
+    private static void WaterTile(Sprite s, Rng r, int shift)
     {
         s.Fill(Water);
         s.Speckle(r, 12, WaterDark);
         (int X, int Y, int Length)[] ripples = [(1, 2, 5), (9, 4, 6), (4, 8, 5), (11, 10, 4), (1, 13, 6), (10, 14, 5)];
-        foreach (var (x, y, length) in ripples)
+        foreach (var (x0, y, length) in ripples)
         {
-            s.HLine(x + 1, x + length - 2, y, WaterLight);
-            (s[x, y + 1], s[x + length - 1, y + 1]) = (WaterLight, WaterLight);
-            s[x + (length / 2), y] = WaterFoam;
+            var x = x0 + shift;
+            for (var px = x + 1; px <= x + length - 2; px++)
+            {
+                s[px % Sprite.Size, y] = WaterLight;
+            }
+
+            (s[x % Sprite.Size, y + 1], s[(x + length - 1) % Sprite.Size, y + 1]) = (WaterLight, WaterLight);
+            s[(x + (length / 2) - (shift == 0 ? 0 : 1)) % Sprite.Size, y] = WaterFoam;
         }
     }
 
@@ -430,17 +475,28 @@ internal static partial class Tiles
         s.Outline(Ink);
     }
 
-    private static void TorchWall(Sprite s, Rng r)
+    // The flicker frame has a taller, leaning flame and casts a little less light.
+    private static void TorchWall(Sprite s, Rng r, bool flicker)
     {
         StoneWall(s, r);
-        s.Light(8, 5, 9, Rgba.Hex(0xffa040), 0.45);
+        s.Light(8, 5, flicker ? 8 : 9, Rgba.Hex(0xffa040), flicker ? 0.38 : 0.45);
         s.HLine(6, 9, 11, Iron);
         (s[6, 10], s[9, 10]) = (Iron, Iron);
         s.VLine(7, 7, 12, Wood);
         s.VLine(8, 7, 12, WoodDark);
-        s.Ellipse(8, 4.5, 2.2, 3, Rgba.Hex(0xe85818));
-        s.Ellipse(8, 5.2, 1.3, 2, Rgba.Hex(0xffb030));
-        (s[7, 5], s[8, 5]) = (Rgba.Hex(0xfff2b0), Rgba.Hex(0xfff2b0));
+        if (flicker)
+        {
+            s.Ellipse(7.7, 4.8, 1.9, 2.8, Rgba.Hex(0xe85818));
+            s.Ellipse(7.9, 5.4, 1.1, 1.8, Rgba.Hex(0xffb030));
+            (s[7, 2], s[6, 1]) = (Rgba.Hex(0xe85818), Rgba.Hex(0xe85818));
+            (s[7, 6], s[8, 5]) = (Rgba.Hex(0xfff2b0), Rgba.Hex(0xfff2b0));
+        }
+        else
+        {
+            s.Ellipse(8, 4.5, 2.2, 3, Rgba.Hex(0xe85818));
+            s.Ellipse(8, 5.2, 1.3, 2, Rgba.Hex(0xffb030));
+            (s[7, 5], s[8, 5]) = (Rgba.Hex(0xfff2b0), Rgba.Hex(0xfff2b0));
+        }
     }
 
     private static void Crate(Sprite s, Rng r)

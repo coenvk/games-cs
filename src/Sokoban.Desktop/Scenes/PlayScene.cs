@@ -497,6 +497,7 @@ internal sealed class PlayScene : Scene
             _queuedMoves.Clear();
             LastImprovement = _context.Progress.Record(Session, Time);
             _context.Sounds.Play(Sound.Completed);
+            Celebration.Confetti(Scenes);
         }
 
         _solvedFor += elapsed;
