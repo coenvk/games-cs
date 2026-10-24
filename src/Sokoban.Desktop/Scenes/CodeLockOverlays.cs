@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Sokoban.Desktop.Input;
 using Sokoban.Desktop.UI;
+using Jentl.Core.UI;
 
 namespace Sokoban.Desktop.Scenes;
 
@@ -37,7 +38,7 @@ internal sealed class CodeLockLevelsScene : Scene
             return;
         }
 
-        _menu.Update(input, _context.Actions, elapsed);
+        _menu.Update(input, Controls.Ui, elapsed);
     }
 
     public override void Draw(SpriteBatch batch, Rectangle viewport) =>
@@ -97,7 +98,7 @@ internal sealed class CodeLockPauseScene : Scene
             return;
         }
 
-        _menu.Update(input, _context.Actions, elapsed);
+        _menu.Update(input, Controls.Ui, elapsed);
     }
 
     public override void Draw(SpriteBatch batch, Rectangle viewport) =>
@@ -127,7 +128,7 @@ internal sealed class CodeLockEndScene : Scene
 
     public override bool IsOverlay => true;
 
-    public override void Update(TimeSpan elapsed, InputState input) => _menu.Update(input, _context.Actions, elapsed);
+    public override void Update(TimeSpan elapsed, InputState input) => _menu.Update(input, Controls.Ui, elapsed);
 
     public override void Draw(SpriteBatch batch, Rectangle viewport)
     {

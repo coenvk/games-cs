@@ -1,14 +1,13 @@
 ﻿using FontStashSharp;
-using Jentl.Core.Content;
 using Microsoft.Xna.Framework;
 
-namespace Sokoban.Desktop.UI;
+namespace Jentl.Core.UI;
 
 /// <summary>
-/// The game's font in the sizes the UI uses, scaled to the screen. Glyphs are rasterised on demand,
+/// A font in the sizes the UI uses, scaled to the screen. Glyphs are rasterised on demand,
 /// so a new scale (resizing the window, rotating a phone) just renders new sizes.
 /// </summary>
-internal sealed class Fonts : IDisposable
+public sealed class Fonts : IDisposable
 {
     // The layout was designed at this size; the UI scales from it.
     private const float DesignWidth = 1280;
@@ -21,11 +20,12 @@ internal sealed class Fonts : IDisposable
 
     private readonly FontSystem _system;
 
-    public Fonts()
+    /// <param name="font">A TrueType or OpenType font file's bytes.</param>
+    public Fonts(byte[] font)
     {
         // The sprite batch blends non-premultiplied (see JentlGame), so the glyph atlas must be too.
         _system = new FontSystem(new FontSystemSettings { GlyphRenderResult = GlyphRenderResult.NonPremultiplied });
-        _system.AddFont(GameFiles.ReadAllBytes("Assets/fonts/LilitaOne-Regular.ttf"));
+        _system.AddFont(font);
     }
 
     /// <summary>UI scale: 1 at 1280x800, smaller on small screens.</summary>

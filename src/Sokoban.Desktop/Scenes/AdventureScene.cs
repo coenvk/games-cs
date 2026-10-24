@@ -14,6 +14,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Mossbrook;
 using Sokoban.Desktop.Input;
 using Sokoban.Desktop.UI;
+using Jentl.Core.UI;
 
 namespace Sokoban.Desktop.Scenes;
 

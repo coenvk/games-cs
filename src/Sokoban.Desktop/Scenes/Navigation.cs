@@ -1,5 +1,6 @@
 ﻿using Jentl.Core.Scenes;
 using Sokoban.Desktop.UI;
+using Jentl.Core.UI;
 
 namespace Sokoban.Desktop.Scenes;
 

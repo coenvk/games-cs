@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Sokoban.Desktop.Input;
 using Sokoban.Desktop.UI;
+using Jentl.Core.UI;
 
 namespace Sokoban.Desktop.Scenes;
 
@@ -42,7 +43,7 @@ internal sealed class CardGamesScene : Scene
             return;
         }
 
-        _menu.Update(input, _context.Actions, elapsed);
+        _menu.Update(input, Controls.Ui, elapsed);
     }
 
     public override void Draw(SpriteBatch batch, Rectangle viewport) =>
@@ -86,7 +87,7 @@ internal sealed class CardPauseScene : Scene
             return;
         }
 
-        _menu.Update(input, _context.Actions, elapsed);
+        _menu.Update(input, Controls.Ui, elapsed);
     }
 
     public override void Draw(SpriteBatch batch, Rectangle viewport) =>
@@ -123,7 +124,7 @@ internal sealed class CardWonScene : Scene
             return;
         }
 
-        _menu.Update(input, _context.Actions, elapsed);
+        _menu.Update(input, Controls.Ui, elapsed);
     }
 
     public override void Draw(SpriteBatch batch, Rectangle viewport) =>
@@ -163,7 +164,7 @@ internal sealed class SpiderSuitsScene : Scene
             return;
         }
 
-        _menu.Update(input, _context.Actions, elapsed);
+        _menu.Update(input, Controls.Ui, elapsed);
     }
 
     public override void Draw(SpriteBatch batch, Rectangle viewport) =>

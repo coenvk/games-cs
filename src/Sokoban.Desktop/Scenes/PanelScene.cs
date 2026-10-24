@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Sokoban.Desktop.Input;
 using Sokoban.Desktop.UI;
+using Jentl.Core.UI;
 
 namespace Sokoban.Desktop.Scenes;
 
@@ -28,7 +29,7 @@ internal abstract class PanelScene(GameContext context) : Scene
             return;
         }
 
-        Menu.Update(input, Context.Actions, elapsed);
+        Menu.Update(input, Controls.Ui, elapsed);
     }
 
     public override void Draw(SpriteBatch batch, Rectangle viewport) => OverlayPanel.Draw(batch, viewport, Context.Fonts, Title, Lines, Menu);

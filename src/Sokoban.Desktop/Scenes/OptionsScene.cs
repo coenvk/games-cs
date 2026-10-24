@@ -1,22 +1,50 @@
-﻿using Jentl.Core.Input;
+﻿using System.Globalization;
+using Jentl.Core.Input;
 using Jentl.Core.Scenes;
+using Jentl.Core.UI;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Sokoban.Desktop.Input;
-using Sokoban.Desktop.UI;
 
 namespace Sokoban.Desktop.Scenes;
 
-/// <summary>Sound and fullscreen toggles, shown over the menu or the paused level. Changes save immediately.</summary>
+/// <summary>Sound, volume and fullscreen, shown over the menu or a paused game. Changes save immediately.</summary>
 internal sealed class OptionsScene : Scene
 {
     private readonly GameContext _context;
-    private Menu _menu;
+    private readonly Form _form;
 
     public OptionsScene(GameContext context)
     {
         _context = context;
-        _menu = BuildMenu();
+        var settings = context.Settings.Value;
+        List<FormRow> rows =
+        [
+            new ToggleRow("Sound", () => settings.Sound, on =>
+            {
+                settings.Sound = on;
+                context.Sounds.Enabled = on;
+                Save();
+            }),
+            new SliderRow("Volume", () => settings.Volume, volume =>
+            {
+                settings.Volume = volume;
+                context.Sounds.Volume = volume;
+                Save();
+            }, step: 0.1f, format: v => string.Create(CultureInfo.InvariantCulture, $"{v * 100:0}%")),
+        ];
+        if (context.Platform.CanFullscreen)
+        {
+            rows.Add(new ToggleRow("Fullscreen", () => settings.Fullscreen, on =>
+            {
+                settings.Fullscreen = on;
+                context.SetFullscreen(on);
+                Save();
+            }));
+        }
+
+        rows.Add(new ButtonRow("Back", () => Scenes.Pop()));
+        _form = new Form(context.Sounds, [.. rows]);
     }
 
     public override bool IsOverlay => true;
@@ -29,7 +57,7 @@ internal sealed class OptionsScene : Scene
             return;
         }
 
-        _menu.Update(input, _context.Actions, elapsed);
+        _form.Update(input, Controls.Ui, elapsed);
     }
 
     public override void Draw(SpriteBatch batch, Rectangle viewport)
@@ -37,47 +65,8 @@ internal sealed class OptionsScene : Scene
         var lines = _context.Sounds.IsAvailable
             ? Array.Empty<PanelLine>()
             : [new PanelLine("No audio device found", Palette.Muted)];
-        OverlayPanel.Draw(batch, viewport, _context.Fonts, "Options", lines, _menu);
+        OverlayPanel.Draw(batch, viewport, _context.Fonts, "Options", lines, _form);
     }
 
-    private Menu BuildMenu(int selected = 0)
-    {
-        var settings = _context.Settings.Value;
-        List<MenuItem> items = [new($"Sound: {OnOff(settings.Sound)}", ToggleSound)];
-        if (_context.Platform.CanFullscreen)
-        {
-            items.Add(new MenuItem($"Fullscreen: {OnOff(settings.Fullscreen)}", ToggleFullscreen));
-        }
-
-        items.Add(new MenuItem("Back", () => Scenes.Pop()));
-        return new Menu(_context.Sounds, [.. items])
-        {
-            Selected = selected,
-        };
-    }
-
-    private void ToggleSound()
-    {
-        var settings = _context.Settings.Value;
-        settings.Sound = !settings.Sound;
-        _context.Sounds.Enabled = settings.Sound;
-        _context.Sounds.Play(Sound.Navigate);
-        Changed();
-    }
-
-    private void ToggleFullscreen()
-    {
-        var settings = _context.Settings.Value;
-        settings.Fullscreen = !settings.Fullscreen;
-        _context.SetFullscreen(settings.Fullscreen);
-        Changed();
-    }
-
-    private void Changed()
-    {
-        _context.Settings.Save();
-        _menu = BuildMenu(_menu.Selected);
-    }
-
-    private static string OnOff(bool value) => value ? "On" : "Off";
+    private void Save() => _context.Settings.Save();
 }

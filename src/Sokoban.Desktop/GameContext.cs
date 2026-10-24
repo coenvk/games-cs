@@ -5,6 +5,7 @@ using Sokoban.Desktop.Input;
 using Sokoban.Desktop.Rendering;
 using Sokoban.Desktop.UI;
 using Sokoban.Model;
+using Jentl.Core.UI;
 
 namespace Sokoban.Desktop;
 

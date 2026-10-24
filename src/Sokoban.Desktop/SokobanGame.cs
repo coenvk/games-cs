@@ -13,6 +13,7 @@ using Sokoban.Desktop.Rendering;
 using Sokoban.Desktop.Scenes;
 using Sokoban.Desktop.UI;
 using Sokoban.Model;
+using Jentl.Core.UI;
 
 namespace Sokoban.Desktop;
 
@@ -54,7 +55,7 @@ internal sealed class SokobanGame : JentlGame
     {
         base.LoadContent();
         _tileset = new Tileset(GraphicsDevice);
-        _fonts = new Fonts();
+        _fonts = new Fonts(GameFiles.ReadAllBytes("Assets/fonts/LilitaOne-Regular.ttf"));
         LevelPack[] packs =
         [
             new("Classic", "Level", LoadPack("original.xsb")),
@@ -65,6 +66,7 @@ internal sealed class SokobanGame : JentlGame
         var settings = SavedFile<Settings>.Load(store, "settings.json", Settings.FromJson, s => s.ToJson(), () => new Settings());
         _sounds = SoundPlayer.Load("Assets/sounds", Sound.Navigate, Sound.Completed);
         _sounds.Enabled = settings.Value.Sound;
+        _sounds.Volume = Math.Clamp(settings.Value.Volume, 0f, 1f);
         if (_platform.CanFullscreen)
         {
             SetFullscreen(settings.Value.Fullscreen);

@@ -2,16 +2,16 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Sokoban.Desktop.UI;
+namespace Jentl.Core.UI;
 
-internal enum Align
+public enum Align
 {
     Left,
     Center,
     Right,
 }
 
-internal static class TextExtensions
+public static class TextExtensions
 {
     private static readonly Vector2 ShadowOffset = new(0, 3);
 

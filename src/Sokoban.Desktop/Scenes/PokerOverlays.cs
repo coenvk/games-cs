@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using Microsoft.Xna.Framework;
 using Sokoban.Desktop.UI;
+using Jentl.Core.UI;
 
 namespace Sokoban.Desktop.Scenes;
 

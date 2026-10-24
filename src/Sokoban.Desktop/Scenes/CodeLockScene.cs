@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Sokoban.Desktop.Input;
 using Sokoban.Desktop.UI;
+using Jentl.Core.UI;
 
 namespace Sokoban.Desktop.Scenes;
 
@@ -216,8 +217,8 @@ internal sealed class CodeLockScene : Scene
             _up[i] = new Rectangle(x, wheelsTop, wheel, arrow);
             _faces[i] = new Rectangle(x, wheelsTop + arrow, wheel, wheel);
             _down[i] = new Rectangle(x, wheelsTop + arrow + wheel, wheel, arrow);
-            Triangle(batch, _up[i], pointsUp: true, Palette.Muted);
-            Triangle(batch, _down[i], pointsUp: false, Palette.Muted);
+            batch.FillTriangle(Arrow(_up[i]), pointsUp: true, Palette.Muted);
+            batch.FillTriangle(Arrow(_down[i]), pointsUp: false, Palette.Muted);
             batch.FillRectangle(_faces[i], i == _selected && !Game.IsOver ? Palette.Accent : Palette.PanelLight);
             var face = _faces[i];
             face.Inflate(-fonts.Px(4), -fonts.Px(4));
@@ -371,15 +372,11 @@ internal sealed class CodeLockScene : Scene
         batch.FillRectangle(new Rectangle(body.Center.X - hole / 2, body.Center.Y - hole, hole, hole * 2), Palette.Ink);
     }
 
-    private static void Triangle(SpriteBatch batch, Rectangle area, bool pointsUp, Color color)
+    /// <summary>The arrow inside a wheel's up or down area: three fifths of it, centred.</summary>
+    private static Rectangle Arrow(Rectangle area)
     {
-        var height = area.Height * 3 / 5;
-        var top = area.Y + (area.Height - height) / 2;
-        for (var y = 0; y < height; y++)
-        {
-            var row = pointsUp ? y : height - 1 - y;
-            var width = Math.Max(1, (row + 1) * area.Width * 3 / 5 / height);
-            batch.FillRectangle(new Rectangle(area.Center.X - width / 2, top + y, width, 1), color);
-        }
+        var inner = new Rectangle(0, 0, area.Width * 3 / 5, area.Height * 3 / 5);
+        inner.Offset(area.Center.X - inner.Width / 2, area.Center.Y - inner.Height / 2);
+        return inner;
     }
 }

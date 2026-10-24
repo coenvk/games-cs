@@ -1,4 +1,5 @@
 ﻿using Jentl.Core.Input;
+using Jentl.Core.UI;
 using Microsoft.Xna.Framework.Input;
 
 namespace Sokoban.Desktop.Input;
@@ -43,5 +44,16 @@ internal static class Controls
         [GameAction.Inventory] = [Keys.I, Keys.B],
         [GameAction.Journal] = [Keys.J, Keys.Q],
         [GameAction.Wait] = [Keys.OemPeriod, Keys.T],
+    });
+
+    /// <summary>The same keys for the UI widgets (menus, forms).</summary>
+    public static ActionMap<UiAction> Ui { get; } = new(new Dictionary<UiAction, Keys[]>
+    {
+        [UiAction.Up] = [.. Default.KeysFor(GameAction.Up)],
+        [UiAction.Down] = [.. Default.KeysFor(GameAction.Down)],
+        [UiAction.Left] = [.. Default.KeysFor(GameAction.Left)],
+        [UiAction.Right] = [.. Default.KeysFor(GameAction.Right)],
+        [UiAction.Confirm] = [.. Default.KeysFor(GameAction.Confirm)],
+        [UiAction.Back] = [.. Default.KeysFor(GameAction.Back)],
     });
 }

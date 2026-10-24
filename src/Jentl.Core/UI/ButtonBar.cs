@@ -4,15 +4,15 @@ using Jentl.Core.Input;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Sokoban.Desktop.UI;
+namespace Jentl.Core.UI;
 
 /// <param name="Label">Text on the button.</param>
 /// <param name="Press">What it does when tapped or clicked.</param>
 /// <param name="Highlight">Draws it in the accent colour, e.g. the main action on a screen.</param>
-internal sealed record Button(string Label, Action Press, bool Highlight = false);
+public sealed record Button(string Label, Action Press, bool Highlight = false);
 
 /// <summary>A centred row of tappable buttons. Like <see cref="Menu"/>, hit areas are where they were last drawn.</summary>
-internal sealed class ButtonBar
+public sealed class ButtonBar
 {
     private const int MinGap = 4;
 

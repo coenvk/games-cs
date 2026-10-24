@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Sokoban.Desktop.Input;
 using Sokoban.Desktop.UI;
+using Jentl.Core.UI;
 
 namespace Sokoban.Desktop.Scenes;
 
@@ -40,7 +41,7 @@ internal sealed class PauseScene : Scene
             return;
         }
 
-        _menu.Update(input, _context.Actions, elapsed);
+        _menu.Update(input, Controls.Ui, elapsed);
     }
 
     public override void Draw(SpriteBatch batch, Rectangle viewport) =>

@@ -8,6 +8,9 @@ internal sealed class Settings
 {
     public bool Sound { get; set; } = true;
 
+    /// <summary>Sound volume from 0 to 1.</summary>
+    public float Volume { get; set; } = 1f;
+
     public bool Fullscreen { get; set; }
 
     public string ToJson() => JsonSerializer.Serialize(this, SettingsJsonContext.Default.Settings);

@@ -10,6 +10,7 @@ using Microsoft.Xna.Framework.Input;
 using Poker;
 using Sokoban.Desktop.Input;
 using Sokoban.Desktop.UI;
+using Jentl.Core.UI;
 
 namespace Sokoban.Desktop.Scenes;
 
