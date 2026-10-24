@@ -50,7 +50,8 @@ Command-line options (handy for checking screens without playing):
 
 - `--level <n>` opens level n directly (above the main menu)
 - `--keys "<k1> <k2> ..."` plays these keys instead of reading the keyboard (MonoGame `Keys` names; `Wait` idles half a second), plus
-  `Tap:x,y` and `Drag:x1,y1,x2,y2` for pointer input
+  `Tap:x,y` and `Drag:x1,y1,x2,y2` for pointer input, and `Pad:A` (MonoGame `Buttons` names) and
+  `RightStick:x,y,frames[,trigger]` for a gamepad
 - `--screenshot <path>` saves a PNG once the keys have played out, then exits
 - `--save-dir <path>` keeps progress in this directory (scripted runs otherwise keep progress in memory only)
 - `--settle <frames>` idle frames after the keys before the screenshot (default 60; use 1 to catch an animation mid-step)
@@ -98,6 +99,21 @@ On a keyboard:
 | Enter / Space | Select menu item; reopen the completion screen on a solved level |
 | PageDown / `]`, PageUp / `[` | Next / previous level |
 | Esc | Pause in a level; back in menus |
+
+With a gamepad (any connected controller; in the browser, press a button first so the page sees it):
+
+| Button | Action |
+|---|---|
+| D-pad / left stick | Move; menu selection |
+| A | Select / confirm |
+| B / Start | Pause in a level; back in menus |
+| X / LB | Undo |
+| RB | Redo; next pack in level select |
+| Y | Hint |
+| View (Back) | Restart level |
+| Right stick + right trigger | An on-screen pointer: move it and pull the trigger to tap, hold to drag. Plays the card games and walks the adventure map; the mouse or a touch takes over again as soon as it moves |
+
+In the adventure Y opens the bag, X the journal and RB waits a turn.
 
 ## Roadmap
 

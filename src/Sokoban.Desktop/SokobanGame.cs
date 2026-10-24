@@ -27,6 +27,7 @@ internal sealed class SokobanGame : JentlGame
     private readonly PlatformFeatures _platform;
     private readonly Queue<ScriptFrame>? _script;
     private PointerState _scriptPointer;
+    private GamePadState _scriptPad;
     private int _settledFrames;
     private Tileset? _tileset;
     private Fonts? _fonts;
@@ -106,16 +107,20 @@ internal sealed class SokobanGame : JentlGame
         if (_script.TryDequeue(out var frame))
         {
             _scriptPointer = frame.Pointer ?? _scriptPointer with { IsDown = false };
+            _scriptPad = frame.Pad;
             return frame.Keys;
         }
 
         _settledFrames++;
         _scriptPointer = _scriptPointer with { IsDown = false };
+        _scriptPad = default;
         return default;
     }
 
     // Called right after ReadKeyboard each frame, so it returns the same script frame's pointer.
     protected override PointerState ReadPointer(TimeSpan now) => _script is null ? base.ReadPointer(now) : _scriptPointer;
+
+    protected override GamePadState ReadGamePad() => _script is null ? base.ReadGamePad() : _scriptPad;
 
     protected override void Update(GameTime gameTime)
     {
@@ -161,7 +166,9 @@ internal sealed class SokobanGame : JentlGame
 
     /// <summary>
     /// Each key is held for one frame and released for one frame. <c>Tap:x,y</c> presses and releases the
-    /// pointer there; <c>Drag:x1,y1,x2,y2</c> moves it from one point to the other while held.
+    /// pointer there; <c>Drag:x1,y1,x2,y2</c> moves it from one point to the other while held. <c>Pad:A</c>
+    /// presses a gamepad button; <c>RightStick:x,y,frames</c> tilts the right stick (with the trigger held when
+    /// <c>x,y,frames,1</c>).
     /// </summary>
     private static Queue<ScriptFrame> BuildScript(IEnumerable<string> keys)
     {
@@ -188,6 +195,26 @@ internal sealed class SokobanGame : JentlGame
                 continue;
             }
 
+            if (name.StartsWith("Pad:", StringComparison.OrdinalIgnoreCase))
+            {
+                var button = Enum.Parse<Buttons>(name[4..], ignoreCase: true);
+                frames.Enqueue(new ScriptFrame(default, null, new GamePadState(Vector2.Zero, Vector2.Zero, 0f, 0f, button)));
+                frames.Enqueue(default);
+                continue;
+            }
+
+            if (name.StartsWith("RightStick:", StringComparison.OrdinalIgnoreCase))
+            {
+                var numbers = Numbers(name);
+                var trigger = numbers.Length > 3 ? numbers[3] : 0f;
+                for (var i = 0; i < numbers[2]; i++)
+                {
+                    frames.Enqueue(new ScriptFrame(default, null, new GamePadState(Vector2.Zero, new Vector2(numbers[0], numbers[1]), 0f, trigger, [])));
+                }
+
+                continue;
+            }
+
             if (name.Equals("Wait", StringComparison.OrdinalIgnoreCase))
             {
                 for (var i = 0; i < WaitFrames; i++)
@@ -205,15 +232,18 @@ internal sealed class SokobanGame : JentlGame
         return frames;
     }
 
-    private static Vector2[] Coordinates(string token)
-    {
-        var numbers = token[(token.IndexOf(':', StringComparison.Ordinal) + 1)..]
+    private static float[] Numbers(string token) =>
+        token[(token.IndexOf(':', StringComparison.Ordinal) + 1)..]
             .Split(',')
             .Select(n => float.Parse(n, CultureInfo.InvariantCulture))
             .ToArray();
+
+    private static Vector2[] Coordinates(string token)
+    {
+        var numbers = Numbers(token);
         return Enumerable.Range(0, numbers.Length / 2).Select(i => new Vector2(numbers[2 * i], numbers[2 * i + 1])).ToArray();
     }
 
     /// <summary>One frame of scripted input; a null pointer means "released where it last was".</summary>
-    private readonly record struct ScriptFrame(KeyboardState Keys, PointerState? Pointer);
+    private readonly record struct ScriptFrame(KeyboardState Keys, PointerState? Pointer, GamePadState Pad = default);
 }
