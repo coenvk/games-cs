@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\..\test.props" />
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="$(AspNetCoreVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Jentl.Net" Version="$(JentlVersion)" />
+    <ProjectReference Include="..\..\src\GameServer\GameServer.csproj" />
+    <ProjectReference Include="..\..\src\Uno\Uno.csproj" />
+  </ItemGroup>
+
+</Project>

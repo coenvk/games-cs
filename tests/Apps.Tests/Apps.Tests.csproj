@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Checks over the apps' own files: translations and assets. -->
+
+  <Import Project="..\..\test.props" />
+
+  <ItemGroup>
+    <PackageReference Include="Jentl.Core" Version="$(JentlVersion)" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Mossbrook on the desktop. -->
+
+  <PropertyGroup>
+    <AppName>Mossbrook.Game</AppName>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\shell\Desktop.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Mossbrook\Mossbrook.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <!-- Mossbrook in the browser. -->
+
+  <PropertyGroup>
+    <AppName>Mossbrook.Game</AppName>
+    <AppTitle>Mossbrook</AppTitle>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\shell\Web.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Mossbrook\Mossbrook.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Code Lock on the desktop. -->
+
+  <PropertyGroup>
+    <AppName>CodeLock.Game</AppName>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\shell\Desktop.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\CodeLock\CodeLock.csproj" />
+  </ItemGroup>
+
+</Project>

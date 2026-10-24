@@ -1,4 +1,5 @@
-# Runs the tests, builds the browser version and publishes it to GitHub Pages on every push to main.
+# Runs the tests, builds every game for the browser and publishes them to GitHub Pages on every push to main:
+# a landing page at the root and each game in its own folder (sokoban/, solitaire/, ...).
 # One-time setup: repository Settings -> Pages -> Source: GitHub Actions.
 name: Deploy to GitHub Pages
 
@@ -23,23 +24,49 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Find the engine version
+        run: echo "JENTL_VERSION=$(sed -n 's:.*<JentlVersion>\(.*\)</JentlVersion>.*:\1:p' dependencies.props)" >> "$GITHUB_ENV"
+
+      # The engine is public; building its packages here needs no token for GitHub Packages.
+      - uses: actions/checkout@v4
+        with:
+          repository: coenvk/jentl
+          ref: v${{ env.JENTL_VERSION }}
+          path: jentl
+
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
 
-      - name: Test
-        run: dotnet test
+      - name: Pack the engine
+        run: build/jentl.sh jentl
 
-      - name: Publish web build
-        run: dotnet publish src/Sokoban.Web -c Release -o publish -p:DebugType=None
+      - name: Test
+        run: dotnet test Games.slnx
+
+      - name: Publish the games
+        run: |
+          mkdir -p site
+          cp build/site/* site/
+          publish() {
+            dotnet publish "apps/$1/Web" -c Release -o "out/$1" -p:DebugType=None
+            mkdir -p "site/$2"
+            cp -R "out/$1/wwwroot/." "site/$2/"
+          }
+          publish Sokoban sokoban
+          publish Solitaire solitaire
+          publish CardTable card-table
+          publish Mossbrook mossbrook
+          publish CodeLock code-lock
+          publish Bricks bricks
 
       # Without this, Pages runs Jekyll, which drops the _framework and _content folders.
       - name: Disable Jekyll
-        run: touch publish/wwwroot/.nojekyll
+        run: touch site/.nojekyll
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: publish/wwwroot
+          path: site
 
   deploy:
     needs: build

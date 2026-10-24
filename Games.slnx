@@ -1,0 +1,60 @@
+<Solution>
+  <Folder Name="/apps/">
+    <Project Path="apps/Sokoban/Desktop/Sokoban.Desktop.csproj" />
+    <Project Path="apps/Sokoban/Web/Sokoban.Web.csproj" />
+    <Project Path="apps/Solitaire/Desktop/Solitaire.Desktop.csproj" />
+    <Project Path="apps/Solitaire/Web/Solitaire.Web.csproj" />
+    <Project Path="apps/CardTable/Desktop/CardTable.Desktop.csproj" />
+    <Project Path="apps/CardTable/Web/CardTable.Web.csproj" />
+    <Project Path="apps/Mossbrook/Desktop/Mossbrook.Desktop.csproj" />
+    <Project Path="apps/Mossbrook/Web/Mossbrook.Web.csproj" />
+    <Project Path="apps/CodeLock/Desktop/CodeLock.Desktop.csproj" />
+    <Project Path="apps/CodeLock/Web/CodeLock.Web.csproj" />
+    <Project Path="apps/Bricks/Desktop/Bricks.Desktop.csproj" />
+    <Project Path="apps/Bricks/Web/Bricks.Web.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/Bricks/Bricks.csproj" />
+    <Project Path="src/CodeLock/CodeLock.csproj" />
+    <Project Path="src/Easthaven/Easthaven.csproj" />
+    <Project Path="src/FortyThieves/FortyThieves.csproj" />
+    <Project Path="src/FreeCell/FreeCell.csproj" />
+    <Project Path="src/GameServer/GameServer.csproj" />
+    <Project Path="src/Golf/Golf.csproj" />
+    <Project Path="src/Klondike/Klondike.csproj" />
+    <Project Path="src/Mossbrook/Mossbrook.csproj" />
+    <Project Path="src/Poker/Poker.csproj" />
+    <Project Path="src/Pyramid/Pyramid.csproj" />
+    <Project Path="src/Sokoban.Model/Sokoban.Model.csproj" />
+    <Project Path="src/Sokoban.Solver/Sokoban.Solver.csproj" />
+    <Project Path="src/Spider/Spider.csproj" />
+    <Project Path="src/TriPeaks/TriPeaks.csproj" />
+    <Project Path="src/Uno/Uno.csproj" />
+    <Project Path="src/Yukon/Yukon.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Apps.Tests/Apps.Tests.csproj" />
+    <Project Path="tests/Bricks.Tests/Bricks.Tests.csproj" />
+    <Project Path="tests/CodeLock.Tests/CodeLock.Tests.csproj" />
+    <Project Path="tests/Easthaven.Tests/Easthaven.Tests.csproj" />
+    <Project Path="tests/FortyThieves.Tests/FortyThieves.Tests.csproj" />
+    <Project Path="tests/FreeCell.Tests/FreeCell.Tests.csproj" />
+    <Project Path="tests/GameServer.Tests/GameServer.Tests.csproj" />
+    <Project Path="tests/Golf.Tests/Golf.Tests.csproj" />
+    <Project Path="tests/Klondike.Tests/Klondike.Tests.csproj" />
+    <Project Path="tests/Mossbrook.Tests/Mossbrook.Tests.csproj" />
+    <Project Path="tests/Poker.Tests/Poker.Tests.csproj" />
+    <Project Path="tests/Pyramid.Tests/Pyramid.Tests.csproj" />
+    <Project Path="tests/Sokoban.Model.Tests/Sokoban.Model.Tests.csproj" />
+    <Project Path="tests/Sokoban.Solver.Tests/Sokoban.Solver.Tests.csproj" />
+    <Project Path="tests/Spider.Tests/Spider.Tests.csproj" />
+    <Project Path="tests/TriPeaks.Tests/TriPeaks.Tests.csproj" />
+    <Project Path="tests/Uno.Tests/Uno.Tests.csproj" />
+    <Project Path="tests/Yukon.Tests/Yukon.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/LevelConverter/LevelConverter.csproj" />
+    <Project Path="tools/RpgArt/RpgArt.csproj" />
+    <Project Path="tools/SolverBench/SolverBench.csproj" />
+  </Folder>
+</Solution>

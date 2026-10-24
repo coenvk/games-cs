@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "isRoot": true,
+  "tools": {
+    "jentl.assets.tool": {
+      "version": "0.1.0",
+      "commands": [
+        "jentl-assets"
+      ],
+      "rollForward": false
+    }
+  }
+}

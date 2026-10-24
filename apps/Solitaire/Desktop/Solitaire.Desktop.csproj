@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Solitaire on the desktop. -->
+
+  <PropertyGroup>
+    <AppName>Solitaire</AppName>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\shell\Desktop.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Klondike\Klondike.csproj" />
+    <ProjectReference Include="..\..\..\src\FreeCell\FreeCell.csproj" />
+    <ProjectReference Include="..\..\..\src\Pyramid\Pyramid.csproj" />
+    <ProjectReference Include="..\..\..\src\Spider\Spider.csproj" />
+    <ProjectReference Include="..\..\..\src\TriPeaks\TriPeaks.csproj" />
+    <ProjectReference Include="..\..\..\src\FortyThieves\FortyThieves.csproj" />
+    <ProjectReference Include="..\..\..\src\Yukon\Yukon.csproj" />
+    <ProjectReference Include="..\..\..\src\Easthaven\Easthaven.csproj" />
+    <ProjectReference Include="..\..\..\src\Golf\Golf.csproj" />
+  </ItemGroup>
+
+</Project>

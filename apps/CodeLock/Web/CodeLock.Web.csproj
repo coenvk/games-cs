@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <!-- Code Lock in the browser. -->
+
+  <PropertyGroup>
+    <AppName>CodeLock.Game</AppName>
+    <AppTitle>Code Lock</AppTitle>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\shell\Web.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\CodeLock\CodeLock.csproj" />
+  </ItemGroup>
+
+</Project>

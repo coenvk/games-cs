@@ -366,6 +366,8 @@ artifacts
 # Packaged builds
 dist/
 
-# Mirrored game files for the web dev server (source: src/Sokoban.Desktop/Assets, levels/)
-src/Sokoban.Web/wwwroot/Assets/
-src/Sokoban.Web/wwwroot/Levels/
+# The Jentl engine, packed locally by build/jentl.sh
+.jentl-packages/
+
+# Web apps: mirrored copies of the shared and linked assets (see shell/Web.props)
+apps/*/Web/wwwroot/

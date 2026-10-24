@@ -1,9 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk">
-
-  <Import Project="..\..\test.props" />
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\Jentl.Puzzle\Jentl.Puzzle.csproj" />
-  </ItemGroup>
-
-</Project>

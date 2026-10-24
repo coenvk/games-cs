@@ -7,8 +7,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Jentl.Multiplayer\Jentl.Multiplayer.csproj" />
-    <ProjectReference Include="..\Jentl.Net\Jentl.Net.csproj" />
+    <PackageReference Include="Jentl.Multiplayer" Version="$(JentlVersion)" />
+    <PackageReference Include="Jentl.Net" Version="$(JentlVersion)" />
   </ItemGroup>
 
 </Project>

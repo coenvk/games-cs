@@ -7,8 +7,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Jentl.Ecs\Jentl.Ecs.csproj" />
-    <ProjectReference Include="..\Jentl.Physics\Jentl.Physics.csproj" />
+    <PackageReference Include="Jentl.Ecs" Version="$(JentlVersion)" />
+    <PackageReference Include="Jentl.Physics" Version="$(JentlVersion)" />
   </ItemGroup>
 
 </Project>

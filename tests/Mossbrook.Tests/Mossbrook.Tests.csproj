@@ -8,7 +8,7 @@
 
   <!-- The real content files, so the tests check what ships. -->
   <ItemGroup>
-    <None Include="..\..\src\Sokoban.Desktop\Assets\rpg\*" Link="rpg\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\apps\Mossbrook\Assets\rpg\*" Link="rpg\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,71 @@
+<Project>
+
+  <!--
+    Turns an app folder into a browser game (KNI on Blazor WebAssembly). The app's Web project sets AppName and
+    AppTitle and imports this: the shell's code and the app's Game/ folder are compiled against KNI, the assets are
+    served as static files, and the page (index.html) is made from the shell's template with the app's title.
+  -->
+
+  <PropertyGroup>
+    <AssemblyName>$(AppName).Web</AssemblyName>
+    <RootNamespace>Games</RootNamespace>
+    <KniPlatform>BlazorGL</KniPlatform>
+    <DefineConstants>$(DefineConstants);BLAZORGL</DefineConstants>
+    <BlazorEnableTimeZoneSupport>false</BlazorEnableTimeZoneSupport>
+    <ShellDir>$(MSBuildThisFileDirectory)</ShellDir>
+    <AppDir>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)/../'))</AppDir>
+    <!-- Mirrored copies of the linked files (see MirrorGameFiles); the links themselves are the assets. -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);wwwroot/**</DefaultItemExcludes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="$(ShellDir)Shell/**/*.cs;$(ShellDir)Web/**/*.cs" LinkBase="Shell" />
+    <Compile Include="$(AppDir)Game/**/*.cs" LinkBase="Game" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="$(ShellDir)Assets/**/*.*" Link="wwwroot/Assets/%(RecursiveDir)%(Filename)%(Extension)" />
+    <Content Include="$(AppDir)Assets/**/*.*" Link="wwwroot/Assets/%(RecursiveDir)%(Filename)%(Extension)" />
+    <Content Include="$(ShellDir)Web/wwwroot/**/*.*" Link="wwwroot/%(RecursiveDir)%(Filename)%(Extension)" />
+    <Content Include="$(IntermediateOutputPath)index.html" Link="wwwroot/index.html" />
+  </ItemGroup>
+
+  <!-- The list of shipped game files, embedded so the page can download them all before the game starts. -->
+  <ItemGroup>
+    <EmbeddedResource Include="$(IntermediateOutputPath)gamefiles.txt" LogicalName="gamefiles.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Jentl.Core.Kni" Version="$(JentlVersion)" />
+    <PackageReference Include="nkast.Kni.Platform.Blazor.GL" Version="$(KniVersion)" />
+    <PackageReference Include="FontStashSharp.Kni" Version="$(FontStashSharpVersion)" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="$(BlazorVersion)" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="$(BlazorVersion)" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!-- The page, from the shell's template with this game's title. -->
+  <Target Name="WriteIndexPage" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <_IndexPage>$([System.IO.File]::ReadAllText('$(ShellDir)Web/index.template.html').Replace('{{TITLE}}', '$(AppTitle)').Replace('{{LOADING}}', 'Loading $(AppTitle)…'))</_IndexPage>
+    </PropertyGroup>
+    <WriteLinesToFile File="$(IntermediateOutputPath)index.html" Lines="$(_IndexPage)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+  </Target>
+
+  <!--
+    The development server serves static files from wwwroot on disk, so linked files must physically exist there
+    too. Publishing copies them anyway; this keeps "dotnet run" working.
+  -->
+  <Target Name="MirrorGameFiles" BeforeTargets="PrepareForBuild" DependsOnTargets="WriteIndexPage">
+    <Copy SourceFiles="@(Content)" DestinationFiles="@(Content->'$(MSBuildProjectDirectory)/%(Link)')" Condition="'%(Content.Link)' != ''" SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="WriteGameFileList" BeforeTargets="PrepareForBuild">
+    <ItemGroup>
+      <!-- Raw link paths (wwwroot/Assets/...); the page normalises separators when it reads the list. -->
+      <_GameFile Include="@(Content->'%(Link)')" Condition="'%(Content.Link)' != '' And $([System.String]::Copy('%(Content.Link)').Replace('\', '/').StartsWith('wwwroot/Assets/'))" />
+      <_GameFile Include="@(Content->'%(Link)')" Condition="'%(Content.Link)' != '' And $([System.String]::Copy('%(Content.Link)').Replace('\', '/').StartsWith('wwwroot/Levels/'))" />
+    </ItemGroup>
+    <WriteLinesToFile File="$(IntermediateOutputPath)gamefiles.txt" Lines="@(_GameFile)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+  </Target>
+
+</Project>

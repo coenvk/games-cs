@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Games on Jentl</title>
+    <link rel="icon" type="image/png" href="icon.png" />
+    <style>
+        :root {
+            --background: #1c2130;
+            --panel: #29304a;
+            --panel-light: #3a435e;
+            --text: #f2eee4;
+            --muted: #96a0ba;
+            --accent: #ffc72c;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: var(--background);
+            color: var(--text);
+            font: 1rem/1.5 system-ui, sans-serif;
+        }
+
+        main {
+            max-width: 64rem;
+            margin: 0 auto;
+            padding: 2.5rem 1rem 3rem;
+        }
+
+        h1 {
+            margin: 0;
+            color: var(--accent);
+            font-size: clamp(2rem, 6vw, 3rem);
+        }
+
+        .intro {
+            margin: 0.5rem 0 2rem;
+            color: var(--muted);
+        }
+
+        .games {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+            gap: 1rem;
+        }
+
+        a.game {
+            display: block;
+            padding: 1.25rem;
+            border-radius: 0.5rem;
+            background: var(--panel);
+            color: inherit;
+            text-decoration: none;
+            border-top: 4px solid var(--accent);
+        }
+
+        a.game:hover,
+        a.game:focus-visible {
+            background: var(--panel-light);
+            outline: none;
+        }
+
+        a.game h2 {
+            margin: 0 0 0.25rem;
+            font-size: 1.35rem;
+        }
+
+        a.game p {
+            margin: 0;
+            color: var(--muted);
+        }
+
+        footer {
+            margin-top: 2.5rem;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        footer a {
+            color: var(--accent);
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <h1>Games on Jentl</h1>
+        <p class="intro">Six small games in your browser, made with the Jentl engine. They also run on the desktop, and in
+            Dutch (Options &gt; Language).</p>
+
+        <div class="games">
+            <a class="game" href="sokoban/">
+                <h2>Sokoban</h2>
+                <p>Push every crate onto a goal. Two packs of levels, generated levels, and hints from a solver.</p>
+            </a>
+            <a class="game" href="solitaire/">
+                <h2>Solitaire</h2>
+                <p>Nine games: Klondike, Easthaven, Forty Thieves, FreeCell, Golf, Pyramid, Spider, TriPeaks and Yukon.</p>
+            </a>
+            <a class="game" href="card-table/">
+                <h2>Card Table</h2>
+                <p>Uno and Texas Hold'em against bots, passing the device round, or Uno online.</p>
+            </a>
+            <a class="game" href="mossbrook/">
+                <h2>Mossbrook</h2>
+                <p>A small turn-based adventure: a village, a cellar and a lost amulet.</p>
+            </a>
+            <a class="game" href="code-lock/">
+                <h2>Code Lock</h2>
+                <p>Mastermind on a combination lock: crack the code in ten tries.</p>
+            </a>
+            <a class="game" href="bricks/">
+                <h2>Bricks</h2>
+                <p>A brick breaker with power-ups, on Jentl's entity component system and physics.</p>
+            </a>
+        </div>
+
+        <footer>
+            Source: <a href="https://github.com/coenvk/sokoban-cs">the games</a> and <a
+                href="https://github.com/coenvk/jentl">the Jentl engine</a>.
+        </footer>
+    </main>
+</body>
+
+</html>

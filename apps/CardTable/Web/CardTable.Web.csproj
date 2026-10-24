@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <!-- Card Table in the browser. -->
+
+  <PropertyGroup>
+    <AppName>CardTable</AppName>
+    <AppTitle>Card Table</AppTitle>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\shell\Web.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Uno\Uno.csproj" />
+    <ProjectReference Include="..\..\..\src\Poker\Poker.csproj" />
+  </ItemGroup>
+
+</Project>

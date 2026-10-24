@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Bricks on the desktop. -->
+
+  <PropertyGroup>
+    <AppName>Bricks.Game</AppName>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\shell\Desktop.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Bricks\Bricks.csproj" />
+  </ItemGroup>
+
+</Project>

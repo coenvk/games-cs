@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <!-- Sokoban in the browser. -->
+
+  <PropertyGroup>
+    <AppName>Sokoban</AppName>
+    <AppTitle>Sokoban</AppTitle>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\shell\Web.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Sokoban.Model\Sokoban.Model.csproj" />
+    <ProjectReference Include="..\..\..\src\Sokoban.Solver\Sokoban.Solver.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\..\..\levels\*.xsb" Link="wwwroot/Levels/%(Filename)%(Extension)" />
+  </ItemGroup>
+
+</Project>

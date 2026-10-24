@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <!-- Bricks in the browser. -->
+
+  <PropertyGroup>
+    <AppName>Bricks.Game</AppName>
+    <AppTitle>Bricks</AppTitle>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\shell\Web.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Bricks\Bricks.csproj" />
+  </ItemGroup>
+
+</Project>

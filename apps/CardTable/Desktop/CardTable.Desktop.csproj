@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Card Table on the desktop. -->
+
+  <PropertyGroup>
+    <AppName>CardTable</AppName>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\shell\Desktop.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Uno\Uno.csproj" />
+    <ProjectReference Include="..\..\..\src\Poker\Poker.csproj" />
+  </ItemGroup>
+
+</Project>
