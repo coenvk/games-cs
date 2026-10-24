@@ -1,6 +1,6 @@
 # Games on Jentl
 
-**Play in your browser: https://coenvk.github.io/sokoban-cs/**
+**Play in your browser: https://coenvk.github.io/games-cs/**
 
 Six small games made with [Jentl](https://github.com/coenvk/jentl-cs), a C# game engine on MonoGame (desktop) and KNI (the
 browser). It started as a C# rewrite of [coenvk/Sokoban](https://github.com/coenvk/Sokoban), and the engine grew alongside;
