@@ -54,6 +54,7 @@ internal sealed class AdventureScene : Scene
     private GraphicsDevice? _device;
     private Rectangle _mapArea;
     private Vector2 _pointer;
+    private readonly LightMap _lights = new();
     private TimeSpan _untilWalk;
     private TimeSpan _overFor;
     private bool _endShown;
@@ -149,6 +150,12 @@ internal sealed class AdventureScene : Scene
             _context.Sounds.Play(Sound.Hit);
         }
 
+        // A red wash when the player takes a blow.
+        if (result.Events.OfType<ActorAttacked>().Any(a => a.Target == World.Player))
+        {
+            Scenes.Post.Flash(new Color(220, 40, 30, 110), TimeSpan.FromMilliseconds(300));
+        }
+
         if (result.Events.Any(e => e is AreaEntered))
         {
             PlayAreaMusic();
@@ -180,6 +187,18 @@ internal sealed class AdventureScene : Scene
     }
 
     public override void DrawDebug(SpriteBatch batch, Rectangle viewport) => _view.DrawDebug(batch, World.Area, _pointer);
+
+    /// <summary>In dark areas, the light map: the player's lantern, torches and glowing mushrooms.</summary>
+    public override void DrawLayers(SpriteBatch batch, Rectangle viewport)
+    {
+        if (World.Area.IsLit || _mapArea.IsEmpty)
+        {
+            return;
+        }
+
+        _view.Arrange(_mapArea, World.Area, World.Player);
+        _lights.Render(batch, _mapArea, _view.Lights(World.Area, World.Player));
+    }
 
     public override void Update(TimeSpan elapsed, InputState input)
     {
@@ -298,6 +317,10 @@ internal sealed class AdventureScene : Scene
 
         batch.FillRectangle(_mapArea, new Color(8, 9, 14));
         _view.Draw(batch, _mapArea, World.Area, player);
+        if (!World.Area.IsLit)
+        {
+            _lights.Apply(batch);
+        }
 
         batch.FillRectangle(new Rectangle(log.X, log.Y, log.Width, viewport.Bottom - log.Y), Palette.Background);
         var messages = World.Messages.TakeLast(LogLines).ToArray();
@@ -342,6 +365,7 @@ internal sealed class AdventureScene : Scene
             }
 
             _textures.Clear();
+            _lights.Dispose();
         }
 
         base.Dispose(disposing);

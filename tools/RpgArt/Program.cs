@@ -1,5 +1,5 @@
 ﻿// Procedurally draws the pixel-art tileset for the RPG demo and writes it as a PNG
-// plus a Tiled tileset (.tsx) carrying each tile's name, solid and opaque flags, the
+// plus a Tiled tileset (.tsx) carrying each tile's name, solid and opaque flags, lights, the
 // characters' walk frames and the in-place tile animations.
 // The output is deterministic: every tile is drawn with its own fixed seed.
 //
@@ -86,6 +86,12 @@ static string Tsx(int width, int height)
         {
             _ = Tiles.Id(walk); // Fails on a typo rather than writing a dangling name.
             xml.Append(c, $"   <property name=\"walk\" value=\"{walk}\"/>\n");
+        }
+
+        if (tile.Light is { } light)
+        {
+            xml.Append(c, $"   <property name=\"light\" type=\"float\" value=\"{light.Radius}\"/>\n");
+            xml.Append(c, $"   <property name=\"light_color\" value=\"{light.Color}\"/>\n");
         }
 
         xml.Append("  </properties>\n");

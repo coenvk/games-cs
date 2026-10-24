@@ -131,6 +131,8 @@
    <property name="name" value="torch_wall"/>
    <property name="solid" type="bool" value="true"/>
    <property name="opaque" type="bool" value="true"/>
+   <property name="light" type="float" value="4.5"/>
+   <property name="light_color" value="#ffb060"/>
   </properties>
   <animation>
    <frame tileid="21" duration="180"/>
@@ -217,6 +219,8 @@
  <tile id="35">
   <properties>
    <property name="name" value="glowcap"/>
+   <property name="light" type="float" value="2.2"/>
+   <property name="light_color" value="#60e8d0"/>
   </properties>
   <animation>
    <frame tileid="35" duration="500"/>

@@ -18,6 +18,9 @@ internal sealed class Settings
 
     public bool Fullscreen { get; set; }
 
+    /// <summary>Glow, scanlines and a vignette over everything.</summary>
+    public bool Retro { get; set; }
+
     public string ToJson() => JsonSerializer.Serialize(this, SettingsJsonContext.Default.Settings);
 
     /// <exception cref="InvalidDataException">The JSON is malformed.</exception>

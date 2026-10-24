@@ -5,6 +5,7 @@ using Jentl.Core.UI;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Sokoban.Desktop.Input;
+using Sokoban.Desktop.Rendering;
 
 namespace Sokoban.Desktop.Scenes;
 
@@ -57,6 +58,12 @@ internal sealed class OptionsScene : Scene
             }));
         }
 
+        rows.Add(new ToggleRow("Retro screen", () => settings.Retro, on =>
+        {
+            settings.Retro = on;
+            RetroScreen.Apply(Scenes.Post, on);
+            Save();
+        }));
         // Not saved: a tool for the session (F3 does the same).
         rows.Add(new ToggleRow("Debug overlay", () => Scenes.Debug.IsVisible, on => Scenes.Debug.IsVisible = on));
         rows.Add(new ButtonRow("Back", () => Scenes.Pop()));

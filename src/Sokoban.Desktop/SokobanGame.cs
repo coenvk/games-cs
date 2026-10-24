@@ -74,6 +74,7 @@ internal sealed class SokobanGame : JentlGame
         _sounds.MusicEnabled = settings.Value.Music;
         _sounds.MusicVolume = settings.Value.MusicVolume;
         GameAudio.Register(_sounds);
+        RetroScreen.Apply(Scenes.Post, settings.Value.Retro);
         if (_platform.CanFullscreen)
         {
             SetFullscreen(settings.Value.Fullscreen);

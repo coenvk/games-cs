@@ -6,7 +6,8 @@ namespace RpgArt;
 /// <param name="Opaque">Blocks line of sight.</param>
 /// <param name="Walk">Name of the tile holding this character's walk frame.</param>
 /// <param name="Animation">In-place animation as (tile name, duration in ms) frames.</param>
-internal sealed record TileDef(string Name, bool Solid, bool Opaque, Action<Sprite, Rng> Draw, string? Walk = null, IReadOnlyList<(string Tile, int Duration)>? Animation = null);
+/// <param name="Light">A light the tile gives off in dark areas: radius in tiles and colour (#rrggbb).</param>
+internal sealed record TileDef(string Name, bool Solid, bool Opaque, Action<Sprite, Rng> Draw, string? Walk = null, IReadOnlyList<(string Tile, int Duration)>? Animation = null, (float Radius, string Color)? Light = null);
 
 /// <summary>
 /// The tiles in sheet order (row-major); the index is the Tiled local tile id. Terrain is
@@ -42,7 +43,7 @@ internal static partial class Tiles
         new("stairs_down", false, false, StairsDown),
         new("stairs_up", false, false, StairsUp),
         new("rubble", false, false, Rubble),
-        new("torch_wall", true, true, (s, r) => TorchWall(s, r, false), Animation: [("torch_wall", 180), ("torch_wall_2", 140)]),
+        new("torch_wall", true, true, (s, r) => TorchWall(s, r, false), Animation: [("torch_wall", 180), ("torch_wall_2", 140)], Light: (4.5f, "#ffb060")),
         new("crate", true, false, Crate),
         new("barrel", true, false, Barrel),
         new("player", false, false, (s, r) => Player(s, r, false), Walk: "player_walk"),
@@ -56,7 +57,7 @@ internal static partial class Tiles
         new("skeleton", false, false, (s, r) => Skeleton(s, r, false), Walk: "skeleton_walk"),
         new("spider", false, false, (s, r) => Spider(s, r, false), Walk: "spider_walk"),
         new("potion", false, false, Potion),
-        new("glowcap", false, false, (s, r) => Glowcap(s, r, false), Animation: [("glowcap", 500), ("glowcap_2", 500)]),
+        new("glowcap", false, false, (s, r) => Glowcap(s, r, false), Animation: [("glowcap", 500), ("glowcap_2", 500)], Light: (2.2f, "#60e8d0")),
         new("amulet", false, false, Amulet),
         new("sword", false, false, Sword),
         new("shield", false, false, Shield),
