@@ -70,7 +70,7 @@ internal static class CarCard
         var header = new Rectangle(inner.X, inner.Y, inner.Width, U(34));
         batch.FillRectangle(header, frame);
         batch.DrawText(big, rarity.ToString(), new Vector2(header.X + U(10), header.Y + U(2)), Ink * alpha, shadow: false);
-        var rqText = string.Create(CultureInfo.InvariantCulture, $"RQ {rq}");
+        var rqText = string.Create(Culture, $"RQ {rq}");
         batch.DrawText(big, rqText, new Vector2(header.Right - U(10), header.Y + U(2)), Ink * alpha, Align.Right, shadow: false);
 
         // The car on a sky and a strip of road, at a whole-number scale so its pixels stay square.
@@ -89,17 +89,17 @@ internal static class CarCard
         var y = picture.Bottom + U(6);
         batch.DrawText(big, Fit(big, model.Name, inner.Width - U(16)), new Vector2(inner.X + U(8), y), Palette.Text * alpha, shadow: false);
         y += (int)big.LineHeight;
-        batch.DrawText(small, string.Create(CultureInfo.InvariantCulture, $"{model.Maker}, {model.Year}"), new Vector2(inner.X + U(8), y), Palette.Muted * alpha, shadow: false);
+        batch.DrawText(small, string.Create(Culture, $"{model.Maker}, {model.Year}"), new Vector2(inner.X + U(8), y), Palette.Muted * alpha, shadow: false);
         y += (int)small.LineHeight + U(4);
 
         // The four stats, with upgrades.
         var stats = Matches.StatsOf(car, data.Roster);
         (string Label, string Value)[] rows =
         [
-            (T("Top speed"), string.Create(CultureInfo.InvariantCulture, $"{stats.TopSpeedKmh:0} km/h")),
-            (T("0-100"), stats.TopSpeedKmh < 100 ? "—" : string.Create(CultureInfo.InvariantCulture, $"{stats.ZeroTo100:0.0} s")),
-            (T("Handling"), string.Create(CultureInfo.InvariantCulture, $"{stats.Handling:0}")),
-            (T("Weight"), string.Create(CultureInfo.InvariantCulture, $"{stats.WeightKg:#,0} kg")),
+            (T("Top speed"), string.Create(Culture, $"{stats.TopSpeedKmh:0} km/h")),
+            (T("0-100"), stats.TopSpeedKmh < 100 ? "—" : string.Create(Culture, $"{stats.ZeroTo100:0.0} s")),
+            (T("Handling"), string.Create(Culture, $"{stats.Handling:0}")),
+            (T("Weight"), string.Create(Culture, $"{stats.WeightKg:#,0} kg")),
         ];
         foreach (var (label, value) in rows)
         {

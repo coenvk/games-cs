@@ -106,7 +106,7 @@ internal sealed class EventScene : Scene
         var rung = EventPlay.Progress(profile, _event, Store.Now).Rung;
         var setup = EventPlay.Next(_event, rung, data.Roster, data.Tracks);
         var rules = _event.Def.Rules;
-        Scenes.Push(new MatchSetupScene(_context, T(_event.Def.Name), setup, rules.HandRqLimit, m => rules.Allows(m, data.Roster.Rq(m.Id)), order =>
+        Scenes.Push(new MatchSetupScene(_context, T(_event.Def.Name), setup, rules.HandRqLimit, m => rules.Allows(m, data.Roster.Rq(m.Id)), rules.Describe(T, Words.Name), order =>
         {
             var cars = order.Select(id => profile.Car(id)!).ToList();
             var outcome = EventPlay.Race(profile, _event, order, data.Roster, data.Tracks, Store.Now, new Random());

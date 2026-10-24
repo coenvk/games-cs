@@ -25,6 +25,10 @@ internal sealed class EventsScene : Scene
     {
         _context = context;
         _buttons = new ButtonBar(new Button(T("Back"), () => Scenes.Pop(Navigation.Fade())));
+
+        // Progress in events that have closed is of no use any more.
+        EventPlay.Prune(context.Paddock.Profile, context.PaddockData.Events.Live(context.Paddock.Now));
+        context.Paddock.Save();
     }
 
     public override void Update(TimeSpan elapsed, InputState input)

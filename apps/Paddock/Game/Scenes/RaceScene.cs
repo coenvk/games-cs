@@ -38,6 +38,7 @@ internal sealed class RaceScene : Scene
     // Painted tracks, kept for the match: a track and condition that come round again are not painted twice.
     private readonly Dictionary<(string Track, Condition Condition), TrackArt> _arts = [];
     private Menu? _menu;
+    private Rectangle _viewport;
 
     /// <param name="player">The player's cars in round order.</param>
     /// <param name="result">The match, already decided.</param>
@@ -83,6 +84,8 @@ internal sealed class RaceScene : Scene
         }
 
         _seconds += elapsed.TotalSeconds;
+        var (_, mine, theirs) = Positions();
+        _circuit?.Update(mine, theirs, _viewport, elapsed);
         if (_seconds >= Duration + Linger.TotalSeconds)
         {
             ShowRound();
@@ -92,13 +95,17 @@ internal sealed class RaceScene : Scene
     public override void Draw(SpriteBatch batch, Rectangle viewport)
     {
         var fonts = _context.Fonts;
-        var time = Playback.RaceTime(Math.Min(_seconds, Duration), WinnerTime, Track.Kind);
-        var mine = Current.Player.DistanceAt(time);
-        var theirs = Current.Opponent.DistanceAt(time);
+        var (time, mine, theirs) = Positions();
+        if (_viewport != viewport)
+        {
+            // The first frame, or a new window size: place the camera before drawing.
+            _viewport = viewport;
+            _circuit?.Update(mine, theirs, viewport, TimeSpan.Zero);
+        }
+
         batch.FillRectangle(viewport, Palette.Background);
         if (_circuit is not null)
         {
-            _circuit.Update(mine, viewport, TimeSpan.FromSeconds(1 / 60.0));
             _circuit.Draw(batch, mine, theirs);
         }
         else
@@ -106,7 +113,13 @@ internal sealed class RaceScene : Scene
             _drag!.Draw(batch, fonts, viewport, mine, theirs);
         }
 
-        Weather(batch, viewport);
+        var (_, condition) = _setup.Rounds[_round];
+        Jentl.Core.Graphics.Weather.Draw(batch, viewport, condition switch
+        {
+            Condition.Wet => Precipitation.Rain,
+            Condition.Snow or Condition.Ice => Precipitation.Snow,
+            _ => Precipitation.None,
+        }, _seconds);
         Hud(batch, viewport, time, mine, theirs);
         if (_phase == Phase.Racing)
         {
@@ -152,7 +165,8 @@ internal sealed class RaceScene : Scene
             {
                 art = _arts[(track.Id, condition)] = TrackArt.Build(_context.PaddockData.Cars.Texture.GraphicsDevice, track, condition);
             }
-            _circuit = new CircuitView(art, mine, theirs, _context.Paddock.Settings.Value.RaceCamera);
+            _circuit = new CircuitView(art, mine, theirs, _context.Paddock.Settings.Value.RaceCamera, condition);
+            _viewport = Rectangle.Empty;
         }
 
         _context.Sounds.Play(Sound.Navigate);
@@ -229,24 +243,10 @@ internal sealed class RaceScene : Scene
         }
     }
 
-    // Rain on a wet track, snowflakes on snow and ice: screen-space streaks, moving with the clock.
-    private void Weather(SpriteBatch batch, Rectangle viewport)
+    // The race time on screen, and how far each car has come.
+    private (double Time, double Mine, double Theirs) Positions()
     {
-        var condition = _setup.Rounds[_round].Condition;
-        if (condition is not (Condition.Wet or Condition.Snow or Condition.Ice))
-        {
-            return;
-        }
-
-        var frame = (int)(_seconds * 60);
-        var snow = condition != Condition.Wet;
-        var count = viewport.Width * viewport.Height / (snow ? 9000 : 5000);
-        for (var i = 0; i < count; i++)
-        {
-            var fall = snow ? 1 : 9;
-            var x = viewport.X + ((i * 53) + (frame * (snow ? 1 : 3))) % viewport.Width;
-            var y = viewport.Y + ((i * 97) + (frame * fall)) % viewport.Height;
-            batch.FillRectangle(new Rectangle(x, y, snow ? 3 : 1, snow ? 3 : 7), snow ? new Color(255, 255, 255, 200) : new Color(170, 200, 240, 120));
-        }
+        var time = Playback.RaceTime(Math.Min(_seconds, Duration), WinnerTime, Track.Kind);
+        return (time, Current.Player.DistanceAt(time), Current.Opponent.DistanceAt(time));
     }
 }

@@ -94,33 +94,9 @@ internal sealed class TrackArt : IDisposable
 
     private static (Texture2D Map, Func<Vector2, Vector2> ToMap) DrawMap(GraphicsDevice device, TrackPath path)
     {
-        const int size = 120;
-        const int margin = 6;
-        var (min, max) = path.Bounds;
-        var span = Vector2.Max(new Vector2(1, 1), new Vector2(max.X - min.X, max.Y - min.Y));
-        var scale = (size - (2 * margin)) / MathF.Max(span.X, span.Y);
-        var (width, height) = ((int)(span.X * scale) + (2 * margin), (int)(span.Y * scale) + (2 * margin));
-        var pixels = new Color[width * height];
-        Array.Fill(pixels, new Color(0, 0, 0, 140));
-        Vector2 ToMap(Vector2 world) => new Vector2(world.X - min.X, world.Y - min.Y) * scale + new Vector2(margin);
-        foreach (var point in path.Polyline(2))
-        {
-            var p = ToMap(new Vector2(point.X, point.Y));
-            for (var dy = -1; dy <= 1; dy++)
-            {
-                for (var dx = -1; dx <= 1; dx++)
-                {
-                    var (x, y) = ((int)p.X + dx, (int)p.Y + dy);
-                    if (x >= 0 && y >= 0 && x < width && y < height)
-                    {
-                        pixels[(y * width) + x] = new Color(190, 190, 200);
-                    }
-                }
-            }
-        }
-
-        var texture = new Texture2D(device, width, height);
-        texture.SetData(pixels);
-        return (texture, ToMap);
+        var map = RoadPainter.PaintMap(path, 120, new Color(0, 0, 0, 140), new Color(190, 190, 200));
+        var texture = new Texture2D(device, map.Size.X, map.Size.Y);
+        texture.SetData(map.Pixels);
+        return (texture, map.ToMap);
     }
 }

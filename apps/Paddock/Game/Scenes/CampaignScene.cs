@@ -90,16 +90,18 @@ internal sealed class CampaignScene : Scene
 
     private void Race(StageDef stage)
     {
-        if (!CampaignPlay.IsOpen(Profile, Regions, stage))
+        var data = _context.PaddockData;
+        if (!CampaignPlay.CanEnter(Profile, Regions, stage, data.Roster, out var why))
         {
             _context.Sounds.Play(Sound.Error);
-            Scenes.Push(new MessageScene(_context, T("Locked"), T("Win the stage before this one first.")));
+            var title = CampaignPlay.IsOpen(Profile, Regions, stage) ? T("Can't race now") : T("Locked");
+            Scenes.Push(new MessageScene(_context, title, T(why!)));
             return;
         }
 
-        var data = _context.PaddockData;
         var setup = CampaignPlay.Setup(stage, data.Roster, data.Tracks);
-        Scenes.Push(new MatchSetupScene(_context, StageName(stage), setup, CampaignPlay.HandLimit(Profile, stage), _ => true, order =>
+        var limit = CampaignPlay.HandLimit(Profile, stage);
+        Scenes.Push(new MatchSetupScene(_context, StageName(stage), setup, limit, _ => true, [T("Hand RQ up to {0}", limit)], order =>
         {
             var cars = order.Select(id => Profile.Car(id)!).ToList();
             var outcome = CampaignPlay.Race(Profile, Regions, stage, order, data.Roster, data.Tracks);

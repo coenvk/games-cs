@@ -60,7 +60,7 @@ public class AppFileTests
             .Concat(Strings("events.json", "events", "name"))
             .Concat(Strings("campaign.json", "regions", "name"))
             .Concat(Strings("cars.json", "cars", "country"))
-            .Concat(["Starter pack", "Classic pack", "Elite pack", "Event finished", "Not enough cars that may enter", "No tickets left"]);
+            .Concat(["Starter pack", "Classic pack", "Elite pack", "Event finished", "Event ended", "Not enough cars that may enter", "No tickets left", "Win the stage before this one first."]);
     }
 
     private static string RepositoryRoot()

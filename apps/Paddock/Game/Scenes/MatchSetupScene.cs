@@ -26,6 +26,7 @@ internal sealed class MatchSetupScene : Scene
     private readonly int _rqLimit;
     private readonly Func<CarModel, bool> _allowed;
     private readonly Action<IReadOnlyList<Guid>> _start;
+    private readonly IReadOnlyList<string> _rules;
     private readonly CarInstance?[] _hand = new CarInstance?[Hands.Size];
     private readonly Rectangle[] _slots = new Rectangle[Hands.Size + 1];
     private readonly CardGrid _garage;
@@ -35,8 +36,9 @@ internal sealed class MatchSetupScene : Scene
 
     /// <param name="title">What is being raced (the event's or stage's name).</param>
     /// <param name="allowed">Which cars may enter.</param>
+    /// <param name="rules">The entry rules in words, shown when a car that may not enter is picked.</param>
     /// <param name="start">Called with the player's cars in round order when they press Race.</param>
-    public MatchSetupScene(GameContext context, string title, MatchSetup setup, int rqLimit, Func<CarModel, bool> allowed, Action<IReadOnlyList<Guid>> start)
+    public MatchSetupScene(GameContext context, string title, MatchSetup setup, int rqLimit, Func<CarModel, bool> allowed, IReadOnlyList<string> rules, Action<IReadOnlyList<Guid>> start)
     {
         _context = context;
         _title = title;
@@ -44,12 +46,18 @@ internal sealed class MatchSetupScene : Scene
         _rqLimit = rqLimit;
         _allowed = allowed;
         _start = start;
+        _rules = rules;
         var profile = context.Paddock.Profile;
         var roster = context.PaddockData.Roster;
-        var eligible = profile.Garage.Where(c => roster.Find(c.ModelId) is { } m && allowed(m)).OrderByDescending(c => roster.Rq(c.ModelId)).ToList();
-        _garage = new CardGrid(context, eligible)
+        bool May(CarInstance c) => roster.Find(c.ModelId) is { } m && allowed(m);
+        var eligible = profile.Garage.Where(May).OrderByDescending(c => roster.Rq(c.ModelId)).ToList();
+
+        // Every car shows, those that may not enter greyed at the end, so the player sees what the rules keep out.
+        var shown = eligible.Concat(profile.Garage.Where(c => !May(c)).OrderByDescending(c => roster.Find(c.ModelId) is null ? 0 : roster.Rq(c.ModelId))).ToList();
+        _garage = new CardGrid(context, shown)
         {
             Badge = car => Array.FindIndex(_hand, h => h?.Id == car.Id) is var i and >= 0 ? T("Round {0}", i + 1) : null,
+            Dimmed = car => !May(car),
         };
 
         // Start from the last hand, where its cars may still enter.
@@ -256,6 +264,13 @@ internal sealed class MatchSetupScene : Scene
     // Puts the car in the chosen slot; if it was in another slot, the two swap.
     private void Place(CarInstance car)
     {
+        if (_context.PaddockData.Roster.Find(car.ModelId) is not { } model || !_allowed(model))
+        {
+            _context.Sounds.Play(Sound.Error);
+            Scenes.Push(new MessageScene(_context, T("This car may not enter"), [.. _rules]));
+            return;
+        }
+
         var from = Array.FindIndex(_hand, h => h?.Id == car.Id);
         if (from >= 0)
         {

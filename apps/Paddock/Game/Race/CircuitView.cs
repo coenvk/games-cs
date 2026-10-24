@@ -7,17 +7,21 @@ namespace Games.Race;
 
 /// <summary>
 /// A round on a circuit, road or trail seen from above, close up: the camera follows the player's car (fixed north-up
-/// or turning with the car), the opponent shows when near. Distances are in metres along the track.
+/// or turning with the car), the opponent shows when near. Spray or grit flies up behind the wheels on wet or loose
+/// ground. Distances are in metres along the track.
 /// </summary>
-internal sealed class CircuitView(TrackArt art, Sprite player, Sprite opponent, RaceCamera mode)
+internal sealed class CircuitView(TrackArt art, Sprite player, Sprite opponent, RaceCamera mode, Condition condition)
 {
     private readonly Camera2D _camera = new() { RoundToPixels = true };
+    private readonly ParticleSystem _particles = new(capacity: 600, seed: 1);
+    private readonly ParticleEffect? _trail = TrailFor(condition);
     private bool _started;
+    private (double Player, double Opponent) _last;
 
     public TrackArt Art => art;
 
-    /// <summary>Moves the camera to the player's car.</summary>
-    public void Update(double playerMetres, Rectangle viewport, TimeSpan elapsed)
+    /// <summary>Moves the cars' trails and the camera to the player's car; call once per frame with the real elapsed time.</summary>
+    public void Update(double playerMetres, double opponentMetres, Rectangle viewport, TimeSpan elapsed)
     {
         var pose = Pose(playerMetres, TrackArt.Lane);
         _camera.Viewport = viewport;
@@ -37,6 +41,22 @@ internal sealed class CircuitView(TrackArt art, Sprite player, Sprite opponent, 
             _camera.FollowHeading(pose.Position, -MathHelper.PiOver2, elapsed, 1000, new Vector2(0.5f, 0.55f));
         }
 
+        // Only moving cars throw anything up.
+        if (_trail is { } trail && _started)
+        {
+            if (playerMetres > _last.Player)
+            {
+                Emit(trail, Pose(playerMetres, TrackArt.Lane));
+            }
+
+            if (opponentMetres > _last.Opponent)
+            {
+                Emit(trail, Pose(opponentMetres, -TrackArt.Lane));
+            }
+        }
+
+        _particles.Update(elapsed);
+        _last = (playerMetres, opponentMetres);
         _started = true;
     }
 
@@ -49,6 +69,7 @@ internal sealed class CircuitView(TrackArt art, Sprite player, Sprite opponent, 
         visible.Inflate(4, 4);
         batch.FillRectangle(visible, art.Ground);
         batch.Draw(art.World, new Vector2(art.Bounds.X, art.Bounds.Y), Color.White);
+        _particles.Draw(batch);
         DrawCar(batch, opponent, Pose(opponentMetres, -TrackArt.Lane));
         DrawCar(batch, player, Pose(playerMetres, TrackArt.Lane));
         batch.End();
@@ -65,6 +86,25 @@ internal sealed class CircuitView(TrackArt art, Sprite player, Sprite opponent, 
             var p = art.ToMap(Pose(metres, 0).Position) + new Vector2(at.X, at.Y);
             batch.FillRectangle(new Rectangle((int)p.X - 2, (int)p.Y - 2, 5, 5), color);
         }
+    }
+
+    // Water on a wet road, grit or snow on loose ground; nothing on dry tarmac or ice.
+    private static ParticleEffect? TrailFor(Condition condition) => condition switch
+    {
+        Condition.Wet => ParticleEffects.Spray,
+        Condition.Dirt => ParticleEffects.Kickup,
+        Condition.Gravel => ParticleEffects.Kickup with { Colors = [new Color(170, 160, 140, 200), new Color(130, 122, 108, 180)] },
+        Condition.Sand => ParticleEffects.Kickup with { Colors = [new Color(226, 204, 150, 200), new Color(200, 176, 120, 180)] },
+        Condition.Snow => ParticleEffects.Kickup with { Colors = [new Color(255, 255, 255, 220), new Color(220, 228, 238, 200)] },
+        _ => null,
+    };
+
+    // Behind the car, thrown backwards.
+    private void Emit(ParticleEffect trail, (Vector2 Position, float Heading) pose)
+    {
+        var (sin, cos) = MathF.SinCos(pose.Heading);
+        var back = pose.Position - (new Vector2(cos, sin) * 8);
+        _particles.Emit(back, trail with { Direction = pose.Heading + MathF.PI });
     }
 
     // Where a car is: along the centre line, shifted sideways into its lane.
