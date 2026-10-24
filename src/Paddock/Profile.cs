@@ -24,12 +24,13 @@ public sealed class Profile
     /// <summary>Campaign progress.</summary>
     public CampaignProgress Campaign { get; set; } = new();
 
-    /// <summary>A new player's profile: 5 000 cash and eight starter cars of classes F and E.</summary>
+    /// <summary>A new player's profile: 5 000 cash and eight starter cars of classes F and E (the six first F cars and the two with the lowest RQ of class E).</summary>
     public static Profile New(Roster roster)
     {
         ArgumentNullException.ThrowIfNull(roster);
         var f = roster.All.Where(c => roster.Class(c.Id) == Rarity.F).Take(6);
-        var e = roster.All.Where(c => roster.Class(c.Id) == Rarity.E).Take(2);
+        // The two gentlest E cars, so any five of the eight fit level 1's RQ limit.
+        var e = roster.All.Where(c => roster.Class(c.Id) == Rarity.E).OrderBy(c => roster.Rq(c.Id)).Take(2);
         return new Profile { Cash = Balance.StartingCash, Garage = [.. f.Concat(e).Select(c => CarInstance.New(c.Id))] };
     }
 

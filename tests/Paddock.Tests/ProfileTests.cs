@@ -226,3 +226,16 @@ public class FuseLockTests
         Workshop.CanFuseKeepingAHand(profile).Should().BeFalse();
     }
 }
+
+public class StarterGarageTests
+{
+    private static readonly Roster Cars = Roster.FromJson(GameData.Read("cars.json"));
+
+    [Fact]
+    public void New_AnyFiveStarterCars_FitLevelOne()
+    {
+        var strongest = Profile.New(Cars).Garage.Select(c => Cars.Rq(c.ModelId)).OrderDescending().Take(Hands.Size).Sum();
+
+        strongest.Should().BeLessThanOrEqualTo(Progression.RqLimit(1));
+    }
+}
