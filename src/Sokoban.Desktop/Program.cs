@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using Jentl.Core.Content;
+using Jentl.Core.Graphics;
 using Jentl.Core.Storage;
 using Sokoban.Desktop;
 
@@ -11,6 +12,7 @@ using Sokoban.Desktop;
 //   --settle <frames>    idle frames after the keys before the screenshot (default 60)
 //   --deal <n>           deal solitaire game n instead of a random one
 //   --size <w>x<h>       window size in pixels (default 1280x800)
+//   --virtual <w>x<h>[:fit|pixel|expand]  render at a fixed design resolution, scaled to the window
 var options = new GameOptions();
 for (var i = 0; i + 1 < args.Length; i += 2)
 {
@@ -37,6 +39,17 @@ for (var i = 0; i + 1 < args.Length; i += 2)
         case "--size":
             var size = args[i + 1].Split('x');
             options = options with { Size = new Microsoft.Xna.Framework.Point(int.Parse(size[0], CultureInfo.InvariantCulture), int.Parse(size[1], CultureInfo.InvariantCulture)) };
+            break;
+        case "--virtual":
+            var parts = args[i + 1].Split(':');
+            var design = parts[0].Split('x');
+            var mode = parts.Length > 1 ? parts[1].ToUpperInvariant() switch
+            {
+                "PIXEL" => ScaleMode.PixelPerfect,
+                "EXPAND" => ScaleMode.Expand,
+                _ => ScaleMode.Fit,
+            } : ScaleMode.Fit;
+            options = options with { Virtual = new VirtualScreen(int.Parse(design[0], CultureInfo.InvariantCulture), int.Parse(design[1], CultureInfo.InvariantCulture), mode) };
             break;
         default:
             Console.Error.WriteLine($"Unknown option '{args[i]}'.");

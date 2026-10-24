@@ -42,6 +42,7 @@ internal sealed class SokobanGame : JentlGame
         _store = store;
         _platform = platform;
         _script = options.Script is null ? null : BuildScript(options.Script);
+        VirtualScreen = options.Virtual;
         Window.AllowUserResizing = true;
         Window.Title = "Sokoban";
         IsMouseVisible = true;
@@ -124,7 +125,7 @@ internal sealed class SokobanGame : JentlGame
 
     protected override void Update(GameTime gameTime)
     {
-        _fonts?.Fit(GraphicsDevice.Viewport.Bounds);
+        _fonts?.Fit(ScreenBounds);
         _sounds?.Update(gameTime.ElapsedGameTime);
         base.Update(gameTime);
     }

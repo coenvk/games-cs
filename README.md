@@ -56,6 +56,8 @@ Command-line options (handy for checking screens without playing):
 - `--save-dir <path>` keeps progress in this directory (scripted runs otherwise keep progress in memory only)
 - `--settle <frames>` idle frames after the keys before the screenshot (default 60; use 1 to catch an animation mid-step)
 - `--deal <n>` deals card game n; `--size <w>x<h>` sets the window size (e.g. `390x844` for a phone layout)
+- `--virtual <w>x<h>[:fit|pixel|expand]` renders at a fixed design resolution scaled into the window (Jentl's
+  `VirtualScreen`); the app normally lays out for the window itself
 
 ```bash
 dotnet run --project src/Sokoban.Desktop -- --keys "Down Enter Wait" --screenshot select.png
