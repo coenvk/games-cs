@@ -248,3 +248,24 @@ public class RulesWordingTests
             .Should().Equal("Hand RQ up to 150", "Tyres: All-surface, Off-road", "Bodies: Suv");
     }
 }
+
+public class EventClockTests
+{
+    private static readonly Roster Cars = Roster.FromJson(GameData.Read("cars.json"));
+    private static readonly DateTimeOffset Now = new(2026, 10, 24, 12, 0, 0, TimeSpan.Zero);
+
+    [Fact]
+    public void ClockSetBack_RaceThenRestore_GrantsNoExtraTickets()
+    {
+        var def = EventDef.ListFromJson(GameData.Read("events.json")).Single(t => t.Id == "budget-battle");
+        var ev = new LiveEvent(def, "budget@test", Now.AddDays(1));
+        var profile = Profile.New(Cars);
+        profile.Events[ev.InstanceId] = new EventProgress(0, new Jentl.Collect.RechargeState(1, Now), false);
+        var hand = profile.Garage.OrderBy(c => Cars.Rq(c.ModelId)).Take(5).Select(c => c.Id).ToList();
+
+        EventPlay.Race(profile, ev, hand, Cars, GameData.Tracks, Now.AddHours(-5), new Random(1));
+
+        EventPlay.Progress(profile, ev, Now).Tickets.Count.Should().Be(0);
+        EventPlay.Progress(profile, ev, Now.AddMinutes(30)).Tickets.Count.Should().Be(1);
+    }
+}

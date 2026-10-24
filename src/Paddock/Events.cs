@@ -151,9 +151,7 @@ public static class EventPlay
             return new EventProgress(0, Tickets.Full(now), false);
         }
 
-        var count = Tickets.Count(progress.Tickets, now);
-        var since = Tickets.NextIn(progress.Tickets, now) is { } next ? now - (Tickets.Interval - next) : now;
-        return progress with { Tickets = new RechargeState(count, since) };
+        return progress with { Tickets = Tickets.Current(progress.Tickets, now) };
     }
 
     /// <summary>The cars of the garage that may enter.</summary>
