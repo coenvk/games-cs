@@ -101,3 +101,19 @@ public class SlowCarTests
         time.Should().BeInRange(402 / (90 / 3.6), 60);
     }
 }
+
+public class TimeAtTests
+{
+    [Fact]
+    public void TimeAt_InvertsDistanceAt()
+    {
+        var run = TestCars.Run(TestCars.Hatch, TestCars.Twisty, Condition.Dry);
+
+        foreach (var distance in new[] { 0.0, 10.5, 200, run.Length })
+        {
+            run.DistanceAt(run.TimeAt(distance)).Should().BeApproximately(distance, 1e-6);
+        }
+
+        run.TimeAt(run.Length + 50).Should().Be(run.Time);
+    }
+}

@@ -33,7 +33,7 @@ internal sealed class PaddockApp : IGameApp
         [
             new(T("Garage"), () => title.Open(new GarageScene(context))),
             new(T("Events"), () => title.Open(PlaceholderScenes.Soon(context, T("Events")), fade: false)),
-            new(T("Campaign"), () => title.Open(PlaceholderScenes.Soon(context, T("Campaign")), fade: false)),
+            new(T("Campaign"), () => title.Open(new CampaignScene(context))),
             new(T("Packs"), () => title.Open(PlaceholderScenes.Soon(context, T("Packs")), fade: false)),
         ],
         () => T("Collect cars, race them, win rare ones"));

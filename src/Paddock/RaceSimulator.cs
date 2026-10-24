@@ -8,6 +8,23 @@ public sealed record RaceRun(double Time, IReadOnlyList<double> TimeAtMetre)
     /// <summary>The distance run, in metres.</summary>
     public double Length => TimeAtMetre.Count - 1;
 
+    /// <summary>When the car passed <paramref name="distance"/> metres (the finish time beyond the end).</summary>
+    public double TimeAt(double distance)
+    {
+        if (distance <= 0)
+        {
+            return 0;
+        }
+
+        if (distance >= Length)
+        {
+            return Time;
+        }
+
+        var metre = (int)distance;
+        return TimeAtMetre[metre] + ((TimeAtMetre[metre + 1] - TimeAtMetre[metre]) * (distance - metre));
+    }
+
     /// <summary>How far the car had come at <paramref name="time"/>: 0 before the start, the full length after the finish.</summary>
     public double DistanceAt(double time)
     {
