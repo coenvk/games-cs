@@ -50,6 +50,36 @@ public static class Balance
         _ => 1.0,
     };
 
+    /// <summary>Top speed gained per engine point (share).</summary>
+    public const double EngineTopSpeed = 0.012;
+
+    /// <summary>0-100 time saved per engine point (share).</summary>
+    public const double EngineAcceleration = 0.02;
+
+    /// <summary>Weight saved per weight point (share).</summary>
+    public const double WeightSaving = 0.015;
+
+    /// <summary>0-100 time saved per weight point (share).</summary>
+    public const double WeightAcceleration = 0.01;
+
+    /// <summary>Handling gained per weight point.</summary>
+    public const double WeightHandling = 0.5;
+
+    /// <summary>Handling gained per chassis point.</summary>
+    public const double ChassisHandling = 1.5;
+
+    /// <summary>The price of a stage-1 upgrade point for a car of this class; later points and stages cost more.</summary>
+    public static long UpgradeBase(Rarity rarity) => rarity switch
+    {
+        Rarity.F => 300,
+        Rarity.E => 500,
+        Rarity.D => 900,
+        Rarity.C => 1_600,
+        Rarity.B => 3_000,
+        Rarity.A => 6_000,
+        _ => 12_000,
+    };
+
     /// <summary>Braking as a share of cornering grip.</summary>
     public const double Braking = 0.9;
 }
