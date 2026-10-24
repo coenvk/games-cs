@@ -371,3 +371,6 @@ dist/
 
 # Web apps: mirrored copies of the shared and linked assets (see shell/Web.props)
 apps/*/Web/wwwroot/
+
+# Brainstorming mockups
+.superpowers/

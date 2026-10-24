@@ -1,0 +1,91 @@
+<h2>What should a car card look like?</h2>
+<p class="subtitle">Three invented cars in two styles. The colour of the frame is the rarity class (F grey up to S gold); RQ is the car's strength, which counts towards your hand's limit. Click the style you like.</p>
+
+<style>
+  .row { display: flex; gap: 12px; flex-wrap: wrap; }
+  canvas.px { image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
+  .tdcard { width: 170px; border-radius: 8px; padding: 5px; font: 11px/1.3 monospace; color: #f2eee4; }
+  .tdcard .inner { background: #1c2130; border-radius: 5px; overflow: hidden; }
+  .tdcard .top { display: flex; justify-content: space-between; align-items: center; padding: 4px 6px; font-weight: bold; }
+  .tdcard .rq { background: rgba(0,0,0,.45); padding: 1px 5px; border-radius: 3px; }
+  .tdcard .pic { background: linear-gradient(#7ea6d8, #b9d3ee 60%, #4b4c55 60%); }
+  .tdcard .name { padding: 4px 6px 2px; font-weight: bold; }
+  .tdcard .maker { padding: 0 6px 4px; color: #96a0ba; }
+  .tdcard table { width: 100%; border-collapse: collapse; }
+  .tdcard td { padding: 1px 6px; border-top: 1px solid #29304a; }
+  .tdcard td:last-child { text-align: right; }
+  .tdcard .tags { display: flex; gap: 3px; padding: 4px 6px 6px; flex-wrap: wrap; }
+  .tdcard .tag { background: #29304a; padding: 0 4px; border-radius: 3px; }
+  .mini { width: 120px; border: 3px solid; border-radius: 4px; background: #1c2130; font: 10px/1.25 monospace; color: #f2eee4; }
+  .mini .pic { background: #2a3048; }
+  .mini .bar { display: flex; justify-content: space-between; padding: 2px 4px; }
+  .mini .stats { display: grid; grid-template-columns: 1fr 1fr; padding: 0 4px 3px; color: #c8cede; }
+</style>
+
+<div class="options">
+  <div class="option" data-choice="full" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Full card (like Top Drives)</h3>
+      <p>Every stat on the card; used when looking at a car, in the garage and before a race.</p>
+      <div class="row" id="full"></div>
+    </div>
+  </div>
+  <div class="option" data-choice="compact" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Compact card, full details on tap</h3>
+      <p>Smaller cards so more fit on screen (a hand of five on a phone, a big garage grid); tap one for the full card.</p>
+      <div class="row" id="compact"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const rarity = { F: '#8a8f98', E: '#6fae5a', D: '#3f8fd8', C: '#9a5ad8', B: '#d8703f', A: '#d83f5a', S: '#e8c040' };
+  const cars = [
+    { name: 'Corvo 1300 GL', maker: 'Vantelli, 1972', cls: 'E', rq: 24, body: '#e0a030', kind: 'hatch',
+      top: '152 km/h', acc: '13.9 s', hand: 61, weight: '890 kg', drive: 'FWD', tyres: 'Standard', clear: 'Mid' },
+    { name: 'Halvard Tundra XR', maker: 'Halvard, 1994', cls: 'C', rq: 47, body: '#3c7a4a', kind: 'suv',
+      top: '178 km/h', acc: '9.8 s', hand: 55, weight: '1,740 kg', drive: '4WD', tyres: 'Off-road', clear: 'High' },
+    { name: 'Strale GT-R', maker: 'Strale, 2019', cls: 'S', rq: 92, body: '#d8342c', kind: 'super',
+      top: '338 km/h', acc: '2.8 s', hand: 88, weight: '1,390 kg', drive: 'RWD', tyres: 'Performance', clear: 'Low' }
+  ];
+  // Side-view pixel car drawn in code, 48x20 px.
+  function drawCar(c, kind, body) {
+    const g = c.getContext('2d'), dark = '#111', glass = '#9fd3ff';
+    const shapes = {
+      hatch: () => { g.fillStyle = body; g.fillRect(6, 9, 36, 6); g.fillRect(10, 4, 22, 6); g.fillStyle = glass; g.fillRect(12, 5, 8, 4); g.fillRect(22, 5, 8, 4); },
+      suv:   () => { g.fillStyle = body; g.fillRect(4, 7, 40, 8); g.fillRect(7, 1, 31, 7); g.fillStyle = glass; g.fillRect(9, 2, 9, 4); g.fillRect(20, 2, 9, 4); g.fillRect(31, 2, 5, 4); g.fillStyle = '#333'; g.fillRect(7, 0, 31, 1); },
+      super: () => { g.fillStyle = body; g.fillRect(3, 10, 42, 5); g.fillRect(14, 7, 22, 4); g.fillStyle = glass; g.fillRect(17, 7, 12, 3); g.fillStyle = '#111'; g.fillRect(40, 8, 5, 2); }
+    };
+    shapes[kind]();
+    const wy = kind === 'suv' ? 13 : 13, wr = kind === 'suv' ? 4 : 3;
+    [[12, wy], [36, wy]].forEach(([x, y]) => { g.fillStyle = dark; g.fillRect(x - wr, y, wr * 2, wr + 2); g.fillStyle = '#888'; g.fillRect(x - 1, y + 1, 2, 2); });
+    g.fillStyle = '#fff6a0'; g.fillRect(kind === 'super' ? 44 : 42, kind === 'suv' ? 8 : 10, 2, 2);
+  }
+  function canvas(kind, body, scale, w) {
+    const c = document.createElement('canvas'); c.width = 48; c.height = 20; c.className = 'px';
+    c.style.width = w + 'px'; c.style.height = (w * 20 / 48) + 'px'; c.style.margin = '6px auto'; drawCar(c, kind, body); return c;
+  }
+  const full = document.getElementById('full'), compact = document.getElementById('compact');
+  cars.forEach(car => {
+    const col = rarity[car.cls];
+    const d = document.createElement('div'); d.className = 'tdcard'; d.style.background = col;
+    d.innerHTML = `<div class="inner"><div class="top" style="background:${col}"><span>${car.cls}</span><span class="rq">RQ ${car.rq}</span></div>
+      <div class="pic"></div><div class="name">${car.name}</div><div class="maker">${car.maker}</div>
+      <table><tr><td>Top speed</td><td>${car.top}</td></tr><tr><td>0-100</td><td>${car.acc}</td></tr>
+      <tr><td>Handling</td><td>${car.hand}</td></tr><tr><td>Weight</td><td>${car.weight}</td></tr></table>
+      <div class="tags"><span class="tag">${car.drive}</span><span class="tag">${car.tyres}</span><span class="tag">${car.clear}</span></div></div>`;
+    d.querySelector('.pic').appendChild(canvas(car.kind, car.body, 3, 144));
+    full.appendChild(d);
+    const m = document.createElement('div'); m.className = 'mini'; m.style.borderColor = col;
+    m.innerHTML = `<div class="bar" style="background:${col}"><b>${car.cls}</b><b>${car.rq}</b></div><div class="pic"></div>
+      <div class="bar"><b>${car.name.split(' ').slice(0, 2).join(' ')}</b></div>
+      <div class="stats"><span>${car.top.replace(' km/h', '')}</span><span>${car.acc}</span><span>H ${car.hand}</span><span>${car.tyres.slice(0, 4)}</span></div>`;
+    m.querySelector('.pic').appendChild(canvas(car.kind, car.body, 2, 96));
+    compact.appendChild(m);
+  });
+})();
+</script>
