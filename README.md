@@ -207,6 +207,8 @@ Differences from desktop:
   file requests cannot carry binary files intact.
 - Progress and settings live in `localStorage`, under a prefix per game (`sokoban/`, `solitaire/`, ...).
 - Quit and Fullscreen are hidden.
+- Published builds (the site, `build/package.sh <app> web`) are compiled ahead of time to WebAssembly, which needs the
+  `wasm-tools` workload: `sudo dotnet workload install wasm-tools`. `dotnet run` and Debug builds stay interpreted.
 - WebAssembly has one thread, so a Sokoban hint blocks the game while it searches; its budget is 1 second instead of 3.
 - The page is made from `shell/Web/index.template.html` with the game's title; the dev server needs the linked assets
   physically under `wwwroot`, so the build mirrors them there (git-ignored).

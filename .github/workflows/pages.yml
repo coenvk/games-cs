@@ -38,6 +38,10 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
+      # The games are published compiled ahead of time to WebAssembly (shell/Web.props), which needs this workload.
+      - name: Install the WebAssembly tools
+        run: dotnet workload install wasm-tools
+
       - name: Pack the engine
         run: build/jentl.sh jentl
 

@@ -18,6 +18,16 @@
     <DefaultItemExcludes>$(DefaultItemExcludes);wwwroot/**</DefaultItemExcludes>
   </PropertyGroup>
 
+  <!--
+    Published builds compile .NET to WebAssembly ahead of time instead of interpreting it in the browser: several
+    times faster for game code (the software renderer most of all), at the cost of a longer publish and a bigger
+    download. Needs the wasm-tools workload (dotnet workload install wasm-tools). Debug builds and the dev server
+    stay interpreted, so they build quickly.
+  -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <RunAOTCompilation>true</RunAOTCompilation>
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Include="$(ShellDir)Shell/**/*.cs;$(ShellDir)Web/**/*.cs" LinkBase="Shell" />
     <Compile Include="$(AppDir)Game/**/*.cs" LinkBase="Game" />
