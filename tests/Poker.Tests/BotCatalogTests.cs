@@ -27,6 +27,7 @@ public sealed class BotCatalogTests : IDisposable
         program.Command!.FileName.Should().Be("python3");
         program.Command.Arguments.Should().Equal("bot.py");
         program.Command.WorkingDirectory.Should().Be(Path.Combine(_folder, "sub"));
+        program.Source.Should().Be(Path.Combine(_folder, "bot.bot.json"));
 
         var dll = entries.Single(e => e.Name == "Mine");
         dll.Kind.Should().Be(BotKind.CSharp);
@@ -34,8 +35,41 @@ public sealed class BotCatalogTests : IDisposable
         dll.Command.Arguments.Should().Equal("host.dll", Path.Combine(_folder, "Mine.dll"));
 
         var broken = entries.Single(e => e.Name == "broken");
+        broken.Kind.Should().Be(BotKind.Program);
         broken.Command.Should().BeNull();
         broken.Source.Should().Contain("broken.bot.json");
+    }
+
+    [Fact]
+    public void ADescriptionWithoutACommand_IsUnreadable()
+    {
+        File.WriteAllText(Path.Combine(_folder, "empty.bot.json"), "{ \"name\": \"Empty\" }");
+
+        var entry = BotCatalog.Scan(_folder, new AgentCommand("dotnet", [])).Single();
+
+        entry.Command.Should().BeNull();
+        entry.Source.Should().Contain("empty.bot.json").And.Contain("command");
+    }
+
+    [Fact]
+    public void ARelativeCommand_IsResolvedAgainstItsWorkingDirectory()
+    {
+        File.WriteAllText(Path.Combine(_folder, "rel.bot.json"), "{ \"command\": \"./run.sh\", \"workingDirectory\": \"sub\" }");
+
+        var entry = BotCatalog.Scan(_folder, new AgentCommand("dotnet", [])).Single();
+
+        entry.Command!.FileName.Should().Be(Path.Combine(_folder, "sub", "run.sh"));
+    }
+
+    [Fact]
+    public void TheFolder_MayBeRelative()
+    {
+        File.WriteAllText(Path.Combine(_folder, "Mine.dll"), "");
+        var relative = Path.GetRelativePath(Directory.GetCurrentDirectory(), _folder);
+
+        var entry = BotCatalog.Scan(relative, new AgentCommand("dotnet", [])).Single();
+
+        entry.Source.Should().Be(Path.Combine(_folder, "Mine.dll"));
     }
 
     [Fact]

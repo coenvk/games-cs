@@ -75,5 +75,66 @@ public class SeatTests
         (await seat.AskAsync(Decision, CancellationToken.None)).Should().Be(BotAction.Call);
     }
 
+    [Fact]
+    public async Task AStaleAnswer_IsSkipped_AndTheRightOneTaken()
+    {
+        using var seat = new ProcessSeat(EchoBot("stale"), "Echo");
+        await seat.StartAsync(Start, Limit);
+
+        (await seat.AskAsync(Decision, TimeoutToken())).Should().Be(BotAction.Call with { Id = 7 });
+    }
+
+    [Fact]
+    public async Task AWrongProtocolMajor_IsGone_WithItsProblem()
+    {
+        using var seat = new ProcessSeat(EchoBot("protocol2"), "Old");
+        await seat.StartAsync(Start, Limit);
+
+        seat.IsGone.Should().BeTrue();
+        seat.Problem.Should().Be("speaks protocol 2, the app speaks 1");
+    }
+
+    [Fact]
+    public async Task ACancelledSlowAsk_DoesNotTakeTheNextAnswer()
+    {
+        using var seat = new ProcessSeat(EchoBot("slow:700"), "Echo");
+        await seat.StartAsync(Start, Limit);
+        using var first = new CancellationTokenSource(TimeSpan.FromMilliseconds(200));
+        var abandoned = seat.AskAsync(Decision with { Id = 1 }, first.Token);
+
+        (await abandoned).Should().BeNull();
+        var second = await seat.AskAsync(Decision with { Id = 2 }, TimeoutToken());
+
+        second.Should().Be(BotAction.Call with { Id = 2 });
+    }
+
+    [Fact]
+    public async Task AHouseBotThatThrows_IsGone_WithItsProblem()
+    {
+        using var seat = new HouseSeat(new ThrowingBot());
+        await seat.StartAsync(Start, Limit);
+        seat.Notify(new MatchEnd([]));
+        seat.IsGone.Should().BeFalse();
+
+        var first = () => seat.AskAsync(Decision, CancellationToken.None);
+        await first.Should().ThrowAsync<IOException>();
+
+        seat.IsGone.Should().BeTrue();
+        seat.Problem.Should().Contain("threw").And.Contain("boom");
+        var again = () => seat.AskAsync(Decision, CancellationToken.None);
+        await again.Should().ThrowAsync<IOException>();
+    }
+
+    private sealed class ThrowingBot : IPokerBot
+    {
+        public string Name => "Thrower";
+
+        public void OnMatchStart(MatchStart m) => throw new InvalidOperationException("hook");
+
+        public void OnMatchEnd(MatchEnd m) => throw new InvalidOperationException("hook");
+
+        public BotAction Decide(Decision d) => throw new InvalidOperationException("boom");
+    }
+
     private static CancellationToken TimeoutToken() => new CancellationTokenSource(Limit).Token;
 }

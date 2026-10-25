@@ -14,6 +14,7 @@ public sealed class ProcessSeat(AgentCommand command, string name) : IArenaSeat
     private static readonly TimeSpan Slice = TimeSpan.FromMilliseconds(25);
 
     private readonly AgentProcess _process = AgentProcess.Start(command);
+    private readonly SemaphoreSlim _asking = new(1, 1);
     private string? _problem;
 
     /// <inheritdoc />
@@ -65,6 +66,21 @@ public sealed class ProcessSeat(AgentCommand command, string name) : IArenaSeat
     public async Task<BotAction?> AskAsync(Decision decision, CancellationToken cancel)
     {
         ArgumentNullException.ThrowIfNull(decision);
+
+        // One ask at a time: an abandoned ask (its token cancelled) ends within a slice, and must not take the next answer.
+        await _asking.WaitAsync(CancellationToken.None).ConfigureAwait(false);
+        try
+        {
+            return await AskOnceAsync(decision, cancel).ConfigureAwait(false);
+        }
+        finally
+        {
+            _asking.Release();
+        }
+    }
+
+    private async Task<BotAction?> AskOnceAsync(Decision decision, CancellationToken cancel)
+    {
         if (IsGone)
         {
             throw new IOException(Problem);

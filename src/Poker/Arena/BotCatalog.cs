@@ -38,6 +38,7 @@ public static class BotCatalog
     public static IReadOnlyList<BotEntry> Scan(string folder, AgentCommand host)
     {
         ArgumentNullException.ThrowIfNull(host);
+        folder = Path.GetFullPath(folder);
         if (!Directory.Exists(folder))
         {
             return [];
@@ -82,6 +83,12 @@ public static class BotCatalog
             if (root.TryGetProperty("workingDirectory", out var w) && w.ValueKind == JsonValueKind.String && !string.IsNullOrEmpty(w.GetString()))
             {
                 directory = Path.GetFullPath(w.GetString()!, directory);
+            }
+
+            // A command with a path in it is relative to the working directory; a bare name is looked up on the PATH.
+            if (program.Contains('/', StringComparison.Ordinal) || program.Contains(Path.DirectorySeparatorChar, StringComparison.Ordinal))
+            {
+                program = Path.GetFullPath(program, directory);
             }
 
             return new BotEntry(name, BotKind.Program, new AgentCommand(program, arguments, directory), file);
