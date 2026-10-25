@@ -12,8 +12,13 @@ internal static class TrackScenery
 {
     private const int Clearance = 14;
 
-    public static void Decorate(Color[] pixels, Rectangle bounds, RoadStyle style, TrackDef track, Condition condition)
+    /// <summary>Paints the scenery into <paramref name="pixels"/> and says where the trees, rocks and buildings went.</summary>
+    public static IReadOnlyList<Prop> Decorate(Color[] pixels, Rectangle bounds, RoadStyle style, TrackDef track, Condition condition)
     {
+        var props = new List<Prop>();
+        void Place(PropKind kind, int x, int y, int w, int h, Color color) =>
+            props.Add(new Prop(kind, new Rectangle(bounds.X + x - (w / 2), bounds.Y + y - (h / 2), w, h), color));
+
         var random = new Random(Jentl.Collect.StableSeed.Of(track.Id));
         var (width, height) = (bounds.Width, bounds.Height);
         bool IsGround(int x, int y) => x >= 0 && y >= 0 && x < width && y < height && pixels[(y * width) + x] == style.Ground;
@@ -47,17 +52,21 @@ internal static class TrackScenery
                     var roof = new[] { new Color(150, 84, 70), new Color(96, 104, 120), new Color(170, 160, 140) }[random.Next(3)];
                     Fill(pixels, width, height, x - (w / 2), y - (h / 2), w, h, Darker(roof, 0.35f));
                     Fill(pixels, width, height, x - (w / 2) + 2, y - (h / 2) + 2, w - 4, h - 4, roof);
+                    Place(PropKind.Building, x, y, w, h, roof);
                     break;
                 case (_, Condition.Sand) when Open(x, y, 10):
                     Blob(pixels, width, height, x, y, 8 + random.Next(6), 4, Darker(style.Ground, 0.1f));
                     break;
                 case (TrackKind.OffRoad or TrackKind.HillClimb, _) when random.Next(3) == 0 && Open(x, y, 6):
-                    Blob(pixels, width, height, x, y, 3 + random.Next(3), 3, new Color(120, 116, 110));
+                    var size = 3 + random.Next(3);
+                    Blob(pixels, width, height, x, y, size, 3, new Color(120, 116, 110));
+                    Place(PropKind.Rock, x, y, size * 2, 6, new Color(120, 116, 110));
                     break;
                 case (_, _) when condition != Condition.Ice && Open(x, y, 8):
                     var leaves = condition == Condition.Snow ? new Color(46, 84, 60) : new Color(31, 67, 32);
                     Blob(pixels, width, height, x, y, 6, 6, leaves);
                     Blob(pixels, width, height, x - 1, y - 2, 3, 3, condition == Condition.Snow ? new Color(236, 241, 246) : Lighter(leaves, 0.25f));
+                    Place(PropKind.Tree, x, y, 12, 12, leaves);
                     break;
             }
         }
@@ -83,6 +92,8 @@ internal static class TrackScenery
                 Fill(pixels, width, height, x - (rx / 2), y - (ry / 2), Math.Max(2, rx / 2), 1, shine);
             }
         }
+
+        return props;
     }
 
     private static bool[] NearRoad(Color[] pixels, int width, int height, Color ground)
@@ -142,3 +153,14 @@ internal static class TrackScenery
 
     private static Color Lighter(Color c, float t) => Color.Lerp(c, Color.White, t);
 }
+
+/// <summary>What stands on a track's scenery.</summary>
+internal enum PropKind
+{
+    Tree,
+    Rock,
+    Building,
+}
+
+/// <summary>A tree, rock or building: what it is, the ground it covers in world pixels, and its colour (leaves, stone, roof).</summary>
+internal readonly record struct Prop(PropKind Kind, Rectangle Area, Color Color);

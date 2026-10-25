@@ -107,14 +107,7 @@ internal sealed class CircuitView(TrackArt art, Sprite player, Sprite opponent, 
         _particles.Emit(back, trail with { Direction = pose.Heading + MathF.PI });
     }
 
-    // Where a car is: along the centre line, shifted sideways into its lane.
-    private (Vector2 Position, float Heading) Pose(double metres, float lane)
-    {
-        var pose = art.Path.At(metres * TrackArt.PixelsPerMetre);
-        var (sin, cos) = MathF.SinCos(pose.Heading);
-        var left = new Vector2(sin, -cos);
-        return (new Vector2(pose.Position.X, pose.Position.Y) + (left * lane), pose.Heading);
-    }
+    private (Vector2 Position, float Heading) Pose(double metres, float lane) => art.Pose(metres, lane);
 
     private static void DrawCar(SpriteBatch batch, Sprite sprite, (Vector2 Position, float Heading) pose)
     {

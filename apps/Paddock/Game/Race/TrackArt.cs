@@ -17,10 +17,15 @@ internal sealed class TrackArt : IDisposable
 
     private const int RoadWidth = 32;
 
-    private TrackArt(TrackPath path, Texture2D world, Rectangle bounds, Texture2D map, Func<Vector2, Vector2> toMap, Color ground)
+    private readonly uint[] _pixels;
+    private Jentl.Raster.Texture? _picture;
+
+    private TrackArt(TrackPath path, Texture2D world, uint[] pixels, Rectangle bounds, IReadOnlyList<Prop> props, Texture2D map, Func<Vector2, Vector2> toMap, Color ground)
     {
         Path = path;
         World = world;
+        _pixels = pixels;
+        Props = props;
         Bounds = bounds;
         Map = map;
         ToMap = toMap;
@@ -31,6 +36,12 @@ internal sealed class TrackArt : IDisposable
     public TrackPath Path { get; }
 
     public Texture2D World { get; }
+
+    /// <summary>The trees, rocks and buildings painted into <see cref="World"/>, for standing them up in 3D.</summary>
+    public IReadOnlyList<Prop> Props { get; }
+
+    /// <summary><see cref="World"/> for the software renderer, made when first asked for.</summary>
+    public Jentl.Raster.Texture Picture => _picture ??= new Jentl.Raster.Texture(Bounds.Width, Bounds.Height, _pixels) { Wrap = Jentl.Raster.TextureWrap.Clamp };
 
     /// <summary>Where <see cref="World"/> lies in world pixels.</summary>
     public Rectangle Bounds { get; }
@@ -54,10 +65,19 @@ internal sealed class TrackArt : IDisposable
             : new Straight(p.Length * PixelsPerMetre))]);
         var style = StyleFor(track.Kind, condition);
         var pixels = RoadPainter.Paint(path, style, padding: 90, out var bounds);
-        TrackScenery.Decorate(pixels, bounds, style, track, condition);
+        var props = TrackScenery.Decorate(pixels, bounds, style, track, condition);
         var world = RoadPainter.ToTexture(device, pixels, bounds);
         var (map, toMap) = DrawMap(device, path);
-        return new TrackArt(path, world, bounds, map, toMap, style.Ground);
+        return new TrackArt(path, world, [.. pixels.Select(p => p.PackedValue)], bounds, props, map, toMap, style.Ground);
+    }
+
+    /// <summary>Where a car is: along the centre line, <paramref name="lane"/> pixels to the left of it (negative: right).</summary>
+    public (Vector2 Position, float Heading) Pose(double metres, float lane)
+    {
+        var pose = Path.At(metres * PixelsPerMetre);
+        var (sin, cos) = MathF.SinCos(pose.Heading);
+        var left = new Vector2(sin, -cos);
+        return (new Vector2(pose.Position.X, pose.Position.Y) + (left * lane), pose.Heading);
     }
 
     public void Dispose()

@@ -14,7 +14,7 @@ namespace Games.Scenes;
 
 /// <summary>
 /// Plays a raced match back, round by round: each round's two runs (already decided) squeezed into 10 to 20 seconds,
-/// drags from the side and everything else from above. After each round its winner and what decided it; after five,
+/// drags from the side and everything else from above, or in 3D from behind the car if the player chose that. After each round its winner and what decided it; after five,
 /// the match. Skip jumps to the round's result.
 /// </summary>
 internal sealed class RaceScene : Scene
@@ -34,6 +34,7 @@ internal sealed class RaceScene : Scene
     private Phase _phase;
     private CircuitView? _circuit;
     private DragView? _drag;
+    private ChaseView? _chase;
 
     // Painted tracks, kept for the match: a track and condition that come round again are not painted twice.
     private readonly Dictionary<(string Track, Condition Condition), TrackArt> _arts = [];
@@ -92,6 +93,15 @@ internal sealed class RaceScene : Scene
         }
     }
 
+    public override void DrawLayers(SpriteBatch batch, Rectangle viewport)
+    {
+        if (_chase is not null)
+        {
+            var (_, mine, theirs) = Positions();
+            _chase.Render(batch.GraphicsDevice, viewport, mine, theirs);
+        }
+    }
+
     public override void Draw(SpriteBatch batch, Rectangle viewport)
     {
         var fonts = _context.Fonts;
@@ -104,7 +114,11 @@ internal sealed class RaceScene : Scene
         }
 
         batch.FillRectangle(viewport, Palette.Background);
-        if (_circuit is not null)
+        if (_chase is not null)
+        {
+            _chase.Draw(batch, viewport);
+        }
+        else if (_circuit is not null)
         {
             _circuit.Draw(batch, mine, theirs);
         }
@@ -145,12 +159,15 @@ internal sealed class RaceScene : Scene
             art.Dispose();
         }
 
+        _chase?.Dispose();
+
         base.Dispose(disposing);
     }
 
     private void StartRound(int round)
     {
-        (_circuit, _drag) = (null, null);
+        _chase?.Dispose();
+        (_circuit, _drag, _chase) = (null, null, null);
         _round = round;
         _seconds = 0;
         _phase = Phase.Racing;
@@ -170,7 +187,15 @@ internal sealed class RaceScene : Scene
             {
                 art = _arts[(track.Id, condition)] = TrackArt.Build(_context.PaddockData.Cars.Texture.GraphicsDevice, track, condition);
             }
-            _circuit = new CircuitView(art, mine, theirs, _context.Paddock.Settings.Value.RaceCamera, condition);
+            // The top-down view also keeps the mini-map, under the 3D one too.
+            var camera = _context.Paddock.Settings.Value.RaceCamera;
+            _circuit = new CircuitView(art, mine, theirs, camera, condition);
+            if (camera == RaceCamera.Chase)
+            {
+                var data = _context.PaddockData;
+                _chase = new ChaseView(art, data.CarPicture($"side/{_player[round].ModelId}"), data.CarPicture($"side/{_setup.Opponent[round].ModelId}"), condition);
+            }
+
             _viewport = Rectangle.Empty;
         }
 

@@ -13,6 +13,9 @@ internal enum RaceCamera
 
     /// <summary>The view turns with the car, so the road runs up the screen.</summary>
     TurnWithCar,
+
+    /// <summary>In 3D, from just behind the car.</summary>
+    Chase,
 }
 
 /// <summary>Paddock's own settings, next to the shared ones.</summary>

@@ -1,5 +1,6 @@
 ﻿using Games.Scenes;
 using Jentl.Core.Content;
+using Jentl.Core.Raster;
 using Jentl.Core.Scenes;
 using Jentl.Core.UI;
 using Microsoft.Xna.Framework.Graphics;
@@ -43,7 +44,7 @@ internal sealed class PaddockApp : IGameApp
         var store = context.Paddock;
         yield return new ChoiceRow(
             T("Race camera"),
-            [T("Fixed"), T("Turn with car")],
+            [T("Fixed"), T("Turn with car"), T("Behind the car (3D)")],
             () => (int)store.Settings.Value.RaceCamera,
             choice =>
             {
@@ -58,8 +59,15 @@ internal sealed class PaddockData : IDisposable
 {
     public const string Folder = "Assets/paddock";
 
-    private PaddockData(Roster roster, IReadOnlyList<TrackDef> tracks, IReadOnlyList<EventDef> events, IReadOnlyList<RegionDef> regions, TextureAtlas cars)
+    private const string CarAtlas = "Assets/cars.atlas.json";
+
+    private readonly AssetStore _assets;
+    private readonly Dictionary<string, Jentl.Raster.Texture> _pictures = [];
+    private Jentl.Assets.Image? _carImage;
+
+    private PaddockData(AssetStore assets, Roster roster, IReadOnlyList<TrackDef> tracks, IReadOnlyList<EventDef> events, IReadOnlyList<RegionDef> regions, TextureAtlas cars)
     {
+        _assets = assets;
         Roster = roster;
         Tracks = tracks;
         Events = new EventCalendar(events);
@@ -78,15 +86,29 @@ internal sealed class PaddockData : IDisposable
     /// <summary>Side views (<c>side/&lt;id&gt;</c>) and top views (<c>top/&lt;id&gt;</c>) of every car.</summary>
     public TextureAtlas Cars { get; }
 
+    /// <summary>A sprite of <see cref="Cars"/> (<c>side/&lt;id&gt;</c>) for the software renderer; the atlas image is read the first time.</summary>
+    public Jentl.Raster.Texture CarPicture(string name)
+    {
+        if (!_pictures.TryGetValue(name, out var picture))
+        {
+            _carImage ??= _assets.Image($"Assets/{Cars.Description.Image}");
+            var source = Cars[name].Source;
+            picture = _pictures[name] = RasterTextures.From(_carImage, source);
+        }
+
+        return picture;
+    }
+
     public static PaddockData Load(AssetStore assets)
     {
         static string Read(string file) => GameFiles.ReadAllText($"{Folder}/{file}");
         return new PaddockData(
+            assets,
             Roster.FromJson(Read("cars.json")),
             TrackDef.ListFromJson(Read("tracks.json")),
             EventDef.ListFromJson(Read("events.json")),
             RegionDef.ListFromJson(Read("campaign.json")),
-            assets.Atlas("Assets/cars.atlas.json"));
+            assets.Atlas(CarAtlas));
     }
 
     public void Dispose() => Cars.Dispose();
