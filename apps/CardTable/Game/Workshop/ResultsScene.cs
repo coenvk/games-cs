@@ -19,7 +19,7 @@ namespace Games.Workshop;
 /// How each bot did in a finished match or batch, best first, a row each: its result, its hands and faults, and how it
 /// played (VPIP, PFR, AF, WTSD, W$SD over the match's hands). The result is big blinds won per 100 hands with the 95%
 /// margin, or for sit-and-gos, where that means nothing, the place (a series: the average place and how often each
-/// place was taken). Below: Replay hands, Export hand histories (into the workshop's histories folder, named after
+/// place was taken). Under the table, why each bot that could not play could not. Below: Replay hands, Export hand histories (into the workshop's histories folder, named after
 /// the match file) and Back.
 /// </summary>
 internal sealed class ResultsScene : Scene
@@ -34,6 +34,7 @@ internal sealed class ResultsScene : Scene
     private readonly string[] _header;
     private readonly List<string[]> _rows;
     private readonly bool[] _faulty;
+    private readonly string[] _problems;
 
     // What each button does, in order; Replay only when there are hands.
     private Action[] _actions = [];
@@ -51,6 +52,7 @@ internal sealed class ResultsScene : Scene
         _match = match;
         _path = path;
         (_header, _rows, _faulty) = Table(match);
+        _problems = [.. match.Results.Where(r => r.Problem is not null).Select(r => T("{0} could not play: {1}", r.Name, r.Problem!))];
         SetButtons();
     }
 
@@ -151,7 +153,16 @@ internal sealed class ResultsScene : Scene
         var buttonFont = _buttons.Width(fonts.Body) <= inner.Width ? fonts.Body : small;
         var buttonsHeight = ButtonBar.Height(buttonFont);
         var buttons = new Rectangle(inner.X, inner.Bottom - buttonsHeight, inner.Width, buttonsHeight);
-        DrawTable(batch, new Rectangle(inner.X, y + fonts.Px(12), inner.Width, buttons.Top - y - fonts.Px(24)));
+        // Why a bot could not play, between the table and the buttons.
+        var problems = _problems.SelectMany(p => small.Wrap(p, inner.Width)).ToList();
+        var problemsTop = buttons.Top - fonts.Px(12) - problems.Count * ((int)small.LineHeight + 2);
+        DrawTable(batch, new Rectangle(inner.X, y + fonts.Px(12), inner.Width, problemsTop - y - fonts.Px(24)));
+        foreach (var line in problems)
+        {
+            batch.DrawText(small, line, new Vector2(panel.Center.X, problemsTop), Problem, Align.Center, shadow: false);
+            problemsTop += (int)small.LineHeight + 2;
+        }
+
         _buttons.Draw(batch, buttonFont, buttons);
     }
 

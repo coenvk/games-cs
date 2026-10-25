@@ -404,7 +404,7 @@ internal sealed class WatchScene : Scene
                 var label = HoldemText.Action(a);
                 _lastAction[a.Seat] = label;
                 var fault = faults.FindIndex(f => f.Seat == a.Seat) is var at and >= 0 ? faults[at].Fault : Fault.None;
-                Say(fault == Fault.None ? $"{_names[a.Seat]}: {label}" : FaultLine(_names[a.Seat], fault, a.Action is Fold), fault != Fault.None);
+                Say(fault == Fault.None ? $"{_names[a.Seat]}: {label}" : FaultLine(_names[a.Seat], fault, a.Action is Fold, fault == Fault.Gone ? _table.Results()[a.Seat].Problem : null), fault != Fault.None);
                 break;
             case StreetDealt d:
                 HoldemText.NewStreet(_lastAction);
@@ -427,13 +427,16 @@ internal sealed class WatchScene : Scene
         }
     }
 
-    // A move the bot did not make itself: why, and what was played for it (a check when that was free, else a fold).
-    private static string FaultLine(string name, Fault fault, bool folded) => (fault, folded) switch
+    // A move the bot did not make itself: why (for a bot that is gone, what is wrong with it), and what was played for it
+    // (a check when that was free, else a fold).
+    private static string FaultLine(string name, Fault fault, bool folded, string? problem) => (fault, folded) switch
     {
         (Fault.Late, true) => T("{0}: late, folds", name),
         (Fault.Late, false) => T("{0}: late, checks", name),
         (Fault.Illegal, true) => T("{0}: illegal move, folds", name),
         (Fault.Illegal, false) => T("{0}: illegal move, checks", name),
+        (_, true) when problem is not null => T("{0}: gone ({1}), folds", name, problem),
+        (_, false) when problem is not null => T("{0}: gone ({1}), checks", name, problem),
         (_, true) => T("{0}: gone, folds", name),
         _ => T("{0}: gone, checks", name),
     };

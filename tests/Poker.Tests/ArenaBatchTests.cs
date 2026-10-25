@@ -163,6 +163,37 @@ public class ArenaBatchTests
         progress.Values.Order().Should().Equal(0.25, 0.5, 0.75, 1);
     }
 
+    [Theory]
+    [InlineData(BatchFormat.DuplicateHeadsUp)]
+    [InlineData(BatchFormat.SitAndGoSeries)]
+    public async Task ABotThatCannotPlay_SaysWhyInItsResult(BatchFormat format)
+    {
+        var batch = new ArenaBatch(
+            [() => new ProcessSeat(new Jentl.Net.AgentCommand("no-such-program-anywhere", []), "Ghost"), House(() => new CallingBot())],
+            new BatchSettings(format, 2, Seed: DealSeed.FromNumber(6), Limit));
+
+        var result = await batch.RunAsync(new Reports(), CancellationToken.None);
+
+        result.Results[0].Problem.Should().StartWith("could not start");
+        result.Results[0].Gone.Should().Be(2);
+        result.Results[1].Problem.Should().BeNull();
+        MatchFile.Read(MatchFile.Write(result)).Results[0].Problem.Should().Be(result.Results[0].Problem);
+    }
+
+    [Fact]
+    public async Task AWatchedMatch_SaysWhyABotCouldNotPlay()
+    {
+        using var table = new ArenaTable(
+            [new ProcessSeat(new Jentl.Net.AgentCommand("no-such-program-anywhere", []), "Ghost"), new HouseSeat(new CallingBot())],
+            new ArenaSettings(TableFormat.FixedStacks, 2, Seed: DealSeed.FromNumber(6), Limit));
+        await table.RunAsync(CancellationToken.None);
+
+        var result = MatchResult.FromTable(table, DateTimeOffset.UnixEpoch);
+
+        result.Results[0].Problem.Should().StartWith("could not start");
+        result.Results[1].Problem.Should().BeNull();
+    }
+
     [Fact]
     public async Task TheNetOfEachHand_AddsUpToTheTablesNet()
     {

@@ -176,7 +176,8 @@ public sealed class ArenaBatch
             faults.Sum(r => r.Late),
             faults.Sum(r => r.Illegal),
             faults.Count(r => r.Gone),
-            []);
+            [],
+            faults.Select(r => r.Problem).FirstOrDefault(p => p is not null));
     }
 
     private static BotResult SeriesResult(string name, int bot, List<Played> played)
@@ -190,7 +191,8 @@ public sealed class ArenaBatch
             games.Sum(g => g.Result.Late),
             games.Sum(g => g.Result.Illegal),
             games.Count(g => g.Result.Gone),
-            [.. games.Where(g => g.Finished).Select(g => g.Result.Place!.Value)]);
+            [.. games.Where(g => g.Finished).Select(g => g.Result.Place!.Value)],
+            games.Select(g => g.Result.Problem).FirstOrDefault(p => p is not null));
     }
 
     /// <summary>The seed game <paramref name="game"/> (counting from 0) of a sit-and-go series is dealt from.</summary>

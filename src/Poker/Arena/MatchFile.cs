@@ -14,6 +14,7 @@ namespace Poker.Arena;
 /// <param name="Illegal">Its decisions answered with nothing or with a move that was not allowed.</param>
 /// <param name="Gone">Matches in which it stopped playing.</param>
 /// <param name="Places">The places it finished in, one per sit-and-go.</param>
+/// <param name="Problem">Why it could not play ("could not start: …"), the first time it could not; null when it always could.</param>
 public sealed record BotResult(
     string Name,
     double BigBlindsPer100,
@@ -22,7 +23,8 @@ public sealed record BotResult(
     int Late,
     int Illegal,
     int Gone,
-    IReadOnlyList<int> Places);
+    IReadOnlyList<int> Places,
+    string? Problem = null);
 
 /// <summary>A finished match or batch: how it was played, how each bot did and every hand.</summary>
 /// <param name="Settings">The rules of the table.</param>
@@ -41,7 +43,8 @@ public sealed record MatchResult(
 {
     /// <summary>
     /// The single match played at <paramref name="table"/> so far: one result per seat, in big blinds won per 100
-    /// hands at the starting blinds, with no margin, a gone count of 0 or 1 and the seat's place when it has one.
+    /// hands at the starting blinds, with no margin, a gone count of 0 or 1, the seat's place when it has one and what
+    /// was wrong with its bot.
     /// </summary>
     public static MatchResult FromTable(ArenaTable table, DateTimeOffset at)
     {
@@ -62,7 +65,8 @@ public sealed record MatchResult(
                 r.Late,
                 r.Illegal,
                 r.Gone ? 1 : 0,
-                r.Place is { } place ? [place] : []))],
+                r.Place is { } place ? [place] : [],
+                r.Problem))],
             [.. table.Hands]);
     }
 }
