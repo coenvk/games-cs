@@ -14,7 +14,7 @@ internal sealed class CircuitView(TrackArt art, Sprite player, Sprite opponent, 
 {
     private readonly Camera2D _camera = new() { RoundToPixels = true };
     private readonly ParticleSystem _particles = new(capacity: 600, seed: 1);
-    private readonly ParticleEffect? _trail = TrailFor(condition);
+    private readonly ParticleEffect? _trail = Trails.For(condition);
     private bool _started;
     private (double Player, double Opponent) _last;
 
@@ -87,17 +87,6 @@ internal sealed class CircuitView(TrackArt art, Sprite player, Sprite opponent, 
             batch.FillRectangle(new Rectangle((int)p.X - 2, (int)p.Y - 2, 5, 5), color);
         }
     }
-
-    // Water on a wet road, grit or snow on loose ground; nothing on dry tarmac or ice.
-    private static ParticleEffect? TrailFor(Condition condition) => condition switch
-    {
-        Condition.Wet => ParticleEffects.Spray,
-        Condition.Dirt => ParticleEffects.Kickup,
-        Condition.Gravel => ParticleEffects.Kickup with { Colors = [new Color(170, 160, 140, 200), new Color(130, 122, 108, 180)] },
-        Condition.Sand => ParticleEffects.Kickup with { Colors = [new Color(226, 204, 150, 200), new Color(200, 176, 120, 180)] },
-        Condition.Snow => ParticleEffects.Kickup with { Colors = [new Color(255, 255, 255, 220), new Color(220, 228, 238, 200)] },
-        _ => null,
-    };
 
     // Behind the car, thrown backwards.
     private void Emit(ParticleEffect trail, (Vector2 Position, float Heading) pose)

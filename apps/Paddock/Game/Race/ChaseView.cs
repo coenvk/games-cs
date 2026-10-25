@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Paddock;
 using Numerics = System.Numerics;
+using ParticleEffect = Jentl.Core.Graphics.ParticleEffect;
 
 namespace Games.Race;
 
@@ -48,6 +49,10 @@ internal sealed class ChaseView(TrackArt art, Jentl.Raster.Texture player, Jentl
     private readonly Color _sky = SkyFor(condition);
     private readonly (Prop Prop, Numerics.Vector3 At, Material Material)[] _props =
         [.. art.Props.Select(p => (p, new Numerics.Vector3(Metres(p.Area.Center.X), 0, Metres(p.Area.Center.Y)), new Material(Of(p.Color), Shading.Flat)))];
+    private readonly ParticleEffect? _trail = Trails.For(condition);
+    private readonly Particles _spray = new(capacity: 600) { Gravity = 9, Drag = 1.5f, Floor = 0 };
+    private readonly Random _random = new(1);
+    private (double Player, double Opponent)? _last;
     private SoftwareView? _view;
 
     /// <summary>The picture, after <see cref="Render"/>.</summary>
@@ -88,7 +93,21 @@ internal sealed class ChaseView(TrackArt art, Jentl.Raster.Texture player, Jentl
 
         DrawCar(_view, _opponent, _opponentMaterial, opponentMetres, -TrackArt.Lane);
         DrawCar(_view, _player, _playerMaterial, playerMetres, TrackArt.Lane);
+        _view.DrawParticles(_spray);
         _view.Finish();
+    }
+
+    /// <summary>Throws spray or grit up behind moving cars and moves it on; call once per frame with the real elapsed time.</summary>
+    public void Update(double playerMetres, double opponentMetres, TimeSpan elapsed)
+    {
+        if (_trail is { } trail && _last is var (lastPlayer, lastOpponent))
+        {
+            Throw(trail, playerMetres, playerMetres - lastPlayer, elapsed, TrackArt.Lane);
+            Throw(trail, opponentMetres, opponentMetres - lastOpponent, elapsed, -TrackArt.Lane);
+        }
+
+        _spray.Update((float)elapsed.TotalSeconds);
+        _last = (playerMetres, opponentMetres);
     }
 
     /// <summary>The last picture, filling <paramref name="viewport"/> with square pixels.</summary>
@@ -160,6 +179,33 @@ internal sealed class ChaseView(TrackArt art, Jentl.Raster.Texture player, Jentl
         var forward = Spot(metres + Ahead, TrackArt.Lane, EyeHeight) - eye;
         return (eye, forward.LengthSquared() > 0 ? Numerics.Vector3.Normalize(forward) : Numerics.Vector3.UnitX);
     }
+
+    // From both rear wheels, more the faster the car, thrown up and back but carried along at most of its speed (as
+    // spray is), in the trail's colours.
+    private void Throw(ParticleEffect trail, double metres, double moved, TimeSpan elapsed, float lane)
+    {
+        if (moved <= 0 || elapsed <= TimeSpan.Zero)
+        {
+            return;
+        }
+
+        var (position, heading) = art.Pose(metres, lane);
+        var (sin, cos) = MathF.SinCos(heading);
+        var forward = new Numerics.Vector3(cos, 0, sin);
+        var side = new Numerics.Vector3(-sin, 0, cos);
+        var rear = new Numerics.Vector3(Metres(position.X), 0.2f, Metres(position.Y)) - (forward * 1.6f);
+        var speed = (float)(moved / elapsed.TotalSeconds);
+        var count = Math.Min(12, (int)Math.Ceiling(Math.Min(speed * 4, 150) * elapsed.TotalSeconds));
+        for (var i = 0; i < count; i++)
+        {
+            var wheel = rear + (side * (_random.Next(2) == 0 ? -0.75f : 0.75f));
+            var velocity = (forward * ((speed * Between(0.5f, 0.8f)) - Between(1, 4))) + (side * Between(-1, 1)) + new Numerics.Vector3(0, Between(1.5f, 3.5f), 0);
+            var color = trail.Colors[_random.Next(trail.Colors.Count)];
+            _spray.Emit(wheel, velocity, Between(0.4f, 0.9f), Between(0.15f, 0.3f), Of(color));
+        }
+    }
+
+    private float Between(float low, float high) => low + ((high - low) * _random.NextSingle());
 
     // The model's front is +x; turned to the car's heading (x east, z south, as the track's pixels run).
     private void DrawCar(SoftwareView view, Mesh car, Material material, double metres, float lane)

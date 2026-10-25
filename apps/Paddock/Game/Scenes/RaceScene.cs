@@ -87,6 +87,7 @@ internal sealed class RaceScene : Scene
         _seconds += elapsed.TotalSeconds;
         var (_, mine, theirs) = Positions();
         _circuit?.Update(mine, theirs, _viewport, elapsed);
+        _chase?.Update(mine, theirs, elapsed);
         if (_seconds >= Duration + Linger.TotalSeconds)
         {
             ShowRound();
