@@ -47,6 +47,7 @@
 
   <ItemGroup>
     <PackageReference Include="Jentl.Core.Kni" Version="$(JentlVersion)" />
+    <PackageReference Include="Jentl.Net" Version="$(JentlVersion)" />
     <PackageReference Include="nkast.Kni.Platform.Blazor.GL" Version="$(KniVersion)" />
     <PackageReference Include="FontStashSharp.Kni" Version="$(FontStashSharpVersion)" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="$(BlazorVersion)" />

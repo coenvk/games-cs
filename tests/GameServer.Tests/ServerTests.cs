@@ -61,6 +61,29 @@ public sealed class ServerTests(WebApplicationFactory<Program> factory) : IClass
         client.Error.Should().Contain("Could not reach");
     }
 
+    [Fact]
+    public async Task AScore_GoesOnTheBricksLeaderboard_AndIsKeptInTheFile()
+    {
+        var file = Path.Combine(Path.GetTempPath(), $"scores-{Guid.NewGuid():N}.json");
+        try
+        {
+            using var server = factory.WithWebHostBuilder(b => b.UseSetting("scores", file));
+            using var player = new NetClient(async cancel =>
+                await server.Server.CreateWebSocketClient().ConnectAsync(new Uri("ws://localhost/play"), cancel));
+
+            player.Send(new SubmitScore("bricks", "Swift Otter 27", 12_400));
+            var scores = await Next<Scores>(player);
+
+            scores.Rank.Should().Be(0);
+            scores.Top.Should().ContainSingle().Which.Score.Should().Be(12_400);
+            File.ReadAllText(file).Should().Contain("Swift Otter 27");
+        }
+        finally
+        {
+            File.Delete(file);
+        }
+    }
+
     private NetClient Connect() => new(async cancel =>
         await factory.Server.CreateWebSocketClient().ConnectAsync(new Uri("ws://localhost/play"), cancel));
 

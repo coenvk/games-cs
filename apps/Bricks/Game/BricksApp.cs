@@ -1,4 +1,5 @@
-﻿using Jentl.Core.Scenes;
+﻿using Jentl.Collect;
+using Jentl.Core.Scenes;
 using Games.Scenes;
 using Microsoft.Xna.Framework.Graphics;
 using static Games.UI.Tr;
@@ -18,12 +19,15 @@ internal sealed class BricksApp : IGameApp
 
     public string SaveName => "Bricks";
 
-    public void Load(GameContext context, GraphicsDevice device)
-    {
-    }
+    public void Load(GameContext context, GraphicsDevice device) =>
+        context.Add(new ScoreBoard(context, "bricks", ScoreOrder.HigherIsBetter, score => score.ToString("N0", Culture)));
 
     public Scene MainMenu(GameContext context) => new TitleScene(
         context,
-        title => [new(T("Play"), () => title.Open(new BricksScene(context)))],
+        title =>
+        [
+            new(T("Play"), () => title.Open(new BricksScene(context))),
+            new(T("Leaderboard"), () => title.Open(new LeaderboardScene(context))),
+        ],
         () => T("Break every brick"));
 }

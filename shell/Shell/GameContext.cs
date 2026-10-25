@@ -107,6 +107,27 @@ internal sealed class GameContext(
     /// <summary>The game server for online play: chosen at start-up, or one on this machine.</summary>
     public Uri GameServer => Options.Server ?? DefaultServer;
 
+    /// <summary>The player's name on leaderboards: made up the first time it is needed, then kept in the settings.</summary>
+    public string PlayerName
+    {
+        get
+        {
+            if (!Jentl.Collect.PlayerNames.IsValid(Settings.Value.PlayerName))
+            {
+                NewPlayerName();
+            }
+
+            return Settings.Value.PlayerName;
+        }
+    }
+
+    /// <summary>Makes up another name for the player (and saves it).</summary>
+    public void NewPlayerName()
+    {
+        Settings.Value.PlayerName = Jentl.Collect.PlayerNames.Make(Random.Shared);
+        Settings.Save();
+    }
+
     /// <summary>A server run locally with <c>dotnet run --project src/GameServer</c>.</summary>
     public static Uri DefaultServer { get; } = new("ws://localhost:5080/play");
 
@@ -118,6 +139,10 @@ internal sealed class GameContext(
         _services[typeof(T)] = service;
         return service;
     }
+
+    /// <summary>Whether a service of this type was added.</summary>
+    public bool Has<T>()
+        where T : class => _services.ContainsKey(typeof(T));
 
     /// <exception cref="InvalidOperationException">The app didn't add one.</exception>
     public T Get<T>()

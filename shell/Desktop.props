@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <PackageReference Include="Jentl.Core" Version="$(JentlVersion)" />
+    <PackageReference Include="Jentl.Net" Version="$(JentlVersion)" />
     <PackageReference Include="MonoGame.Framework.DesktopGL" Version="$(MonoGameVersion)" />
     <PackageReference Include="FontStashSharp.MonoGame" Version="$(FontStashSharpVersion)" />
   </ItemGroup>

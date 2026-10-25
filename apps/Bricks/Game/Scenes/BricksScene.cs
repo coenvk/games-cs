@@ -302,10 +302,15 @@ internal sealed class BricksOverScene : PanelScene
 {
     private readonly BricksScene _game;
 
+    private readonly int? _place;
+
     public BricksOverScene(GameContext context, BricksScene game)
         : base(context)
     {
         _game = game;
+
+        // The score goes on the leaderboards once, as the game ends (a game without a point is not worth a line).
+        _place = game.Game.Score > 0 ? context.ScoreBoard.Submit(game.Game.Score) : null;
         Menu = new Menu(
             context.Sounds,
             new MenuItem(T("New game"), () =>
@@ -313,15 +318,16 @@ internal sealed class BricksOverScene : PanelScene
                 Scenes.Pop();
                 _game.NewGame();
             }),
+            new MenuItem(T("Leaderboard"), () => Scenes.Push(new LeaderboardScene(context))),
             new MenuItem(T("Main menu"), () => Navigation.ToMainMenu(Scenes, context)));
     }
 
-    protected override string Title => T("Game over");
+    protected override string Title => _place is not null ? T("New high score!") : T("Game over");
 
     protected override IReadOnlyList<PanelLine> Lines =>
     [
         new(T("Score {0:N0}", _game.Game.Score), Palette.Text),
-        new(T("Reached level {0}", _game.Game.Level + 1), Palette.Muted),
+        _place is { } place ? new(T("Number {0} on this device", place + 1), Palette.Accent) : new(T("Reached level {0}", _game.Game.Level + 1), Palette.Muted),
     ];
 
     protected override void OnBack() => Navigation.ToMainMenu(Scenes, Context);

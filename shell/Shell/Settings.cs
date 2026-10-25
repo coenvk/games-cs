@@ -24,6 +24,9 @@ internal sealed class Settings
     /// <summary>Glow, scanlines and a vignette over everything.</summary>
     public bool Retro { get; set; }
 
+    /// <summary>The name on leaderboards, one of <see cref="Jentl.Collect.PlayerNames"/>; empty until first needed.</summary>
+    public string PlayerName { get; set; } = "";
+
     public string ToJson() => JsonSerializer.Serialize(this, SettingsJsonContext.Default.Settings);
 
     /// <exception cref="InvalidDataException">The JSON is malformed.</exception>

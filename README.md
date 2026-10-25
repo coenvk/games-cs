@@ -273,6 +273,11 @@ unbreakable kinds, over four walls that come round again faster; one brick in si
 widens the paddle, **M** splits each ball into three, **+** is an extra life. Three lives. `--deal` picks the seed,
 and the debug overlay (F3) outlines every physics body.
 
+**Leaderboard** (on the title screen and after a game) shows the top ten on this device and, from the game server,
+online. Every finished game's score goes on both, under a made-up name such as "Swift Otter 27" (Options >
+Leaderboard name picks another; there is no typing, and nobody's own words reach a public board). Online needs the
+game server, as Uno does; the shell's `ScoreBoard` and `LeaderboardScene` work for any game.
+
 ## Uno
 
 **Card Table > Uno** plays Uno against computer opponents (you and 1 to 3 bots) or with 2 to 4 people passing the
@@ -289,6 +294,9 @@ bots fill any empty seats (and take over for anyone who leaves). Run a server wi
 src/GameServer` (port 5080); the app connects to `ws://localhost:5080/play` unless told otherwise: `--server
 wss://example.org/play` or the `JENTL_SERVER` variable on the desktop, `?server=wss://example.org/play` in the page
 address in the browser. See [Jentl's guide](https://github.com/coenvk/jentl-cs/blob/main/docs/kits.md) for how it works and how to host it.
+The server also keeps the online leaderboards (`src/GameServer/Leaderboards.cs` lists the boards), in
+`scores.json` in its working directory, or the file `JENTL_SCORES` (or `--scores`) names; give it a lasting place
+when it runs in a container.
 
 The bots match colour before number, keep wilds for when nothing else fits, and attack with Skip, Reverse and Draw
 Two when the next player is close to going out; in the tests they beat a random player well over half the time.

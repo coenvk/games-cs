@@ -374,3 +374,4 @@ apps/*/Web/wwwroot/
 
 # Brainstorming mockups
 .superpowers/
+scores.json
