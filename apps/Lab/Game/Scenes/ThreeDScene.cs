@@ -11,6 +11,7 @@ using Jentl.Raster;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Numerics = System.Numerics;
+using RasterTexture = Jentl.Raster.Texture;
 
 namespace Games.Scenes;
 
@@ -33,9 +34,14 @@ internal sealed class ThreeDScene : Scene
 
     private readonly Mesh _wheel = MeshBuilder.Cylinder(0.35f, 0.3f, 12).Transform(Numerics.Matrix4x4.CreateRotationX(MathF.PI / 2));
     private readonly Mesh _ball = MeshBuilder.Sphere(0.8f, 16, 10);
+    private readonly Mesh _crate = MeshBuilder.Box(new Numerics.Vector3(1.2f));
+    private readonly RasterTexture _grass = DemoTextures.Grass();
+    private readonly RasterTexture _wood = DemoTextures.Crate();
+    private readonly RasterTexture _paint = DemoTextures.CarSide();
     private readonly Stopwatch _clock = new();
     private IMeshView? _view;
     private bool _gpu;
+    private bool _affine;
     private double _angle;
     private double _drawMs;
     private double _frameMs;
@@ -43,7 +49,8 @@ internal sealed class ThreeDScene : Scene
     public ThreeDScene(GameContext context)
     {
         _context = context;
-        _buttons = new ButtonBar(new Button("Switch", Switch), new Button("Back", () => Scenes.Pop()));
+        _buttons = new ButtonBar();
+        SetButtons();
     }
 
     public override void Update(TimeSpan elapsed, InputState input)
@@ -83,8 +90,14 @@ internal sealed class ThreeDScene : Scene
         _clock.Restart();
         _view.Begin(Sky);
         var spin = Numerics.Matrix4x4.CreateRotationY((float)_angle);
-        _view.DrawMesh(_ground, Numerics.Matrix4x4.Identity, new Material(new Numerics.Vector4(0.3f, 0.55f, 0.3f, 1), Shading.Flat));
-        _view.DrawMesh(_body, spin, new Material(new Numerics.Vector4(0.85f, 0.2f, 0.15f, 1), Shading.Flat));
+        if (_view is SoftwareView software)
+        {
+            software.Renderer.Mapping = _affine ? TextureMapping.Affine : TextureMapping.PerspectiveCorrect;
+        }
+
+        _view.DrawMesh(_ground, Numerics.Matrix4x4.Identity, new Material(Numerics.Vector4.One, Shading.Flat, _grass));
+        _view.DrawMesh(_crate, Numerics.Matrix4x4.CreateRotationY(0.4f) * Numerics.Matrix4x4.CreateTranslation(2.8f, 0.6f, -1.5f), new Material(Numerics.Vector4.One, Shading.Flat, _wood));
+        _view.DrawMesh(_body, spin, new Material(Numerics.Vector4.One, Shading.Flat, _paint));
         foreach (var (x, z) in new[] { (-1.2f, 0.8f), (1.2f, 0.8f), (-1.2f, -0.8f), (1.2f, -0.8f) })
         {
             _view.DrawMesh(_wheel, Numerics.Matrix4x4.CreateTranslation(x, 0.35f, z) * spin, new Material(new Numerics.Vector4(0.1f, 0.1f, 0.12f, 1)));
@@ -112,7 +125,7 @@ internal sealed class ThreeDScene : Scene
 
         var fonts = _context.Fonts;
         var pad = fonts.Px(12);
-        var name = _gpu ? "GPU (BasicEffect)" : "Software (Jentl.Raster)";
+        var name = _gpu ? "GPU (BasicEffect)" : _affine ? "Software (Jentl.Raster), affine textures" : "Software (Jentl.Raster)";
         var size2 = _view?.Size ?? Point.Zero;
         string[] lines =
         [
@@ -141,5 +154,23 @@ internal sealed class ThreeDScene : Scene
         _gpu = !_gpu;
         _drawMs = 0;
         _context.Sounds.Play(Sound.Click);
+        SetButtons();
+    }
+
+    // Affine texture mapping is the software renderer's; the GPU always maps correctly.
+    private void SetButtons()
+    {
+        List<Button> buttons = [new Button("Switch", Switch)];
+        if (!_gpu)
+        {
+            buttons.Add(new Button(_affine ? "Affine: on" : "Affine: off", () =>
+            {
+                _affine = !_affine;
+                SetButtons();
+            }));
+        }
+
+        buttons.Add(new Button("Back", () => Scenes.Pop()));
+        _buttons.Set([.. buttons]);
     }
 }
