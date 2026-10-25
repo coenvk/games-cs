@@ -27,6 +27,24 @@ public static class BotView
             _ => throw new ArgumentOutOfRangeException(nameof(card), card, "Unknown suit."),
         };
 
+    /// <summary>The card a two-character <paramref name="code"/> stands for; the other way round from <see cref="Code"/>.</summary>
+    public static Card Card(string code)
+    {
+        ArgumentNullException.ThrowIfNull(code);
+        var rank = code.Length == 2 ? RankLetters.IndexOf(code[0], StringComparison.Ordinal) + 1 : 0;
+        var suit = code.Length == 2 ? code[1] switch
+        {
+            's' => Suit.Spades,
+            'h' => Suit.Hearts,
+            'd' => Suit.Diamonds,
+            'c' => Suit.Clubs,
+            _ => (Suit?)null,
+        } : null;
+        return rank == 0 || suit is null
+            ? throw new ArgumentException($"Not a card code: \"{code}\".", nameof(code))
+            : new Card(rank, suit.Value);
+    }
+
     /// <summary>What <paramref name="seat"/> is shown when it is its turn: its own cards, the board and the betting.</summary>
     /// <param name="decisionId">The id of this decision; the bot's answer must carry it back.</param>
     /// <param name="names">The players' names by seat.</param>
