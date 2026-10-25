@@ -1,4 +1,5 @@
-﻿using Jentl.Cards;
+﻿using System.Globalization;
+using Jentl.Cards;
 using Jentl.Multiplayer;
 using PokerBots;
 
@@ -16,8 +17,8 @@ public enum TableFormat
 
 /// <summary>The rules of a match at one table.</summary>
 /// <param name="Hands">For a sit-and-go the most hands to play; for fixed stacks the number of hands.</param>
-/// <param name="Seed">The match seed: the cards are dealt from it, and each seat's own seed is derived from it
-/// (see <see cref="ArenaTable.SeatSeed"/>).</param>
+/// <param name="Seed">The match seed: each hand's seed is derived from it (see <see cref="DealSeed.Hand"/>), and so is
+/// each seat's own seed (see <see cref="ArenaTable.SeatSeed"/>).</param>
 /// <param name="TimeLimit">How long a bot gets for each decision.</param>
 /// <param name="StartingStack">The chips everyone starts a sit-and-go with.</param>
 /// <param name="SmallBlind">The small blind (at the start, for a sit-and-go).</param>
@@ -25,7 +26,7 @@ public enum TableFormat
 public sealed record ArenaSettings(
     TableFormat Format,
     int Hands,
-    int Seed,
+    DealSeed Seed,
     TimeSpan TimeLimit,
     int StartingStack = 1000,
     int SmallBlind = 10,
@@ -68,6 +69,7 @@ public sealed class ArenaTable : IDisposable
     private readonly int[] _illegal;
     private readonly bool[] _gone;
     private readonly int?[] _places;
+    private readonly int _run;
 
     private int _stepping;
     private bool _started;
@@ -78,7 +80,7 @@ public sealed class ArenaTable : IDisposable
     private bool _playing;
     private int _handNumber;
     private int _level;
-    private int _handSeed;
+    private DealSeed _handSeed;
     private int[] _startStacks = [];
     private int[] _recipients = [];
     private Street _street;
@@ -88,7 +90,10 @@ public sealed class ArenaTable : IDisposable
     private int _smallPosted;
     private int _bigPosted;
 
-    public ArenaTable(IReadOnlyList<IArenaSeat> seats, ArenaSettings settings)
+    /// <param name="seats">The seats, in order; the table disposes them.</param>
+    /// <param name="settings">The rules of the match.</param>
+    /// <param name="run">Which run of a batch this match is (0 for a match on its own): the seats' own seeds differ per run.</param>
+    public ArenaTable(IReadOnlyList<IArenaSeat> seats, ArenaSettings settings, int run = 0)
     {
         ArgumentNullException.ThrowIfNull(seats);
         ArgumentNullException.ThrowIfNull(settings);
@@ -96,6 +101,7 @@ public sealed class ArenaTable : IDisposable
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(settings.Hands);
         _seats = seats;
         _settings = settings;
+        _run = run;
         _names = [.. seats.Select(s => s.Name)];
         if (settings.Format == TableFormat.FixedStacks)
         {
@@ -130,16 +136,12 @@ public sealed class ArenaTable : IDisposable
     public IReadOnlyList<(int Seat, Fault Fault)> HandFaults => _faults;
 
     /// <summary>
-    /// The seed a seat gets for its own randomness: the match seed and the seat number mixed by SplitMix64, so
-    /// seats get unrelated seeds and none is a seed the cards are dealt from.
+    /// The seed a seat gets for its own randomness in run <paramref name="run"/> of a match dealt from
+    /// <paramref name="seed"/>: 64 bits of the match seed's numbers for that run and seat (<see cref="DealSeed.Numbers"/>).
+    /// Those are one-way, so the seat seed tells a bot nothing about the match seed, the deck or another seat's seed.
     /// </summary>
-    public static long SeatSeed(int seed, int seat)
-    {
-        var z = (((ulong)(uint)seed << 32) | (uint)seat) + 0x9E3779B97F4A7C15;
-        z = (z ^ (z >> 30)) * 0xBF58476D1CE4E5B9;
-        z = (z ^ (z >> 27)) * 0x94D049BB133111EB;
-        return (long)(z ^ (z >> 31));
-    }
+    public static long SeatSeed(DealSeed seed, int run, int seat) =>
+        unchecked((long)seed.Numbers(string.Create(CultureInfo.InvariantCulture, $"seat {run} {seat}")).NextUInt64());
 
     /// <summary>Tells every bot the match is starting, with its seat and its own seed, and waits until all are ready (or gone).</summary>
     public async Task StartAsync()
@@ -161,7 +163,7 @@ public sealed class ArenaTable : IDisposable
                 _settings.SmallBlind,
                 _settings.SmallBlind * 2,
                 (int)_settings.TimeLimit.TotalMilliseconds,
-                SeatSeed(_settings.Seed, i)),
+                SeatSeed(_settings.Seed, _run, i)),
             StartLimit)));
     }
 

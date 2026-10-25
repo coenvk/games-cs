@@ -11,7 +11,7 @@ public class ArenaTableTests
     private static BotAction CheckOrCall(Decision d) => d.Legal.Check ? BotAction.Check : BotAction.Call;
 
     private static ArenaSettings Fixed(int hands, TimeSpan? limit = null) =>
-        new(TableFormat.FixedStacks, hands, Seed: 42, limit ?? Limit);
+        new(TableFormat.FixedStacks, hands, Seed: DealSeed.FromNumber(42), limit ?? Limit);
 
     [Fact]
     public async Task ALateSeat_IsFoldedOrChecked_AndCounted()
@@ -59,9 +59,9 @@ public class ArenaTableTests
         await table.RunAsync(CancellationToken.None);
 
         var start = first.Messages.OfType<MatchStart>().Should().ContainSingle().Subject;
-        start.Should().Be(new MatchStart(0, 2, "fixed-stacks", 2000, 10, 20, 50, ArenaTable.SeatSeed(42, 0)));
-        second.Messages.OfType<MatchStart>().Single().Seed.Should().Be(ArenaTable.SeatSeed(42, 1)).And.NotBe(start.Seed);
-        start.Seed.Should().NotBe(42);
+        start.Should().Be(new MatchStart(0, 2, "fixed-stacks", 2000, 10, 20, 50, ArenaTable.SeatSeed(DealSeed.FromNumber(42), 0, 0)));
+        second.Messages.OfType<MatchStart>().Single().Seed.Should().Be(ArenaTable.SeatSeed(DealSeed.FromNumber(42), 0, 1)).And.NotBe(start.Seed);
+        start.Seed.Should().NotBe(42).And.NotBe(ArenaTable.SeatSeed(DealSeed.FromNumber(42), 1, 0), "a seat gets another seed in every run");
         foreach (var seat in new[] { first, second })
         {
             seat.Messages.Select(m => m.GetType().Name).Should().Equal(
@@ -224,7 +224,7 @@ public class ArenaTableTests
             new HouseSeat(new CallingBot()),
             new HouseSeat(new CallingBot()),
         ];
-        using var table = new ArenaTable(seats, new ArenaSettings(TableFormat.SitAndGo, 1000, 7, TimeSpan.FromSeconds(5)));
+        using var table = new ArenaTable(seats, new ArenaSettings(TableFormat.SitAndGo, 1000, DealSeed.FromNumber(7), TimeSpan.FromSeconds(5)));
 
         await table.RunAsync(CancellationToken.None);
 
@@ -241,7 +241,7 @@ public class ArenaTableTests
     public async Task ASitAndGo_CutShortByTheHandLimit_PlacesByStack()
     {
         IArenaSeat[] seats = [new HouseSeat(new CallingBot()), new HouseSeat(new RaisingBot()), new HouseSeat(new CallingBot())];
-        using var table = new ArenaTable(seats, new ArenaSettings(TableFormat.SitAndGo, 2, 7, TimeSpan.FromSeconds(5)));
+        using var table = new ArenaTable(seats, new ArenaSettings(TableFormat.SitAndGo, 2, DealSeed.FromNumber(7), TimeSpan.FromSeconds(5)));
 
         await table.RunAsync(CancellationToken.None);
 
@@ -281,9 +281,9 @@ public class ArenaTableTests
         await table.RunAsync(CancellationToken.None);
 
         var record = table.Hands.Should().ContainSingle().Subject;
-        var deal = new HandSeries(2, 42).Deal(0);
+        var deal = new HandSeries(2, DealSeed.FromNumber(42)).Deal(0);
         record.Number.Should().Be(1);
-        record.Seed.Should().Be(new HandSeries(2, 42).SeedOf(0));
+        record.Seed.Should().Be(new HandSeries(2, DealSeed.FromNumber(42)).SeedOf(0));
         record.Button.Should().Be(0);
         record.SmallBlind.Should().Be(10);
         record.BigBlind.Should().Be(20);

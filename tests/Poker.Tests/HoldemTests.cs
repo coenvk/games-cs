@@ -8,7 +8,7 @@ public class HoldemTests
     [Fact]
     public void Blinds_ArePosted_AndPlayStartsAfterTheBigBlind()
     {
-        var hand = new HoldemHand([1000, 1000, 1000, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: 1);
+        var hand = new HoldemHand([1000, 1000, 1000, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: DealSeed.FromNumber(1));
 
         hand.SmallBlindSeat.Should().Be(1);
         hand.BigBlindSeat.Should().Be(2);
@@ -22,7 +22,7 @@ public class HoldemTests
     [Fact]
     public void HeadsUp_TheButtonPostsTheSmallBlind_AndActsFirstBeforeTheFlop()
     {
-        var hand = new HoldemHand([1000, 1000], button: 1, smallBlind: 10, bigBlind: 20, seed: 1);
+        var hand = new HoldemHand([1000, 1000], button: 1, smallBlind: 10, bigBlind: 20, seed: DealSeed.FromNumber(1));
 
         hand.SmallBlindSeat.Should().Be(1);
         hand.CurrentSeat.Should().Be(1);
@@ -39,7 +39,7 @@ public class HoldemTests
     [Fact]
     public void WhenEveryoneElseFolds_TheLastPlayerTakesThePot()
     {
-        var hand = new HoldemHand([1000, 1000, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: 1);
+        var hand = new HoldemHand([1000, 1000, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: DealSeed.FromNumber(1));
 
         hand.Apply(0, new RaiseTo(60));
         hand.Apply(1, Fold.Instance);
@@ -54,7 +54,7 @@ public class HoldemTests
     [Fact]
     public void Raises_MustBeAtLeastTheLastRaise()
     {
-        var hand = new HoldemHand([1000, 1000, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: 1);
+        var hand = new HoldemHand([1000, 1000, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: DealSeed.FromNumber(1));
 
         hand.MinRaiseTo.Should().Be(40);
         var tooSmall = () => hand.Apply(0, new RaiseTo(30));
@@ -109,7 +109,7 @@ public class HoldemTests
     [Fact]
     public void WhenEveryoneIsAllIn_TheBoardIsDealtOut()
     {
-        var hand = new HoldemHand([300, 300], button: 0, smallBlind: 10, bigBlind: 20, seed: 3);
+        var hand = new HoldemHand([300, 300], button: 0, smallBlind: 10, bigBlind: 20, seed: DealSeed.FromNumber(3));
 
         hand.Apply(0, AllIn.Instance);
         hand.Apply(1, AllIn.Instance);
@@ -122,7 +122,7 @@ public class HoldemTests
     [Fact]
     public void ABlindThatPutsAPlayerAllIn_StillPlays()
     {
-        var hand = new HoldemHand([15, 1000], button: 1, smallBlind: 10, bigBlind: 20, seed: 4);
+        var hand = new HoldemHand([15, 1000], button: 1, smallBlind: 10, bigBlind: 20, seed: DealSeed.FromNumber(4));
 
         hand.IsAllIn(0).Should().BeTrue();
         hand.Apply(1, CallBet.Instance);
@@ -134,7 +134,7 @@ public class HoldemTests
     [Fact]
     public void TheTable_MovesTheButton_RaisesBlinds_AndDropsBustedPlayers()
     {
-        var table = new HoldemTable(3, seed: 1, startingStack: 100, smallBlind: 5, handsPerLevel: 2);
+        var table = new HoldemTable(3, seed: DealSeed.FromNumber(1), startingStack: 100, smallBlind: 5, handsPerLevel: 2);
 
         var first = table.DealHand();
         first.Button.Should().Be(0);
@@ -166,7 +166,7 @@ public class HoldemTests
     [InlineData(6, 3)]
     public void BotTournaments_KeepEveryChip_AndEndWithOneWinner(int players, int seed)
     {
-        var table = new HoldemTable(players, seed, startingStack: 500, smallBlind: 10, handsPerLevel: 5);
+        var table = new HoldemTable(players, DealSeed.FromNumber(seed), startingStack: 500, smallBlind: 10, handsPerLevel: 5);
         var bots = Enumerable.Range(0, players).Select(i => new PokerBot(0.3 + 0.1 * i, 0.7 - 0.1 * i, samples: 40)).ToArray();
         var seats = Enumerable.Range(0, players).Select(s => new Player(s, $"Bot {s}", PlayerKind.Bot)).ToArray();
 
@@ -191,7 +191,7 @@ public class HoldemTests
     [Fact]
     public void ACopy_StaysAsItWas_AndPlaysOnTheSameWay()
     {
-        var hand = new HoldemHand([1000, 600, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: 7);
+        var hand = new HoldemHand([1000, 600, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: DealSeed.FromNumber(7));
         hand.Apply(0, new RaiseTo(60));
 
         var copy = hand.Copy();

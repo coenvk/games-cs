@@ -14,7 +14,7 @@ public class ArenaBatchTests
         var progress = new Reports();
         var batch = new ArenaBatch(
             [House(() => new CallingBot()), House(() => new CallingBot())],
-            new BatchSettings(BatchFormat.DuplicateHeadsUp, 200, Seed: 7, Limit));
+            new BatchSettings(BatchFormat.DuplicateHeadsUp, 200, Seed: DealSeed.FromNumber(7), Limit));
 
         var result = await batch.RunAsync(progress, CancellationToken.None);
 
@@ -31,7 +31,7 @@ public class ArenaBatchTests
     {
         var batch = new ArenaBatch(
             [House(() => new CallingBot()), House(() => new RandomBot(3)), House(() => new RaisingBot())],
-            new BatchSettings(BatchFormat.DuplicateRing, 4, Seed: 11, Limit));
+            new BatchSettings(BatchFormat.DuplicateRing, 4, Seed: DealSeed.FromNumber(11), Limit));
 
         var result = await batch.RunAsync(new Reports(), CancellationToken.None);
 
@@ -55,7 +55,7 @@ public class ArenaBatchTests
         {
             var batch = new ArenaBatch(
                 [House(() => new EquityBot(EquityStyle.Balanced, 5, samples: 20)), House(() => new RandomBot(9))],
-                new BatchSettings(BatchFormat.DuplicateHeadsUp, hands, Seed: 3, Limit));
+                new BatchSettings(BatchFormat.DuplicateHeadsUp, hands, Seed: DealSeed.FromNumber(3), Limit));
             return (await batch.RunAsync(new Reports(), CancellationToken.None)).Results[0];
         }
 
@@ -72,7 +72,7 @@ public class ArenaBatchTests
     {
         var batch = new ArenaBatch(
             [House(() => new CallingBot()), House(() => new RandomBot(1)), House(() => new RaisingBot())],
-            new BatchSettings(BatchFormat.SitAndGoSeries, 5, Seed: 2, Limit));
+            new BatchSettings(BatchFormat.SitAndGoSeries, 5, Seed: DealSeed.FromNumber(2), Limit));
 
         var result = await batch.RunAsync(new Reports(), CancellationToken.None);
 
@@ -102,7 +102,7 @@ public class ArenaBatchTests
         });
         var batch = new ArenaBatch(
             [House(() => new CallingBot()), House(() => new RandomBot(4))],
-            new BatchSettings(BatchFormat.DuplicateHeadsUp, 200, Seed: 8, Limit));
+            new BatchSettings(BatchFormat.DuplicateHeadsUp, 200, Seed: DealSeed.FromNumber(8), Limit));
 
         var result = await batch.RunAsync(progress, cancel.Token);
 
@@ -117,7 +117,7 @@ public class ArenaBatchTests
     {
         async Task<MatchResult> Play(bool parallel) => await new ArenaBatch(
             [House(() => new CallingBot()), House(() => new RandomBot(6)), House(() => new RaisingBot())],
-            new BatchSettings(BatchFormat.DuplicateRing, 50, Seed: 4, Limit, parallel)).RunAsync(new Reports(), CancellationToken.None);
+            new BatchSettings(BatchFormat.DuplicateRing, 50, Seed: DealSeed.FromNumber(4), Limit, parallel)).RunAsync(new Reports(), CancellationToken.None);
 
         var one = await Play(false);
         var all = await Play(true);
@@ -140,7 +140,7 @@ public class ArenaBatchTests
         Func<IArenaSeat> breaksOnSecondRun = () => ++calls == 2 ? throw new InvalidOperationException("no more bots") : Counted()();
 
         // Run 1 seats bots 1, 2, 0: bot 1's seat is made before bot 2's factory throws.
-        var batch = new ArenaBatch([Counted(), Counted(), breaksOnSecondRun], new BatchSettings(BatchFormat.DuplicateRing, 3, Seed: 1, Limit));
+        var batch = new ArenaBatch([Counted(), Counted(), breaksOnSecondRun], new BatchSettings(BatchFormat.DuplicateRing, 3, Seed: DealSeed.FromNumber(1), Limit));
 
         var act = () => batch.RunAsync(new Reports(), CancellationToken.None);
 
@@ -156,7 +156,7 @@ public class ArenaBatchTests
         var progress = new Reports();
         var batch = new ArenaBatch(
             [House(() => new CallingBot()), House(() => new RaisingBot())],
-            new BatchSettings(BatchFormat.SitAndGoSeries, 4, Seed: 3, Limit, parallel));
+            new BatchSettings(BatchFormat.SitAndGoSeries, 4, Seed: DealSeed.FromNumber(3), Limit, parallel));
 
         await batch.RunAsync(progress, CancellationToken.None);
 
@@ -168,7 +168,7 @@ public class ArenaBatchTests
     {
         using var table = new ArenaTable(
             [new HouseSeat(new RandomBot(1)), new HouseSeat(new RaisingBot()), new HouseSeat(new RandomBot(2))],
-            new ArenaSettings(TableFormat.FixedStacks, 60, Seed: 5, Limit));
+            new ArenaSettings(TableFormat.FixedStacks, 60, Seed: DealSeed.FromNumber(5), Limit));
         await table.RunAsync(CancellationToken.None);
 
         for (var seat = 0; seat < 3; seat++)
@@ -183,11 +183,11 @@ public class ArenaBatchTests
     public void TheWrongNumberOfBots_IsRefused()
     {
         var call = House(() => new CallingBot());
-        var act = () => new ArenaBatch([call, call, call], new BatchSettings(BatchFormat.DuplicateHeadsUp, 10, 1, Limit));
+        var act = () => new ArenaBatch([call, call, call], new BatchSettings(BatchFormat.DuplicateHeadsUp, 10, DealSeed.FromNumber(1), Limit));
         act.Should().Throw<ArgumentException>();
-        act = () => new ArenaBatch([call], new BatchSettings(BatchFormat.DuplicateRing, 10, 1, Limit));
+        act = () => new ArenaBatch([call], new BatchSettings(BatchFormat.DuplicateRing, 10, DealSeed.FromNumber(1), Limit));
         act.Should().Throw<ArgumentException>();
-        act = () => new ArenaBatch([.. Enumerable.Repeat(call, 10)], new BatchSettings(BatchFormat.SitAndGoSeries, 10, 1, Limit));
+        act = () => new ArenaBatch([.. Enumerable.Repeat(call, 10)], new BatchSettings(BatchFormat.SitAndGoSeries, 10, DealSeed.FromNumber(1), Limit));
         act.Should().Throw<ArgumentException>();
     }
 

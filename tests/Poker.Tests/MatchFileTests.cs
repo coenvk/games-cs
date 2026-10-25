@@ -9,7 +9,7 @@ public class MatchFileTests
     {
         var withFault = TestHands.BigBlindWins() with { Faults = [(2, Fault.Late), (0, Fault.Illegal)] };
         return new MatchResult(
-            new ArenaSettings(TableFormat.FixedStacks, 4, Seed: 42, TimeSpan.FromMilliseconds(250), StackBigBlinds: 50),
+            new ArenaSettings(TableFormat.FixedStacks, 4, Seed: DealSeed.FromNumber(42), TimeSpan.FromMilliseconds(250), StackBigBlinds: 50),
             batch,
             new DateTimeOffset(2026, 10, 25, 14, 3, 9, TimeSpan.FromHours(2)),
             ["Ann", "Bob", "Cy"],
@@ -34,7 +34,7 @@ public class MatchFileTests
     [Fact]
     public void ABatch_RoundTrips()
     {
-        var match = Match(new BatchSettings(BatchFormat.DuplicateRing, 200, Seed: 9, TimeSpan.FromSeconds(1), Parallel: true));
+        var match = Match(new BatchSettings(BatchFormat.DuplicateRing, 200, Seed: DealSeed.FromNumber(9), TimeSpan.FromSeconds(1), Parallel: true));
 
         var read = MatchFile.Read(MatchFile.Write(match));
 
@@ -48,6 +48,38 @@ public class MatchFileTests
         var json = MatchFile.Write(Match());
 
         json.Should().Contain("\"timeLimitMs\":250").And.Contain("\"Ah\"").And.Contain("{\"street\":\"Preflop\",\"seat\":1,\"kind\":\"raise\",\"to\":60,\"amount\":50,\"total\":60}");
+    }
+
+    [Fact]
+    public async Task ASavedBatch_KeepsItsSeedInHex_AndRunsAgainTheSame()
+    {
+        var seed = DealSeed.New();
+        var first = await Run(new BatchSettings(BatchFormat.DuplicateRing, 6, seed, TimeSpan.FromSeconds(5)));
+        var json = MatchFile.Write(first);
+
+        json.Should().Contain($"\"seed\":\"{seed}\"");
+        var read = MatchFile.Read(json);
+        read.Batch!.Seed.Should().Be(seed);
+        read.Settings.Seed.Should().Be(seed);
+        var again = await Run(read.Batch);
+        again.Hands.Should().BeEquivalentTo(first.Hands, o => o.WithStrictOrdering().RespectingRuntimeTypes());
+        again.Results.Should().BeEquivalentTo(first.Results, o => o.WithStrictOrdering());
+
+        static Task<MatchResult> Run(BatchSettings settings) => new ArenaBatch(
+            [
+                () => new HouseSeat(new EquityBot(EquityStyle.Balanced, 1, samples: 20)),
+                () => new HouseSeat(new RandomBot(2)),
+                () => new HouseSeat(new RaisingBot()),
+            ],
+            settings).RunAsync(new Progress<double>(), CancellationToken.None);
+    }
+
+    [Fact]
+    public void ASeedThatIsNotHex_IsNotAMatchFile()
+    {
+        var json = MatchFile.Write(Match()).Replace($"\"seed\":\"{DealSeed.FromNumber(42)}\"", "\"seed\":\"42!\"", StringComparison.Ordinal);
+
+        FluentActions.Invoking(() => MatchFile.Read(json)).Should().Throw<InvalidDataException>();
     }
 
     [Theory]
@@ -103,7 +135,7 @@ public class MatchFileTests
     public async Task AWatchedMatch_HasOneResultPerSeat_InBigBlindsPer100()
     {
         var at = new DateTimeOffset(2026, 10, 25, 12, 0, 0, TimeSpan.Zero);
-        using var table = new ArenaTable([new HouseSeat(new CallingBot()), new HouseSeat(new RaisingBot()), new HouseSeat(new CallingBot())], new ArenaSettings(TableFormat.SitAndGo, 50, 7, TimeSpan.FromSeconds(1)));
+        using var table = new ArenaTable([new HouseSeat(new CallingBot()), new HouseSeat(new RaisingBot()), new HouseSeat(new CallingBot())], new ArenaSettings(TableFormat.SitAndGo, 50, DealSeed.FromNumber(7), TimeSpan.FromSeconds(1)));
         await table.RunAsync(CancellationToken.None);
 
         var match = MatchResult.FromTable(table, at);

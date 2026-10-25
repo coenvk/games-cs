@@ -6,6 +6,7 @@ using Games.Input;
 using Games.UI;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Poker;
 using Poker.Arena;
 using static Games.UI.Tr;
 
@@ -17,7 +18,7 @@ internal sealed class MatchSetup
     public const int MaxSeats = 9;
     private static readonly int[] FirstBots = [3, 4, 5, 2, 0, 1, 3, 4, 5];
 
-    public MatchSetup(IReadOnlyList<BotEntry> bots, bool batch, int seed)
+    public MatchSetup(IReadOnlyList<BotEntry> bots, bool batch, DealSeed seed)
     {
         // A bot whose description cannot be read has no command and cannot be seated.
         Bots = [.. bots.Where(b => b.Kind == BotKind.House || b.Command is not null)];
@@ -74,7 +75,7 @@ internal sealed class MatchSetup
 
     public int TimeIndex { get; set; } = 2;
 
-    public int Seed { get; set; }
+    public DealSeed Seed { get; set; }
 
     public int You => Bots.Count;
 
@@ -149,7 +150,7 @@ internal sealed class MatchSetupScene : Scene
     {
         _workshop = workshop;
         _context = workshop.Game;
-        _setup = new MatchSetup(workshop.Bots(), batch, workshop.Game.Deal ?? Random.Shared.Next(1, 1_000_000));
+        _setup = new MatchSetup(workshop.Bots(), batch, workshop.Game.Deal is { } deal ? DealSeed.FromNumber(deal) : DealSeed.New());
         var setup = _setup;
         string[] formats = batch
             ? [T("Duplicate heads-up"), T("Duplicate ring"), T("Sit-and-go series")]
@@ -179,7 +180,7 @@ internal sealed class MatchSetupScene : Scene
                 [.. MatchSetup.TimeLimits.Select(t => T("{0} s", t.TotalSeconds.ToString("0.##", Tr.Culture)))],
                 () => setup.TimeIndex,
                 index => setup.TimeIndex = index),
-            new ButtonRow(T("New seed"), () => setup.Seed = Random.Shared.Next(1, 1_000_000), () => setup.Seed.ToString(CultureInfo.InvariantCulture)),
+            new ButtonRow(T("New seed"), () => setup.Seed = DealSeed.New(), () => setup.Seed.ToString()),
             new ButtonRow(T("Start"), Start),
             new ButtonRow(T("Back"), () => Scenes.Pop()));
         string HandsLabel() => setup.IsSeries ? T("Tournaments") : T("Hands");

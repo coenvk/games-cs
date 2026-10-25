@@ -8,10 +8,11 @@
 public sealed class HoldemTable
 {
     private readonly int[] _stacks;
-    private readonly int _seed;
+    private readonly DealSeed _seed;
     private readonly int _startingBlind;
 
-    public HoldemTable(int players, int seed, int startingStack = 1000, int smallBlind = 10, int handsPerLevel = 10)
+    /// <param name="seed">The seed every hand's own is derived from (see <see cref="DealSeed.Hand"/>).</param>
+    public HoldemTable(int players, DealSeed seed, int startingStack = 1000, int smallBlind = 10, int handsPerLevel = 10)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(players, 2);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(startingStack);
@@ -33,7 +34,7 @@ public sealed class HoldemTable
     public int Button { get; private set; }
 
     /// <summary>The seed the current hand (number <see cref="HandNumber"/>) is shuffled from.</summary>
-    public int HandSeed => unchecked(_seed + HandNumber * 7919);
+    public DealSeed HandSeed => _seed.Hand(HandNumber);
 
     /// <summary>The current hand, once <see cref="DealHand"/> has been called.</summary>
     public HoldemHand? Hand { get; private set; }

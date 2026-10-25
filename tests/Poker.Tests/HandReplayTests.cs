@@ -17,7 +17,7 @@ public class HandReplayTests
         List<Func<IArenaSeat>> bots = format == BatchFormat.DuplicateHeadsUp
             ? [House(() => new EquityBot(EquityStyle.Balanced, 5, samples: 20)), House(() => new CallingBot())]
             : [House(() => new RandomBot(4)), House(() => new CallingBot()), House(() => new RaisingBot()), House(() => new RandomBot(8))];
-        var batch = new ArenaBatch(bots, new BatchSettings(format, format == BatchFormat.SitAndGoSeries ? 2 : 30, Seed: 17, Limit));
+        var batch = new ArenaBatch(bots, new BatchSettings(format, format == BatchFormat.SitAndGoSeries ? 2 : 30, Seed: DealSeed.FromNumber(17), Limit));
         var result = await batch.RunAsync(new Progress<double>(), CancellationToken.None);
 
         // Replays are made from saved matches: the hands read back from the file.
@@ -39,7 +39,7 @@ public class HandReplayTests
     [Fact]
     public void Rebuild_StopsAfterTheGivenNumberOfActions()
     {
-        var record = Record(new HoldemHand([1000, 1000, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: 5), seed: 5,
+        var record = Record(new HoldemHand([1000, 1000, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: DealSeed.FromNumber(5)), seed: DealSeed.FromNumber(5),
             (0, new RaiseTo(60)), (1, CallBet.Instance), (2, Fold.Instance), (1, Check.Instance), (0, new RaiseTo(100)), (1, Fold.Instance));
 
         var preflop = HandReplay.Rebuild(record, 2);
@@ -58,7 +58,7 @@ public class HandReplayTests
     [Fact]
     public void ARecordThatDoesNotPlayOut_IsRefused()
     {
-        var record = Record(new HoldemHand([1000, 1000, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: 5), seed: 5, (0, Fold.Instance));
+        var record = Record(new HoldemHand([1000, 1000, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: DealSeed.FromNumber(5)), seed: DealSeed.FromNumber(5), (0, Fold.Instance));
         var wrongSeat = record with { Actions = [new ActionRecord(Street.Preflop, 1, Fold.Instance, 0, 10)] };
 
         var replay = () => HandReplay.Rebuild(wrongSeat, 1);
@@ -71,7 +71,7 @@ public class HandReplayTests
     [InlineData(2)]
     public void ACountOutsideTheActions_IsRefused(int actions)
     {
-        var record = Record(new HoldemHand([1000, 1000, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: 5), seed: 5, (0, Fold.Instance));
+        var record = Record(new HoldemHand([1000, 1000, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: DealSeed.FromNumber(5)), seed: DealSeed.FromNumber(5), (0, Fold.Instance));
 
         var replay = () => HandReplay.Rebuild(record, actions);
 
@@ -79,7 +79,7 @@ public class HandReplayTests
     }
 
     /// <summary>A record of <paramref name="hand"/> after the moves are applied to it, as the arena would write it.</summary>
-    private static HandRecord Record(HoldemHand hand, int seed, params (int Seat, PokerAction Move)[] moves)
+    private static HandRecord Record(HoldemHand hand, DealSeed seed, params (int Seat, PokerAction Move)[] moves)
     {
         var stacks = Enumerable.Range(0, hand.Seats).Select(s => hand.Stack(s) + hand.Committed(s)).ToList();
         var actions = new List<ActionRecord>();

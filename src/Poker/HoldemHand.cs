@@ -80,8 +80,9 @@ public sealed class HoldemHand : ITurnBasedGame<PokerAction>
 
     /// <param name="stacks">Chips per seat; 0 sits out.</param>
     /// <param name="button">The dealer seat (must have chips).</param>
-    public HoldemHand(IReadOnlyList<int> stacks, int button, int smallBlind, int bigBlind, int seed)
-        : this(stacks, button, smallBlind, bigBlind, Deck.Shuffled(Deck.Standard52(), new Random(seed)).Reverse().ToArray())
+    /// <param name="seed">The hand's seed: the deck is shuffled from it (see <see cref="DealSeed.Deck"/>).</param>
+    public HoldemHand(IReadOnlyList<int> stacks, int button, int smallBlind, int bigBlind, DealSeed seed)
+        : this(stacks, button, smallBlind, bigBlind, seed.Deck())
     {
     }
 

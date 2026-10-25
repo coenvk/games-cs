@@ -33,8 +33,9 @@ public sealed record Hello(int Protocol, string? Name = null) : Message;
 /// <param name="SmallBlind">The small blind at the start of the match.</param>
 /// <param name="BigBlind">The big blind at the start of the match.</param>
 /// <param name="TimeLimitMs">How long you get to answer each decision, in milliseconds.</param>
-/// <param name="Seed">Your own seed for your own randomness, derived from the match seed. It is never the seed the
-/// cards are dealt from: a bot never learns the deck.</param>
+/// <param name="Seed">Your own seed for your own randomness: every seat gets its own, in every run of a batch. It is
+/// derived one way from the match seed, so it tells you nothing about the match seed, the deck or another seat's
+/// seed.</param>
 public sealed record MatchStart(
     int Seat,
     int Seats,

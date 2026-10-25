@@ -70,7 +70,7 @@ internal sealed class PokerScene : Scene
             bluff: 0.04 + 0.03 * (i % 3)))];
         _view = new PokerTableView(context);
         _names = [.. setup.Players.Select(p => p.Name)];
-        Table = new HoldemTable(setup.Players.Count, _seed, StartingStack);
+        Table = new HoldemTable(setup.Players.Count, DealSeed.FromNumber(_seed), StartingStack);
         _runner = DealHand();
         _faceUp = seat => seat == _runner.Viewer || _shown.Contains(seat);
     }

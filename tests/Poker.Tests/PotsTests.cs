@@ -5,7 +5,7 @@ public class PotsTests
     [Fact]
     public void Pots_WithThreeAllInTiers_AndAFoldedStake_MatchThePayout()
     {
-        var hand = new HoldemHand([100, 300, 600, 1000, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: 3);
+        var hand = new HoldemHand([100, 300, 600, 1000, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: DealSeed.FromNumber(3));
 
         hand.Apply(3, CallBet.Instance);
         hand.Apply(4, CallBet.Instance);
@@ -25,7 +25,7 @@ public class PotsTests
     [Fact]
     public void Pots_WithAllInsOfDifferentSizes_AndAFold_SplitOffTheUncalledChips()
     {
-        var hand = new HoldemHand([100, 300, 600, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: 3);
+        var hand = new HoldemHand([100, 300, 600, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: DealSeed.FromNumber(3));
 
         hand.Apply(3, new RaiseTo(400));
         hand.Apply(0, AllIn.Instance);
@@ -41,7 +41,7 @@ public class PotsTests
     [Fact]
     public void Pots_BeforeAnyAllIn_IsOnePot()
     {
-        var hand = new HoldemHand([1000, 1000, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: 1);
+        var hand = new HoldemHand([1000, 1000, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: DealSeed.FromNumber(1));
 
         hand.Pots.Should().ContainSingle();
         hand.Pots[0].Amount.Should().Be(30);
@@ -51,7 +51,7 @@ public class PotsTests
     [Fact]
     public void Pots_WhenOnePlayerIsAllInForLess_ShowASidePotWhileTheHandIsStillOn()
     {
-        var hand = new HoldemHand([100, 1000, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: 1);
+        var hand = new HoldemHand([100, 1000, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: DealSeed.FromNumber(1));
 
         hand.Apply(0, AllIn.Instance);
         hand.Apply(1, new RaiseTo(300));
@@ -80,7 +80,7 @@ public class PotsTests
     [Fact]
     public void GatheredPots_AreThePotsAsTheStreetBegan_WithoutTheBetsInFrontOfTheSeats()
     {
-        var hand = new HoldemHand([100, 1000, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: 1);
+        var hand = new HoldemHand([100, 1000, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: DealSeed.FromNumber(1));
         hand.GatheredPots.Should().BeEmpty("before the flop the blinds are bets");
 
         hand.Apply(0, AllIn.Instance);

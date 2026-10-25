@@ -25,7 +25,7 @@ internal static class TestHands
         int bigBlind = 20,
         string[]? names = null,
         int? bigBlindPosted = null,
-        int seed = 7)
+        DealSeed? seed = null)
     {
         // Heads-up the button posts the small blind; otherwise the small blind is the seat after the button.
         var playing = Enumerable.Range(0, stacks.Length).Where(s => stacks[s] > 0).ToArray();
@@ -33,7 +33,7 @@ internal static class TestHands
         var big = (small + 1) % stacks.Length;
         return new(
             number,
-            seed,
+            seed ?? DealSeed.FromNumber(7),
             button,
             smallBlind,
             bigBlind,

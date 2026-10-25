@@ -195,7 +195,7 @@ internal sealed class ResultsScene : Scene
     private IEnumerable<(string Text, Color Color)> Summary()
     {
         var hands = N(_match.Hands.Count, "{0} hand", "{0} hands");
-        var seed = (_match.Batch?.Seed ?? _match.Settings.Seed).ToString(CultureInfo.InvariantCulture);
+        var seed = (_match.Batch?.Seed ?? _match.Settings.Seed).ToString();
         yield return ($"{FormatName(_match)}  ·  {When(_match)}  ·  {hands}  ·  {T("seed {0}", seed)}", Palette.Muted);
         yield return _path is null
             ? (T("The match could not be saved."), Problem)

@@ -109,7 +109,7 @@ public class HandHistoryTests
     [Fact]
     public void TheHandNumberInTheHeader_IsNeverNegative()
     {
-        var hand = TestHands.Hand(3, button: 0, [1000, 1000, 1000], ["Ah Ad", "7c 2d", "9s 4s"], [], string.Empty, [], new() { [0] = 30 }, seed: -5);
+        var hand = TestHands.Hand(3, button: 0, [1000, 1000, 1000], ["Ah Ad", "7c 2d", "9s 4s"], [], string.Empty, [], new() { [0] = 30 }, seed: DealSeed.FromNumber(-5));
 
         Lines(hand)[0].Should().Be("PokerStars Hand #4294967291000003: Hold'em No Limit (10/20) - 2026/10/25 12:03:09 UTC");
     }
@@ -136,7 +136,7 @@ public class HandHistoryTests
     {
         var batch = new ArenaBatch(
             [() => new HouseSeat(new CallingBot()), () => new HouseSeat(new RaisingBot())],
-            new BatchSettings(BatchFormat.DuplicateHeadsUp, 15, Seed: 4, TimeSpan.FromSeconds(1)));
+            new BatchSettings(BatchFormat.DuplicateHeadsUp, 15, Seed: DealSeed.FromNumber(4), TimeSpan.FromSeconds(1)));
         var match = await batch.RunAsync(new Progress<double>(), CancellationToken.None) with { At = At };
 
         var text = HandHistoryText.WriteMatch(match, "Workshop");

@@ -116,7 +116,7 @@ internal sealed class WatchScene : Scene
             {
                 if (request.Seats[seat] is { } bot)
                 {
-                    seats.Add(workshop.Seat(bot, unchecked((int)ArenaTable.SeatSeed(request.Settings.Seed, seat)), names[seat]));
+                    seats.Add(workshop.Seat(bot, unchecked((int)ArenaTable.SeatSeed(request.Settings.Seed, 0, seat)), names[seat]));
                 }
                 else
                 {

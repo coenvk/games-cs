@@ -8,7 +8,7 @@ namespace Poker.Arena;
 /// it holds every seat's hole cards.
 /// </summary>
 /// <param name="Number">The hand number, counting from 1.</param>
-/// <param name="Seed">The seed the deck was shuffled from.</param>
+/// <param name="Seed">The hand's seed: the deck was shuffled from it.</param>
 /// <param name="SmallBlindSeat">The seat that posted the small blind, as the engine dealt it.</param>
 /// <param name="BigBlindSeat">The seat that posted the big blind.</param>
 /// <param name="SmallBlindPosted">What the small blind posted; less than the blind when it was short of chips.</param>
@@ -24,7 +24,7 @@ namespace Poker.Arena;
 /// <param name="Faults">Every decision in the hand that was not the bot's own answer, with the reason.</param>
 public sealed record HandRecord(
     int Number,
-    int Seed,
+    DealSeed Seed,
     int Button,
     int SmallBlind,
     int BigBlind,

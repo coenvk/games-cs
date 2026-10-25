@@ -15,7 +15,7 @@ public class BotViewTests
     // Three players, blinds 10/20: seat 0 raises to 60, so seat 1 (small blind) faces a raise.
     private static HoldemHand FacingARaise()
     {
-        var hand = new HoldemHand([1000, 1000, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: 1);
+        var hand = new HoldemHand([1000, 1000, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: DealSeed.FromNumber(1));
         hand.Apply(0, new RaiseTo(60));
         return hand;
     }
@@ -32,7 +32,7 @@ public class BotViewTests
     [Fact]
     public void ADecision_ShowsOnlyTheSeatsOwnCards_OnEveryStreet()
     {
-        var hand = new HoldemHand([1000, 1000, 1000, 1000, 1000, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: 7);
+        var hand = new HoldemHand([1000, 1000, 1000, 1000, 1000, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: DealSeed.FromNumber(7));
         var streets = new HashSet<string>();
         while (!hand.IsOver)
         {
@@ -80,7 +80,7 @@ public class BotViewTests
     [Fact]
     public void ADecision_ShowsSeatStates()
     {
-        var hand = new HoldemHand([1000, 0, 100, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: 2);
+        var hand = new HoldemHand([1000, 0, 100, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: DealSeed.FromNumber(2));
         hand.Apply(hand.CurrentSeat, Fold.Instance);
         hand.Apply(hand.CurrentSeat, AllIn.Instance);
 
@@ -103,7 +103,7 @@ public class BotViewTests
 
     private static HoldemHand OnlyACallIsPossible()
     {
-        var hand = new HoldemHand([1000, 1000, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: 1);
+        var hand = new HoldemHand([1000, 1000, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: DealSeed.FromNumber(1));
         hand.Apply(0, AllIn.Instance);
         hand.Apply(1, CallBet.Instance);
         return hand;
@@ -112,7 +112,7 @@ public class BotViewTests
     private static HoldemHand ShortStackFacingARaise()
     {
         // Seat 1 has 110: facing a raise to 100 the minimum raise is to 140, so all in (110) is a short raise.
-        var hand = new HoldemHand([1000, 110, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: 1);
+        var hand = new HoldemHand([1000, 110, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: DealSeed.FromNumber(1));
         hand.Apply(0, new RaiseTo(100));
         return hand;
     }
@@ -145,7 +145,7 @@ public class BotViewTests
 
     private static HoldemHand BigBlindWithTheOption()
     {
-        var hand = new HoldemHand([1000, 1000, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: 1);
+        var hand = new HoldemHand([1000, 1000, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: DealSeed.FromNumber(1));
         hand.Apply(0, CallBet.Instance);
         hand.Apply(1, CallBet.Instance);
         return hand;
@@ -187,7 +187,7 @@ public class BotViewTests
     [Fact]
     public void HandStart_ShowsStacksBeforeTheBlinds()
     {
-        var hand = new HoldemHand([1000, 0, 500], button: 0, smallBlind: 10, bigBlind: 20, seed: 1);
+        var hand = new HoldemHand([1000, 0, 500], button: 0, smallBlind: 10, bigBlind: 20, seed: DealSeed.FromNumber(1));
 
         var start = BotView.HandStart(hand, 3, Names);
 
@@ -198,7 +198,7 @@ public class BotViewTests
     [Fact]
     public void HandEnd_ShowsOnlyShownCards()
     {
-        var hand = new HoldemHand([1000, 1000, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: 1);
+        var hand = new HoldemHand([1000, 1000, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: DealSeed.FromNumber(1));
         hand.Apply(0, Fold.Instance);
         hand.Apply(1, Fold.Instance);
 
@@ -219,7 +219,7 @@ public class BotViewTests
     [Fact]
     public void HandEnd_AtShowdown_ShowsEveryHandStillIn_AndPaysEachPot()
     {
-        var hand = new HoldemHand([100, 300, 600], button: 0, smallBlind: 10, bigBlind: 20, seed: 3);
+        var hand = new HoldemHand([100, 300, 600], button: 0, smallBlind: 10, bigBlind: 20, seed: DealSeed.FromNumber(3));
         hand.Apply(0, AllIn.Instance);
         hand.Apply(1, AllIn.Instance);
         hand.Apply(2, CallBet.Instance);
@@ -240,7 +240,7 @@ public class BotViewTests
     [Fact]
     public void WhenEveryOpponentIsAllIn_ThereIsNothingToRaise()
     {
-        var hand = new HoldemHand([1000, 100, 100], button: 0, smallBlind: 10, bigBlind: 20, seed: 1);
+        var hand = new HoldemHand([1000, 100, 100], button: 0, smallBlind: 10, bigBlind: 20, seed: DealSeed.FromNumber(1));
         hand.Apply(0, new RaiseTo(60));
         hand.Apply(1, AllIn.Instance);
         hand.Apply(2, AllIn.Instance);

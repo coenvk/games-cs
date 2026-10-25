@@ -89,7 +89,7 @@ within 5 seconds of the app starting it.
 | `format` | `"sit-and-go"` (play until one player has all the chips, blinds going up) or `"fixed-stacks"` (every hand starts from the starting stack, so each hand counts on its own; this is what duplicate batches use) |
 | `startingStack`, `smallBlind`, `bigBlind` | the chips everyone starts with, and the blinds at the start of the match |
 | `timeLimitMs` | how long you get for each decision |
-| `seed` | **your own** seed, for your own randomness; it differs per seat and per run. It is never the seed the cards are dealt from: a bot never learns the deck. It is a 64-bit integer, possibly negative. JavaScript bots: numbers above 2^53 lose precision when parsed with `JSON.parse`; read it as a `BigInt` (or take the loss, the seed is only for randomness). |
+| `seed` | **your own** seed, for your own randomness. Every seat gets its own, and gets another in every run of a batch (each run of a duplicate batch, each game of a series); the same match seed gives the same seeds again. It is derived one way from the match seed, so it tells your bot nothing about the match seed, the deck or another seat's seed. It is a 64-bit integer, possibly negative. JavaScript bots: numbers above 2^53 lose precision when parsed with `JSON.parse`; read it as a `BigInt` (or take the loss, the seed is only for randomness). |
 
 ### hand-start (app to bot)
 
@@ -196,8 +196,10 @@ the chips the seat finished with. In a **fixed-stacks** match every hand starts 
   processes that share nothing, and nothing carries over from one run to the next. In a duplicate batch a run plays the
   same deals as the one before with the seats swapped, and your bot starts from scratch in each.
 - **Seeds.** `match-start` carries your bot's own seed. Use it for all of your randomness: a match of bots that do is
-  played out the same way when it is run again with the same seed. A bot never learns the deck, another seat's hole
-  cards (before a showdown) or another bot's seed.
+  played out the same way when it is run again with the same match seed. A bot never learns the match seed, the deck,
+  another seat's hole cards (before a showdown) or another bot's seed: the match seed is 128 random bits, and every
+  hand's deck and every seat's seed is derived from it one way (HMAC-SHA256), so neither a bot's own seed nor its own
+  cards tell it anything about the rest.
 - **Versions.** Within major version 1 messages only gain fields. **Ignore fields and message types you do not know**
   (the Python starter kit does; `BotRunner` does for C#), and your bot keeps working when the app is updated.
 

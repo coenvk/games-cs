@@ -70,7 +70,7 @@ public sealed record MatchResult(
 /// <summary>
 /// Saves a <see cref="MatchResult"/> as JSON and reads it back. Property names are camelCase and enums are written by
 /// name (for example "Preflop"). Cards are written as their codes ("As"), a move as <c>{ "kind": "raise", "to": 60 }</c> (the kinds are fold,
-/// check, call, raise and allIn) and every time limit as whole milliseconds.
+/// check, call, raise and allIn), every seed as its 32 hexadecimal digits and every time limit as whole milliseconds.
 /// </summary>
 public static class MatchFile
 {
@@ -196,7 +196,7 @@ internal sealed record MatchJson
         {
             Format = m.Settings.Format,
             Hands = m.Settings.Hands,
-            Seed = m.Settings.Seed,
+            Seed = m.Settings.Seed.ToString(),
             TimeLimitMs = (long)m.Settings.TimeLimit.TotalMilliseconds,
             StartingStack = m.Settings.StartingStack,
             SmallBlind = m.Settings.SmallBlind,
@@ -206,7 +206,7 @@ internal sealed record MatchJson
         {
             Format = m.Batch.Format,
             Hands = m.Batch.Hands,
-            Seed = m.Batch.Seed,
+            Seed = m.Batch.Seed.ToString(),
             TimeLimitMs = (long)m.Batch.TimeLimit.TotalMilliseconds,
             Parallel = m.Batch.Parallel,
         },
@@ -217,8 +217,8 @@ internal sealed record MatchJson
     };
 
     public MatchResult ToResult() => new(
-        new ArenaSettings(Settings.Format, Settings.Hands, Settings.Seed, TimeSpan.FromMilliseconds(Settings.TimeLimitMs), Settings.StartingStack, Settings.SmallBlind, Settings.StackBigBlinds),
-        Batch is null ? null : new BatchSettings(Batch.Format, Batch.Hands, Batch.Seed, TimeSpan.FromMilliseconds(Batch.TimeLimitMs), Batch.Parallel),
+        new ArenaSettings(Settings.Format, Settings.Hands, DealSeed.Parse(Settings.Seed), TimeSpan.FromMilliseconds(Settings.TimeLimitMs), Settings.StartingStack, Settings.SmallBlind, Settings.StackBigBlinds),
+        Batch is null ? null : new BatchSettings(Batch.Format, Batch.Hands, DealSeed.Parse(Batch.Seed), TimeSpan.FromMilliseconds(Batch.TimeLimitMs), Batch.Parallel),
         At,
         Bots,
         Results,
@@ -231,7 +231,7 @@ internal sealed record SettingsJson
 
     public required int Hands { get; init; }
 
-    public required int Seed { get; init; }
+    public required string Seed { get; init; }
 
     public required long TimeLimitMs { get; init; }
 
@@ -248,7 +248,7 @@ internal sealed record BatchJson
 
     public required int Hands { get; init; }
 
-    public required int Seed { get; init; }
+    public required string Seed { get; init; }
 
     public required long TimeLimitMs { get; init; }
 
@@ -259,7 +259,7 @@ internal sealed record HandJson
 {
     public required int Number { get; init; }
 
-    public required int Seed { get; init; }
+    public required string Seed { get; init; }
 
     public required int Button { get; init; }
 
@@ -296,7 +296,7 @@ internal sealed record HandJson
     public static HandJson From(HandRecord h) => new()
     {
         Number = h.Number,
-        Seed = h.Seed,
+        Seed = h.Seed.ToString(),
         Button = h.Button,
         SmallBlind = h.SmallBlind,
         BigBlind = h.BigBlind,
@@ -323,7 +323,7 @@ internal sealed record HandJson
 
     private HandRecord Build() => new(
         Number,
-        Seed,
+        DealSeed.Parse(Seed),
         Button,
         SmallBlind,
         BigBlind,

@@ -36,7 +36,7 @@ public class HouseBotTests
                     ? new EquityBot(Enum.Parse<EquityStyle>(name), seat, samples: 20)
                     : make(seat))
                 .ToArray();
-            var series = new HandSeries(6, seed: 3);
+            var series = new HandSeries(6, seed: DealSeed.FromNumber(3));
             var id = 0;
             for (var index = 0; index < 300; index++)
             {
@@ -57,7 +57,7 @@ public class HouseBotTests
     [Fact]
     public void TheCallingBot_Calls()
     {
-        var hand = new HoldemHand([1000, 1000, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: 1);
+        var hand = new HoldemHand([1000, 1000, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: DealSeed.FromNumber(1));
         new CallingBot().Decide(DecisionFor(hand)).Should().Be(BotAction.Call);
         hand.Apply(hand.CurrentSeat, CallBet.Instance);
         hand.Apply(hand.CurrentSeat, CallBet.Instance);
@@ -67,7 +67,7 @@ public class HouseBotTests
     [Fact]
     public void TheRaisingBot_RaisesTheMinimum()
     {
-        var hand = new HoldemHand([1000, 1000, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: 1);
+        var hand = new HoldemHand([1000, 1000, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: DealSeed.FromNumber(1));
         var decision = DecisionFor(hand);
         new RaisingBot().Decide(decision).Should().Be(BotAction.Raise(decision.Legal.MinRaiseTo!.Value));
     }
@@ -75,7 +75,7 @@ public class HouseBotTests
     [Fact]
     public void TheRaisingBot_GoesAllIn_WhenTheMinimumIsAllItHas()
     {
-        var hand = new HoldemHand([1000, 30, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: 1);
+        var hand = new HoldemHand([1000, 30, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: DealSeed.FromNumber(1));
         hand.Apply(hand.CurrentSeat, CallBet.Instance);
         var decision = DecisionFor(hand);
         decision.Legal.MaxRaiseTo.Should().BeLessThan(decision.Legal.MinRaiseTo!.Value + 1);

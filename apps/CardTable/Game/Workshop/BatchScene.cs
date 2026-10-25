@@ -53,7 +53,7 @@ internal sealed class BatchScene : Scene
         // A bot entered twice is numbered, so that each keeps its own results and statistics.
         var names = SeatNames.Distinct([.. request.Bots.Select(b => b.Name)]);
         var bots = request.Bots
-            .Select((bot, i) => (Func<IArenaSeat>)(() => workshop.Seat(bot, unchecked((int)ArenaTable.SeatSeed(settings.Seed, i)), names[i])))
+            .Select((bot, i) => (Func<IArenaSeat>)(() => workshop.Seat(bot, unchecked((int)ArenaTable.SeatSeed(settings.Seed, 0, i)), names[i])))
             .ToList();
         var batch = new ArenaBatch(bots, settings);
         _run = Task.Run(() => batch.RunAsync(_done, _cancel.Token));

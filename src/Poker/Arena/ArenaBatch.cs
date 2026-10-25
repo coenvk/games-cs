@@ -1,4 +1,5 @@
-﻿using Jentl.Collect;
+﻿using System.Globalization;
+using Jentl.Collect;
 using Jentl.Multiplayer;
 
 namespace Poker.Arena;
@@ -16,8 +17,9 @@ namespace Poker.Arena;
 /// blinds per 100 hands, with the 95% margin scaled the same way.
 /// </para>
 /// <para>
-/// A series of sit-and-gos turns the seating one seat further each game, so no bot always sits in seat 0. Its
-/// result is the bots' places; big blinds per 100 hands mean nothing there and are reported as 0.
+/// A series of sit-and-gos turns the seating one seat further each game, so no bot always sits in seat 0, and deals each
+/// game from its own seed (see <see cref="GameSeed"/>). Its result is the bots' places; big blinds per 100 hands mean
+/// nothing there and are reported as 0.
 /// </para>
 /// <para>
 /// A cancelled batch stops between hands and returns what was played. In a duplicate batch only the deals played in
@@ -108,7 +110,8 @@ public sealed class ArenaBatch
         {
             var game = await PlayAsync(
                 rotations[run % rotations.Count],
-                series ? table with { Seed = unchecked(_settings.Seed + run) } : table,
+                series ? table with { Seed = GameSeed(_settings.Seed, run) } : table,
+                run,
                 series ? null : Report,
                 cancel);
             if (series && game.Finished)
@@ -190,8 +193,12 @@ public sealed class ArenaBatch
             [.. games.Where(g => g.Finished).Select(g => g.Result.Place!.Value)]);
     }
 
-    /// <summary>Plays one run with the bots in <paramref name="seating"/> (bot by seat), stopping between hands when cancelled.</summary>
-    private async Task<Played> PlayAsync(int[] seating, ArenaSettings settings, Action? handPlayed, CancellationToken cancel)
+    /// <summary>The seed game <paramref name="game"/> (counting from 0) of a sit-and-go series is dealt from.</summary>
+    public static DealSeed GameSeed(DealSeed seed, int game) =>
+        seed.Derive(string.Create(CultureInfo.InvariantCulture, $"game {game}"));
+
+    /// <summary>Plays run <paramref name="run"/> with the bots in <paramref name="seating"/> (bot by seat), stopping between hands when cancelled.</summary>
+    private async Task<Played> PlayAsync(int[] seating, ArenaSettings settings, int run, Action? handPlayed, CancellationToken cancel)
     {
         var seats = new List<IArenaSeat>();
         try
@@ -207,7 +214,7 @@ public sealed class ArenaBatch
             throw;
         }
 
-        using var table = new ArenaTable(seats, settings);
+        using var table = new ArenaTable(seats, settings, run);
         await table.StartAsync();
         var hands = 0;
         while (!table.IsOver)
