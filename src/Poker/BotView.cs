@@ -14,14 +14,17 @@ public sealed record ActionRecord(Street Street, int Seat, PokerAction Action, i
 /// </summary>
 public static class BotView
 {
-    /// <summary>The two-character code of a card: a rank from "23456789TJQKA" and a suit from "shdc".</summary>
+    private const string RankLetters = "A23456789TJQK";
+
+    /// <summary>The two-character code of a card: a rank from "23456789TJQKA" (an ace is "A") and a suit from "shdc".</summary>
     public static string Code(Card card) =>
-        "A23456789TJQK"[card.Rank - 1].ToString() + card.Suit switch
+        RankLetters[card.Rank - 1].ToString() + card.Suit switch
         {
             Suit.Spades => "s",
             Suit.Hearts => "h",
             Suit.Diamonds => "d",
-            _ => "c",
+            Suit.Clubs => "c",
+            _ => throw new ArgumentOutOfRangeException(nameof(card), card, "Unknown suit."),
         };
 
     /// <summary>What <paramref name="seat"/> is shown when it is its turn: its own cards, the board and the betting.</summary>
@@ -37,6 +40,7 @@ public static class BotView
         IReadOnlyList<ActionRecord> actions,
         TimeSpan limit)
     {
+        ArgumentOutOfRangeException.ThrowIfLessThan(names.Count, hand.Seats);
         var moves = hand.LegalMoves(seat);
         var toCall = hand.ToCall(seat);
         var max = hand.MaxRaiseTo(seat);
@@ -73,14 +77,17 @@ public static class BotView
     }
 
     /// <summary>What every bot is told when a hand starts, with stacks as they were before the blinds.</summary>
-    public static HandStart HandStart(HoldemHand hand, int handNumber, IReadOnlyList<string> names) =>
-        new(
+    public static HandStart HandStart(HoldemHand hand, int handNumber, IReadOnlyList<string> names)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(names.Count, hand.Seats);
+        return new(
             handNumber,
             hand.Button,
             hand.SmallBlind,
             hand.BigBlind,
             [.. Enumerable.Range(0, hand.Seats).Select(s =>
                 new HandSeat(s, names[s], hand.Stack(s) + hand.Committed(s), hand.InHand(s) ? "active" : "out"))]);
+    }
 
     /// <summary>
     /// What every bot is told when a hand is over. Hole cards appear only for the seats that showed them at
@@ -88,6 +95,11 @@ public static class BotView
     /// </summary>
     public static HandEnd HandEnd(HoldemHand hand, int handNumber, IReadOnlyList<ActionRecord> actions)
     {
+        if (!hand.IsOver)
+        {
+            throw new InvalidOperationException("The hand is not over: showing it now would reveal hole cards.");
+        }
+
         var live = Enumerable.Range(0, hand.Seats).Where(hand.IsLive).ToArray();
         var showdown = live.Length > 1;
         var values = showdown
@@ -100,7 +112,7 @@ public static class BotView
             Played(actions),
             [.. live.Where(_ => showdown).Select(s => new ShownHand(s, [.. hand.Hole(s).Select(Code)], RankName(values[s].Category)))],
             [.. hand.Winnings.OrderBy(w => w.Key).Select(w => new Win(w.Key, w.Value))],
-            [.. hand.Pots.Select(p => new PotResult(p.Amount, p.Seats, Winners(hand, p, live, values)))],
+            [.. hand.PotResults.Select(p => new PotResult(p.Amount, p.Seats, [.. p.Winners.Select(w => new Win(w.Seat, w.Amount))]))],
             [.. Enumerable.Range(0, hand.Seats).Select(hand.Stack)]);
     }
 
@@ -182,24 +194,7 @@ public static class BotView
         HandCategory.Flush => "flush",
         HandCategory.FullHouse => "full house",
         HandCategory.FourOfAKind => "four of a kind",
-        _ => "straight flush",
+        HandCategory.StraightFlush => "straight flush",
+        _ => throw new ArgumentOutOfRangeException(nameof(category), category, "Unknown hand category."),
     };
-
-    /// <summary>Who won a pot and how much of it, the way the engine paid it out: ties split, odd chips to the left of the button.</summary>
-    private static Win[] Winners(HoldemHand hand, Pot pot, int[] live, Dictionary<int, HandValue> values)
-    {
-        if (live.Length == 1)
-        {
-            return [new Win(live[0], pot.Amount)];
-        }
-
-        var best = pot.Seats.Max(s => values[s]);
-        var winners = Enumerable.Range(1, hand.Seats)
-            .Select(i => (hand.Button + i) % hand.Seats)
-            .Where(s => pot.Seats.Contains(s) && values[s] == best)
-            .ToArray();
-        return [.. winners
-            .Select((seat, i) => new Win(seat, (pot.Amount / winners.Length) + (i < pot.Amount % winners.Length ? 1 : 0)))
-            .OrderBy(w => w.Seat)];
-    }
 }

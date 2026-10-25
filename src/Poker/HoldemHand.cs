@@ -60,6 +60,9 @@ public sealed record PotWon(int Seat, int Amount, HandValue? Value) : PokerEvent
 /// <summary>Chips that the players in <paramref name="Seats"/> are contending for.</summary>
 public sealed record Pot(int Amount, IReadOnlyList<int> Seats);
 
+/// <summary>How a pot was paid out: the seats that contended for it and what each winner got (more than one on a split).</summary>
+public sealed record PotPayout(int Amount, IReadOnlyList<int> Seats, IReadOnlyList<(int Seat, int Amount)> Winners);
+
 /// <summary>
 /// One hand of No-Limit Texas Hold'em: blinds, two hole cards each, four betting rounds around a five-card
 /// board, and a showdown that splits the pot into side pots when players are all in for different amounts.
@@ -200,6 +203,9 @@ public sealed class HoldemHand : ITurnBasedGame<PokerAction>
 
     /// <summary>What each seat won (including chips returned to it), once the hand is over.</summary>
     public IReadOnlyDictionary<int, int> Winnings { get; private set; } = new Dictionary<int, int>();
+
+    /// <summary>How each pot was paid out, main pot first, once the hand is over.</summary>
+    public IReadOnlyList<PotPayout> PotResults { get; private set; } = [];
 
     public int Stack(int seat) => _seats[seat].Stack;
 
@@ -419,10 +425,12 @@ public sealed class HoldemHand : ITurnBasedGame<PokerAction>
         Street = Street.Showdown;
         IsOver = true;
         var winnings = new Dictionary<int, int>();
+        var results = new List<PotPayout>();
         var live = Enumerable.Range(0, Seats).Where(IsLive).ToArray();
         if (live.Length == 1)
         {
             winnings[live[0]] = Pot;
+            results.AddRange(Pots.Select(p => new PotPayout(p.Amount, p.Seats, [(live[0], p.Amount)])));
             _events.Add(new PotWon(live[0], Pot, null));
         }
         else
@@ -437,12 +445,16 @@ public sealed class HoldemHand : ITurnBasedGame<PokerAction>
             {
                 var best = pot.Seats.Max(s => values[s]);
                 var winners = Around(Button).Where(s => pot.Seats.Contains(s) && values[s] == best).ToArray();
+                var shares = new List<(int Seat, int Amount)>();
                 for (var i = 0; i < winners.Length; i++)
                 {
                     // Odd chips go to the first winners left of the button.
                     var share = pot.Amount / winners.Length + (i < pot.Amount % winners.Length ? 1 : 0);
                     winnings[winners[i]] = winnings.GetValueOrDefault(winners[i]) + share;
+                    shares.Add((winners[i], share));
                 }
+
+                results.Add(new PotPayout(pot.Amount, pot.Seats, [.. shares.OrderBy(s => s.Seat)]));
             }
 
             foreach (var (seat, amount) in winnings.OrderBy(w => w.Key))
@@ -457,6 +469,7 @@ public sealed class HoldemHand : ITurnBasedGame<PokerAction>
         }
 
         Winnings = winnings;
+        PotResults = results;
     }
 
     private void Put(int seat, int amount)

@@ -6,6 +6,9 @@ public class BotViewTests
 {
     private static readonly string[] Names = ["A", "B", "C", "D", "E", "F"];
 
+    private static readonly Jentl.Cards.Card[] OddChipDeck =
+        [.. new[] { "2C", "2D", "3C", "3D", "3H", "4C", "AS", "KS", "QS", "JS", "10S" }.Select(Jentl.Cards.Card.Parse)];
+
     private static Decision DecisionFor(HoldemHand hand, int seat, int id = 1) =>
         BotView.Decision(hand, seat, id, handNumber: 1, level: 1, Names, [], TimeSpan.FromSeconds(1));
 
@@ -232,6 +235,67 @@ public class BotViewTests
         end.Pots.SelectMany(p => p.Winners).GroupBy(w => w.Seat).ToDictionary(g => g.Key, g => g.Sum(w => w.Amount))
             .Should().BeEquivalentTo(hand.Winnings);
         end.Won.ToDictionary(w => w.Seat, w => w.Amount).Should().BeEquivalentTo(hand.Winnings);
+    }
+
+    [Fact]
+    public void WhenEveryOpponentIsAllIn_ThereIsNothingToRaise()
+    {
+        var hand = new HoldemHand([1000, 100, 100], button: 0, smallBlind: 10, bigBlind: 20, seed: 1);
+        hand.Apply(0, new RaiseTo(60));
+        hand.Apply(1, AllIn.Instance);
+        hand.Apply(2, AllIn.Instance);
+
+        var legal = DecisionFor(hand, 0).Legal;
+
+        legal.Call.Should().Be(40);
+        legal.MinRaiseTo.Should().BeNull();
+        legal.MaxRaiseTo.Should().BeNull();
+        BotView.ToAction(BotAction.Raise(500), hand, 0, 5).Should().BeNull();
+        BotView.ToAction(BotAction.Raise(1000), hand, 0, 5).Should().BeNull();
+        BotView.ToAction(BotAction.Call, hand, 0, 5).Should().Be(CallBet.Instance);
+    }
+
+    [Fact]
+    public void HandEnd_MidHand_Throws()
+    {
+        var hand = FacingARaise();
+
+        var act = () => BotView.HandEnd(hand, 1, []);
+
+        act.Should().Throw<InvalidOperationException>();
+    }
+
+    [Fact]
+    public void NamesShorterThanTheSeats_Throw()
+    {
+        var hand = FacingARaise();
+
+        var decision = () => BotView.Decision(hand, 1, 1, 1, 1, ["A", "B"], [], TimeSpan.FromSeconds(1));
+        var start = () => BotView.HandStart(hand, 1, ["A", "B"]);
+
+        decision.Should().Throw<ArgumentException>();
+        start.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void HandEnd_ReportsTheEnginesPayout_IncludingTheOddChip()
+    {
+        // Seats 0 and 2 both play the royal flush on the board and split 25 chips; the odd chip goes left of the button.
+        var deck = OddChipDeck;
+        var hand = new HoldemHand([1000, 1000, 1000], button: 0, smallBlind: 5, bigBlind: 10, deck);
+        hand.Apply(0, CallBet.Instance);
+        hand.Apply(1, Fold.Instance);
+        hand.Apply(2, Check.Instance);
+        while (!hand.IsOver)
+        {
+            hand.Apply(hand.CurrentSeat, Check.Instance);
+        }
+
+        var end = BotView.HandEnd(hand, 1, []);
+
+        end.Pots.Should().ContainSingle().Which.Winners.Should().Equal(new Win(0, 12), new Win(2, 13));
+        end.Pots.Select(p => (p.Amount, p.Seats, p.Winners)).Should().BeEquivalentTo(
+            hand.PotResults.Select(p => (p.Amount, p.Seats, (IReadOnlyList<Win>)[.. p.Winners.Select(w => new Win(w.Seat, w.Amount))])));
     }
 
     [Fact]
