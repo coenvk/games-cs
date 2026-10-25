@@ -92,6 +92,22 @@ public class SeatTests
     }
 
     [Fact]
+    public void SeatNames_Original_GivesTheNameASeatWasNumberedFrom()
+    {
+        string[] bots = ["Tight", "Balanced", "Echo 2"];
+
+        SeatNames.Original("Tight", bots).Should().Be("Tight");
+        SeatNames.Original("Tight 3", bots).Should().Be("Tight");
+        SeatNames.Original("Echo 2", bots).Should().Be("Echo 2", "a name that is a bot's own is kept");
+        SeatNames.Original("Loose", bots).Should().BeNull();
+        SeatNames.Original("Loose 2", bots).Should().BeNull();
+        SeatNames.Original("Tight x", bots).Should().BeNull();
+
+        string[] seated = ["Tight", "Balanced", "Tight", "Tight"];
+        SeatNames.Distinct(seated).Select(n => SeatNames.Original(n, seated)).Should().Equal(seated);
+    }
+
+    [Fact]
     public async Task AStaleAnswer_IsSkipped_AndTheRightOneTaken()
     {
         using var seat = new ProcessSeat(EchoBot("stale"), "Echo");

@@ -199,10 +199,11 @@ the chips the seat finished with. In a **fixed-stacks** match every hand starts 
   processes that share nothing, and nothing carries over from one run to the next. In a duplicate batch a run plays the
   same deals as the one before with the seats swapped, and your bot starts from scratch in each.
 - **Seeds.** `match-start` carries your bot's own seed. Use it for all of your randomness: a match of bots that do is
-  played out the same way when it is run again with the same match seed. A bot never learns the match seed, the deck,
-  another seat's hole cards (before a showdown) or another bot's seed: the match seed is 128 random bits, and every
-  hand's deck and every seat's seed is derived from it one way (HMAC-SHA256), so neither a bot's own seed nor its own
-  cards tell it anything about the rest.
+  played out the same way when it is run again with the same match seed (see
+  [Running a match again](#running-a-match-again)). A bot never learns the match seed, the deck, another seat's hole
+  cards (before a showdown) or another bot's seed: the match seed is 128 random bits, and every hand's deck and every
+  seat's seed is derived from it one way (HMAC-SHA256), so neither a bot's own seed nor its own cards tell it anything
+  about the rest.
 - **Versions.** Within major version 1 messages only gain fields. **Ignore fields and message types you do not know**
   (the Python starter kit does; `BotRunner` does for C#), and your bot keeps working when the app is updated.
 
@@ -311,7 +312,25 @@ Feed it a whole file with `python3 bots/python/example_bot.py < messages.txt` (s
 **In the app.** **Watch a match** shows what every bot did, step by step (P pauses, N steps), with a red note when a bot
 was late, or its answer illegal. When a bot cannot play, its seat shows why, with the last line it printed on stderr:
 print your own diagnostics there (`print(..., file=sys.stderr)`, `Console.Error.WriteLine`). **Run a batch** plays many
-hands fast. **Past matches** lists the saved ones, where any hand can be replayed step by step.
+hands fast. **Past matches** lists the saved ones, where any hand can be replayed step by step. When a bot could not
+play, the results say why under the table.
+
+### Running a match again
+
+Every match and batch has a seed: 32 hexadecimal digits, shown on its results and saved with it. **Run again** on the
+results (also those of a past match) plays it once more in its place: the same bots in the same seats, by their names
+in the bots list, with the same rules and the same seed. Every hand gets the same cards and every bot the same seed of
+its own, so bots that take all their randomness from their seed play it out the same way: a bug that showed once can be
+watched again. (A bot that answered late may not be late again, and the other way round.) A bot that is no longer in
+the bots folder cannot be seated, and the results say which. **New seed** in the setup picks a fresh seed.
+
+Starting the app with `--deal <n>` makes the setup start from the seed of deal number `n` instead of a random one, and
+the Card Table's own Hold'em game deal the same cards every time, so a match can be set up again by hand, also on
+another machine:
+
+```
+dotnet run --project apps/CardTable/Desktop -- --deal 42
+```
 
 ## First milestone: beat Always call
 

@@ -1,4 +1,5 @@
-﻿using PokerBots;
+﻿using System.Globalization;
+using PokerBots;
 
 namespace Poker.Arena;
 
@@ -61,5 +62,29 @@ public static class SeatNames
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// The name in <paramref name="names"/> that <see cref="Distinct"/> gave the seat called <paramref name="seat"/>:
+    /// the name itself when it is in the list, else the name without its number ("Tight 2" is "Tight") when that is;
+    /// null when neither is. For seating the same bots again from a match's names.
+    /// </summary>
+    public static string? Original(string seat, IReadOnlyCollection<string> names)
+    {
+        ArgumentNullException.ThrowIfNull(seat);
+        ArgumentNullException.ThrowIfNull(names);
+        if (names.Contains(seat, StringComparer.Ordinal))
+        {
+            return seat;
+        }
+
+        var space = seat.LastIndexOf(' ');
+        if (space > 0 && int.TryParse(seat.AsSpan(space + 1), NumberStyles.None, CultureInfo.InvariantCulture, out var number) && number >= 2)
+        {
+            var name = seat[..space];
+            return names.Contains(name, StringComparer.Ordinal) ? name : null;
+        }
+
+        return null;
     }
 }

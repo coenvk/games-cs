@@ -19,8 +19,9 @@ namespace Games.Workshop;
 /// How each bot did in a finished match or batch, best first, a row each: its result, its hands and faults, and how it
 /// played (VPIP, PFR, AF, WTSD, W$SD over the match's hands). The result is big blinds won per 100 hands with the 95%
 /// margin, or for sit-and-gos, where that means nothing, the place (a series: the average place and how often each
-/// place was taken). Under the table, why each bot that could not play could not. Below: Replay hands, Export hand histories (into the workshop's histories folder, named after
-/// the match file) and Back.
+/// place was taken). Under the table, why each bot that could not play could not. Below: Replay hands, Export hand
+/// histories (into the workshop's histories folder, named after the match file), Run again (the same bots, rules and
+/// seed) and Back.
 /// </summary>
 internal sealed class ResultsScene : Scene
 {
@@ -175,6 +176,7 @@ internal sealed class ResultsScene : Scene
         }
 
         buttons.Add((T("Export hand histories"), Export));
+        buttons.Add((T("Run again"), RunAgain));
         buttons.Add((T("Back"), () => Scenes.Pop()));
         _actions = [.. buttons.Select(b => b.Press)];
         _selected = Math.Clamp(_selected, 0, _actions.Length - 1);
@@ -182,6 +184,34 @@ internal sealed class ResultsScene : Scene
     }
 
     private void Replay() => Scenes.Push(new ReplayScene(_workshop, _match, 0));
+
+    /// <summary>
+    /// Plays the match (or batch) again in place of these results: the same bots in the same seats, by their names in
+    /// the bots list now (the player at the seat that was theirs), with the same rules and seed, so bots that play by
+    /// their seeds play it out the same way.
+    /// </summary>
+    private void RunAgain()
+    {
+        var you = T("You");
+        var bots = _workshop.Bots().Where(b => b.Kind == BotKind.House || b.Command is not null).ToList();
+        string[] names = [.. bots.Select(b => b.Name), .. _match.Batch is null ? [you] : Array.Empty<string>()];
+        var seats = new List<BotEntry?>();
+        foreach (var seat in _match.Bots)
+        {
+            if (SeatNames.Original(seat, names) is not { } name)
+            {
+                _note = T("Cannot run it again: {0} is not in the bots folder.", seat);
+                _noteIsProblem = true;
+                return;
+            }
+
+            seats.Add(name == you && _match.Batch is null ? null : bots.First(b => b.Name == name));
+        }
+
+        Scenes.Replace(_match.Batch is { } batch
+            ? _workshop.RunBatch(new BatchRequest([.. seats.OfType<BotEntry>()], batch))
+            : _workshop.WatchMatch(new MatchRequest(seats, _match.Settings)));
+    }
 
     /// <summary>Writes every hand as a PokerStars hand history into one text file named after the match file.</summary>
     private void Export()
