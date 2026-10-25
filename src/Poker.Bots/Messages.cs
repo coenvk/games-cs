@@ -33,7 +33,8 @@ public sealed record Hello(int Protocol, string? Name = null) : Message;
 /// <param name="SmallBlind">The small blind at the start of the match.</param>
 /// <param name="BigBlind">The big blind at the start of the match.</param>
 /// <param name="TimeLimitMs">How long you get to answer each decision, in milliseconds.</param>
-/// <param name="Seed">The seed the match's shuffling was derived from, so a match can be replayed.</param>
+/// <param name="Seed">Your own seed for your own randomness, derived from the match seed. It is never the seed the
+/// cards are dealt from: a bot never learns the deck.</param>
 public sealed record MatchStart(
     int Seat,
     int Seats,
@@ -150,6 +151,7 @@ public sealed record PlayedAction(string Street, int Seat, string Action, int Am
 /// <param name="Actions">Everything that happened this hand, oldest first.</param>
 /// <param name="Shown">The hands revealed at showdown. Empty when everyone else folded.</param>
 /// <param name="Won">How much each winning seat collected.</param>
+/// <param name="Pots">Each pot with its contenders and who won how much of it.</param>
 /// <param name="Stacks">Every seat's stack after the hand, indexed by seat number.</param>
 public sealed record HandEnd(
     int Hand,
@@ -157,6 +159,7 @@ public sealed record HandEnd(
     IReadOnlyList<PlayedAction> Actions,
     IReadOnlyList<ShownHand> Shown,
     IReadOnlyList<Win> Won,
+    IReadOnlyList<PotResult> Pots,
     IReadOnlyList<int> Stacks) : Message;
 
 /// <summary>A hand revealed at showdown.</summary>
@@ -208,3 +211,9 @@ public sealed record BotAction(string Action, int? To = null, int? Id = null) : 
     /// <summary>Raise so your total bet this street is <paramref name="to"/>.</summary>
     public static BotAction Raise(int to) => new("raise", to);
 }
+
+/// <summary>A pot at the end of a hand and how it was paid out.</summary>
+/// <param name="Amount">The chips in the pot.</param>
+/// <param name="Seats">The seats that contended for it.</param>
+/// <param name="Winners">The seats that won it and how much each got (more than one on a split).</param>
+public sealed record PotResult(int Amount, IReadOnlyList<int> Seats, IReadOnlyList<Win> Winners);

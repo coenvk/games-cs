@@ -21,7 +21,8 @@ public class ProtocolTests
         SampleDecision(),
         new HandEnd(
             3, ["2c", "7h", "Jd", "Qs", "3s"], [new PlayedAction("river", 0, "check", 0, 0)],
-            [new ShownHand(0, ["As", "Ks"], "flush")], [new Win(0, 120)], [1060, 940]),
+            [new ShownHand(0, ["As", "Ks"], "flush")], [new Win(0, 120)],
+            [new PotResult(120, [0, 1], [new Win(0, 120)]), new PotResult(0, [1], [])], [1060, 940]),
         new MatchEnd([new Standing(0, "Ann", 2000, 1), new Standing(1, "Bob", 0, 2)]),
         BotAction.Fold,
         BotAction.Raise(60) with { Id = 4 },
@@ -81,4 +82,13 @@ public class ProtocolTests
     [Fact]
     public void AnUnknownActionName_IsKeptForTheAppToJudge() =>
         Protocol.Read("""{"type":"action","action":"bluff"}""").Should().Be(new BotAction("bluff"));
+
+    [Fact]
+    public void ADecisionWithoutItsId_IsNull()
+    {
+        var json = Protocol.Write(SampleDecision()).Replace("\"id\":7,", "");
+
+        json.Should().NotContain("\"id\"");
+        Protocol.Read(json).Should().BeNull();
+    }
 }
