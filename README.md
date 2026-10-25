@@ -313,6 +313,19 @@ The bots deal out the unknown cards a hundred and fifty times to estimate their 
 the pot odds; each seat plays its own style, from tight and careful to loose and pushy, with the odd bluff. The
 engine (`src/Poker`) is framework-free and runs on the same multiplayer layer as Uno.
 
+### Bot workshop
+
+**Card Table > Bot workshop** (desktop only) is a place to write a poker bot and find out how good it is. Watch your bot
+play house bots or other bots of yours at a table with chips, run a duplicate batch of thousands of hands for a result
+that luck cannot fake (big blinds won per 100 hands, with its margin of error), look at statistics per bot, and replay
+single hands. A bot is a C# class (`src/Poker.Bots`, packed by `build/pokersdk.sh`) or a program in any language that
+speaks JSON lines on stdin and stdout; every bot runs in a process of its own, with a time limit per decision.
+
+Starter kits: `bots/csharp` (an example bot that builds into the bots folder, and a harness that plays it against the
+house bots in one process, so you can debug it) and `bots/python` (an example bot using only the standard library).
+`docs/poker-bots.md` has the protocol with an example of every message, the rules, where the bots go, and how to test
+and debug.
+
 ## Paddock
 
 **Paddock** is a car collecting game in the spirit of Top Drives, with 100 invented cars from invented makers, drawn in

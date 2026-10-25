@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Plays MyBot against the house bots in this very process, so a breakpoint in MyBot.cs stops the match, no app needed.
+       Needs the SDK package like MyBot does: run build/pokersdk.sh once. Run it with: dotnet run [hands] -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MyBot\MyBot.csproj" />
+    <ProjectReference Include="..\..\..\src\Poker\Poker.csproj" />
+  </ItemGroup>
+
+</Project>

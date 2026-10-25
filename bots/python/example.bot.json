@@ -1,0 +1,6 @@
+{
+  "name": "Python example",
+  "command": "python3",
+  "args": ["example_bot.py"],
+  "workingDirectory": "."
+}

@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Your poker bot: a class library with one public IPokerBot, built straight into the workshop's bots folder.
+       It needs the SDK package: run build/pokersdk.sh once (it packs it into .poker-packages, see nuget.config).
+       To build somewhere else: dotnet build -p:PokerBotsFolder=/some/folder -->
+
+  <PropertyGroup>
+    <!-- The bots folder inside the app's save folder: ~/Library/Application Support/CardTable/bots on macOS, ~/.local/share/CardTable/bots on Linux,
+         %LOCALAPPDATA%\CardTable\bots on Windows. -->
+    <PokerBotsFolder Condition="'$(PokerBotsFolder)' == ''">$([System.IO.Path]::Combine($([System.Environment]::GetFolderPath(SpecialFolder.LocalApplicationData)), 'CardTable', 'bots'))</PokerBotsFolder>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Poker.Bots" Version="1.0.0" />
+  </ItemGroup>
+
+  <!-- Copies the bot next to the app's other bots. The SDK, Poker.Bots.dll, is not copied: the bot host brings its own. -->
+  <Target Name="InstallBot" AfterTargets="Build">
+    <MakeDir Directories="$(PokerBotsFolder)" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(PokerBotsFolder)" />
+    <Copy SourceFiles="$(TargetDir)$(TargetName).pdb" DestinationFolder="$(PokerBotsFolder)" Condition="Exists('$(TargetDir)$(TargetName).pdb')" />
+    <Message Importance="high" Text="Installed $(TargetFileName) in $(PokerBotsFolder)" />
+  </Target>
+
+</Project>

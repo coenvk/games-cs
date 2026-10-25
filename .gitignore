@@ -375,3 +375,6 @@ apps/*/Web/wwwroot/
 # Brainstorming mockups
 .superpowers/
 scores.json
+
+# The poker bot SDK, packed locally by build/pokersdk.sh
+.poker-packages/
