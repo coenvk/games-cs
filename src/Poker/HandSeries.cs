@@ -34,6 +34,9 @@ public sealed class HandSeries
             index % _seats,
             _smallBlind,
             BigBlind,
-            unchecked(_seed + index * 7919));
+            SeedOf(index));
     }
+
+    /// <summary>The seed hand number <paramref name="index"/> is shuffled from.</summary>
+    public int SeedOf(int index) => unchecked(_seed + index * 7919);
 }

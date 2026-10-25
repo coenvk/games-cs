@@ -32,6 +32,9 @@ public sealed class HoldemTable
 
     public int Button { get; private set; }
 
+    /// <summary>The seed the current hand (number <see cref="HandNumber"/>) is shuffled from.</summary>
+    public int HandSeed => unchecked(_seed + HandNumber * 7919);
+
     /// <summary>The current hand, once <see cref="DealHand"/> has been called.</summary>
     public HoldemHand? Hand { get; private set; }
 
@@ -71,7 +74,7 @@ public sealed class HoldemTable
         }
         while (_stacks[Button] == 0);
 
-        Hand = new HoldemHand(_stacks, Button, SmallBlind, BigBlind, unchecked(_seed + HandNumber * 7919));
+        Hand = new HoldemHand(_stacks, Button, SmallBlind, BigBlind, HandSeed);
         return Hand;
     }
 
