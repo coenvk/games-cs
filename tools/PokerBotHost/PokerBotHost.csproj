@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Runs a C# bot (a DLL built against Poker.Bots) in a process of its own: loads it from bytes, so rebuilding never hits a locked file, and speaks the JSON-lines protocol for it. -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Poker.Bots\Poker.Bots.csproj" />
+  </ItemGroup>
+
+</Project>

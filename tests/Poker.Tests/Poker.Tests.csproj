@@ -18,4 +18,20 @@
     <Copy SourceFiles="@(EchoBotFile)" DestinationFiles="@(EchoBotFile->'$(OutDir)EchoBot\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
   </Target>
 
+
+  <!-- The bot host and the sample bots library the BotHostTests run (as dotnet BotHost/PokerBotHost.dll SampleBots/Poker.SampleBots.dll GoodBot). -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\tools\PokerBotHost\PokerBotHost.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\Poker.SampleBots\Poker.SampleBots.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <Target Name="CopyBotHost" AfterTargets="Build">
+    <ItemGroup>
+      <BotHostFile Include="..\..\tools\PokerBotHost\bin\$(Configuration)\$(TargetFramework)\**\*" />
+      <SampleBotsFile Include="..\Poker.SampleBots\bin\$(Configuration)\$(TargetFramework)\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(BotHostFile)" DestinationFiles="@(BotHostFile->'$(OutDir)BotHost\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(SampleBotsFile)" DestinationFiles="@(SampleBotsFile->'$(OutDir)SampleBots\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  </Target>
+
 </Project>

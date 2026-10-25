@@ -51,6 +51,7 @@
     <Project Path="tests/Mossbrook.Tests/Mossbrook.Tests.csproj" />
     <Project Path="tests/Paddock.Tests/Paddock.Tests.csproj" />
     <Project Path="tests/Poker.Bots.Tests/Poker.Bots.Tests.csproj" />
+    <Project Path="tests/Poker.SampleBots/Poker.SampleBots.csproj" />
     <Project Path="tests/Poker.Tests/Poker.Tests.csproj" />
     <Project Path="tests/Poker.Tests.EchoBot/Poker.Tests.EchoBot.csproj" />
     <Project Path="tests/Pyramid.Tests/Pyramid.Tests.csproj" />
@@ -64,6 +65,7 @@
   <Folder Name="/tools/">
     <Project Path="tools/CarArt/CarArt.csproj" />
     <Project Path="tools/LevelConverter/LevelConverter.csproj" />
+    <Project Path="tools/PokerBotHost/PokerBotHost.csproj" />
     <Project Path="tools/RpgArt/RpgArt.csproj" />
     <Project Path="tools/SolverBench/SolverBench.csproj" />
   </Folder>

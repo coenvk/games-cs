@@ -21,7 +21,7 @@ public sealed class ProcessSeat(AgentCommand command, string name) : IArenaSeat
     public string Name => name;
 
     /// <inheritdoc />
-    public string? Problem => _problem ?? (_process.HasExited ? _process.Problem ?? "exited" : null);
+    public string? Problem => _problem ?? (_process.HasExited ? ExitProblem() : null);
 
     /// <inheritdoc />
     public bool IsGone => Problem is not null;
@@ -37,7 +37,7 @@ public sealed class ProcessSeat(AgentCommand command, string name) : IArenaSeat
             var line = await _process.ReadAsync(deadline - DateTime.UtcNow).ConfigureAwait(false);
             if (line is null)
             {
-                _problem ??= _process.HasExited ? _process.Problem ?? "exited" : "did not say hello in time";
+                _problem ??= _process.HasExited ? ExitProblem() : "did not say hello in time";
                 _process.Stop();
                 return;
             }
@@ -57,6 +57,14 @@ public sealed class ProcessSeat(AgentCommand command, string name) : IArenaSeat
             Notify(start);
             return;
         }
+    }
+
+    // Why the process ended, with the last thing it said on stderr (the bot host explains itself there).
+    private string ExitProblem()
+    {
+        var problem = _process.Problem ?? "exited";
+        var last = _process.ErrorOutput.LastOrDefault(l => !string.IsNullOrWhiteSpace(l));
+        return last is null ? problem : $"{problem}: {last.Trim()}";
     }
 
     /// <inheritdoc />

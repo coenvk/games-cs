@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Four small bots for the bot host tests: one that plays and three that misbehave. Not packed. -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Poker.Bots\Poker.Bots.csproj" />
+  </ItemGroup>
+
+</Project>
