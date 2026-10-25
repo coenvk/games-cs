@@ -332,6 +332,9 @@ another machine:
 dotnet run --project apps/CardTable/Desktop -- --deal 42
 ```
 
+A seed from a deal number is for testing only: there are few enough deal numbers to try them all, so a bot could work
+out the deck from its own cards. Compare bots on a random seed.
+
 ## First milestone: beat Always call
 
 A bot that checks and calls whatever it holds is the weakest sensible opponent; losing to it means something is wrong.
