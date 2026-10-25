@@ -3,6 +3,7 @@ using Jentl.Core.Storage;
 using Jentl.Net;
 using Poker;
 using Poker.Arena;
+using static Games.UI.Tr;
 
 namespace Games.Workshop;
 
@@ -14,21 +15,37 @@ internal sealed record BatchRequest(IReadOnlyList<BotEntry> Bots, BatchSettings 
 
 /// <summary>
 /// What the workshop's scenes share: where the bots and the matches live, how to find the bots, and how to seat one.
-/// The three scenes the setup and the menu lead to are made through <see cref="WatchMatch"/>, <see cref="RunBatch"/>
-/// and <see cref="PastMatches"/>, so a screen replaces its stand-in by setting one of them.
+/// The scenes the setup, the menu and a finished match lead to are made through <see cref="WatchMatch"/>,
+/// <see cref="RunBatch"/>, <see cref="PastMatches"/> and <see cref="MatchResults"/>, so a screen replaces its stand-in
+/// by setting one of them.
 /// </summary>
-internal sealed class WorkshopContext(GameContext game)
+internal sealed class WorkshopContext
 {
-    public GameContext Game { get; } = game;
+    public WorkshopContext(GameContext game)
+    {
+        Game = game;
+        WatchMatch = request => WatchScene.Open(this, request);
+        RunBatch = _ => new ComingSoonScene(game, T("Run a batch"));
+        PastMatches = () => new ComingSoonScene(game, T("Past matches"));
+        MatchResults = (_, path) => new ComingSoonScene(
+            game,
+            T("Match results"),
+            path is null ? T("The match could not be saved.") : T("Saved to {0}", Path.GetRelativePath(SaveFolder, path)));
+    }
+
+    public GameContext Game { get; }
 
     /// <summary>The scene that plays a match the player watches.</summary>
-    public Func<MatchRequest, Scene> WatchMatch { get; set; } = _ => new ComingSoonScene(game, "Watch a match");
+    public Func<MatchRequest, Scene> WatchMatch { get; set; }
 
     /// <summary>The scene that runs a batch and shows its table.</summary>
-    public Func<BatchRequest, Scene> RunBatch { get; set; } = _ => new ComingSoonScene(game, "Run a batch");
+    public Func<BatchRequest, Scene> RunBatch { get; set; }
 
     /// <summary>The scene that lists the matches played before.</summary>
-    public Func<Scene> PastMatches { get; set; } = () => new ComingSoonScene(game, "Past matches");
+    public Func<Scene> PastMatches { get; set; }
+
+    /// <summary>The scene that shows a finished match, with the file it was saved to (null when saving failed).</summary>
+    public Func<MatchResult, string?, Scene> MatchResults { get; set; }
 
     /// <summary>The player's bots: <c>*.bot.json</c> descriptions and C# DLLs.</summary>
     public string BotsFolder => Path.Combine(SaveFolder, "bots");

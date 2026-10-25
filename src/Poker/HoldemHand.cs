@@ -131,6 +131,28 @@ public sealed class HoldemHand : ITurnBasedGame<PokerAction>
         StartBetting(firstAfter: big);
     }
 
+    // A copy of other, see Copy.
+    private HoldemHand(HoldemHand other)
+    {
+        _seats = [.. other._seats.Select(s => s.Copy())];
+        _deck = [.. other._deck];
+        _board.AddRange(other._board);
+        _events.AddRange(other._events);
+        _toAct.UnionWith(other._toAct);
+        Button = other.Button;
+        SmallBlind = other.SmallBlind;
+        BigBlind = other.BigBlind;
+        SmallBlindSeat = other.SmallBlindSeat;
+        BigBlindSeat = other.BigBlindSeat;
+        Street = other.Street;
+        CurrentSeat = other.CurrentSeat;
+        CurrentBet = other.CurrentBet;
+        MinRaise = other.MinRaise;
+        IsOver = other.IsOver;
+        Winnings = new Dictionary<int, int>(other.Winnings);
+        PotResults = [.. other.PotResults];
+    }
+
     public int Seats => _seats.Length;
 
     public int Button { get; }
@@ -232,6 +254,12 @@ public sealed class HoldemHand : ITurnBasedGame<PokerAction>
 
     /// <summary>The largest total <paramref name="seat"/> can bet: everything.</summary>
     public int MaxRaiseTo(int seat) => _seats[seat].Bet + _seats[seat].Stack;
+
+    /// <summary>
+    /// A copy of the hand as it stands, with the same deck and the events not yet taken: it plays on exactly as this
+    /// one would, and nothing done to either changes the other.
+    /// </summary>
+    public HoldemHand Copy() => new(this);
 
     /// <summary>The events since the last call, emptying the list.</summary>
     public IReadOnlyList<PokerEvent> TakeEvents()
@@ -506,5 +534,12 @@ public sealed class HoldemHand : ITurnBasedGame<PokerAction>
         public bool Folded { get; set; }
 
         public List<Card> Hole { get; } = [];
+
+        public SeatState Copy()
+        {
+            var copy = new SeatState { Stack = Stack, Bet = Bet, Committed = Committed, InHand = InHand, Folded = Folded };
+            copy.Hole.AddRange(Hole);
+            return copy;
+        }
     }
 }

@@ -6,7 +6,6 @@ using Jentl.Core.Scenes;
 using Jentl.Multiplayer;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using Poker;
 using Games.Input;
 using Games.Poker;
@@ -48,6 +47,7 @@ internal sealed class PokerScene : Scene
     private readonly int _seed;
     private readonly PokerBot[] _bots;
     private readonly ButtonBar _buttons = new();
+    private readonly HoldemControls _controls = new();
     private readonly List<string> _log = [];
     private readonly Dictionary<int, string> _lastAction = [];
     private readonly HashSet<int> _shown = [];
@@ -55,7 +55,6 @@ internal sealed class PokerScene : Scene
     private readonly string[] _names;
     private readonly Func<int, bool> _faceUp;
     private Match<HoldemHand, PokerAction> _runner;
-    private int _raiseTo;
     private bool _endShown;
 
     public PokerScene(GameContext context, PokerSetup setup, int? seed = null)
@@ -132,33 +131,13 @@ internal sealed class PokerScene : Scene
         }
 
         var seat = _runner.Current.Seat;
-        _raiseTo = Math.Clamp(_raiseTo, Math.Min(Hand.MinRaiseTo, Hand.MaxRaiseTo(seat)), Hand.MaxRaiseTo(seat));
-        _buttons.Set(Controls(seat));
+        _buttons.Set(_controls.Buttons(Hand, seat, Act, new Button(T("Menu"), Pause)));
         if (_buttons.Update(input))
         {
             return;
         }
 
-        if (actions.WasPressed(input, GameAction.Confirm))
-        {
-            Act(Hand.ToCall(seat) > 0 ? CallBet.Instance : Check.Instance);
-        }
-        else if (actions.WasPressed(input, GameAction.Up))
-        {
-            Raise();
-        }
-        else if (actions.WasPressed(input, GameAction.Left))
-        {
-            Step(-1);
-        }
-        else if (actions.WasPressed(input, GameAction.Right))
-        {
-            Step(1);
-        }
-        else if (input.WasPressed(Keys.F) && Hand.ToCall(seat) > 0)
-        {
-            Act(Fold.Instance);
-        }
+        _controls.Update(actions, input, Hand, seat, Act);
     }
 
     public override void Draw(SpriteBatch batch, Rectangle viewport)
@@ -219,60 +198,8 @@ internal sealed class PokerScene : Scene
         var runner = new Match<HoldemHand, PokerAction>(hand, Players, s => _bots[s], unchecked(_seed + Table.HandNumber)) { BotDelay = BotDelay };
         Say(T("Hand {0}, dealer: {1}", Table.HandNumber, Players[hand.Button].Name));
         Show(hand.TakeEvents());
-        _raiseTo = hand.MinRaiseTo;
+        _controls.Reset(hand);
         return runner;
-    }
-
-    private Button[] Controls(int seat)
-    {
-        var hand = Hand;
-        var toCall = hand.ToCall(seat);
-        var max = hand.MaxRaiseTo(seat);
-        var moves = hand.LegalMoves(seat);
-        var canRaise = moves.Any(m => m is RaiseTo);
-        var buttons = new List<Button>();
-        if (toCall > 0)
-        {
-            buttons.Add(new Button(T("Fold"), () => Act(Fold.Instance)));
-        }
-
-        buttons.Add(toCall == 0 ? new Button(T("Check"), () => Act(Check.Instance), Highlight: true)
-            : moves.Contains(CallBet.Instance) ? new Button(T("Call {0}", toCall), () => Act(CallBet.Instance), Highlight: true)
-            : new Button(T("Call all in {0}", toCall), () => Act(AllIn.Instance), Highlight: true));
-        if (canRaise)
-        {
-            buttons.Add(new Button("-", () => Step(-1)));
-            buttons.Add(new Button(hand.CurrentBet == 0 ? T("Bet {0}", _raiseTo) : T("Raise to {0}", _raiseTo), Raise));
-            buttons.Add(new Button("+", () => Step(1)));
-        }
-
-        if (moves.Contains(AllIn.Instance) && max > toCall + hand.Bet(seat))
-        {
-            buttons.Add(new Button(T("All in"), () => Act(AllIn.Instance)));
-        }
-
-        buttons.Add(new Button(T("Menu"), Pause));
-        return [.. buttons];
-    }
-
-    private void Step(int direction)
-    {
-        if (_runner.IsHumansTurn)
-        {
-            // A short stack may have less than a full raise: then all it has is the only amount.
-            var max = Hand.MaxRaiseTo(_runner.Current.Seat);
-            _raiseTo = Math.Clamp(_raiseTo + direction * Table.BigBlind, Math.Min(Hand.MinRaiseTo, max), max);
-        }
-    }
-
-    private void Raise()
-    {
-        if (!_runner.IsHumansTurn || !Hand.LegalMoves(_runner.Current.Seat).Any(m => m is RaiseTo))
-        {
-            return;
-        }
-
-        Act(_raiseTo >= Hand.MaxRaiseTo(_runner.Current.Seat) ? AllIn.Instance : new RaiseTo(_raiseTo));
     }
 
     private void Act(PokerAction action)
@@ -351,99 +278,26 @@ internal sealed class PokerScene : Scene
                     _context.Sounds.Play(Sound.Chips);
                 }
 
-                var label = a.Action switch
-                {
-                    Fold => T("Fold"),
-                    Check => T("Check"),
-                    CallBet => T("Call {0}", a.Amount),
-                    AllIn => T("All in {0}", a.Total),
-                    _ when a.Opened => T("Bet {0}", a.Total),
-                    _ => T("Raise to {0}", a.Total),
-                };
+                var label = HoldemText.Action(a);
                 _lastAction[a.Seat] = label;
                 Say($"{Name(a.Seat)}: {label}");
                 break;
             case StreetDealt d:
-                foreach (var seat in _lastAction.Keys.Where(s => _lastAction[s] != T("Fold") && !_lastAction[s].StartsWith(T("All in"), StringComparison.Ordinal)).ToArray())
-                {
-                    _lastAction.Remove(seat);
-                }
-
-                Say(T("{0}: {1}", StreetName(d.Street), string.Join(" ", d.Cards)));
+                HoldemText.NewStreet(_lastAction);
+                Say(T("{0}: {1}", HoldemText.StreetName(d.Street), string.Join(" ", d.Cards)));
                 break;
             case HandShown s:
                 _shown.Add(s.Seat);
-                _lastAction[s.Seat] = Describe(s.Value);
+                _lastAction[s.Seat] = HoldemText.Describe(s.Value);
                 break;
             case PotWon w:
                 _context.Sounds.Play(Sound.Chips);
                 Say(w.Value is { } value
-                    ? T("{0} wins {1}: {2}", Name(w.Seat), w.Amount, Describe(value))
+                    ? T("{0} wins {1}: {2}", Name(w.Seat), w.Amount, HoldemText.Describe(value))
                     : T("{0} takes {1}", Name(w.Seat), w.Amount));
                 break;
         }
     }
-
-    /// <summary>A poker hand in words, in the player's language: "Two pair, kings and fives".</summary>
-    private static string Describe(HandValue value)
-    {
-        var r = value.Ranks;
-        return value.Category switch
-        {
-            HandCategory.StraightFlush when r[0] == 14 => T("Royal flush"),
-            HandCategory.StraightFlush => T("Straight flush, {0} high", RankName(r[0])),
-            HandCategory.FourOfAKind => T("Four {0}", RankNames(r[0])),
-            HandCategory.FullHouse => T("Full house, {0} over {1}", RankNames(r[0]), RankNames(r[1])),
-            HandCategory.Flush => T("Flush, {0} high", RankName(r[0])),
-            HandCategory.Straight => T("Straight, {0} high", RankName(r[0])),
-            HandCategory.ThreeOfAKind => T("Three {0}", RankNames(r[0])),
-            HandCategory.TwoPair => T("Two pair, {0} and {1}", RankNames(r[0]), RankNames(r[1])),
-            HandCategory.Pair => T("Pair of {0}", RankNames(r[0])),
-            _ => T("{0} high", RankName(r[0])),
-        };
-    }
-
-    private static string RankName(int rank) => rank switch
-    {
-        14 => T("ace"),
-        13 => T("king"),
-        12 => T("queen"),
-        11 => T("jack"),
-        10 => T("ten"),
-        9 => T("nine"),
-        8 => T("eight"),
-        7 => T("seven"),
-        6 => T("six"),
-        5 => T("five"),
-        4 => T("four"),
-        3 => T("three"),
-        _ => T("two"),
-    };
-
-    private static string RankNames(int rank) => rank switch
-    {
-        14 => T("aces"),
-        13 => T("kings"),
-        12 => T("queens"),
-        11 => T("jacks"),
-        10 => T("tens"),
-        9 => T("nines"),
-        8 => T("eights"),
-        7 => T("sevens"),
-        6 => T("sixes"),
-        5 => T("fives"),
-        4 => T("fours"),
-        3 => T("threes"),
-        _ => T("twos"),
-    };
-
-    private static string StreetName(Street street) => street switch
-    {
-        Street.Flop => T("Flop"),
-        Street.Turn => T("Turn"),
-        Street.River => T("River"),
-        _ => street.ToString(),
-    };
 
     private void Say(string message)
     {

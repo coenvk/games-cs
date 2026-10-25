@@ -14,6 +14,9 @@ public interface IArenaSeat : IDisposable
     /// <summary>Whether the bot can no longer play: it could not start, said the wrong thing at hello, or has exited.</summary>
     bool IsGone { get; }
 
+    /// <summary>Whether its decisions have to be made within the match's time limit; a person at the table has no limit.</summary>
+    bool HasTimeLimit => true;
+
     /// <summary>Gets the bot ready for the match, within <paramref name="limit"/>. Never throws for a bot that misbehaves: it is <see cref="IsGone"/> instead.</summary>
     Task StartAsync(MatchStart start, TimeSpan limit);
 

@@ -42,9 +42,10 @@ public sealed record ArenaSettings(
 public sealed record SeatResult(int Seat, string Name, int Net, int Hands, int Late, int Illegal, bool Gone, string? Problem, int? Place);
 
 /// <summary>
-/// A match of No-Limit Hold'em between bots at one table. Each bot is asked for its moves under the time limit; a
-/// late or illegal answer is replaced by a check when that is free and a fold otherwise, and counted; a bot that is
-/// gone is never asked again. Every hand is recorded. The table owns its seats and disposes them.
+/// A match of No-Limit Hold'em between bots at one table. Each bot is asked for its moves under the time limit (a
+/// seat without one, a person, is waited for); a late or illegal answer is replaced by a check when that is free and a
+/// fold otherwise, and counted; a bot that is gone is never asked again. Every hand is recorded. The table owns its
+/// seats and disposes them.
 /// </summary>
 /// <remarks>
 /// Drive it with <see cref="StartAsync"/> and then <see cref="StepAsync"/> until <see cref="IsOver"/>, or with
@@ -121,6 +122,12 @@ public sealed class ArenaTable : IDisposable
 
     /// <summary>Every hand played to the end so far.</summary>
     public IReadOnlyList<HandRecord> Hands => _records;
+
+    /// <summary>The rules the match is played by.</summary>
+    public ArenaSettings Settings => _settings;
+
+    /// <summary>The faults so far in <see cref="Hand"/>, the hand being played or the last one played, in order.</summary>
+    public IReadOnlyList<(int Seat, Fault Fault)> HandFaults => _faults;
 
     /// <summary>
     /// The seed a seat gets for its own randomness: the match seed and the seat number mixed by SplitMix64, so
@@ -294,7 +301,7 @@ public sealed class ArenaTable : IDisposable
         PokerAction? move = null;
         var decided = await Decisions.DecideAsync(
             token => bot.AskAsync(decision, token),
-            _settings.TimeLimit,
+            bot.HasTimeLimit ? _settings.TimeLimit : Timeout.InfiniteTimeSpan,
             answer => (move = BotView.ToAction(answer, hand, seat, id)) is not null,
             () => BotAction.Fold,
             () => bot.IsGone);

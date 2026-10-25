@@ -188,6 +188,29 @@ public class HoldemTests
         table.Stacks.Sum().Should().Be(players * 500);
     }
 
+    [Fact]
+    public void ACopy_StaysAsItWas_AndPlaysOnTheSameWay()
+    {
+        var hand = new HoldemHand([1000, 600, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: 7);
+        hand.Apply(0, new RaiseTo(60));
+
+        var copy = hand.Copy();
+        copy.TakeEvents().Should().Equal(hand.TakeEvents());
+        PlayToShowdown(hand, callsOnly: true);
+
+        copy.Street.Should().Be(Street.Preflop);
+        copy.Board.Should().BeEmpty();
+        copy.CurrentSeat.Should().Be(1);
+        copy.Bet(0).Should().Be(60);
+        copy.Stack(0).Should().Be(940);
+        copy.IsOver.Should().BeFalse();
+        PlayToShowdown(copy, callsOnly: true);
+        copy.Board.Should().Equal(hand.Board);
+        Enumerable.Range(0, 3).Should().OnlyContain(s => copy.Hole(s).SequenceEqual(hand.Hole(s)) && copy.Stack(s) == hand.Stack(s));
+        copy.Winnings.Should().Equal(hand.Winnings);
+        copy.TakeEvents().Should().BeEquivalentTo(hand.TakeEvents(), o => o.WithStrictOrdering().ComparingRecordsByMembers().RespectingRuntimeTypes());
+    }
+
     /// <summary>Folds round to the big blind.</summary>
     private static void FoldAround(HoldemHand hand)
     {

@@ -169,17 +169,21 @@ internal sealed class WorkshopScene : Scene
     }
 }
 
-/// <summary>Stands in for a workshop screen that is not made yet.</summary>
+/// <summary>Stands in for a workshop screen that is not made yet: its title, and a note if there is one.</summary>
 internal sealed class ComingSoonScene : PanelScene
 {
-    public ComingSoonScene(GameContext context, string what)
+    private readonly string? _note;
+
+    public ComingSoonScene(GameContext context, string title, string? note = null)
         : base(context)
     {
-        Title = T(what);
+        Title = title;
+        _note = note;
         Menu = new Menu(context.Sounds, new MenuItem(T("Back"), () => Scenes.Pop()));
     }
 
     protected override string Title { get; }
 
-    protected override IReadOnlyList<PanelLine> Lines => [new(T("Coming in the next step"), Palette.Muted)];
+    protected override IReadOnlyList<PanelLine> Lines =>
+        _note is null ? [new(T("Coming in the next step"), Palette.Muted)] : [new(T("Coming in the next step"), Palette.Muted), new(_note, Palette.Text)];
 }

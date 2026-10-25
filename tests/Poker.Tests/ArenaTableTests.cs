@@ -297,6 +297,38 @@ public class ArenaTableTests
         record.Actions[0].Should().Be(new ActionRecord(Street.Preflop, 0, CallBet.Instance, 10, 20));
         record.Faults.Should().BeEmpty();
     }
+
+    [Fact]
+    public async Task ASeatWithoutATimeLimit_IsWaitedFor()
+    {
+        var person = new FakeSeat(CheckOrCall, _ => TimeSpan.FromMilliseconds(200)) { HasTimeLimit = false };
+        using var table = new ArenaTable([person, new HouseSeat(new CallingBot())], Fixed(1));
+
+        await table.RunAsync(CancellationToken.None);
+
+        person.Asked.Should().BePositive();
+        table.Hands.SelectMany(h => h.Faults).Should().BeEmpty();
+        table.Hands.Single().Actions.Where(a => a.Seat == 0).Should().NotContain(a => a.Action is Fold);
+        table.Results()[0].Late.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task HandFaults_TellTheFaultsOfTheHandBeingPlayed()
+    {
+        var late = new FakeSeat(CheckOrCall, _ => TimeSpan.FromMilliseconds(200));
+        using var table = new ArenaTable([late, new HouseSeat(new CallingBot())], Fixed(2));
+        await table.StartAsync();
+
+        await table.StepAsync(CancellationToken.None);
+        table.HandFaults.Should().BeEmpty();
+        await table.StepAsync(CancellationToken.None);
+        table.HandFaults.Should().Equal((0, Fault.Late));
+
+        // The hand ends with the fold; the next deal starts a clean list.
+        await table.StepAsync(CancellationToken.None);
+        table.HandFaults.Should().BeEmpty();
+        table.Settings.Should().Be(Fixed(2));
+    }
 }
 
 /// <summary>
@@ -332,6 +364,8 @@ internal sealed class FakeSeat : IArenaSeat
     public FakeSeat(Func<Decision, int, Task<BotAction?>> ask) => _ask = ask;
 
     public string Name => "Fake";
+
+    public bool HasTimeLimit { get; init; } = true;
 
     public string? Problem => _problem;
 
