@@ -31,6 +31,16 @@ public class BotHostTests
     }
 
     [Fact]
+    public async Task ABotThatPrintsPartialLines_StillAnswers()
+    {
+        using var seat = new ProcessSeat(Host(SampleDll, "ChattyBot"), "Chatty");
+        await seat.StartAsync(Start, Limit);
+
+        (await seat.AskAsync(Decision, TimeoutToken())).Should().Be(BotAction.Call with { Id = 7 });
+        (await seat.AskAsync(Decision with { Id = 8 }, TimeoutToken())).Should().Be(BotAction.Call with { Id = 8 });
+    }
+
+    [Fact]
     public async Task TheHost_FindsABotByItsFullName()
     {
         using var seat = new ProcessSeat(Host(SampleDll, "Poker.SampleBots.GoodBot"), "Good");
@@ -46,7 +56,7 @@ public class BotHostTests
         await seat.StartAsync(Start, Limit);
 
         seat.IsGone.Should().BeTrue();
-        seat.Problem.Should().Contain("has 4 bots: ExitingBot, GoodBot, SlowBot, ThrowingBot; name one");
+        seat.Problem.Should().Contain("has 5 bots: ChattyBot, ExitingBot, GoodBot, SlowBot, ThrowingBot; name one");
     }
 
     [Fact]

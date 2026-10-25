@@ -63,8 +63,8 @@ public sealed class ProcessSeat(AgentCommand command, string name) : IArenaSeat
     private string ExitProblem()
     {
         var problem = _process.Problem ?? "exited";
-        var last = _process.ErrorOutput.LastOrDefault(l => !string.IsNullOrWhiteSpace(l));
-        return last is null ? problem : $"{problem}: {last.Trim()}";
+        var last = _process.ErrorOutput.LastOrDefault(l => !string.IsNullOrWhiteSpace(l))?.Trim();
+        return last is null ? problem : $"{problem}: {(last.Length > 200 ? last[..200] + "..." : last)}";
     }
 
     /// <inheritdoc />

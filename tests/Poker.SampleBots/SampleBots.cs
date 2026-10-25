@@ -49,3 +49,17 @@ public sealed class ExitingBot : IPokerBot
         return BotAction.Call;
     }
 }
+
+/// <summary>Prints half a line to the console before it calls.</summary>
+public sealed class ChattyBot : IPokerBot
+{
+    /// <inheritdoc />
+    public string Name => "ChattyBot";
+
+    /// <inheritdoc />
+    public BotAction Decide(Decision d)
+    {
+        Console.Write("thinking ");
+        return BotAction.Call;
+    }
+}

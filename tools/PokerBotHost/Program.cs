@@ -3,7 +3,7 @@ using System.Runtime.Loader;
 using System.Text;
 using PokerBots;
 
-// Usage: PokerBotHost <bot.dll> [TypeName]. Exit codes: 0 done, 2 no single bot (or the file cannot be read), 3 SDK major mismatch.
+// Usage: PokerBotHost <bot.dll> [TypeName]. Exit codes: 0 done, 2 no single bot (or the file cannot be loaded), 3 SDK major mismatch.
 if (args.Length is < 1 or > 2)
 {
     return Fail(2, "usage: PokerBotHost <bot.dll> [TypeName]");
@@ -13,27 +13,18 @@ var path = Path.GetFullPath(args[0]);
 var file = Path.GetFileName(path);
 var sdkName = typeof(IPokerBot).Assembly.GetName();
 
-BotLoadContext context;
-Assembly assembly;
-try
-{
-    context = new BotLoadContext(path, sdkName);
-    assembly = context.LoadFromBytes(path);
-}
-catch (Exception e) when (e is IOException or UnauthorizedAccessException or BadImageFormatException)
-{
-    return Fail(2, $"cannot read {file}: {e.Message}");
-}
-
-var reference = assembly.GetReferencedAssemblies().FirstOrDefault(a => a.Name == sdkName.Name);
-if (reference?.Version is { } version && version.Major != sdkName.Version!.Major)
-{
-    return Fail(3, $"{file} was built against Poker.Bots {version}, this host has Poker.Bots {sdkName.Version}");
-}
-
 IPokerBot bot;
 try
 {
+    var context = new BotLoadContext(path, sdkName);
+    var assembly = context.LoadFromBytes(path);
+
+    var reference = assembly.GetReferencedAssemblies().FirstOrDefault(a => a.Name == sdkName.Name);
+    if (reference?.Version is { } version && version.Major != sdkName.Version!.Major)
+    {
+        return Fail(3, $"{file} was built against Poker.Bots {version}, this host has Poker.Bots {sdkName.Version}");
+    }
+
     var type = PickBot(assembly, file, args.Length > 1 ? args[1] : null, out var problem);
     if (type is null)
     {
@@ -42,14 +33,20 @@ try
 
     bot = (IPokerBot)Activator.CreateInstance(type)!;
 }
-catch (Exception e) when (e is TargetInvocationException or ReflectionTypeLoadException or FileNotFoundException or BadImageFormatException)
+catch (Exception e)
 {
-    return Fail(2, $"{file} could not be loaded: {(e as TargetInvocationException)?.InnerException?.Message ?? e.Message}");
+    // Whatever goes wrong while loading is one line for the seat's problem, not a stack trace.
+    var reason = (e as TargetInvocationException)?.InnerException?.Message ?? e.Message;
+    return Fail(2, $"{file} could not be loaded: {reason.ReplaceLineEndings(" ")}");
 }
 
-// UTF-8 without a byte order mark, and written as it comes: the runner flushes after every line.
+// The protocol keeps its own writer (UTF-8 without a byte order mark, flushed per line) and reader, so whatever the bot
+// prints or reads through Console cannot garble or steal protocol lines: its output goes to stderr, its input is empty.
+var input = new StreamReader(Console.OpenStandardInput(), new UTF8Encoding(false));
 var output = new StreamWriter(Console.OpenStandardOutput(), new UTF8Encoding(false)) { AutoFlush = true, NewLine = "\n" };
-return BotRunner.Run(bot, Console.In, output, Console.Error);
+Console.SetOut(Console.Error);
+Console.SetIn(TextReader.Null);
+return BotRunner.Run(bot, input, output, Console.Error);
 
 static int Fail(int code, string message)
 {
