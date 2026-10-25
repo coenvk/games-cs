@@ -27,7 +27,7 @@ internal static class DemoTextures
     {
         var u = x / 64f;
         var v = y / 32f;
-        if (v < 0.42f && u > 0.18f && u < 0.75f && Math.Abs(u - 0.47f) > 0.02f)
+        if (v > 0.08f && v < 0.42f && u > 0.18f && u < 0.75f && Math.Abs(u - 0.47f) > 0.02f)
         {
             return Colors.Pack(new Vector4(0.62f, 0.82f, 0.95f, 1));
         }

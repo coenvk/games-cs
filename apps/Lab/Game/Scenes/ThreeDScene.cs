@@ -44,6 +44,7 @@ internal sealed class ThreeDScene : Scene
     private bool _affine;
     private double _angle;
     private double _drawMs;
+    private double _finishMs;
     private double _frameMs;
 
     public ThreeDScene(GameContext context)
@@ -104,7 +105,9 @@ internal sealed class ThreeDScene : Scene
         }
 
         _view.DrawMesh(_ball, Numerics.Matrix4x4.CreateTranslation(-3, 0.8f, -2), new Material(new Numerics.Vector4(0.9f, 0.8f, 0.2f, 1)));
+        var drawn = _clock.Elapsed.TotalMilliseconds;
         _view.Finish();
+        _finishMs = (_finishMs * 0.9) + ((_clock.Elapsed.TotalMilliseconds - drawn) * 0.1);
         _drawMs = (_drawMs * 0.9) + (_clock.Elapsed.TotalMilliseconds * 0.1);
     }
 
@@ -130,10 +133,10 @@ internal sealed class ThreeDScene : Scene
         string[] lines =
         [
             name,
-            string.Create(CultureInfo.InvariantCulture, $"{size2.X}x{size2.Y}, draw {_drawMs:0.00} ms, frame {_frameMs:0.0} ms"),
+            string.Create(CultureInfo.InvariantCulture, $"{size2.X}x{size2.Y}, draw {_drawMs:0.00} ms (of which upload {_finishMs:0.00}), frame {_frameMs:0.0} ms"),
             "Enter or Switch to change",
         ];
-        var box = new Rectangle(viewport.X + pad, viewport.Y + pad, fonts.Px(460), (int)(fonts.Small.LineHeight * 3) + pad);
+        var box = new Rectangle(viewport.X + pad, viewport.Y + pad, fonts.Px(640), (int)(fonts.Small.LineHeight * 3) + pad);
         batch.FillRectangle(box, new Color(0, 0, 0, 160));
         for (var i = 0; i < lines.Length; i++)
         {
