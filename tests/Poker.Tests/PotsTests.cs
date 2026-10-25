@@ -76,4 +76,22 @@ public class PotsTests
         hand.Pots.Should().ContainSingle().Which.Amount.Should().Be(217);
         hand.Winnings.Should().Equal(new Dictionary<int, int> { [3] = 109, [0] = 108 });
     }
+
+    [Fact]
+    public void GatheredPots_AreThePotsAsTheStreetBegan_WithoutTheBetsInFrontOfTheSeats()
+    {
+        var hand = new HoldemHand([100, 1000, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: 1);
+        hand.GatheredPots.Should().BeEmpty("before the flop the blinds are bets");
+
+        hand.Apply(0, AllIn.Instance);
+        hand.Apply(1, CallBet.Instance);
+        hand.Apply(2, CallBet.Instance);
+        hand.Street.Should().Be(Street.Flop);
+        hand.GatheredPots.Select(p => p.Amount).Should().Equal(300);
+
+        hand.Apply(1, new RaiseTo(200));
+        hand.GatheredPots.Select(p => p.Amount).Should().Equal(300);
+        hand.Pots.Sum(p => p.Amount).Should().Be(500);
+        hand.Copy().GatheredPots.Should().Equal(hand.GatheredPots);
+    }
 }

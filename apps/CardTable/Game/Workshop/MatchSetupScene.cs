@@ -28,7 +28,11 @@ internal sealed class MatchSetup
         Seats = [.. FirstBots.Select(i => i % Bots.Count)];
     }
 
+    /// <summary>The numbers of hands a match or a duplicate batch can have.</summary>
     public static IReadOnlyList<int> HandChoices { get; } = [10, 20, 50, 100, 200, 500, 1000, 2000];
+
+    /// <summary>The numbers of tournaments a sit-and-go series can have; each takes many hands.</summary>
+    public static IReadOnlyList<int> SeriesChoices { get; } = [5, 10, 20, 50, 100];
 
     public static IReadOnlyList<TimeSpan> TimeLimits { get; } = [.. new[] { 0.25, 0.5, 1, 2, 5 }.Select(TimeSpan.FromSeconds)];
 
@@ -46,6 +50,28 @@ internal sealed class MatchSetup
 
     public int HandsIndex { get; set; }
 
+    public int SeriesIndex { get; set; } = 2;
+
+    /// <summary>What the hands row offers: tournaments for a series, hands otherwise.</summary>
+    public IReadOnlyList<int> CountChoices => IsSeries ? SeriesChoices : HandChoices;
+
+    /// <summary>The choice in <see cref="CountChoices"/>; the series and the hands each keep their own.</summary>
+    public int CountIndex
+    {
+        get => IsSeries ? SeriesIndex : HandsIndex;
+        set
+        {
+            if (IsSeries)
+            {
+                SeriesIndex = value;
+            }
+            else
+            {
+                HandsIndex = value;
+            }
+        }
+    }
+
     public int TimeIndex { get; set; } = 2;
 
     public int Seed { get; set; }
@@ -53,6 +79,8 @@ internal sealed class MatchSetup
     public int You => Bots.Count;
 
     public bool IsHeadsUp => IsBatch && (BatchFormat)Format == BatchFormat.DuplicateHeadsUp;
+
+    public bool IsSeries => IsBatch && (BatchFormat)Format == BatchFormat.SitAndGoSeries;
 
     public BotEntry? Bot(int seat) => Seats[seat] == You ? null : Bots[Seats[seat]];
 
@@ -102,7 +130,7 @@ internal sealed class MatchSetup
 
     public BatchRequest Batch() => new(
         [.. Enumerable.Range(0, Size).Select(s => Bots[Seats[s]])],
-        new BatchSettings((BatchFormat)Format, HandChoices[HandsIndex], Seed, TimeLimits[TimeIndex]));
+        new BatchSettings((BatchFormat)Format, CountChoices[CountIndex], Seed, TimeLimits[TimeIndex]));
 }
 
 /// <summary>
@@ -127,11 +155,9 @@ internal sealed class MatchSetupScene : Scene
             ? [T("Duplicate heads-up"), T("Duplicate ring"), T("Sit-and-go series")]
             : [T("Sit-and-go"), T("Fixed stacks")];
         string[] sizes = [.. Enumerable.Range(2, MatchSetup.MaxSeats - 1).Select(n => n.ToString(CultureInfo.CurrentCulture))];
-        var hands = new ChoiceRow(
-            HandsLabel(),
-            [.. MatchSetup.HandChoices.Select(n => n.ToString("N0", Tr.Culture))],
-            () => setup.HandsIndex,
-            index => setup.HandsIndex = index);
+        // The row's choices are swapped in place when the format changes between hands and tournaments.
+        var counts = Counts(setup);
+        var hands = new ChoiceRow(HandsLabel(), counts, () => setup.CountIndex, index => setup.CountIndex = index);
         _form = new Form(
             _context.Sounds,
             new ChoiceRow(T("Table size"), sizes, () => setup.Size - 2, index => setup.Resize(index + 2)),
@@ -144,6 +170,8 @@ internal sealed class MatchSetupScene : Scene
                 {
                     setup.SetFormat(index);
                     hands.Label = HandsLabel();
+                    counts.Clear();
+                    counts.AddRange(Counts(setup));
                 }),
             hands,
             new ChoiceRow(
@@ -154,7 +182,7 @@ internal sealed class MatchSetupScene : Scene
             new ButtonRow(T("New seed"), () => setup.Seed = Random.Shared.Next(1, 1_000_000), () => setup.Seed.ToString(CultureInfo.InvariantCulture)),
             new ButtonRow(T("Start"), Start),
             new ButtonRow(T("Back"), () => Scenes.Pop()));
-        string HandsLabel() => batch && (BatchFormat)setup.Format == BatchFormat.SitAndGoSeries ? T("Tournaments") : T("Hands");
+        string HandsLabel() => setup.IsSeries ? T("Tournaments") : T("Hands");
     }
 
     public override bool IsOverlay => true;
@@ -172,6 +200,8 @@ internal sealed class MatchSetupScene : Scene
 
     public override void Draw(SpriteBatch batch, Rectangle viewport) =>
         OverlayPanel.Draw(batch, viewport, _context.Fonts, _setup.IsBatch ? T("Run a batch") : T("Watch a match"), [], _form);
+
+    private static List<string> Counts(MatchSetup setup) => [.. setup.CountChoices.Select(n => n.ToString("N0", Tr.Culture))];
 
     private static string Summary(MatchSetup setup)
     {

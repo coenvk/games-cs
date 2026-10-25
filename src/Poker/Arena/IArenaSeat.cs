@@ -29,3 +29,37 @@ public interface IArenaSeat : IDisposable
     /// </summary>
     Task<BotAction?> AskAsync(Decision decision, CancellationToken cancel);
 }
+
+/// <summary>Names for the seats of a match, so that each bot's results and statistics can be told apart.</summary>
+public static class SeatNames
+{
+    /// <summary>
+    /// <paramref name="names"/> with a number added to each repeat of a name, in order: "Tight", "Tight 2", "Tight 3".
+    /// The first holder of a name keeps it, and a number that would give a name already in the list is skipped.
+    /// </summary>
+    public static IReadOnlyList<string> Distinct(IReadOnlyList<string> names)
+    {
+        ArgumentNullException.ThrowIfNull(names);
+        var given = new HashSet<string>(names, StringComparer.Ordinal);
+        var used = new HashSet<string>(StringComparer.Ordinal);
+        var result = new List<string>(names.Count);
+        foreach (var name in names)
+        {
+            var unique = name;
+            var number = 1;
+            while (!used.Add(unique))
+            {
+                do
+                {
+                    number++;
+                    unique = $"{name} {number}";
+                }
+                while (given.Contains(unique));
+            }
+
+            result.Add(unique);
+        }
+
+        return result;
+    }
+}

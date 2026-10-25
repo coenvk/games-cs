@@ -76,6 +76,22 @@ public class SeatTests
     }
 
     [Fact]
+    public void AHouseSeat_CanBeGivenAName()
+    {
+        using var seat = new HouseSeat(new CallingBot(), "Always call 2");
+
+        seat.Name.Should().Be("Always call 2");
+    }
+
+    [Fact]
+    public void SeatNames_NumberTheRepeats_AndKeepClearOfTheNamesGiven()
+    {
+        SeatNames.Distinct(["Tight", "Balanced", "Tight", "Tight"]).Should().Equal("Tight", "Balanced", "Tight 2", "Tight 3");
+        SeatNames.Distinct(["Tight", "Tight", "Tight 2"]).Should().Equal("Tight", "Tight 3", "Tight 2");
+        SeatNames.Distinct(["A", "B"]).Should().Equal("A", "B");
+    }
+
+    [Fact]
     public async Task AStaleAnswer_IsSkipped_AndTheRightOneTaken()
     {
         using var seat = new ProcessSeat(EchoBot("stale"), "Echo");

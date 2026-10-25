@@ -76,6 +76,7 @@ public sealed class HoldemHand : ITurnBasedGame<PokerAction>
     private readonly List<Card> _board = [];
     private readonly List<PokerEvent> _events = [];
     private readonly HashSet<int> _toAct = [];
+    private IReadOnlyList<Pot> _gathered = [];
 
     /// <param name="stacks">Chips per seat; 0 sits out.</param>
     /// <param name="button">The dealer seat (must have chips).</param>
@@ -139,6 +140,7 @@ public sealed class HoldemHand : ITurnBasedGame<PokerAction>
         _board.AddRange(other._board);
         _events.AddRange(other._events);
         _toAct.UnionWith(other._toAct);
+        _gathered = other._gathered;
         Button = other.Button;
         SmallBlind = other.SmallBlind;
         BigBlind = other.BigBlind;
@@ -220,6 +222,12 @@ public sealed class HoldemHand : ITurnBasedGame<PokerAction>
             return pots;
         }
     }
+
+    /// <summary>
+    /// The pots as they stood when this street's betting began: the chips gathered in the middle, not counting the bets in
+    /// front of the seats. Empty before the flop, where the blinds are bets.
+    /// </summary>
+    public IReadOnlyList<Pot> GatheredPots => _gathered;
 
     public bool IsOver { get; private set; }
 
@@ -408,6 +416,7 @@ public sealed class HoldemHand : ITurnBasedGame<PokerAction>
 
             CurrentBet = 0;
             MinRaise = BigBlind;
+            _gathered = Pots;
             if (Street == Street.River)
             {
                 Award();

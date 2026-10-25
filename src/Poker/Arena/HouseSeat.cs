@@ -3,12 +3,14 @@
 namespace Poker.Arena;
 
 /// <summary>A seat for a bot that runs in this process. A bot that throws from <c>Decide</c> is gone for the rest of the match.</summary>
-public sealed class HouseSeat(IPokerBot bot) : IArenaSeat
+/// <param name="bot">The bot.</param>
+/// <param name="name">The name at the table; the bot's own when null.</param>
+public sealed class HouseSeat(IPokerBot bot, string? name = null) : IArenaSeat
 {
     private volatile string? _problem;
 
     /// <inheritdoc />
-    public string Name => bot.Name;
+    public string Name => name ?? bot.Name;
 
     /// <inheritdoc />
     public string? Problem => _problem;

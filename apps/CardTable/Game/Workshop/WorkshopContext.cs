@@ -3,7 +3,6 @@ using Jentl.Core.Storage;
 using Jentl.Net;
 using Poker;
 using Poker.Arena;
-using static Games.UI.Tr;
 
 namespace Games.Workshop;
 
@@ -16,8 +15,8 @@ internal sealed record BatchRequest(IReadOnlyList<BotEntry> Bots, BatchSettings 
 /// <summary>
 /// What the workshop's scenes share: where the bots and the matches live, how to find the bots, and how to seat one.
 /// The scenes the setup, the menu and a finished match lead to are made through <see cref="WatchMatch"/>,
-/// <see cref="RunBatch"/>, <see cref="PastMatches"/> and <see cref="MatchResults"/>, so a screen replaces its stand-in
-/// by setting one of them.
+/// <see cref="RunBatch"/>, <see cref="PastMatches"/> and <see cref="MatchResults"/>, so another
+/// screen can be put in by setting one of them.
 /// </summary>
 internal sealed class WorkshopContext
 {
@@ -25,12 +24,9 @@ internal sealed class WorkshopContext
     {
         Game = game;
         WatchMatch = request => WatchScene.Open(this, request);
-        RunBatch = _ => new ComingSoonScene(game, T("Run a batch"));
-        PastMatches = () => new ComingSoonScene(game, T("Past matches"));
-        MatchResults = (_, path) => new ComingSoonScene(
-            game,
-            T("Match results"),
-            path is null ? T("The match could not be saved.") : T("Saved to {0}", Path.GetRelativePath(SaveFolder, path)));
+        RunBatch = request => new BatchScene(this, request);
+        PastMatches = () => new MatchesScene(this);
+        MatchResults = (match, path) => new ResultsScene(this, match, path);
     }
 
     public GameContext Game { get; }
@@ -62,6 +58,9 @@ internal sealed class WorkshopContext
     // The save folder of the desktop app; scripted runs without one keep their workshop in a temporary folder.
     private string SaveFolder => Game.Store is SaveStore store ? store.Directory : Path.Combine(Path.GetTempPath(), Game.App.SaveName);
 
+    /// <summary><paramref name="path"/> as it is shown to the player: from the save folder on, as it would be too long whole.</summary>
+    public string Shown(string path) => Path.GetRelativePath(SaveFolder, path);
+
     /// <summary>Makes the folders if they are not there yet.</summary>
     public void EnsureFolders()
     {
@@ -77,19 +76,22 @@ internal sealed class WorkshopContext
         .. BotCatalog.Scan(BotsFolder, Host),
     ];
 
-    /// <summary>Seats <paramref name="bot"/>, with <paramref name="seed"/> for a house bot's own randomness.</summary>
+    /// <summary>
+    /// Seats <paramref name="bot"/>, with <paramref name="seed"/> for a house bot's own randomness, under <paramref name="name"/>
+    /// (the bot's own when null; see <see cref="SeatNames"/> for a bot seated more than once).
+    /// </summary>
     /// <exception cref="InvalidOperationException">The bot cannot be run: its description is unreadable.</exception>
     // Kept an instance member, like the rest of the workshop's API, though it needs none of the context's state yet.
 #pragma warning disable CA1822
-    public IArenaSeat Seat(BotEntry bot, int seed)
+    public IArenaSeat Seat(BotEntry bot, int seed, string? name = null)
     {
         ArgumentNullException.ThrowIfNull(bot);
         if (bot.Kind == BotKind.House)
         {
-            return new HouseSeat(HouseBots.All.First(b => b.Name == bot.Name).Make(seed));
+            return new HouseSeat(HouseBots.All.First(b => b.Name == bot.Name).Make(seed), name);
         }
 
-        return new ProcessSeat(bot.Command ?? throw new InvalidOperationException($"{bot.Name} cannot be run: {bot.Source}"), bot.Name);
+        return new ProcessSeat(bot.Command ?? throw new InvalidOperationException($"{bot.Name} cannot be run: {bot.Source}"), name ?? bot.Name);
     }
 #pragma warning restore CA1822
 }

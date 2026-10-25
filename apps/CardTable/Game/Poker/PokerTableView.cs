@@ -191,10 +191,10 @@ internal sealed class PokerTableView(GameContext context) : IDisposable
     }
 
     /// <summary>The pots that can be won: an uncalled bet (a one-seat "pot") goes back, so it is left out.</summary>
-    private static Pot[] Contested(HoldemHand hand)
+    private static Pot[] Contested(IReadOnlyList<Pot> all)
     {
         var pots = new List<Pot>();
-        foreach (var pot in hand.Pots)
+        foreach (var pot in all)
         {
             if (pot.Seats.Count > 1)
             {
@@ -210,9 +210,19 @@ internal sealed class PokerTableView(GameContext context) : IDisposable
     {
         if (!ReferenceEquals(hand, _hand))
         {
-            // A new hand: whatever was still flying from the last one has landed.
+            // A new hand: whatever was still flying from the last one has landed. A hand first seen part of the way
+            // through (a replay going back) shows what was gathered before this street, and the bets out in front.
             _hand = hand;
-            _pots = [];
+            _pots = Contested(hand.GatheredPots);
+            _bets.Clear();
+            for (var seat = 0; seat < hand.Seats; seat++)
+            {
+                if (hand.Bet(seat) > 0)
+                {
+                    _bets[seat] = hand.Bet(seat);
+                }
+            }
+
             _nextPots = null;
             _potsStreet = hand.Street;
             _awarding = false;
@@ -225,7 +235,7 @@ internal sealed class PokerTableView(GameContext context) : IDisposable
         if (!hand.IsOver && hand.Street != _potsStreet)
         {
             _potsStreet = hand.Street;
-            _nextPots = Contested(hand);
+            _nextPots = Contested(hand.Pots);
         }
 
         if (_nextPots is not null && !Gathering())

@@ -152,4 +152,31 @@ public class MatchFileTests
             }
         }
     }
+
+    [Fact]
+    public void Save_WhenWritingFails_LeavesNoPartFile_AndSaysSo()
+    {
+        var folder = Path.Combine(Path.GetTempPath(), "matchfile-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            var match = Match() with { At = new DateTimeOffset(2026, 10, 25, 21, 8, 53, TimeSpan.FromHours(1)) };
+            var kept = MatchFile.Save(folder, match);
+
+            var save = () => MatchFile.Save(folder, match, (stream, _) =>
+            {
+                stream.WriteByte((byte)'{');
+                throw new IOException("The disk is full.");
+            });
+
+            save.Should().Throw<IOException>().WithMessage("The disk is full.");
+            Directory.GetFiles(folder).Should().Equal(kept);
+        }
+        finally
+        {
+            if (Directory.Exists(folder))
+            {
+                Directory.Delete(folder, recursive: true);
+            }
+        }
+    }
 }

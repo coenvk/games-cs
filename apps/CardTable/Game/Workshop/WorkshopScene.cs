@@ -6,7 +6,6 @@ using Jentl.Core.Input;
 using Jentl.Core.Scenes;
 using Jentl.Core.UI;
 using Games.Input;
-using Games.Scenes;
 using Games.UI;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -167,23 +166,4 @@ internal sealed class WorkshopScene : Scene
         var at = bot.Source.IndexOf(": ", StringComparison.Ordinal);
         return $"{Path.GetFileName(bot.Source[..(at < 0 ? bot.Source.Length : at)])}: {(at < 0 ? "" : bot.Source[(at + 2)..])}".Trim();
     }
-}
-
-/// <summary>Stands in for a workshop screen that is not made yet: its title, and a note if there is one.</summary>
-internal sealed class ComingSoonScene : PanelScene
-{
-    private readonly string? _note;
-
-    public ComingSoonScene(GameContext context, string title, string? note = null)
-        : base(context)
-    {
-        Title = title;
-        _note = note;
-        Menu = new Menu(context.Sounds, new MenuItem(T("Back"), () => Scenes.Pop()));
-    }
-
-    protected override string Title { get; }
-
-    protected override IReadOnlyList<PanelLine> Lines =>
-        _note is null ? [new(T("Coming in the next step"), Palette.Muted)] : [new(T("Coming in the next step"), Palette.Muted), new(_note, Palette.Text)];
 }

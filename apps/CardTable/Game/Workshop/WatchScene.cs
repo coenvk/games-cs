@@ -107,17 +107,20 @@ internal sealed class WatchScene : Scene
         ArgumentNullException.ThrowIfNull(request);
         var seats = new List<IArenaSeat>();
         HumanSeat? person = null;
+
+        // A bot seated twice is numbered, so that each keeps its own results and statistics.
+        var names = SeatNames.Distinct([.. request.Seats.Select(b => b?.Name ?? T("You"))]);
         try
         {
             for (var seat = 0; seat < request.Seats.Count; seat++)
             {
                 if (request.Seats[seat] is { } bot)
                 {
-                    seats.Add(workshop.Seat(bot, unchecked((int)ArenaTable.SeatSeed(request.Settings.Seed, seat))));
+                    seats.Add(workshop.Seat(bot, unchecked((int)ArenaTable.SeatSeed(request.Settings.Seed, seat)), names[seat]));
                 }
                 else
                 {
-                    person = new HumanSeat(T("You"));
+                    person = new HumanSeat(names[seat]);
                     seats.Add(person);
                 }
             }

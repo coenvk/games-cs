@@ -88,7 +88,17 @@ public static class MatchFile
     /// </summary>
     /// <exception cref="IOException">The file could not be written.</exception>
     /// <exception cref="UnauthorizedAccessException">The folder may not be written to.</exception>
-    public static string Save(string folder, MatchResult match)
+    public static string Save(string folder, MatchResult match) => Save(folder, match, static (file, json) =>
+    {
+        using var writer = new StreamWriter(file);
+        writer.Write(json);
+    });
+
+    /// <summary>
+    /// <see cref="Save(string, MatchResult)"/> with the writing of the text into the new file done by
+    /// <paramref name="write"/>; a file it fails to write is deleted again, so no partial match file is left.
+    /// </summary>
+    internal static string Save(string folder, MatchResult match, Action<Stream, string> write)
     {
         ArgumentNullException.ThrowIfNull(folder);
         ArgumentNullException.ThrowIfNull(match);
@@ -98,16 +108,38 @@ public static class MatchFile
         for (var number = 1; ; number++)
         {
             var path = Path.Combine(folder, number == 1 ? $"{stem}.json" : $"{stem}-{number}.json");
+            FileStream file;
             try
             {
                 // CreateNew fails on a taken name, so two saves at once cannot both have it.
-                using var file = new FileStream(path, FileMode.CreateNew, FileAccess.Write);
-                using var writer = new StreamWriter(file);
-                writer.Write(json);
-                return path;
+                file = new FileStream(path, FileMode.CreateNew, FileAccess.Write);
             }
             catch (IOException) when (File.Exists(path))
             {
+                continue;
+            }
+
+            try
+            {
+                using (file)
+                {
+                    write(file, json);
+                }
+
+                return path;
+            }
+            catch
+            {
+                // The disk filled up, say: the file made for this match goes again, and the failure is passed on.
+                try
+                {
+                    File.Delete(path);
+                }
+                catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+                {
+                }
+
+                throw;
             }
         }
     }
