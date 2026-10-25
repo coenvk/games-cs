@@ -128,12 +128,13 @@ public class MatchFileTests
     }
 
     [Fact]
-    public void Save_NamesTheFileByItsTime_AndNeverOverwrites()
+    public void Save_NamesTheFileByItsLocalTime_AndNeverOverwrites()
     {
         var folder = Path.Combine(Path.GetTempPath(), "matchfile-" + Guid.NewGuid().ToString("N"));
         try
         {
-            var match = Match() with { At = new DateTimeOffset(2026, 10, 25, 21, 8, 53, TimeSpan.FromHours(1)) };
+            // Named in local time: the same moment as the batch clock (UTC) dates it.
+            var match = Match() with { At = new DateTimeOffset(new DateTime(2026, 10, 25, 21, 8, 53, DateTimeKind.Local)).ToUniversalTime() };
 
             var first = MatchFile.Save(folder, match);
             var second = MatchFile.Save(folder, match);

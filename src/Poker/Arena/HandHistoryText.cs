@@ -107,20 +107,66 @@ internal sealed class BettingReplay
 /// <summary>Writes a hand the way PokerStars does in its hand history files, the text poker tools read.</summary>
 public static class HandHistoryText
 {
+    /// <summary>The most hands <see cref="WriteMatch"/> numbers apart within one second's matches.</summary>
+    public const int MaxMatchHands = 999_999;
+
+    /// <summary>
+    /// Every hand of <paramref name="match"/> as one hand history file, a blank line between hands. The hands are
+    /// numbered apart: the id is the match's local time as <c>yyMMddHHmmss</c> followed by the hand's place in the match
+    /// in six digits, so no two hands of the match share one and matches played at different times do not either. A
+    /// batch plays the same hand numbers again in every run, so each run is its own table, "<paramref name="name"/> 1",
+    /// "<paramref name="name"/> 2" and so on.
+    /// </summary>
+    /// <exception cref="ArgumentException">The match has more than <see cref="MaxMatchHands"/> hands.</exception>
+    public static string WriteMatch(MatchResult match, string name)
+    {
+        ArgumentNullException.ThrowIfNull(match);
+        ArgumentNullException.ThrowIfNull(name);
+        if (match.Hands.Count > MaxMatchHands)
+        {
+            throw new ArgumentException($"A match of more than {MaxMatchHands} hands cannot be numbered apart.", nameof(match));
+        }
+
+        var stamp = long.Parse(match.At.ToLocalTime().ToString("yyMMddHHmmss", CultureInfo.InvariantCulture), CultureInfo.InvariantCulture);
+        var text = new StringBuilder();
+        var run = 1;
+        var last = 0;
+        for (var i = 0; i < match.Hands.Count; i++)
+        {
+            var hand = match.Hands[i];
+            if (hand.Number <= last)
+            {
+                run++;
+            }
+
+            last = hand.Number;
+            if (text.Length > 0)
+            {
+                text.Append('\n');
+            }
+
+            text.Append(Write(hand, $"{name} {run}", match.At, (stamp * 1_000_000) + i + 1));
+        }
+
+        return text.ToString();
+    }
+
     /// <summary>
     /// The history of <paramref name="hand"/> as text with LF line endings. Amounts are chips; the table is called
     /// <paramref name="table"/> and the hand is dated <paramref name="at"/> (in UTC). Every seat's hole cards are
     /// written, as the record knows them all.
-    /// The number in the header is the seed read as unsigned, so it is never negative, followed by the hand number.
+    /// The number in the header is <paramref name="id"/>; without one it is the seed read as unsigned, so it is never
+    /// negative, followed by the hand number in six digits. That is the same for the same deal in every run of a
+    /// duplicate batch, so a whole match is written with <see cref="WriteMatch"/>, which numbers every hand apart.
     /// </summary>
-    public static string Write(HandRecord hand, string table, DateTimeOffset at)
+    public static string Write(HandRecord hand, string table, DateTimeOffset at, long? id = null)
     {
         ArgumentNullException.ThrowIfNull(hand);
         ArgumentNullException.ThrowIfNull(table);
         var replay = new BettingReplay(hand);
         var inHand = Enumerable.Range(0, hand.Names.Count).Where(s => hand.Holes[s].Count > 0).ToArray();
         var text = new StringBuilder();
-        Line($"PokerStars Hand #{(uint)hand.Seed}{hand.Number}: Hold'em No Limit ({hand.SmallBlind}/{hand.BigBlind}) - {at.UtcDateTime.ToString("yyyy/MM/dd HH:mm:ss", CultureInfo.InvariantCulture)} UTC");
+        Line($"PokerStars Hand #{id?.ToString(CultureInfo.InvariantCulture) ?? $"{(uint)hand.Seed}{hand.Number:D6}"}: Hold'em No Limit ({hand.SmallBlind}/{hand.BigBlind}) - {at.UtcDateTime.ToString("yyyy/MM/dd HH:mm:ss", CultureInfo.InvariantCulture)} UTC");
         Line($"Table '{table}' 9-max Seat #{hand.Button + 1} is the button");
         foreach (var seat in inHand)
         {

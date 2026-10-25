@@ -3,6 +3,7 @@ using Jentl.Core.Storage;
 using Jentl.Net;
 using Poker;
 using Poker.Arena;
+using PokerBots;
 
 namespace Games.Workshop;
 
@@ -20,9 +21,14 @@ internal sealed record BatchRequest(IReadOnlyList<BotEntry> Bots, BatchSettings 
 /// </summary>
 internal sealed class WorkshopContext
 {
+    private readonly RunningBots _running;
+
     public WorkshopContext(GameContext game)
     {
         Game = game;
+
+        // One list for the whole app, whichever workshop seated the bot: the context disposes it when the app quits.
+        _running = game.Has<RunningBots>() ? game.Get<RunningBots>() : game.Add(new RunningBots());
         WatchMatch = request => WatchScene.Open(this, request);
         RunBatch = request => new BatchScene(this, request);
         PastMatches = () => new MatchesScene(this);
@@ -81,8 +87,6 @@ internal sealed class WorkshopContext
     /// (the bot's own when null; see <see cref="SeatNames"/> for a bot seated more than once).
     /// </summary>
     /// <exception cref="InvalidOperationException">The bot cannot be run: its description is unreadable.</exception>
-    // Kept an instance member, like the rest of the workshop's API, though it needs none of the context's state yet.
-#pragma warning disable CA1822
     public IArenaSeat Seat(BotEntry bot, int seed, string? name = null)
     {
         ArgumentNullException.ThrowIfNull(bot);
@@ -91,7 +95,97 @@ internal sealed class WorkshopContext
             return new HouseSeat(HouseBots.All.First(b => b.Name == bot.Name).Make(seed), name);
         }
 
-        return new ProcessSeat(bot.Command ?? throw new InvalidOperationException($"{bot.Name} cannot be run: {bot.Source}"), name ?? bot.Name);
+        var command = bot.Command ?? throw new InvalidOperationException($"{bot.Name} cannot be run: {bot.Source}");
+        return _running.Track(new ProcessSeat(command, name ?? bot.Name));
     }
-#pragma warning restore CA1822
+}
+
+/// <summary>
+/// The bots running in processes of their own that are seated now. A seat leaves the list when it is disposed; when
+/// the app quits, the game context disposes this list, which stops every bot still in it, so that a bot stuck in a
+/// loop does not outlive the app even while a match or a batch is being played.
+/// </summary>
+internal sealed class RunningBots : IDisposable
+{
+    private readonly HashSet<IArenaSeat> _seats = [];
+    private readonly Lock _lock = new();
+    private bool _stopped;
+
+    /// <summary>
+    /// Keeps <paramref name="seat"/> in the list until the seat returned is disposed. Once the app is quitting no bot is
+    /// started any more: a batch still running would otherwise seat the next run's bots after the others were stopped.
+    /// </summary>
+    /// <exception cref="ObjectDisposedException">The app is quitting; <paramref name="seat"/> has been disposed.</exception>
+    public IArenaSeat Track(IArenaSeat seat)
+    {
+        ArgumentNullException.ThrowIfNull(seat);
+        lock (_lock)
+        {
+            if (!_stopped)
+            {
+                _seats.Add(seat);
+                return new Tracked(this, seat);
+            }
+        }
+
+        seat.Dispose();
+        throw new ObjectDisposedException(nameof(RunningBots), "The app is quitting.");
+    }
+
+    /// <summary>Stops every bot in the list, and every one seated from now on.</summary>
+    public void Dispose()
+    {
+        IArenaSeat[] seats;
+        lock (_lock)
+        {
+            _stopped = true;
+            seats = [.. _seats];
+            _seats.Clear();
+        }
+
+        foreach (var seat in seats)
+        {
+            try
+            {
+                seat.Dispose();
+            }
+#pragma warning disable CA1031 // The app is quitting: one bot failing to stop must not keep the others running.
+            catch (Exception)
+#pragma warning restore CA1031
+            {
+            }
+        }
+    }
+
+    private void Remove(IArenaSeat seat)
+    {
+        lock (_lock)
+        {
+            _seats.Remove(seat);
+        }
+    }
+
+    /// <summary>The seat as the table uses it; disposing it takes it off the list.</summary>
+    private sealed class Tracked(RunningBots list, IArenaSeat seat) : IArenaSeat
+    {
+        public string Name => seat.Name;
+
+        public string? Problem => seat.Problem;
+
+        public bool IsGone => seat.IsGone;
+
+        public bool HasTimeLimit => seat.HasTimeLimit;
+
+        public Task StartAsync(MatchStart start, TimeSpan limit) => seat.StartAsync(start, limit);
+
+        public void Notify(Message message) => seat.Notify(message);
+
+        public Task<BotAction?> AskAsync(Decision decision, CancellationToken cancel) => seat.AskAsync(decision, cancel);
+
+        public void Dispose()
+        {
+            list.Remove(seat);
+            seat.Dispose();
+        }
+    }
 }

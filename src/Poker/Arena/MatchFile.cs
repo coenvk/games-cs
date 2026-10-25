@@ -82,8 +82,18 @@ public static class MatchFile
     }
 
     /// <summary>
+    /// The name of a match's file without its extension: when it was played, in local time, as <c>yyyyMMdd-HHmmss</c>, so
+    /// that every match sorts by when it was played whatever clock dated it.
+    /// </summary>
+    public static string Name(MatchResult match)
+    {
+        ArgumentNullException.ThrowIfNull(match);
+        return match.At.ToLocalTime().ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>
     /// Writes the match into <paramref name="folder"/> (made if need be) as a new file named after its time,
-    /// <c>yyyyMMdd-HHmmss.json</c>, with <c>-2</c>, <c>-3</c> and so on added when that name is taken; an existing file
+    /// <c><see cref="Name"/>.json</c>, with <c>-2</c>, <c>-3</c> and so on added when that name is taken; an existing file
     /// is never overwritten. Returns the file's path.
     /// </summary>
     /// <exception cref="IOException">The file could not be written.</exception>
@@ -104,7 +114,7 @@ public static class MatchFile
         ArgumentNullException.ThrowIfNull(match);
         Directory.CreateDirectory(folder);
         var json = Write(match);
-        var stem = match.At.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture);
+        var stem = Name(match);
         for (var number = 1; ; number++)
         {
             var path = Path.Combine(folder, number == 1 ? $"{stem}.json" : $"{stem}-{number}.json");

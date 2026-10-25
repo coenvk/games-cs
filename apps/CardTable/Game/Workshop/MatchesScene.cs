@@ -14,28 +14,27 @@ namespace Games.Workshop;
 /// <summary>
 /// The matches played before, newest first: a file in the workshop's matches folder each, with when it was played and
 /// how, and beside the list the bots and hands of the one chosen. Choosing one opens its results; a file that cannot
-/// be read is listed with what is wrong with it.
+/// be read is listed with what is wrong with it. The files are read off the UI thread, as there may be many large ones.
 /// </summary>
 internal sealed class MatchesScene : Scene
 {
     private static readonly Color Problem = new(236, 120, 108);
     private readonly WorkshopContext _workshop;
     private readonly GameContext _context;
-    private readonly List<Entry> _entries;
-    private readonly Menu _menu;
+    private readonly Task<(List<Entry> Entries, string? Problem)> _scan;
+    private List<Entry> _entries = [];
+    private Menu _menu;
+    private bool _scanned;
+    private string? _problem;
 
     public MatchesScene(WorkshopContext workshop)
     {
         ArgumentNullException.ThrowIfNull(workshop);
         _workshop = workshop;
         _context = workshop.Game;
-        _entries = Scan(workshop.MatchesFolder);
-        _menu = new Menu(
-            _context.Sounds,
-            [
-                .. _entries.Select((e, i) => new MenuItem(e.Label, () => Open(i))),
-                new MenuItem(T("Back"), () => Scenes.Pop()),
-            ]);
+        var folder = workshop.MatchesFolder;
+        _scan = Task.Run(() => Scan(folder));
+        _menu = Menu(_entries);
     }
 
     public override bool IsOverlay => true;
@@ -46,6 +45,13 @@ internal sealed class MatchesScene : Scene
         {
             Scenes.Pop();
             return;
+        }
+
+        if (!_scanned && _scan.IsCompleted)
+        {
+            _scanned = true;
+            (_entries, _problem) = _scan.GetAwaiter().GetResult();
+            _menu = Menu(_entries);
         }
 
         _menu.Update(input, Controls.Ui, elapsed);
@@ -69,17 +75,27 @@ internal sealed class MatchesScene : Scene
         DrawDetails(batch, new Rectangle(panel.X + panel.Width * 6 / 10, top, panel.Width * 4 / 10 - fonts.Px(24), bottom - top));
     }
 
-    /// <summary>The folder's match files, newest first; each is read to say what it holds, or what is wrong with it.</summary>
-    private static List<Entry> Scan(string folder)
+    /// <summary>
+    /// The folder's match files, newest first; each is read to say what it holds, or what is wrong with it. A folder
+    /// that cannot be listed gives no entries and the reason.
+    /// </summary>
+    private static (List<Entry> Entries, string? Problem) Scan(string folder)
     {
-        if (!Directory.Exists(folder))
+        FileInfo[] files;
+        try
         {
-            return [];
+            if (!Directory.Exists(folder))
+            {
+                return ([], null);
+            }
+
+            files = [.. new DirectoryInfo(folder).GetFiles("*.json").OrderByDescending(f => f.LastWriteTimeUtc).ThenByDescending(f => f.Name, StringComparer.Ordinal)];
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            return ([], T("The matches folder cannot be read: {0}", e.Message.ReplaceLineEndings(" ")));
         }
 
-        var files = new DirectoryInfo(folder).GetFiles("*.json")
-            .OrderByDescending(f => f.LastWriteTimeUtc)
-            .ThenByDescending(f => f.Name, StringComparer.Ordinal);
         var entries = new List<Entry>();
         foreach (var file in files)
         {
@@ -93,7 +109,7 @@ internal sealed class MatchesScene : Scene
                     Problem: false));
         }
 
-        return entries;
+        return (entries, null);
     }
 
     private static (MatchResult? Match, string? Problem) Read(string path)
@@ -107,6 +123,13 @@ internal sealed class MatchesScene : Scene
             return (null, e.Message.ReplaceLineEndings(" "));
         }
     }
+
+    private Menu Menu(List<Entry> entries) => new(
+        _context.Sounds,
+        [
+            .. entries.Select((e, i) => new MenuItem(e.Label, () => Open(i))),
+            new MenuItem(T("Back"), () => Scenes.Pop()),
+        ]);
 
     // Read again when chosen, as the file may have changed since the list was made.
     private void Open(int index)
@@ -139,6 +162,18 @@ internal sealed class MatchesScene : Scene
                 batch.DrawText(font, part, new Vector2(area.X, y), color, shadow: false);
                 y += line;
             }
+        }
+
+        if (!_scanned)
+        {
+            Line(T("Reading the matches"), Palette.Muted);
+            return;
+        }
+
+        if (_problem is not null)
+        {
+            Line(_problem, Problem);
+            return;
         }
 
         if (_entries.Count == 0)

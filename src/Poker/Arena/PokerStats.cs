@@ -4,10 +4,11 @@
 /// <param name="Hands">The hands it was dealt into.</param>
 /// <param name="Vpip">The share of hands it voluntarily put chips in before the flop (beyond a forced blind).</param>
 /// <param name="Pfr">The share of hands it raised before the flop.</param>
-/// <param name="AggressionFactor">After the flop, its bets and raises divided by its calls; 0 when it never called.</param>
+/// <param name="AggressionFactor">After the flop, its bets and raises divided by its calls; null when it never called, as
+/// there is nothing to divide by (a bot that only bets is not passive).</param>
 /// <param name="WentToShowdown">Of the hands it saw the flop in, the share it reached showdown in.</param>
 /// <param name="WonAtShowdown">Of the hands it reached showdown in, the share it won something in.</param>
-public sealed record BotStats(int Hands, double Vpip, double Pfr, double AggressionFactor, double WentToShowdown, double WonAtShowdown);
+public sealed record BotStats(int Hands, double Vpip, double Pfr, double? AggressionFactor, double WentToShowdown, double WonAtShowdown);
 
 /// <summary>Statistics over recorded hands, the numbers poker tools show for a player.</summary>
 public static class PokerStats
@@ -70,7 +71,7 @@ public static class PokerStats
             dealt,
             Rate(vpip, dealt),
             Rate(pfr, dealt),
-            calls == 0 ? 0 : (double)bets / calls,
+            calls == 0 ? null : (double)bets / calls,
             Rate(showdowns, flops),
             Rate(won, showdowns));
     }

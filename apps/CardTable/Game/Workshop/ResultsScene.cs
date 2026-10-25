@@ -175,12 +175,12 @@ internal sealed class ResultsScene : Scene
     /// <summary>Writes every hand as a PokerStars hand history into one text file named after the match file.</summary>
     private void Export()
     {
-        var name = _path is null ? _match.At.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture) : Path.GetFileNameWithoutExtension(_path);
+        var name = _path is null ? MatchFile.Name(_match) : Path.GetFileNameWithoutExtension(_path);
         var file = Path.Combine(_workshop.HistoriesFolder, name + ".txt");
         try
         {
             Directory.CreateDirectory(_workshop.HistoriesFolder);
-            File.WriteAllText(file, Histories(_match, name));
+            File.WriteAllText(file, HandHistoryText.WriteMatch(_match, name));
             _note = T("Hand histories written to {0}", _workshop.Shown(file));
             _noteIsProblem = false;
         }
@@ -189,34 +189,6 @@ internal sealed class ResultsScene : Scene
             _note = T("Could not write the hand histories: {0}", e.Message);
             _noteIsProblem = true;
         }
-    }
-
-    /// <summary>
-    /// Every hand's history, a blank line between them. A batch plays the same hand numbers again in every run, so
-    /// each run is its own table: "<paramref name="name"/> 1", "<paramref name="name"/> 2" and so on.
-    /// </summary>
-    private static string Histories(MatchResult match, string name)
-    {
-        var text = new System.Text.StringBuilder();
-        var run = 1;
-        var last = 0;
-        foreach (var hand in match.Hands)
-        {
-            if (hand.Number <= last)
-            {
-                run++;
-            }
-
-            last = hand.Number;
-            if (text.Length > 0)
-            {
-                text.Append('\n');
-            }
-
-            text.Append(HandHistoryText.Write(hand, $"{name} {run}", match.At));
-        }
-
-        return text.ToString();
     }
 
     // The lines under the title: what was played and when, where it was saved, and what the last export did.
@@ -276,7 +248,7 @@ internal sealed class ResultsScene : Scene
                 result.Gone.ToString(Tr.Culture),
                 Percent(stats.Vpip),
                 Percent(stats.Pfr),
-                stats.AggressionFactor.ToString("0.0", Tr.Culture),
+                stats.AggressionFactor?.ToString("0.0", Tr.Culture) ?? "—",
                 Percent(stats.WentToShowdown),
                 Percent(stats.WonAtShowdown),
             ]);

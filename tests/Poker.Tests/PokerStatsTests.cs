@@ -35,9 +35,9 @@ public class PokerStatsTests
 
     [Fact]
     public void ABotThatNeverPlayed_HasAllZeros() =>
-        PokerStats.For(Hands, "Nobody").Should().Be(new BotStats(0, 0, 0, 0, 0, 0));
+        PokerStats.For(Hands, "Nobody").Should().Be(new BotStats(0, 0, 0, null, 0, 0));
 
     [Fact]
-    public void ABotWithoutCalls_HasZeroAggressionFactor() =>
-        PokerStats.For([TestHands.BigBlindWins()], "Ann").AggressionFactor.Should().Be(0);
+    public void ABotWithoutCalls_HasNoAggressionFactor() =>
+        PokerStats.For([TestHands.BigBlindWins()], "Ann").AggressionFactor.Should().BeNull();
 }

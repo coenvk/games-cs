@@ -13,7 +13,7 @@ public class HandHistoryTests
     public void AShowdownHand_IsWrittenInPokerStarsStyle()
     {
         Lines(TestHands.Showdown()).Should().Equal(
-            "PokerStars Hand #71: Hold'em No Limit (10/20) - 2026/10/25 12:03:09 UTC",
+            "PokerStars Hand #7000001: Hold'em No Limit (10/20) - 2026/10/25 12:03:09 UTC",
             "Table 'Workshop' 9-max Seat #1 is the button",
             "Seat 1: Ann (1000 in chips)",
             "Seat 2: Bob (1000 in chips)",
@@ -111,7 +111,7 @@ public class HandHistoryTests
     {
         var hand = TestHands.Hand(3, button: 0, [1000, 1000, 1000], ["Ah Ad", "7c 2d", "9s 4s"], [], string.Empty, [], new() { [0] = 30 }, seed: -5);
 
-        Lines(hand)[0].Should().Be("PokerStars Hand #42949672913: Hold'em No Limit (10/20) - 2026/10/25 12:03:09 UTC");
+        Lines(hand)[0].Should().Be("PokerStars Hand #4294967291000003: Hold'em No Limit (10/20) - 2026/10/25 12:03:09 UTC");
     }
 
     [Fact]
@@ -128,6 +128,27 @@ public class HandHistoryTests
             new() { [0] = 30 });
 
         Lines(hand).Should().NotContain(l => l.Contains("calls 0", StringComparison.Ordinal)).And.Contain("Ann: checks");
+    }
+
+
+    [Fact]
+    public async Task AWholeDuplicateMatch_IsWrittenWithEveryHand_UnderIdsOfItsOwn()
+    {
+        var batch = new ArenaBatch(
+            [() => new HouseSeat(new CallingBot()), () => new HouseSeat(new RaisingBot())],
+            new BatchSettings(BatchFormat.DuplicateHeadsUp, 15, Seed: 4, TimeSpan.FromSeconds(1)));
+        var match = await batch.RunAsync(new Progress<double>(), CancellationToken.None) with { At = At };
+
+        var text = HandHistoryText.WriteMatch(match, "Workshop");
+
+        var lines = text.Split('\n');
+        var ids = lines.Where(l => l.StartsWith("PokerStars Hand #", StringComparison.Ordinal)).Select(l => l[..l.IndexOf(':', StringComparison.Ordinal)]).ToList();
+        match.Hands.Should().HaveCount(30, "two runs of 15 deals");
+        ids.Should().HaveCount(30).And.OnlyHaveUniqueItems();
+        ids[0].Should().Be($"PokerStars Hand #{At.ToLocalTime():yyMMddHHmmss}000001");
+        lines.Count(l => l.StartsWith("Table 'Workshop 1'", StringComparison.Ordinal)).Should().Be(15);
+        lines.Count(l => l.StartsWith("Table 'Workshop 2'", StringComparison.Ordinal)).Should().Be(15);
+        text.Should().StartWith(HandHistoryText.Write(match.Hands[0], "Workshop 1", At, long.Parse(ids[0]["PokerStars Hand #".Length..], System.Globalization.CultureInfo.InvariantCulture)));
     }
 
     private static ActionRecord Act(Street street, int seat, PokerAction action) => TestHands.Act(street, seat, action, 0, 0);
