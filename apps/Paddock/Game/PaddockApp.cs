@@ -1,6 +1,6 @@
 ﻿using Games.Scenes;
 using Jentl.Core.Content;
-using Jentl.Core.Raster;
+using Jentl.Raster;
 using Jentl.Core.Scenes;
 using Jentl.Core.UI;
 using Microsoft.Xna.Framework.Graphics;
@@ -61,13 +61,10 @@ internal sealed class PaddockData : IDisposable
 
     private const string CarAtlas = "Assets/cars.atlas.json";
 
-    private readonly AssetStore _assets;
-    private readonly Dictionary<string, Jentl.Raster.Texture> _pictures = [];
-    private Jentl.Assets.Image? _carImage;
+    private readonly Dictionary<string, MeshModel> _models = [];
 
-    private PaddockData(AssetStore assets, Roster roster, IReadOnlyList<TrackDef> tracks, IReadOnlyList<EventDef> events, IReadOnlyList<RegionDef> regions, TextureAtlas cars)
+    private PaddockData(Roster roster, IReadOnlyList<TrackDef> tracks, IReadOnlyList<EventDef> events, IReadOnlyList<RegionDef> regions, TextureAtlas cars)
     {
-        _assets = assets;
         Roster = roster;
         Tracks = tracks;
         Events = new EventCalendar(events);
@@ -86,24 +83,21 @@ internal sealed class PaddockData : IDisposable
     /// <summary>Side views (<c>side/&lt;id&gt;</c>) and top views (<c>top/&lt;id&gt;</c>) of every car.</summary>
     public TextureAtlas Cars { get; }
 
-    /// <summary>A sprite of <see cref="Cars"/> (<c>side/&lt;id&gt;</c>) for the software renderer; the atlas image is read the first time.</summary>
-    public Jentl.Raster.Texture CarPicture(string name)
+    /// <summary>A car in 3D, by its model's id, made the first time it is asked for.</summary>
+    public MeshModel CarModel3D(string id)
     {
-        if (!_pictures.TryGetValue(name, out var picture))
+        if (!_models.TryGetValue(id, out var model))
         {
-            _carImage ??= _assets.Image($"Assets/{Cars.Description.Image}");
-            var source = Cars[name].Source;
-            picture = _pictures[name] = RasterTextures.From(_carImage, source);
+            model = _models[id] = CarModels.Build(Roster.Find(id) ?? throw new KeyNotFoundException($"No car {id}."));
         }
 
-        return picture;
+        return model;
     }
 
     public static PaddockData Load(AssetStore assets)
     {
         static string Read(string file) => GameFiles.ReadAllText($"{Folder}/{file}");
         return new PaddockData(
-            assets,
             Roster.FromJson(Read("cars.json")),
             TrackDef.ListFromJson(Read("tracks.json")),
             EventDef.ListFromJson(Read("events.json")),

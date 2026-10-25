@@ -1,10 +1,8 @@
-﻿using Paddock;
-
-namespace CarArt;
+﻿namespace Paddock;
 
 /// <summary>
-/// A kind of car's silhouette in the 64x24 side view (front to the right), in pixels: how long it is, where the
-/// bonnet, cabin and roof sit, how high it rides and where the wheels go.
+/// A kind of car's silhouette in the 64x24 side view (front to the right), in pixels: how long it is, where the bonnet,
+/// cabin and roof sit, how high it rides and where the wheels go. The sprites and the 3D cars are both made from it.
 /// </summary>
 /// <param name="Length">Body length.</param>
 /// <param name="Hood">Top of the bonnet and boot (y).</param>
@@ -17,11 +15,11 @@ namespace CarArt;
 /// <param name="FrontAxle">Front axle, as a share of the length.</param>
 /// <param name="TopLength">Length in the 18x10 top view.</param>
 /// <param name="TopWidth">Width in the top view.</param>
-internal sealed record Shape(
+public sealed record BodyShape(
     int Length, int Hood, int Sill, double CabinFrom, double CabinTo, int Roof, int Wheel, double RearAxle, double FrontAxle,
     int TopLength, int TopWidth)
 {
-    public static Shape Of(Body body) => body switch
+    public static BodyShape Of(Body body) => body switch
     {
         Body.Hatchback => new(44, 12, 19, 0.06, 0.70, 6, 4, 0.17, 0.83, 13, 7),
         Body.Saloon => new(52, 12, 19, 0.26, 0.70, 6, 4, 0.18, 0.80, 15, 8),
@@ -36,4 +34,20 @@ internal sealed record Shape(
         Body.Hypercar => new(58, 16, 21, 0.38, 0.62, 11, 4, 0.18, 0.82, 17, 8),
         _ => new(54, 12, 18, 0.00, 0.82, 2, 4, 0.17, 0.82, 16, 9), // Van
     };
+}
+
+/// <summary>Styling by decade: chrome and round lamps, then wedges and black plastic, then smooth modern lines.</summary>
+public enum Era
+{
+    Classic,
+    Wedge,
+    Modern,
+}
+
+public static class EraExtensions
+{
+    extension(Era)
+    {
+        public static Era Of(int year) => year < 1975 ? Era.Classic : year < 1990 ? Era.Wedge : Era.Modern;
+    }
 }

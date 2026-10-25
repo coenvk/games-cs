@@ -23,7 +23,7 @@ internal static class Painter
 
     public static PixelCanvas Side(CarModel car)
     {
-        var shape = Shape.Of(car.Body);
+        var shape = BodyShape.Of(car.Body);
         var paint = Parse(car.Paint);
         var trim = Parse(car.Trim);
         var era = Era.Of(car.Year);
@@ -139,7 +139,7 @@ internal static class Painter
 
     public static PixelCanvas Top(CarModel car)
     {
-        var shape = Shape.Of(car.Body);
+        var shape = BodyShape.Of(car.Body);
         var paint = Parse(car.Paint);
         var canvas = new PixelCanvas(TopWidth, TopHeight);
         var (length, width) = (shape.TopLength, shape.TopWidth);
@@ -197,7 +197,7 @@ internal static class Painter
     }
 
     // What makes a kind of car itself: stripes, decals, a wing, a bed, roof rails.
-    private static void Extras(PixelCanvas canvas, CarModel car, Shape shape, int left, int right, int cabinFrom, int cabinTo, Rgba paint, Rgba trim)
+    private static void Extras(PixelCanvas canvas, CarModel car, BodyShape shape, int left, int right, int cabinFrom, int cabinTo, Rgba paint, Rgba trim)
     {
         switch (car.Body)
         {
@@ -230,20 +230,4 @@ internal static class Painter
     }
 
     private static Rgba Parse(string hex) => Rgba.Hex(Convert.ToUInt32(hex.TrimStart('#'), 16));
-}
-
-/// <summary>Styling by decade: chrome and round lamps, then wedges and black plastic, then smooth modern lines.</summary>
-internal enum Era
-{
-    Classic,
-    Wedge,
-    Modern,
-}
-
-internal static class EraExtensions
-{
-    extension(Era)
-    {
-        public static Era Of(int year) => year < 1975 ? Era.Classic : year < 1990 ? Era.Wedge : Era.Modern;
-    }
 }

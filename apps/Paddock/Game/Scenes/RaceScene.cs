@@ -194,7 +194,7 @@ internal sealed class RaceScene : Scene
             if (camera == RaceCamera.Chase)
             {
                 var data = _context.PaddockData;
-                _chase = new ChaseView(art, data.CarPicture($"side/{_player[round].ModelId}"), data.CarPicture($"side/{_setup.Opponent[round].ModelId}"), condition);
+                _chase = new ChaseView(art, data.CarModel3D(_player[round].ModelId), data.CarModel3D(_setup.Opponent[round].ModelId), condition);
             }
 
             _viewport = Rectangle.Empty;

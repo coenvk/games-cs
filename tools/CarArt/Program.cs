@@ -1,16 +1,18 @@
 ﻿// Draws every car of Paddock's roster in code, a 64x24 side view (cards, drag races) and an 18x10 top view
 // (circuits), and packs them into one atlas: side/<id> and top/<id>. Deterministic: the same roster draws the same.
 //
-// Usage: CarArt <cars.json> <output-dir> [--preview <path>]
-//   writes <output-dir>/cars.png and cars.atlas.json; --preview writes every car 3x on a dark background.
+// Usage: CarArt <cars.json> <output-dir> [--preview <path>] [--preview3d <path>]
+//   writes <output-dir>/cars.png and cars.atlas.json; --preview writes every car 3x on a dark background, --preview3d
+//   every car's 3D model (Paddock.CarModels) from three-quarters in front, drawn by Jentl's software renderer.
 
 using CarArt;
 using Jentl.Assets;
 using Paddock;
 
-if (args.Length is not (2 or 4) || (args.Length == 4 && args[2] != "--preview"))
+var options = args.Skip(2).Chunk(2).ToDictionary(pair => pair[0], pair => pair.Length > 1 ? pair[1] : "");
+if (args.Length < 2 || args.Length % 2 != 0 || options.Keys.Any(k => k is not ("--preview" or "--preview3d")))
 {
-    Console.Error.WriteLine("Usage: CarArt <cars.json> <output-dir> [--preview <path>]");
+    Console.Error.WriteLine("Usage: CarArt <cars.json> <output-dir> [--preview <path>] [--preview3d <path>]");
     return 1;
 }
 
@@ -27,7 +29,13 @@ File.WriteAllBytes(Path.Combine(args[1], "cars.png"), Png.Encode(sheet));
 File.WriteAllText(Path.Combine(args[1], "cars.atlas.json"), description.ToJson());
 Console.WriteLine($"Drew {roster.All.Count} cars into {Path.Combine(args[1], "cars.png")} ({sheet.Width}x{sheet.Height}).");
 
-if (args.Length == 4)
+if (options.TryGetValue("--preview3d", out var preview3d))
+{
+    File.WriteAllBytes(preview3d, Preview3D.Draw(roster.All).ToPng());
+    Console.WriteLine($"Drew the 3D cars into {preview3d}.");
+}
+
+if (options.TryGetValue("--preview", out var previewPath))
 {
     const int scale = 3;
     const int columns = 5;
@@ -42,7 +50,7 @@ if (args.Length == 4)
         Blow(preview, Painter.Top(roster.All[i]), x + ((Painter.SideWidth + 4) * scale), y + (8 * scale));
     }
 
-    File.WriteAllBytes(args[3], preview.ToPng());
+    File.WriteAllBytes(previewPath, preview.ToPng());
 }
 
 return 0;

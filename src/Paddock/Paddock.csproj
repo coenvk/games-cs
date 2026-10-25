@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Paddock's cars, races, upgrades, events and economy; framework-free. -->
+  <!-- Paddock's cars, races, upgrades, events and economy, and how its cars look (sprites and 3D); framework-free. -->
 
   <ItemGroup>
     <InternalsVisibleTo Include="Paddock.Tests" />
@@ -9,6 +9,7 @@
   <ItemGroup>
     <PackageReference Include="Jentl.Collect" Version="$(JentlVersion)" />
     <PackageReference Include="Jentl.Tracks" Version="$(JentlVersion)" />
+    <PackageReference Include="Jentl.Raster" Version="$(JentlVersion)" />
   </ItemGroup>
 
 </Project>

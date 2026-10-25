@@ -4,8 +4,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Paddock\Paddock.csproj" />
-    <PackageReference Include="Jentl.Assets" Version="$(JentlVersion)" />
-    <PackageReference Include="Jentl.Raster" Version="$(JentlVersion)" />
   </ItemGroup>
 
   <ItemGroup>

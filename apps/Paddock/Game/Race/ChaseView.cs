@@ -12,11 +12,11 @@ namespace Games.Race;
 /// <summary>
 /// A round on a circuit, road or trail in 3D from just behind the player's car, drawn by the software renderer at a
 /// low resolution and scaled up, so it keeps Paddock's pixel look. The painted track is the ground, rocks and
-/// buildings on it stand up and trees are pixel-art cut-outs turned to the camera, the cars are their side sprites
-/// made solid, everything casts a blob shadow, and the distance fades into a sky of the weather's colours.
+/// buildings on it stand up and trees are pixel-art cut-outs turned to the camera, the cars are low-poly models of
+/// their sprites (<see cref="CarModels"/>), everything casts a blob shadow, and the distance fades into a sky of the weather's colours.
 /// World units are metres: x east and z south as the painted track runs, y up.
 /// </summary>
-internal sealed class ChaseView(TrackArt art, Jentl.Raster.Texture player, Jentl.Raster.Texture opponent, Condition condition) : IDisposable
+internal sealed class ChaseView(TrackArt art, MeshModel player, MeshModel opponent, Condition condition) : IDisposable
 {
     private const int Height = 180;
     private const float Behind = 8;
@@ -24,10 +24,6 @@ internal sealed class ChaseView(TrackArt art, Jentl.Raster.Texture player, Jentl
     private const float Ahead = 8;
     private const float FogStart = 30;
     private const float FogEnd = 95;
-
-    // Side sprites are drawn 48 pixels for about 4.6 m of car; cars are about 1.75 m wide.
-    private const float CarPixel = 4.6f / 48;
-    private const float CarWidth = 1.75f;
 
     // Soft daylight: the sprites are painted already, so the light only sets the faces apart.
     private static readonly Lighting Light = new(new Numerics.Vector3(-0.4f, -1, 0.3f), new Numerics.Vector3(0.45f), new Numerics.Vector3(0.7f));
@@ -39,13 +35,8 @@ internal sealed class ChaseView(TrackArt art, Jentl.Raster.Texture player, Jentl
     private static readonly Mesh Block = MeshBuilder.Box(Numerics.Vector3.One);
 
     private readonly Mesh _ground = Ground(art);
-    // The sprites have a dark border; the cars' sides take the paint just inside it.
-    private readonly Mesh _player = Models.FromPicture(player, CarPixel, CarWidth, sideInset: 1.5f);
-    private readonly Mesh _opponent = Models.FromPicture(opponent, CarPixel, CarWidth, sideInset: 1.5f);
     private readonly Material _groundMaterial = new(Numerics.Vector4.One, Shading.Unlit, art.Picture);
     private readonly Material _landMaterial = new(Of(art.Ground), Shading.Unlit);
-    private readonly Material _playerMaterial = new(Numerics.Vector4.One, Shading.Flat, player);
-    private readonly Material _opponentMaterial = new(Numerics.Vector4.One, Shading.Flat, opponent);
     private readonly Sky _sky = SkyFor(condition);
     private readonly (Prop Prop, Numerics.Vector3 At, Material Material)[] _props = Props(art, condition);
     private readonly Camera _camera = new() { FieldOfView = MathF.PI / 3, Near = 0.3f, Far = FogEnd + 10 };
@@ -107,8 +98,8 @@ internal sealed class ChaseView(TrackArt art, Jentl.Raster.Texture player, Jentl
             }
         }
 
-        DrawCar(_view, _opponent, _opponentMaterial, opponentMetres, -TrackArt.Lane);
-        DrawCar(_view, _player, _playerMaterial, playerMetres, TrackArt.Lane);
+        DrawCar(_view, opponent, opponentMetres, -TrackArt.Lane);
+        DrawCar(_view, player, playerMetres, TrackArt.Lane);
         _view.DrawParticles(_spray);
         _view.Finish();
     }
@@ -286,11 +277,11 @@ internal sealed class ChaseView(TrackArt art, Jentl.Raster.Texture player, Jentl
     private float Between(float low, float high) => low + ((high - low) * _random.NextSingle());
 
     // The model's front is +x; turned to the car's heading (x east, z south, as the track's pixels run).
-    private void DrawCar(SoftwareView view, Mesh car, Material material, double metres, float lane)
+    private void DrawCar(SoftwareView view, MeshModel car, double metres, float lane)
     {
         var (position, heading) = art.Pose(metres, lane);
         var world = Numerics.Matrix4x4.CreateRotationY(-heading) * Numerics.Matrix4x4.CreateTranslation(Metres(position.X), 0, Metres(position.Y));
-        view.DrawMesh(car, world, material);
+        view.DrawModel(car, world);
     }
 
     // A blob under the car, stretched along it.
