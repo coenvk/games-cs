@@ -25,4 +25,9 @@
     <Copy SourceFiles="@(BotHostFile)" DestinationFiles="@(BotHostFile->'$(OutDir)%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
   </Target>
 
+  <!-- A published app (build/package.sh) gets the bot host too: framework-dependent and untrimmed, whatever the app itself is published as. -->
+  <Target Name="PublishBotHost" AfterTargets="Publish">
+    <MSBuild Projects="..\..\..\tools\PokerBotHost\PokerBotHost.csproj" Targets="Restore;Publish" Properties="Configuration=$(Configuration);PublishDir=$([System.IO.Path]::GetFullPath('$(PublishDir)'));RuntimeIdentifier=;SelfContained=false;PublishAot=false;PublishSingleFile=false;PublishTrimmed=false;UseAppHost=false;_IsPublishing=true;MSBuildRestoreSessionId=$([System.Guid]::NewGuid())" />
+  </Target>
+
 </Project>
