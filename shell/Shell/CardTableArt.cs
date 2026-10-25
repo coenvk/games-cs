@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Games;
 
-/// <summary>The card art shared by the card apps (Solitaire, Card Table).</summary>
+/// <summary>The card art shared by the card apps (Solitaire, Card Table, Poker).</summary>
 internal static class CardTableArt
 {
     public static void Load(GameContext context, GraphicsDevice device)

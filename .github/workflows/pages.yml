@@ -60,6 +60,7 @@ jobs:
           publish Sokoban sokoban
           publish Solitaire solitaire
           publish CardTable card-table
+          publish Poker poker
           publish Mossbrook mossbrook
           publish CodeLock code-lock
           publish Bricks bricks

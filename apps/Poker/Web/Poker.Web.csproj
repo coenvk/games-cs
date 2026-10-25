@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <!-- Poker in the browser. -->
+
+  <PropertyGroup>
+    <AppName>PokerGame</AppName>
+    <AppTitle>Poker</AppTitle>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\shell\Web.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Poker\Poker.csproj" />
+  </ItemGroup>
+
+</Project>

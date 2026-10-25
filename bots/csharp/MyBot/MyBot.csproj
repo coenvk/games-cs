@@ -13,9 +13,9 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <!-- The bots folder inside the app's save folder: ~/Library/Application Support/CardTable/bots on macOS, ~/.local/share/CardTable/bots on Linux,
-         %LOCALAPPDATA%\CardTable\bots on Windows. -->
-    <PokerBotsFolder Condition="'$(PokerBotsFolder)' == ''">$([System.IO.Path]::Combine($([System.Environment]::GetFolderPath(SpecialFolder.LocalApplicationData)), 'CardTable', 'bots'))</PokerBotsFolder>
+    <!-- The bots folder inside the app's save folder: ~/Library/Application Support/Poker/bots on macOS, ~/.local/share/Poker/bots on Linux,
+         %LOCALAPPDATA%\Poker\bots on Windows. -->
+    <PokerBotsFolder Condition="'$(PokerBotsFolder)' == ''">$([System.IO.Path]::Combine($([System.Environment]::GetFolderPath(SpecialFolder.LocalApplicationData)), 'Poker', 'bots'))</PokerBotsFolder>
   </PropertyGroup>
 
   <ItemGroup>

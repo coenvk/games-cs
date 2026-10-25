@@ -26,7 +26,7 @@ public readonly record struct DealSeed(UInt128 Value)
     }
 
     /// <summary>
-    /// The seed of deal number <paramref name="number"/> (the Card Table's <c>--deal</c>), for games between people,
+    /// The seed of deal number <paramref name="number"/> (Poker's <c>--deal</c>), for games between people,
     /// where a deal that can be looked up does no harm. It deals as every other seed does.
     /// </summary>
     public static DealSeed FromNumber(int number) => new((uint)number);

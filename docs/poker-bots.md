@@ -1,6 +1,6 @@
 # Writing a poker bot
 
-The bot workshop (Card Table > Bot workshop, desktop only) plays your bot at a Texas Hold'em table: you watch it play
+The bot workshop (Poker > Bot workshop, desktop only) plays your bot at a Texas Hold'em table: you watch it play
 against the house bots or other bots of yours, or run thousands of hands without drawing them to find out whether it is
 any good. A bot is either
 
@@ -209,14 +209,14 @@ the chips the seat finished with. In a **fixed-stacks** match every hand starts 
 
 ## The bots folder
 
-The workshop looks for bots in the `bots` folder of the Card Table save folder, and shows it (and a button that opens
+The workshop looks for bots in the `bots` folder of the Poker save folder, and shows it (and a button that opens
 it) in the workshop:
 
 | System | Bots folder |
 |---|---|
-| macOS | `~/Library/Application Support/CardTable/bots` |
-| Linux | `~/.local/share/CardTable/bots` (under `$XDG_DATA_HOME` if you have set it) |
-| Windows | `%LOCALAPPDATA%\CardTable\bots` |
+| macOS | `~/Library/Application Support/Poker/bots` |
+| Linux | `~/.local/share/Poker/bots` (under `$XDG_DATA_HOME` if you have set it) |
+| Windows | `%LOCALAPPDATA%\Poker\bots` |
 
 The list is read when the workshop opens, when you choose **Refresh** and when you come back to it. What it finds:
 
@@ -259,7 +259,7 @@ dotnet build bots/csharp/MyBot      # builds, and copies MyBot.dll (and its .pdb
 dotnet build bots/csharp/MyBot -p:PokerBotsFolder=/some/other/folder    # install somewhere else
 ```
 
-The folder defaults to the Card Table save folder's `bots` (the table above), computed for your system in the project
+The folder defaults to the Poker save folder's `bots` (the table above), computed for your system in the project
 file. Building the harness builds MyBot too, so it installs MyBot into the bots folder as well. `Poker.Bots.dll` is not copied: the bot host brings its own. If you repack the SDK under the same version, NuGet
 keeps its cached copy; clear it with `dotnet nuget locals global-packages --clear`.
 
@@ -325,11 +325,11 @@ watched again. (A bot that answered late may not be late again, and the other wa
 the bots folder cannot be seated, and the results say which. **New seed** in the setup picks a fresh seed.
 
 Starting the app with `--deal <n>` makes the setup start from the seed of deal number `n` instead of a random one, and
-the Card Table's own Hold'em game deal the same cards every time, so a match can be set up again by hand, also on
+Poker's own Hold'em game deal the same cards every time, so a match can be set up again by hand, also on
 another machine:
 
 ```
-dotnet run --project apps/CardTable/Desktop -- --deal 42
+dotnet run --project apps/Poker/Desktop -- --deal 42
 ```
 
 A seed from a deal number is for testing only: there are few enough deal numbers to try them all, so a bot could work

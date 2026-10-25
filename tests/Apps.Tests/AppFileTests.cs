@@ -8,7 +8,7 @@ public class AppFileTests
 {
     private static readonly string Root = RepositoryRoot();
 
-    public static TheoryData<string> Apps => ["Sokoban", "Solitaire", "CardTable", "Mossbrook", "CodeLock", "Bricks", "Paddock"];
+    public static TheoryData<string> Apps => ["Sokoban", "Solitaire", "CardTable", "Poker", "Mossbrook", "CodeLock", "Bricks", "Paddock"];
 
     /// <summary>One language file serves every app, so it must cover the shell's texts and all the apps'.</summary>
     [Fact]

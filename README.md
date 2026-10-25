@@ -2,7 +2,7 @@
 
 **Play in your browser: https://coenvk.github.io/games-cs/**
 
-Seven small games made with [Jentl](https://github.com/coenvk/jentl-cs), a C# game engine on MonoGame (desktop) and KNI (the
+Eight small games made with [Jentl](https://github.com/coenvk/jentl-cs), a C# game engine on MonoGame (desktop) and KNI (the
 browser). It started as a C# rewrite of [coenvk/Sokoban](https://github.com/coenvk/Sokoban), and the engine grew alongside;
 the engine now lives in its own repository and comes in here as packages.
 
@@ -10,7 +10,8 @@ the engine now lives in its own repository and comes in here as packages.
 |---|---|
 | **Sokoban** | Push every crate onto a goal: 100 classic levels, 20 ice levels, generated levels, hints from a solver |
 | **Solitaire** | Klondike, Easthaven, Forty Thieves, FreeCell, Golf, Pyramid, Spider, TriPeaks and Yukon |
-| **Card Table** | Uno and Texas Hold'em against bots or passing the device round, and Uno online |
+| **Card Table** | Uno against bots, passing the device round, or online |
+| **Poker** | No-limit Texas Hold'em against bots or passing the device round, and a workshop for your own poker bots |
 | **Mossbrook** | A small turn-based adventure: a village, a cellar and a lost amulet |
 | **Code Lock** | Mastermind on a combination lock |
 | **Bricks** | A brick breaker with power-ups |
@@ -45,7 +46,7 @@ one if there is one, otherwise from GitHub at the version in `dependencies.props
 ```bash
 build/jentl.sh
 dotnet test Games.slnx
-dotnet run --project apps/Sokoban/Desktop        # or Solitaire, CardTable, Mossbrook, CodeLock, Bricks, Paddock
+dotnet run --project apps/Sokoban/Desktop        # or Solitaire, CardTable, Poker, Mossbrook, CodeLock, Bricks, Paddock
 dotnet run --project apps/Sokoban/Web            # in the browser
 ```
 
@@ -74,7 +75,7 @@ dotnet run --project apps/Sokoban/Desktop -- --keys "Down Enter Wait" --screensh
 
 ## Progress
 
-Each game keeps its files in a folder of its own (`Sokoban`, `Solitaire`, `CardTable`, `Mossbrook`, `CodeLock`, `Bricks`); for Sokoban, progress (best moves, pushes, time and the fewest-moves solution per level) is saved as JSON after every improvement:
+Each game keeps its files in a folder of its own (`Sokoban`, `Solitaire`, `CardTable`, `Poker`, `Mossbrook`, `CodeLock`, `Bricks`, `Paddock`); for Sokoban, progress (best moves, pushes, time and the fewest-moves solution per level) is saved as JSON after every improvement:
 
 - macOS: `~/Library/Application Support/Sokoban/progress.json`
 - Windows: `%LOCALAPPDATA%\Sokoban\progress.json`
@@ -198,8 +199,8 @@ signature); elsewhere a folder with the executable, SDL2/OpenAL libraries and `A
 
 The browser apps compile the same sources against [KNI](https://github.com/kniEngine/kni) (a MonoGame fork with a
 Blazor WebAssembly platform). Pushing to `main` tests everything and publishes the site (`.github/workflows/pages.yml`):
-a landing page (`build/site`) with each game in its own folder (`sokoban/`, `solitaire/`, `card-table/`, `mossbrook/`,
-`code-lock/`, `bricks/`, `paddock/`). CI builds the engine packages from the public jentl repository, so it needs no tokens.
+a landing page (`build/site`) with each game in its own folder (`sokoban/`, `solitaire/`, `card-table/`, `poker/`,
+`mossbrook/`, `code-lock/`, `bricks/`, `paddock/`). CI builds the engine packages from the public jentl repository, so it needs no tokens.
 
 Differences from desktop:
 
@@ -301,9 +302,9 @@ when it runs in a container.
 The bots match colour before number, keep wilds for when nothing else fits, and attack with Skip, Reverse and Draw
 Two when the next player is close to going out; in the tests they beat a random player well over half the time.
 
-## Texas Hold'em
+## Poker
 
-**Card Table > Texas Hold'em** is No-Limit Hold'em as a sit-and-go: 1,000 chips each, blinds from 10/20 doubling
+**Poker > Texas Hold'em** is No-Limit Hold'em as a sit-and-go: 1,000 chips each, blinds from 10/20 doubling
 every ten hands, and the last player with chips wins. Play against 1, 3 or 5 bots, or pass the device around between
 2 to 4 people (hole cards stay hidden between turns). Fold, Check or Call, Bet or Raise (- and + step the amount by
 the big blind), or All in; on a keyboard Enter checks or calls, Up raises, Left/Right change the amount and F folds.
@@ -315,7 +316,7 @@ engine (`src/Poker`) is framework-free and runs on the same multiplayer layer as
 
 ### Bot workshop
 
-**Card Table > Bot workshop** (desktop only) is a place to write a poker bot and find out how good it is. Watch your bot
+**Poker > Bot workshop** (desktop only) is a place to write a poker bot and find out how good it is. Watch your bot
 play house bots or other bots of yours at a table with chips, run a duplicate batch of thousands of hands for a result
 that luck cannot fake (big blinds won per 100 hands, with its margin of error), look at statistics per bot, and replay
 single hands. A bot is a C# class (`src/Poker.Bots`, packed by `build/pokersdk.sh`) or a program in any language that
@@ -325,6 +326,9 @@ Starter kits: `bots/csharp` (an example bot that builds into the bots folder, an
 house bots in one process, so you can debug it) and `bots/python` (an example bot using only the standard library).
 `docs/poker-bots.md` has the protocol with an example of every message, the rules, where the bots go, and how to test
 and debug.
+
+Hold'em and the workshop used to be part of Card Table; the first time Poker starts on the desktop it moves the bots
+folder and the saved matches over from Card Table's folder.
 
 ## Paddock
 
