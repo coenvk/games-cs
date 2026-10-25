@@ -180,7 +180,7 @@ internal sealed class MatchSetupScene : Scene
                 [.. MatchSetup.TimeLimits.Select(t => T("{0} s", t.TotalSeconds.ToString("0.##", Tr.Culture)))],
                 () => setup.TimeIndex,
                 index => setup.TimeIndex = index),
-            new ButtonRow(T("New seed"), () => setup.Seed = DealSeed.New(), () => setup.Seed.ToString()),
+            new ButtonRow(T("New seed"), () => setup.Seed = DealSeed.New(), () => $"{setup.Seed.ToString()[..8]}…"),
             new ButtonRow(T("Start"), Start),
             new ButtonRow(T("Back"), () => Scenes.Pop()));
         string HandsLabel() => setup.IsSeries ? T("Tournaments") : T("Hands");
