@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <PackageReference Include="Jentl.Cards" Version="$(JentlVersion)" />
+    <PackageReference Include="Jentl.Collect" Version="$(JentlVersion)" />
     <PackageReference Include="Jentl.Net" Version="$(JentlVersion)" />
     <PackageReference Include="Jentl.Multiplayer" Version="$(JentlVersion)" />
   </ItemGroup>
