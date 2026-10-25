@@ -127,6 +127,43 @@ public class ArenaBatchTests
     }
 
     [Fact]
+    public async Task AThrowingSeatFactory_DisposesTheSeatsAlreadyMade_AndSurfaces()
+    {
+        var made = new List<CountedSeat>();
+        Func<IArenaSeat> Counted() => () =>
+        {
+            var seat = new CountedSeat(new CallingBot());
+            made.Add(seat);
+            return seat;
+        };
+        var calls = 0;
+        Func<IArenaSeat> breaksOnSecondRun = () => ++calls == 2 ? throw new InvalidOperationException("no more bots") : Counted()();
+
+        // Run 1 seats bots 1, 2, 0: bot 1's seat is made before bot 2's factory throws.
+        var batch = new ArenaBatch([Counted(), Counted(), breaksOnSecondRun], new BatchSettings(BatchFormat.DuplicateRing, 3, Seed: 1, Limit));
+
+        var act = () => batch.RunAsync(new Reports(), CancellationToken.None);
+
+        await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("no more bots");
+        made.Should().HaveCount(4).And.OnlyContain(s => s.Disposed);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ASeries_ReportsProgressAfterEveryGame(bool parallel)
+    {
+        var progress = new Reports();
+        var batch = new ArenaBatch(
+            [House(() => new CallingBot()), House(() => new RaisingBot())],
+            new BatchSettings(BatchFormat.SitAndGoSeries, 4, Seed: 3, Limit, parallel));
+
+        await batch.RunAsync(progress, CancellationToken.None);
+
+        progress.Values.Order().Should().Equal(0.25, 0.5, 0.75, 1);
+    }
+
+    [Fact]
     public async Task TheNetOfEachHand_AddsUpToTheTablesNet()
     {
         using var table = new ArenaTable(
@@ -152,6 +189,28 @@ public class ArenaBatchTests
         act.Should().Throw<ArgumentException>();
         act = () => new ArenaBatch([.. Enumerable.Repeat(call, 10)], new BatchSettings(BatchFormat.SitAndGoSeries, 10, 1, Limit));
         act.Should().Throw<ArgumentException>();
+    }
+
+    /// <summary>A house seat that remembers being disposed.</summary>
+    private sealed class CountedSeat(PokerBots.IPokerBot bot) : IArenaSeat
+    {
+        private readonly HouseSeat _seat = new(bot);
+
+        public bool Disposed { get; private set; }
+
+        public string Name => _seat.Name;
+
+        public string? Problem => _seat.Problem;
+
+        public bool IsGone => _seat.IsGone;
+
+        public Task StartAsync(PokerBots.MatchStart start, TimeSpan limit) => _seat.StartAsync(start, limit);
+
+        public void Notify(PokerBots.Message message) => _seat.Notify(message);
+
+        public Task<PokerBots.BotAction?> AskAsync(PokerBots.Decision decision, CancellationToken cancel) => _seat.AskAsync(decision, cancel);
+
+        public void Dispose() => Disposed = true;
     }
 
     /// <summary>Records progress as it is reported, on the reporting thread.</summary>

@@ -18,5 +18,6 @@ public enum BatchFormat
 /// <param name="Hands">The number of hands (or tournaments) to play.</param>
 /// <param name="Seed">The batch seed the matches' seeds are derived from.</param>
 /// <param name="TimeLimit">How long a bot gets for each decision.</param>
-/// <param name="Parallel">Whether matches may be played at the same time.</param>
+/// <param name="Parallel">Whether matches may be played at the same time, at most one per processor. Beware: bots
+/// that run in their own processes then compete for the processors and may be counted late.</param>
 public sealed record BatchSettings(BatchFormat Format, int Hands, int Seed, TimeSpan TimeLimit, bool Parallel = false);

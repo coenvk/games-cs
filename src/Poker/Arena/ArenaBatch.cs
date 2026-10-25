@@ -23,6 +23,11 @@ namespace Poker.Arena;
 /// A cancelled batch stops between hands and returns what was played. In a duplicate batch only the deals played in
 /// every run count towards the results; a deal some run did not reach is left out (its hands are still recorded).
 /// </para>
+/// <para>
+/// With <see cref="BatchSettings.Parallel"/> up to one run per processor plays at the same time. Bots that run in
+/// their own processes then compete for the processors, and a slow one may be counted late where it would have
+/// answered in time on its own.
+/// </para>
 /// </remarks>
 public sealed class ArenaBatch
 {
@@ -82,7 +87,8 @@ public sealed class ArenaBatch
 
     /// <summary>
     /// Plays the batch and returns how each bot did, in the order the bots were given. Reports the part done (0 to
-    /// 1) after every hand of a duplicate batch and after every game of a series. When <paramref name="cancel"/> is
+    /// 1) after every hand of a duplicate batch and after every game of a series that is played to the end, also when
+    /// the runs are played side by side. When <paramref name="cancel"/> is
     /// cancelled, stops between hands and returns what was played.
     /// </summary>
     public async Task<MatchResult> RunAsync(IProgress<double> progress, CancellationToken cancel)
@@ -98,43 +104,51 @@ public sealed class ArenaBatch
         var done = 0;
         void Report() => progress.Report(Interlocked.Increment(ref done) / total);
 
-        Task<Played> Play(int run) => PlayAsync(
-            rotations[run % rotations.Count],
-            series ? table with { Seed = unchecked(_settings.Seed + run) } : table,
-            series ? null : Report,
-            cancel);
+        async Task<Played> Play(int run)
+        {
+            var game = await PlayAsync(
+                rotations[run % rotations.Count],
+                series ? table with { Seed = unchecked(_settings.Seed + run) } : table,
+                series ? null : Report,
+                cancel);
+            if (series && game.Finished)
+            {
+                Report();
+            }
 
-        var played = new List<Played>();
+            return game;
+        }
+
+        // The first run is always played, if only for the bots' names; no other run starts once cancelled.
+        var played = new Played?[runs];
         if (_settings.Parallel)
         {
-            played.AddRange(await Task.WhenAll(Enumerable.Range(0, runs).Select(run => Task.Run(() => Play(run), CancellationToken.None))));
-            if (series)
+            var options = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount };
+            await Parallel.ForEachAsync(Enumerable.Range(0, runs), options, async (run, _) =>
             {
-                // Progress of a series counts games, which in parallel all end at about the same time.
-                for (var game = played.Count(p => p.Finished); game > 0; game--)
+                if (run == 0 || !cancel.IsCancellationRequested)
                 {
-                    Report();
+                    played[run] = await Play(run);
                 }
-            }
+            });
         }
         else
         {
-            // The first run is always played, if only for the bots' names.
             for (var run = 0; run < runs && (run == 0 || !cancel.IsCancellationRequested); run++)
             {
-                var game = await Play(run);
-                played.Add(game);
-                if (series && game.Finished)
-                {
-                    Report();
-                }
+                played[run] = await Play(run);
             }
         }
 
+        return Result(series, rotations.Count, table, [.. played.OfType<Played>()]);
+    }
+
+    private MatchResult Result(bool series, int rotations, ArenaSettings table, List<Played> played)
+    {
         var first = played[0];
         var names = Enumerable.Range(0, _bots.Count).Select(bot => first.Results[first.SeatOf(bot)].Name).ToList();
         var results = Enumerable.Range(0, _bots.Count)
-            .Select(bot => series ? SeriesResult(names[bot], bot, played) : DuplicateResult(names[bot], bot, played, rotations.Count, table))
+            .Select(bot => series ? SeriesResult(names[bot], bot, played) : DuplicateResult(names[bot], bot, played, rotations, table))
             .ToList();
         return new MatchResult(table, _settings, _time.GetUtcNow(), names, results, [.. played.SelectMany(p => p.Hands)]);
     }
