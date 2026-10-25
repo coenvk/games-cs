@@ -18,7 +18,7 @@ public sealed class MyBot : IPokerBot
 
     private Random _random = new(0);
 
-    /// <summary>The name shown at the table.</summary>
+    /// <summary>The bot's own name, sent in its hello. The table shows the DLL's file name (MyBot) instead.</summary>
     public string Name => "My bot";
 
     /// <summary>

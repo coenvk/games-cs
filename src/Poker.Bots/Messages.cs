@@ -69,8 +69,8 @@ public sealed record HandSeat(int Seat, string Name, int Stack, string State);
 /// App to bot: it is your turn, answer with a <see cref="BotAction"/>. Everything you need to decide is in here, so a
 /// bot does not have to remember anything between decisions.
 /// </summary>
-/// <param name="Id">Counts up through the match. Your answer must carry the same id, so a late answer to an earlier
-/// decision is never mistaken for the current one. <see cref="BotRunner"/> does this for you.</param>
+/// <param name="Id">Counts up through the match. Your answer may carry the same id, so a late answer to an earlier
+/// decision is never mistaken for the current one (an answer with another id is ignored). <see cref="BotRunner"/> does this for you.</param>
 /// <param name="Hand">The hand number.</param>
 /// <param name="Street"><c>"preflop"</c>, <c>"flop"</c>, <c>"turn"</c> or <c>"river"</c>.</param>
 /// <param name="You">Your seat number.</param>
@@ -81,7 +81,7 @@ public sealed record HandSeat(int Seat, string Name, int Stack, string State);
 /// <param name="BigBlindSeat">The seat that posted the big blind.</param>
 /// <param name="SmallBlind">The small blind.</param>
 /// <param name="BigBlind">The big blind.</param>
-/// <param name="Level">The blind level, counting from 1; it goes up as a sit-and-go goes on.</param>
+/// <param name="Level">The blind level, counting from 0; it goes up as a sit-and-go goes on.</param>
 /// <param name="Seats">Every seat with its stack, its bet this street and its state.</param>
 /// <param name="Pots">The main pot and any side pots, chips from earlier streets included.</param>
 /// <param name="ToCall">The chips you must add to stay in. Zero when you can check.</param>
@@ -121,7 +121,7 @@ public sealed record TableSeat(int Seat, string Name, int Stack, int Bet, string
 /// <param name="Seats">The seats that are still in the hand and can win it.</param>
 public sealed record Pot(int Amount, IReadOnlyList<int> Seats);
 
-/// <summary>What the player to act may do. Answering with anything else counts as a fold.</summary>
+/// <summary>What the player to act may do. Answering with anything else is replaced: a check when that is free, otherwise a fold.</summary>
 /// <param name="Fold">Always true.</param>
 /// <param name="Check">True when there is nothing to call.</param>
 /// <param name="Call">The chips a call costs (at most your stack), or null when there is nothing to call.</param>
@@ -140,7 +140,7 @@ public sealed record LegalActions(
 /// <param name="Street">The street it happened on.</param>
 /// <param name="Seat">The seat that acted.</param>
 /// <param name="Action">What it did: <c>"fold"</c>, <c>"check"</c>, <c>"call"</c>, <c>"raise"</c> or <c>"all-in"</c>
-/// (blinds show up as a <c>"raise"</c> or <c>"call"</c> as posted).</param>
+/// (the blinds are not listed: see the blind seats and each seat's bet).</param>
 /// <param name="Amount">The chips it added with this action.</param>
 /// <param name="Total">Its total bet on this street afterwards.</param>
 public sealed record PlayedAction(string Street, int Seat, string Action, int Amount, int Total);
@@ -188,7 +188,7 @@ public sealed record Standing(int Seat, string Name, int Stack, int Place);
 /// <summary>
 /// Bot to app: your answer to a <see cref="Decision"/>. Use <see cref="Fold"/>, <see cref="Check"/>, <see cref="Call"/>,
 /// <see cref="Raise"/> or <see cref="AllIn"/>. Anything that is not legal right now (or an action name the app does not
-/// know) is treated as a fold.
+/// know) is replaced by a check when that is free, otherwise by a fold.
 /// </summary>
 /// <param name="Action"><c>"fold"</c>, <c>"check"</c>, <c>"call"</c>, <c>"raise"</c> or <c>"all-in"</c>.</param>
 /// <param name="To">For a raise: the total bet for this street, between <see cref="LegalActions.MinRaiseTo"/> and

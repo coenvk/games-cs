@@ -63,16 +63,18 @@ anyway (what the others did in earlier hands) if you want to model your opponent
 
 ### hello (both ways)
 
-The app speaks first, then your bot answers with the same message and its name. The name is how your bot is shown at the
-table.
+The app speaks first, then your bot answers with the same message and its name. The table does not use that name: it
+shows the bot's name from the bots folder (the `"name"` in its `.bot.json`, or else the file name; for a C# bot the DLL's
+file name), numbered when the same bot sits twice. The name in your hello is for the bot's own identification and logs.
 
 ```json
 {"type":"hello","protocol":1}
 {"type":"hello","protocol":1,"name":"Always call"}
 ```
 
-If you answer with another protocol version the bot is not seated ("speaks protocol 2, the app speaks 1"). Answer within
-5 seconds of the app starting you.
+If you answer with another protocol version the bot stays at the table but is folded every time it is asked, for the rest of the run, and shows the problem
+("speaks protocol 2, the app speaks 1"); it still pays the blinds. The same goes for a bot that has not answered
+within 5 seconds of the app starting it.
 
 ### match-start (app to bot)
 
@@ -177,13 +179,14 @@ the chips the seat finished with. In a **fixed-stacks** match every hand starts 
 
 - **Transport.** One JSON object per line on stdin and stdout, UTF-8. Flush stdout after every line you write.
 - **Hello.** The first exchange is the hello. A bot that has not answered within 5 seconds, or answers with another
-  protocol version, is not seated.
+  protocol version, stays at the table but is folded every time (it still pays the blinds) and shows its problem.
 - **Time limit.** You get `timeLimitMs` for each decision (1 second by default; the match setup can change it). It is
   given in `match-start` and in every `decision`. Other messages need no answer.
 - **Late, malformed or illegal answers** are replaced: the app checks when checking is free and folds otherwise. Each
   replacement is counted and shown with the bot's results ("late 3, illegal 1"). Illegal means an action that is not in
   `legal` right now, an action name the app does not know, or a raise outside `[minRaiseTo, maxRaiseTo]` (a raise to
-  `maxRaiseTo` is all in, and fine).
+  `maxRaiseTo` is all in, and fine). A malformed line (not a valid message) is skipped like any other stray line, so
+  when no valid answer follows, the decision counts as late, not illegal.
 - **Crashes.** A bot that crashes or exits is folded every time it is asked for the rest of the run, and the match goes
   on. The seat shows what went wrong, with the last line the bot printed on stderr.
 - **Lines that are not protocol messages are ignored**, in both directions. A stray debug print on stdout does not break
@@ -232,8 +235,10 @@ The list is read when the workshop opens, when you choose **Refresh** and when y
   DLL and runs the **one** public class in it that implements `IPokerBot` and has a public constructor without
   parameters. A DLL with none, or with more than one, is a problem shown at its seat ("has 2 bots: ...; name one"). The
   app has no way to name one of several yet: build one bot per DLL. (A `.bot.json` cannot run a DLL either; use the
-  DLL itself.) The DLL may sit beside its own dependencies; `Poker.Bots` itself is the host's, so a bot built against a
-  different major version of the SDK is refused.
+  DLL itself.) A bot's dependencies are loaded from the DLL's own folder, but every `*.dll` in the bots folder is listed
+  as a bot, so a dependency DLL placed there shows up as an entry that "has no bot". Avoid that by building a
+  bot that needs no extra DLLs, or accept the extra entries. `Poker.Bots` itself is
+  the host's, so a bot built against a different major version of the SDK is refused.
 
 ## Building a C# bot
 
@@ -247,7 +252,7 @@ dotnet build bots/csharp/MyBot -p:PokerBotsFolder=/some/other/folder    # instal
 ```
 
 The folder defaults to the Card Table save folder's `bots` (the table above), computed for your system in the project
-file. `Poker.Bots.dll` is not copied: the bot host brings its own. If you repack the SDK under the same version, NuGet
+file. Building the harness builds MyBot too, so it installs MyBot into the bots folder as well. `Poker.Bots.dll` is not copied: the bot host brings its own. If you repack the SDK under the same version, NuGet
 keeps its cached copy; clear it with `dotnet nuget locals global-packages --clear`.
 
 To make your own bot elsewhere: a class library (`net10.0`) with `<PackageReference Include="Poker.Bots" Version="1.0.0" />`
@@ -304,10 +309,12 @@ hands fast. **Past matches** lists the saved ones, where any hand can be replaye
 ## First milestone: beat Always call
 
 A bot that checks and calls whatever it holds is the weakest sensible opponent; losing to it means something is wrong.
-Beat it over **10,000 deals in a duplicate heads-up batch** (each deal is played twice with the seats swapped), with a result that is positive by more than its margin.
+Beat it over **10,000 hands in a duplicate heads-up batch**, with a result that is positive by more than its margin.
+The 10,000 is the number the form asks for: each of those deals is played twice with the seats swapped, so a bot is
+dealt into 20,000 hands.
 
-- C#: `dotnet run --project bots/csharp/MyBot.Harness -- 10000`, and read the "Always call" row.
 - Any language: in the workshop choose **Run a batch**, format **Duplicate heads-up**, your bot against **Always call**,
-  and the largest number of hands the form offers (2,000; it has no 10,000) on a few different seeds.
+  hands **10000**, and read the result.
+- C#: `dotnet run --project bots/csharp/MyBot.Harness -- 10000`, and read the "Always call" row.
 
 Then try the others: Random, Always raise, and the three bots that weigh their chances, Tight, Balanced and Loose.

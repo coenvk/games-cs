@@ -29,7 +29,7 @@ internal sealed class MatchSetup
     }
 
     /// <summary>The numbers of hands a match or a duplicate batch can have.</summary>
-    public static IReadOnlyList<int> HandChoices { get; } = [10, 20, 50, 100, 200, 500, 1000, 2000];
+    public static IReadOnlyList<int> HandChoices { get; } = [10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000];
 
     /// <summary>The numbers of tournaments a sit-and-go series can have; each takes many hands.</summary>
     public static IReadOnlyList<int> SeriesChoices { get; } = [5, 10, 20, 50, 100];

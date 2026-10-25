@@ -5,6 +5,14 @@
        To build somewhere else: dotnet build -p:PokerBotsFolder=/some/folder -->
 
   <PropertyGroup>
+    <!-- This repository builds with warnings as errors and strict analyzers; a starter project should not stop you
+         over a style rule while you are trying things out. -->
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+    <AnalysisLevel>latest</AnalysisLevel>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <!-- The bots folder inside the app's save folder: ~/Library/Application Support/CardTable/bots on macOS, ~/.local/share/CardTable/bots on Linux,
          %LOCALAPPDATA%\CardTable\bots on Windows. -->
     <PokerBotsFolder Condition="'$(PokerBotsFolder)' == ''">$([System.IO.Path]::Combine($([System.Environment]::GetFolderPath(SpecialFolder.LocalApplicationData)), 'CardTable', 'bots'))</PokerBotsFolder>
