@@ -29,11 +29,14 @@ internal static class Sound
 /// Search budget for a hint. WebAssembly has a single thread, so there the search holds up the frame
 /// and must stay short.
 /// </param>
-internal sealed record PlatformFeatures(bool CanQuit, bool CanFullscreen, TimeSpan HintTime)
+/// <param name="CanRunBots">
+/// Whether programs the player wrote can be started (the bot workshop); a browser tab cannot start processes.
+/// </param>
+internal sealed record PlatformFeatures(bool CanQuit, bool CanFullscreen, TimeSpan HintTime, bool CanRunBots)
 {
-    public static PlatformFeatures Desktop { get; } = new(CanQuit: true, CanFullscreen: true, TimeSpan.FromSeconds(3));
+    public static PlatformFeatures Desktop { get; } = new(CanQuit: true, CanFullscreen: true, TimeSpan.FromSeconds(3), CanRunBots: true);
 
-    public static PlatformFeatures Browser { get; } = new(CanQuit: false, CanFullscreen: false, TimeSpan.FromSeconds(1));
+    public static PlatformFeatures Browser { get; } = new(CanQuit: false, CanFullscreen: false, TimeSpan.FromSeconds(1), CanRunBots: false);
 }
 
 /// <summary>

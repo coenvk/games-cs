@@ -1,5 +1,7 @@
 ﻿using Jentl.Core.Scenes;
+using Jentl.Core.UI;
 using Games.Scenes;
+using Games.Workshop;
 using Microsoft.Xna.Framework.Graphics;
 using static Games.UI.Tr;
 
@@ -23,9 +25,20 @@ internal sealed class CardTableApp : IGameApp
     public Scene MainMenu(GameContext context) => new TitleScene(
         context,
         title =>
-        [
-            new("Uno", () => title.Open(new UnoSetupScene(context), fade: false)),
-            new("Texas Hold'em", () => title.Open(new PokerSetupScene(context), fade: false)),
-        ],
+        {
+            List<MenuItem> items =
+            [
+                new("Uno", () => title.Open(new UnoSetupScene(context), fade: false)),
+                new("Texas Hold'em", () => title.Open(new PokerSetupScene(context), fade: false)),
+            ];
+
+            // Running the player's programs needs a desktop; the browser has no workshop.
+            if (context.Platform.CanRunBots)
+            {
+                items.Add(new(T("Bot workshop"), () => title.Open(new WorkshopScene(new WorkshopContext(context)), fade: false)));
+            }
+
+            return items;
+        },
         () => T("Uno and Texas Hold'em, against bots or friends"));
 }

@@ -13,4 +13,16 @@
     <ProjectReference Include="..\..\..\src\Poker\Poker.csproj" />
   </ItemGroup>
 
+  <!-- The bot workshop runs C# bots through the bot host: built with the app and copied next to it (dotnet PokerBotHost.dll). -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\tools\PokerBotHost\PokerBotHost.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <Target Name="CopyBotHost" AfterTargets="Build">
+    <ItemGroup>
+      <BotHostFile Include="..\..\..\tools\PokerBotHost\bin\$(Configuration)\$(TargetFramework)\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(BotHostFile)" DestinationFiles="@(BotHostFile->'$(OutDir)%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  </Target>
+
 </Project>
