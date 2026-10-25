@@ -37,12 +37,10 @@ internal sealed class BettingReplay
             left[i] = hand.StartStacks[i];
         }
 
-        // Heads-up the button posts the small blind; otherwise the small blind is the next seat with chips.
-        var playing = Enumerable.Range(0, seats).Count(s => hand.StartStacks[s] > 0);
-        SmallBlindSeat = playing == 2 ? hand.Button : NextWithChips(hand, hand.Button);
-        BigBlindSeat = NextWithChips(hand, SmallBlindSeat);
-        SmallBlindPosted = Math.Min(hand.SmallBlind, left[SmallBlindSeat]);
-        BigBlindPosted = Math.Min(hand.BigBlind, left[BigBlindSeat]);
+        SmallBlindSeat = hand.SmallBlindSeat;
+        BigBlindSeat = hand.BigBlindSeat;
+        SmallBlindPosted = hand.SmallBlindPosted;
+        BigBlindPosted = hand.BigBlindPosted;
         Put(SmallBlindSeat, SmallBlindPosted);
         Put(BigBlindSeat, BigBlindPosted);
 
@@ -63,7 +61,7 @@ internal sealed class BettingReplay
                 Fold => ActionKind.Fold,
                 Check => ActionKind.Check,
                 RaiseTo or AllIn when raised => bet == 0 ? ActionKind.Bet : ActionKind.Raise,
-                _ => action.Amount > 0 || action.Action is CallBet ? ActionKind.Call : ActionKind.Check,
+                _ => action.Amount > 0 ? ActionKind.Call : ActionKind.Check,
             };
             Put(action.Seat, action.Amount);
             steps.Add(new BettingStep(action, kind, kind == ActionKind.Raise ? action.Total - bet : action.Total, left[action.Seat] == 0));
@@ -94,26 +92,16 @@ internal sealed class BettingReplay
     public int[] Committed { get; }
 
     /// <summary>The chips of a seat's bet that no one called, which went back to it.</summary>
+    /// <summary>The street of the bet that no one called: the last one the seat put chips in on (the blinds count as preflop).</summary>
+    public Street UncalledStreet(int seat) =>
+        Steps.LastOrDefault(s => s.Action.Seat == seat && s.Action.Amount > 0)?.Action.Street ?? Street.Preflop;
+
     public int Uncalled(int seat)
     {
         var others = Enumerable.Range(0, Committed.Length).Where(s => s != seat).Max(s => Committed[s]);
         return Math.Max(0, Committed[seat] - others);
     }
 
-    private static int NextWithChips(HandRecord hand, int seat)
-    {
-        var seats = hand.Names.Count;
-        for (var i = 1; i <= seats; i++)
-        {
-            var next = (seat + i) % seats;
-            if (hand.StartStacks[next] > 0)
-            {
-                return next;
-            }
-        }
-
-        return seat;
-    }
 }
 
 /// <summary>Writes a hand the way PokerStars does in its hand history files, the text poker tools read.</summary>
@@ -123,15 +111,16 @@ public static class HandHistoryText
     /// The history of <paramref name="hand"/> as text with LF line endings. Amounts are chips; the table is called
     /// <paramref name="table"/> and the hand is dated <paramref name="at"/> (in UTC). Every seat's hole cards are
     /// written, as the record knows them all.
+    /// The number in the header is the seed read as unsigned, so it is never negative, followed by the hand number.
     /// </summary>
     public static string Write(HandRecord hand, string table, DateTimeOffset at)
     {
         ArgumentNullException.ThrowIfNull(hand);
         ArgumentNullException.ThrowIfNull(table);
         var replay = new BettingReplay(hand);
-        var inHand = Enumerable.Range(0, hand.Names.Count).Where(s => hand.StartStacks[s] > 0).ToArray();
+        var inHand = Enumerable.Range(0, hand.Names.Count).Where(s => hand.Holes[s].Count > 0).ToArray();
         var text = new StringBuilder();
-        Line($"PokerStars Hand #{hand.Seed}{hand.Number}: Hold'em No Limit ({hand.SmallBlind}/{hand.BigBlind}) - {at.UtcDateTime.ToString("yyyy/MM/dd HH:mm:ss", CultureInfo.InvariantCulture)} UTC");
+        Line($"PokerStars Hand #{(uint)hand.Seed}{hand.Number}: Hold'em No Limit ({hand.SmallBlind}/{hand.BigBlind}) - {at.UtcDateTime.ToString("yyyy/MM/dd HH:mm:ss", CultureInfo.InvariantCulture)} UTC");
         Line($"Table '{table}' 9-max Seat #{hand.Button + 1} is the button");
         foreach (var seat in inHand)
         {
@@ -169,7 +158,12 @@ public static class HandHistoryText
 
             foreach (var step in replay.Steps.Where(s => s.Action.Street == street))
             {
-                Line($"{hand.Names[step.Action.Seat]}: {Describe(step)}{(step.AllIn ? ", and is all-in" : string.Empty)}");
+                Line($"{hand.Names[step.Action.Seat]}: {Describe(step)}{(step.AllIn ? " and is all-in" : string.Empty)}");
+            }
+
+            foreach (var seat in inHand.Where(s => replay.Uncalled(s) > 0 && replay.UncalledStreet(s) == street))
+            {
+                Line($"Uncalled bet ({replay.Uncalled(seat)}) returned to {hand.Names[seat]}");
             }
         }
 
@@ -181,11 +175,6 @@ public static class HandHistoryText
             {
                 Line($"{hand.Names[seat]}: shows [{Cards(hand.Holes[seat])}]{Rank(hand, seat)}");
             }
-        }
-
-        foreach (var seat in inHand.Where(s => replay.Uncalled(s) > 0))
-        {
-            Line($"Uncalled bet ({replay.Uncalled(seat)}) returned to {hand.Names[seat]}");
         }
 
         foreach (var seat in inHand)

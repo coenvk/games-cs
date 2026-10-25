@@ -84,6 +84,8 @@ public sealed class ArenaTable : IDisposable
     private readonly List<ActionRecord> _actions = [];
     private readonly List<(int Seat, Fault Fault)> _faults = [];
     private readonly HashSet<int> _shown = [];
+    private int _smallPosted;
+    private int _bigPosted;
 
     public ArenaTable(IReadOnlyList<IArenaSeat> seats, ArenaSettings settings)
     {
@@ -336,6 +338,12 @@ public sealed class ArenaTable : IDisposable
                 case Acted acted:
                     _actions.Add(new ActionRecord(_street, acted.Seat, acted.Action, acted.Amount, acted.Total));
                     break;
+                case BlindPosted blind when blind.Big:
+                    _bigPosted = blind.Amount;
+                    break;
+                case BlindPosted blind:
+                    _smallPosted = blind.Amount;
+                    break;
                 case HandShown shown:
                     _shown.Add(shown.Seat);
                     break;
@@ -358,6 +366,10 @@ public sealed class ArenaTable : IDisposable
             hand.Button,
             hand.SmallBlind,
             hand.BigBlind,
+            hand.SmallBlindSeat,
+            hand.BigBlindSeat,
+            _smallPosted,
+            _bigPosted,
             _names,
             _startStacks,
             [.. Enumerable.Range(0, hand.Seats).Select(s => (IReadOnlyList<Card>)[.. hand.Hole(s)])],

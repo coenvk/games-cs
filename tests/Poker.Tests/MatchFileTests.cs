@@ -28,6 +28,7 @@ public class MatchFileTests
         var read = MatchFile.Read(MatchFile.Write(match));
 
         read.Should().BeEquivalentTo(match, o => o.RespectingRuntimeTypes());
+        read.Hands.Select(h => (h.SmallBlindSeat, h.BigBlindSeat, h.SmallBlindPosted, h.BigBlindPosted)).Should().Equal(match.Hands.Select(h => (h.SmallBlindSeat, h.BigBlindSeat, h.SmallBlindPosted, h.BigBlindPosted)));
     }
 
     [Fact]
@@ -57,6 +58,30 @@ public class MatchFileTests
     [InlineData("[1, 2]")]
     public void ThingsThatAreNotAMatchFile_AreRefused(string text) =>
         FluentActions.Invoking(() => MatchFile.Read(text)).Should().Throw<InvalidDataException>();
+
+    [Fact]
+    public void ANullWhereAValueIsNeeded_IsRefused()
+    {
+        var json = MatchFile.Write(Match()).Replace("\"bots\":[\"Ann\",\"Bob\",\"Cy\"]", "\"bots\":null", StringComparison.Ordinal);
+
+        FluentActions.Invoking(() => MatchFile.Read(json)).Should().Throw<InvalidDataException>();
+    }
+
+    [Fact]
+    public void AHandWhoseHolesDoNotMatchItsNames_IsRefused()
+    {
+        var json = MatchFile.Write(Match()).Replace("\"holes\":[[\"Ac\",\"Jc\"],[\"Ks\",\"Kh\"],[\"5s\",\"4s\"]]", "\"holes\":[[\"Ac\",\"Jc\"]]", StringComparison.Ordinal);
+
+        FluentActions.Invoking(() => MatchFile.Read(json)).Should().Throw<InvalidDataException>();
+    }
+
+    [Fact]
+    public void ASeatOutOfRange_IsRefused()
+    {
+        var json = MatchFile.Write(Match()).Replace("\"shown\":[0,1]", "\"shown\":[0,9]", StringComparison.Ordinal);
+
+        FluentActions.Invoking(() => MatchFile.Read(json)).Should().Throw<InvalidDataException>();
+    }
 
     [Fact]
     public void ABadCard_IsRefused()

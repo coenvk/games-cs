@@ -62,15 +62,15 @@ public class HandHistoryTests
             "*** HOLE CARDS ***",
             "Dealt to Dee [Ah Ad]",
             "Dealt to Eli [Kc Kd]",
-            "Dee: raises 80 to 100, and is all-in",
-            "Eli: calls 30, and is all-in",
+            "Dee: raises 80 to 100 and is all-in",
+            "Eli: calls 30 and is all-in",
+            "Uncalled bet (50) returned to Dee",
             "*** FLOP *** [Ks 2h 7c]",
             "*** TURN *** [Ks 2h 7c] [9d]",
             "*** RIVER *** [Ks 2h 7c 9d] [3s]",
             "*** SHOW DOWN ***",
             "Dee: shows [Ah Ad] (Pair of aces)",
             "Eli: shows [Kc Kd] (Three kings)",
-            "Uncalled bet (50) returned to Dee",
             "Eli collected 100 from pot",
             "*** SUMMARY ***",
             "Total pot 100 | Rake 0");
@@ -100,9 +100,34 @@ public class HandHistoryTests
             ],
             string.Empty,
             [],
-            new() { [2] = 25 });
+            new() { [2] = 25 },
+            bigBlindPosted: 15);
 
         Lines(hand).Should().Contain("Cy: posts big blind 15 and is all-in");
+    }
+
+    [Fact]
+    public void TheHandNumberInTheHeader_IsNeverNegative()
+    {
+        var hand = TestHands.Hand(3, button: 0, [1000, 1000, 1000], ["Ah Ad", "7c 2d", "9s 4s"], [], string.Empty, [], new() { [0] = 30 }, seed: -5);
+
+        Lines(hand)[0].Should().Be("PokerStars Hand #42949672913: Hold'em No Limit (10/20) - 2026/10/25 12:03:09 UTC");
+    }
+
+    [Fact]
+    public void ACallOfNothing_IsNeverWrittenAsCallsZero()
+    {
+        var hand = TestHands.Hand(
+            3,
+            button: 0,
+            [1000, 1000, 1000],
+            ["Ah Ad", "7c 2d", "9s 4s"],
+            [TestHands.Act(Street.Preflop, 0, CallBet.Instance, 0, 20)],
+            string.Empty,
+            [],
+            new() { [0] = 30 });
+
+        Lines(hand).Should().NotContain(l => l.Contains("calls 0", StringComparison.Ordinal)).And.Contain("Ann: checks");
     }
 
     private static ActionRecord Act(Street street, int seat, PokerAction action) => TestHands.Act(street, seat, action, 0, 0);

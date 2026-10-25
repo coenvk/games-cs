@@ -20,7 +20,7 @@ public static class PokerStats
         int dealt = 0, vpip = 0, pfr = 0, bets = 0, calls = 0, flops = 0, showdowns = 0, won = 0;
         foreach (var hand in hands)
         {
-            var seat = Enumerable.Range(0, hand.Names.Count).FirstOrDefault(s => hand.Names[s] == name && hand.StartStacks[s] > 0, -1);
+            var seat = Enumerable.Range(0, hand.Names.Count).FirstOrDefault(s => hand.Names[s] == name && hand.Holes[s].Count > 0, -1);
             if (seat < 0)
             {
                 continue;

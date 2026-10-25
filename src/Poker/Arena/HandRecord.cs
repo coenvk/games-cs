@@ -9,6 +9,10 @@ namespace Poker.Arena;
 /// </summary>
 /// <param name="Number">The hand number, counting from 1.</param>
 /// <param name="Seed">The seed the deck was shuffled from.</param>
+/// <param name="SmallBlindSeat">The seat that posted the small blind, as the engine dealt it.</param>
+/// <param name="BigBlindSeat">The seat that posted the big blind.</param>
+/// <param name="SmallBlindPosted">What the small blind posted; less than the blind when it was short of chips.</param>
+/// <param name="BigBlindPosted">What the big blind posted.</param>
 /// <param name="Names">The players' names by seat.</param>
 /// <param name="StartStacks">Chips per seat before the blinds; 0 for a seat that was out.</param>
 /// <param name="Holes">Every seat's hole cards; empty for a seat that was out.</param>
@@ -24,6 +28,10 @@ public sealed record HandRecord(
     int Button,
     int SmallBlind,
     int BigBlind,
+    int SmallBlindSeat,
+    int BigBlindSeat,
+    int SmallBlindPosted,
+    int BigBlindPosted,
     IReadOnlyList<string> Names,
     IReadOnlyList<int> StartStacks,
     IReadOnlyList<IReadOnlyList<Card>> Holes,

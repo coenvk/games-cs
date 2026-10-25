@@ -23,13 +23,24 @@ internal static class TestHands
         Dictionary<int, int> won,
         int smallBlind = 10,
         int bigBlind = 20,
-        string[]? names = null) =>
-        new(
+        string[]? names = null,
+        int? bigBlindPosted = null,
+        int seed = 7)
+    {
+        // Heads-up the button posts the small blind; otherwise the small blind is the seat after the button.
+        var playing = Enumerable.Range(0, stacks.Length).Where(s => stacks[s] > 0).ToArray();
+        var small = playing.Length == 2 ? button : (button + 1) % stacks.Length;
+        var big = (small + 1) % stacks.Length;
+        return new(
             number,
-            Seed: 7,
+            seed,
             button,
             smallBlind,
             bigBlind,
+            small,
+            big,
+            smallBlind,
+            bigBlindPosted ?? bigBlind,
             names ?? ["Ann", "Bob", "Cy"],
             stacks,
             [.. holes.Select(h => (IReadOnlyList<Card>)(h.Length == 0 ? [] : Cards(h)))],
@@ -39,6 +50,7 @@ internal static class TestHands
             won,
             new HashSet<int>(shown),
             []);
+    }
 
     /// <summary>Three seats, a raise, a bet on the flop and the turn, and a showdown that Bob wins with three kings.</summary>
     public static HandRecord Showdown() => Hand(

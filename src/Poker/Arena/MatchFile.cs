@@ -63,14 +63,14 @@ public static class MatchFile
                 ?? throw new InvalidDataException("The file is empty.");
             return dto.ToResult();
         }
-        catch (Exception e) when (e is JsonException or ArgumentException or FormatException or InvalidCastException or NullReferenceException or InvalidOperationException or IndexOutOfRangeException)
+        catch (Exception e) when (e is JsonException or ArgumentException or FormatException or InvalidCastException or InvalidOperationException)
         {
             throw new InvalidDataException("The file is not a match file: " + e.Message, e);
         }
     }
 }
 
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, UseStringEnumConverter = true)]
+[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, UseStringEnumConverter = true, RespectNullableAnnotations = true)]
 [JsonSerializable(typeof(MatchJson))]
 internal sealed partial class MatchJsonContext : JsonSerializerContext;
 
@@ -119,7 +119,7 @@ internal sealed record MatchJson
         Batch is null ? null : new BatchSettings(Batch.Format, Batch.Hands, Batch.Seed, TimeSpan.FromMilliseconds(Batch.TimeLimitMs), Batch.Parallel),
         At,
         Bots,
-        [.. Results.Select(r => r with { Places = r.Places ?? throw new InvalidDataException("A result has no places."), Name = r.Name ?? throw new InvalidDataException("A result has no name.") })],
+        Results,
         [.. Hands.Select(h => h.ToRecord())]);
 }
 
@@ -165,6 +165,14 @@ internal sealed record HandJson
 
     public required int BigBlind { get; init; }
 
+    public required int SmallBlindSeat { get; init; }
+
+    public required int BigBlindSeat { get; init; }
+
+    public required int SmallBlindPosted { get; init; }
+
+    public required int BigBlindPosted { get; init; }
+
     public required List<string> Names { get; init; }
 
     public required List<int> StartStacks { get; init; }
@@ -190,6 +198,10 @@ internal sealed record HandJson
         Button = h.Button,
         SmallBlind = h.SmallBlind,
         BigBlind = h.BigBlind,
+        SmallBlindSeat = h.SmallBlindSeat,
+        BigBlindSeat = h.BigBlindSeat,
+        SmallBlindPosted = h.SmallBlindPosted,
+        BigBlindPosted = h.BigBlindPosted,
         Names = [.. h.Names],
         StartStacks = [.. h.StartStacks],
         Holes = [.. h.Holes.Select(c => c.Select(BotView.Code).ToList())],
@@ -201,12 +213,22 @@ internal sealed record HandJson
         Faults = [.. h.Faults.Select(f => new FaultJson { Seat = f.Seat, Fault = f.Fault })],
     };
 
-    public HandRecord ToRecord() => new(
+    public HandRecord ToRecord()
+    {
+        Validate();
+        return Build();
+    }
+
+    private HandRecord Build() => new(
         Number,
         Seed,
         Button,
         SmallBlind,
         BigBlind,
+        SmallBlindSeat,
+        BigBlindSeat,
+        SmallBlindPosted,
+        BigBlindPosted,
         Names,
         StartStacks,
         [.. Holes.Select(c => (IReadOnlyList<Jentl.Cards.Card>)[.. c.Select(BotView.Card)])],
@@ -216,6 +238,23 @@ internal sealed record HandJson
         Won.ToDictionary(w => w.Seat, w => w.Amount),
         new HashSet<int>(Shown),
         [.. Faults.Select(f => (f.Seat, f.Fault))]);
+
+    private void Validate()
+    {
+        var seats = Names.Count;
+        if (seats < 2 || StartStacks.Count != seats || Holes.Count != seats)
+        {
+            throw new InvalidDataException($"Hand {Number}: the names, stacks and hole cards do not match.");
+        }
+
+        var all = new[] { Button, SmallBlindSeat, BigBlindSeat }
+            .Concat(Actions.Select(a => a.Seat)).Concat(Shown).Concat(Won.Select(w => w.Seat))
+            .Concat(Pots.SelectMany(p => p.Seats)).Concat(Faults.Select(f => f.Seat));
+        if (all.Any(s => s < 0 || s >= seats))
+        {
+            throw new InvalidDataException($"Hand {Number}: a seat is out of range.");
+        }
+    }
 }
 
 internal sealed record ActionJson

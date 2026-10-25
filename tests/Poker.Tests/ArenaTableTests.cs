@@ -40,6 +40,16 @@ public class ArenaTableTests
     }
 
     [Fact]
+    public async Task EveryHandRecord_CarriesTheBlindSeatsAndWhatTheyPosted()
+    {
+        using var table = new ArenaTable([new FakeSeat(CheckOrCall), new FakeSeat(CheckOrCall)], Fixed(2));
+
+        await table.RunAsync(CancellationToken.None);
+
+        table.Hands.Should().OnlyContain(h => h.SmallBlindSeat == h.Button && h.BigBlindSeat != h.Button && h.SmallBlindPosted == 10 && h.BigBlindPosted == 20);
+    }
+
+    [Fact]
     public async Task EverySeat_IsToldAboutTheMatch_WithItsOwnSeed()
     {
         var first = new FakeSeat(CheckOrCall);
