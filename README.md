@@ -319,9 +319,9 @@ speed, 0-100, handling, weight, drive, tyres and ground clearance.
   the launch, low cars slow down on rough ground, heavy cars brake later. The same match always ends the same way, on
   every platform. The round then plays out on screen in 10 to 20 seconds: drag races from the side, everything else
   from above, following your car (Options > Race camera: Fixed, or Turn with car), or in 3D from just behind it
-  (Behind the car): the painted track is the ground, trees, rocks and buildings stand up, the cars are their side
-  sprites made solid, all drawn by Jentl's software renderer at 180 pixels high. After each round: who won, by how
-  much, and the stats that decided it. Skip jumps to the result.
+  (Behind the car): the painted track is the ground, pixel-art trees, rocks and buildings stand up, the cars are their
+  side sprites made solid, with shadows, spray and a sky, all drawn by Jentl's software renderer at 180 pixels high.
+  After each round: who won, by how much, and the stats that decided it. Skip jumps to the result.
 - **Upgrades**: each car has three stages of 8 points (at most 3 per area per stage) in engine, weight and chassis,
   bought with cash; a full stage needs another car of the same class fused into it. The tune shows as "3.3.2", up to
   e.g. "9.9.6". Upgrades never change a car's RQ.

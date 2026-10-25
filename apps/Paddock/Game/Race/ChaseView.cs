@@ -11,8 +11,9 @@ namespace Games.Race;
 
 /// <summary>
 /// A round on a circuit, road or trail in 3D from just behind the player's car, drawn by the software renderer at a
-/// low resolution and scaled up, so it keeps Paddock's pixel look. The painted track is the ground, the trees, rocks
-/// and buildings on it stand up, the cars are their side sprites made solid, and the distance fades into the sky.
+/// low resolution and scaled up, so it keeps Paddock's pixel look. The painted track is the ground, rocks and
+/// buildings on it stand up and trees are pixel-art cut-outs turned to the camera, the cars are their side sprites
+/// made solid, everything casts a blob shadow, and the distance fades into a sky of the weather's colours.
 /// World units are metres: x east and z south as the painted track runs, y up.
 /// </summary>
 internal sealed class ChaseView(TrackArt art, Jentl.Raster.Texture player, Jentl.Raster.Texture opponent, Condition condition) : IDisposable
@@ -31,14 +32,13 @@ internal sealed class ChaseView(TrackArt art, Jentl.Raster.Texture player, Jentl
     // Soft daylight: the sprites are painted already, so the light only sets the faces apart.
     private static readonly Lighting Light = new(new Numerics.Vector3(-0.4f, -1, 0.3f), new Numerics.Vector3(0.45f), new Numerics.Vector3(0.7f));
 
-    private static readonly Mesh Cone = MeshBuilder.Cone(1, 1, segments: 6);
-    private static readonly Mesh Trunk = MeshBuilder.Cylinder(1, 1, segments: 4);
+    private static readonly Mesh Cutout = MeshBuilder.Quad();
+    private static readonly Mesh Patch = MeshBuilder.Plane(1, 1);
+    private static readonly Material Shadow = new(Numerics.Vector4.One, Shading.Unlit, Textures.Spot(16, new Numerics.Vector4(0, 0, 0, 0.35f), softness: 0.3f), Translucent: true);
     private static readonly Mesh Rock = MeshBuilder.Sphere(1, segments: 6, rings: 3);
     private static readonly Mesh Block = MeshBuilder.Box(Numerics.Vector3.One);
-    private static readonly Material Bark = new(new Numerics.Vector4(0.36f, 0.25f, 0.16f, 1), Shading.Flat);
 
     private readonly Mesh _ground = Ground(art);
-    private readonly Mesh _land = MeshBuilder.Plane(1, 1);
     // The sprites have a dark border; the cars' sides take the paint just inside it.
     private readonly Mesh _player = Models.FromPicture(player, CarPixel, CarWidth, sideInset: 1.5f);
     private readonly Mesh _opponent = Models.FromPicture(opponent, CarPixel, CarWidth, sideInset: 1.5f);
@@ -46,9 +46,9 @@ internal sealed class ChaseView(TrackArt art, Jentl.Raster.Texture player, Jentl
     private readonly Material _landMaterial = new(Of(art.Ground), Shading.Unlit);
     private readonly Material _playerMaterial = new(Numerics.Vector4.One, Shading.Flat, player);
     private readonly Material _opponentMaterial = new(Numerics.Vector4.One, Shading.Flat, opponent);
-    private readonly Color _sky = SkyFor(condition);
-    private readonly (Prop Prop, Numerics.Vector3 At, Material Material)[] _props =
-        [.. art.Props.Select(p => (p, new Numerics.Vector3(Metres(p.Area.Center.X), 0, Metres(p.Area.Center.Y)), new Material(Of(p.Color), Shading.Flat)))];
+    private readonly Sky _sky = SkyFor(condition);
+    private readonly (Prop Prop, Numerics.Vector3 At, Material Material)[] _props = Props(art, condition);
+    private readonly Camera _camera = new() { FieldOfView = MathF.PI / 3, Near = 0.3f, Far = FogEnd + 10 };
     private readonly ParticleEffect? _trail = Trails.For(condition);
     private readonly Particles _spray = new(capacity: 600) { Gravity = 9, Drag = 1.5f, Floor = 0 };
     private readonly Random _random = new(1);
@@ -66,28 +66,44 @@ internal sealed class ChaseView(TrackArt art, Jentl.Raster.Texture player, Jentl
         if (_view is null || _view.Size != new Point(width, Height))
         {
             _view?.Dispose();
-            _view = new SoftwareView(device, width, Height) { Fog = new Fog(Of(_sky), FogStart, FogEnd), Lighting = Light };
+            _view = new SoftwareView(device, width, Height) { Fog = new Fog(_sky.Horizon, FogStart, FogEnd), Lighting = Light };
         }
 
         var (eye, forward) = CameraAt(playerMetres);
-        var camera = new Camera { Position = eye, Target = Spot(playerMetres + Ahead, TrackArt.Lane, 1), FieldOfView = MathF.PI / 3, Near = 0.3f, Far = FogEnd + 10 };
-        _view.Look(camera);
+        (_camera.Position, _camera.Target) = (eye, Spot(playerMetres + Ahead, TrackArt.Lane, 1));
+        _view.Look(_camera);
         _view.Begin(_sky);
 
         // The land round the painted area, then the painted track just above it.
         var centre = new Numerics.Vector3(Metres(art.Bounds.Center.X), 0, Metres(art.Bounds.Center.Y));
         var reach = (MathF.Max(art.Bounds.Width, art.Bounds.Height) / TrackArt.PixelsPerMetre) + (2 * FogEnd);
-        _view.DrawMesh(_land, Numerics.Matrix4x4.CreateScale(reach, 1, reach) * Numerics.Matrix4x4.CreateTranslation(centre - new Numerics.Vector3(0, 0.05f, 0)), _landMaterial);
+        _view.DrawMesh(Patch, Numerics.Matrix4x4.CreateScale(reach, 1, reach) * Numerics.Matrix4x4.CreateTranslation(centre - new Numerics.Vector3(0, 0.05f, 0)), _landMaterial);
         _view.DrawMesh(_ground, Numerics.Matrix4x4.Identity, _groundMaterial);
 
+        // Shadows on the ground first (they write no depth, so what stands on them covers them), then what casts them.
         // Only what is near enough to show through the fog, and not behind the camera.
-        foreach (var (prop, at, material) in _props)
+        bool Near(Numerics.Vector3 at, float size)
         {
             var to = at - eye;
-            var size = Metres(Math.Max(prop.Area.Width, prop.Area.Height));
-            if (to.LengthSquared() < FogEnd * FogEnd && Numerics.Vector3.Dot(to, forward) > -size)
+            return to.LengthSquared() < FogEnd * FogEnd && Numerics.Vector3.Dot(to, forward) > -size;
+        }
+
+        foreach (var (prop, at, _) in _props)
+        {
+            if (prop.Kind == PropKind.Tree && Near(at, 4))
             {
-                DrawProp(_view, prop, at, material);
+                var spread = Metres(prop.Area.Width) * 1.1f;
+                _view.DrawMesh(Patch, Scaled(new Numerics.Vector3(spread, 1, spread), at + new Numerics.Vector3(0, 0.03f, 0)), Shadow);
+            }
+        }
+
+        CarShadow(_view, opponentMetres, -TrackArt.Lane);
+        CarShadow(_view, playerMetres, TrackArt.Lane);
+        foreach (var (prop, at, material) in _props)
+        {
+            if (Near(at, Metres(Math.Max(prop.Area.Width, prop.Area.Height))))
+            {
+                DrawProp(_view, prop, at, eye, material);
             }
         }
 
@@ -132,14 +148,76 @@ internal sealed class ChaseView(TrackArt art, Jentl.Raster.Texture player, Jentl
 
     public void Dispose() => _view?.Dispose();
 
-    // Weather in the sky: grey with rain, pale with snow and ice, hazy blue over sand.
-    private static Color SkyFor(Condition condition) => condition switch
+    // Weather in the sky, deeper overhead than at the horizon: grey with rain, pale with snow and ice, hazy over sand.
+    private static Sky SkyFor(Condition condition)
     {
-        Condition.Wet => new Color(112, 128, 150),
-        Condition.Snow or Condition.Ice => new Color(196, 208, 222),
-        Condition.Sand => new Color(186, 200, 214),
-        _ => new Color(126, 166, 216),
-    };
+        var (zenith, horizon) = condition switch
+        {
+            Condition.Wet => (new Color(78, 90, 110), new Color(126, 140, 160)),
+            Condition.Snow or Condition.Ice => (new Color(150, 166, 188), new Color(204, 214, 226)),
+            Condition.Sand => (new Color(96, 146, 210), new Color(206, 210, 206)),
+            _ => (new Color(62, 116, 206), new Color(168, 198, 232)),
+        };
+        return new Sky(Of(zenith), Of(horizon));
+    }
+
+    // Each prop with where it stands and what it is made of: trees a pixel-art cut-out in their leaves' colour (one
+    // picture per colour), the rest flat colour.
+    private static (Prop Prop, Numerics.Vector3 At, Material Material)[] Props(TrackArt art, Condition condition)
+    {
+        var trees = new Dictionary<Color, Material>();
+        return [.. art.Props.Select(p =>
+        {
+            var material = p.Kind == PropKind.Tree
+                ? trees.TryGetValue(p.Color, out var tree) ? tree : trees[p.Color] = new Material(Numerics.Vector4.One, Shading.Unlit, TreePicture(p.Color, condition == Condition.Snow))
+                : new Material(Of(p.Color), Shading.Flat);
+            return (p, new Numerics.Vector3(Metres(p.Area.Center.X), 0, Metres(p.Area.Center.Y)), material);
+        })];
+    }
+
+    // A pine 16 by 32 pixels: three tiers of branches, lit from the left with a dark edge, on a brown trunk; snow
+    // lies along the bottom of each tier.
+    private static Jentl.Raster.Texture TreePicture(Color leaves, bool snow)
+    {
+        const int W = 16, H = 32;
+        var pixels = new uint[W * H];
+        var (light, dark, edge) = (Color.Lerp(leaves, Color.White, 0.18f), Color.Lerp(leaves, Color.Black, 0.25f), Color.Lerp(leaves, Color.Black, 0.5f));
+        (int Top, int Bottom, float Half)[] tiers = [(0, 12, 4.5f), (7, 20, 6.5f), (14, 27, 8)];
+        bool Inside(int x, int y)
+        {
+            foreach (var (top, bottom, half) in tiers)
+            {
+                if (y >= top && y <= bottom && MathF.Abs(x + 0.5f - (W / 2f)) <= half * (y - top + 1) / (bottom - top + 1))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        for (var y = 0; y < H; y++)
+        {
+            for (var x = 0; x < W; x++)
+            {
+                Color? c = null;
+                if (Inside(x, y))
+                {
+                    var rim = !Inside(x - 1, y) || !Inside(x + 1, y) || !Inside(x, y + 1);
+                    var onSnow = snow && !Inside(x, y + 1);
+                    c = onSnow ? new Color(236, 241, 246) : rim ? edge : x < W / 2 ? light : dark;
+                }
+                else if (y >= 27 && x is 7 or 8)
+                {
+                    c = x == 7 ? new Color(110, 78, 50) : new Color(84, 58, 38);
+                }
+
+                pixels[(y * W) + x] = c?.PackedValue ?? 0;
+            }
+        }
+
+        return new Jentl.Raster.Texture(W, H, pixels) { Wrap = TextureWrap.Clamp };
+    }
 
     // The painted track as a flat grid over its area.
     private static Mesh Ground(TrackArt art)
@@ -215,15 +293,23 @@ internal sealed class ChaseView(TrackArt art, Jentl.Raster.Texture player, Jentl
         view.DrawMesh(car, world, material);
     }
 
-    private static void DrawProp(SoftwareView view, Prop prop, Numerics.Vector3 at, Material material)
+    // A blob under the car, stretched along it.
+    private void CarShadow(SoftwareView view, double metres, float lane)
+    {
+        var (position, heading) = art.Pose(metres, lane);
+        var world = Numerics.Matrix4x4.CreateScale(4.8f, 1, 2.2f) * Numerics.Matrix4x4.CreateRotationY(-heading)
+            * Numerics.Matrix4x4.CreateTranslation(Metres(position.X), 0.04f, Metres(position.Y));
+        view.DrawMesh(Patch, world, Shadow);
+    }
+
+    private static void DrawProp(SoftwareView view, Prop prop, Numerics.Vector3 at, Numerics.Vector3 eye, Material material)
     {
         var (w, d) = (Metres(prop.Area.Width), Metres(prop.Area.Height));
         switch (prop.Kind)
         {
             case PropKind.Tree:
-                var tall = w * 1.6f;
-                view.DrawMesh(Trunk, Scaled(new Numerics.Vector3(0.25f, 1.2f, 0.25f), at + new Numerics.Vector3(0, 0.6f, 0)), Bark);
-                view.DrawMesh(Cone, Scaled(new Numerics.Vector3(w / 2, tall, d / 2), at + new Numerics.Vector3(0, 1 + (tall / 2), 0)), material);
+                // Twice as tall as wide, as the picture is.
+                view.DrawMesh(Cutout, Billboard.Upright(at, eye, w * 1.2f, w * 2.4f), material);
                 break;
             case PropKind.Rock:
                 view.DrawMesh(Rock, Scaled(new Numerics.Vector3(w / 2, w / 4, d / 2), at), material);
