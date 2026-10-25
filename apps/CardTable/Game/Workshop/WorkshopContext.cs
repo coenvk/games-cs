@@ -58,8 +58,12 @@ internal sealed class WorkshopContext
     /// <summary>The hand histories written out as text.</summary>
     public string HistoriesFolder => Path.Combine(SaveFolder, "workshop", "histories");
 
-    /// <summary>How C# bots are run: the bot host that was copied next to the app, started with <c>dotnet</c>.</summary>
-    public AgentCommand Host { get; } = new("dotnet", [Path.Combine(AppContext.BaseDirectory, "PokerBotHost.dll")]);
+    /// <summary>
+    /// How C# bots are run: the bot host that was copied next to the app, through its own program (which finds the .NET
+    /// runtime where it is installed, also when the app was started from the Finder without dotnet on its PATH), or
+    /// with <c>dotnet</c> when it has none.
+    /// </summary>
+    public AgentCommand Host { get; } = AgentCommand.DotNet(Path.Combine(AppContext.BaseDirectory, "PokerBotHost.dll"));
 
     // The save folder of the desktop app; scripted runs without one keep their workshop in a temporary folder.
     private string SaveFolder => Game.Store is SaveStore store ? store.Directory : Path.Combine(Path.GetTempPath(), Game.App.SaveName);

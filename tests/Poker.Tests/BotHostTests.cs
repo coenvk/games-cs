@@ -31,6 +31,19 @@ public class BotHostTests
     }
 
     [Fact]
+    public async Task TheHost_RunsThroughItsOwnProgram_WithoutDotnet()
+    {
+        var command = AgentCommand.DotNet(Path.Combine(AppContext.BaseDirectory, "BotHost", "PokerBotHost.dll"), [SampleDll, "GoodBot"]);
+        command.FileName.Should().NotBe("dotnet", "the host is built with its apphost");
+
+        using var seat = new ProcessSeat(command, "Good");
+        await seat.StartAsync(Start, Limit);
+        seat.IsGone.Should().BeFalse();
+
+        (await seat.AskAsync(Decision, TimeoutToken())).Should().Be(BotAction.Call with { Id = 7 });
+    }
+
+    [Fact]
     public async Task ABotThatPrintsPartialLines_StillAnswers()
     {
         using var seat = new ProcessSeat(Host(SampleDll, "ChattyBot"), "Chatty");

@@ -31,13 +31,19 @@ public static class BotCatalog
     /// <summary>
     /// Lists every <c>*.bot.json</c> (<c>{ "name", "command", "args": [], "workingDirectory" }</c>, the working directory
     /// relative to the file and by default its folder) and every <c>*.dll</c> except the SDK, <c>Poker.Bots.dll</c>,
-    /// as a C# bot run by <paramref name="host"/> with the DLL path appended. A description that cannot be read becomes
+    /// as a C# bot run by <paramref name="host"/> with the DLL path appended. A bare command (no folder in it) is looked
+    /// up in <see cref="AgentCommand.SearchFolders"/>: the PATH, and on macOS the folders an app started from the Finder
+    /// does not have on its PATH; one found in none of them is left as it is. A description that cannot be read becomes
     /// an entry without a command whose <see cref="BotEntry.Source"/> says what is wrong. Ordered by name; a folder
     /// that does not exist gives nothing.
     /// </summary>
-    public static IReadOnlyList<BotEntry> Scan(string folder, AgentCommand host)
+    public static IReadOnlyList<BotEntry> Scan(string folder, AgentCommand host) => Scan(folder, host, AgentCommand.SearchFolders());
+
+    /// <summary><see cref="Scan(string, AgentCommand)"/> with bare commands looked up in <paramref name="searchFolders"/>.</summary>
+    internal static IReadOnlyList<BotEntry> Scan(string folder, AgentCommand host, IReadOnlyList<string> searchFolders)
     {
         ArgumentNullException.ThrowIfNull(host);
+        ArgumentNullException.ThrowIfNull(searchFolders);
         folder = Path.GetFullPath(folder);
         if (!Directory.Exists(folder))
         {
@@ -47,7 +53,7 @@ public static class BotCatalog
         var entries = new List<BotEntry>();
         foreach (var file in Directory.EnumerateFiles(folder, "*" + Description))
         {
-            entries.Add(ReadDescription(file));
+            entries.Add(ReadDescription(file, searchFolders));
         }
 
         foreach (var file in Directory.EnumerateFiles(folder, "*.dll"))
@@ -62,7 +68,7 @@ public static class BotCatalog
         return [.. entries.OrderBy(e => e.Name, StringComparer.OrdinalIgnoreCase).ThenBy(e => e.Source, StringComparer.Ordinal)];
     }
 
-    private static BotEntry ReadDescription(string file)
+    private static BotEntry ReadDescription(string file, IReadOnlyList<string> searchFolders)
     {
         var stem = Path.GetFileName(file)[..^Description.Length];
         try
@@ -85,10 +91,15 @@ public static class BotCatalog
                 directory = Path.GetFullPath(w.GetString()!, directory);
             }
 
-            // A command with a path in it is relative to the working directory; a bare name is looked up on the PATH.
+            // A command with a path in it is relative to the working directory; a bare name is looked up in the search
+            // folders, which on macOS go beyond the short PATH an app started from the Finder gets.
             if (program.Contains('/', StringComparison.Ordinal) || program.Contains(Path.DirectorySeparatorChar, StringComparison.Ordinal))
             {
                 program = Path.GetFullPath(program, directory);
+            }
+            else
+            {
+                program = AgentCommand.Find(program, searchFolders) ?? program;
             }
 
             return new BotEntry(name, BotKind.Program, new AgentCommand(program, arguments, directory), file);

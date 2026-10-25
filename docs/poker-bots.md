@@ -229,10 +229,12 @@ The list is read when the workshop opens, when you choose **Refresh** and when y
 
   `command` is started with `args` in `workingDirectory`, which is relative to the `.bot.json` and by default the
   folder it is in. A `command` with a path separator in it (`./run.sh`, `bin/mybot`) is resolved against the working
-  directory; a bare name (`python3`, `node`) is looked up on the `PATH`. Without a `name`, the file name stands in for
-  it. A description that cannot be read is listed with what is wrong. On Windows Python is usually `python` (or the
-  launcher: `"command": "py", "args": ["-3", "example_bot.py"]`), not `python3`. A program that cannot be started shows
-  "could not start" at its seat.
+  directory; a bare name (`python3`, `node`) is looked up on the `PATH`, and on macOS also in `/usr/local/bin` and
+  `/opt/homebrew/bin`, as an app started from the Finder gets a short `PATH` without what your shell adds to it. Without
+  a `name`, the file name stands in for it. A description that cannot be read is listed with what is wrong. On Windows
+  Python is usually `python` (or the launcher: `"command": "py", "args": ["-3", "example_bot.py"]`), not `python3`. A
+  program that cannot be started shows "could not start" at its seat; when the app cannot find it, make `command` the
+  program's full path (`which node` prints it).
 - **A C# bot** is any `*.dll` in the folder except `Poker.Bots.dll`, listed under its file name. The bot host loads the
   DLL and runs the **one** public class in it that implements `IPokerBot` and has a public constructor without
   parameters. A DLL with none, or with more than one, is a problem shown at its seat ("has 2 bots: ...; name one"). The

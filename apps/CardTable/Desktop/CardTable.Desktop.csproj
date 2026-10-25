@@ -13,7 +13,7 @@
     <ProjectReference Include="..\..\..\src\Poker\Poker.csproj" />
   </ItemGroup>
 
-  <!-- The bot workshop runs C# bots through the bot host: built with the app and copied next to it (dotnet PokerBotHost.dll). -->
+  <!-- The bot workshop runs C# bots through the bot host: built with the app and copied next to it (PokerBotHost, or dotnet PokerBotHost.dll). -->
   <ItemGroup>
     <ProjectReference Include="..\..\..\tools\PokerBotHost\PokerBotHost.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
@@ -25,9 +25,10 @@
     <Copy SourceFiles="@(BotHostFile)" DestinationFiles="@(BotHostFile->'$(OutDir)%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
   </Target>
 
-  <!-- A published app (build/package.sh) gets the bot host too: framework-dependent and untrimmed, whatever the app itself is published as. -->
+  <!-- A published app (build/package.sh) gets the bot host too: framework-dependent and untrimmed, whatever the app itself is published as,
+       with its apphost for the app's runtime, which finds the .NET runtime where it is installed (a Finder-started app has no dotnet on its PATH). -->
   <Target Name="PublishBotHost" AfterTargets="Publish">
-    <MSBuild Projects="..\..\..\tools\PokerBotHost\PokerBotHost.csproj" Targets="Restore;Publish" Properties="Configuration=$(Configuration);PublishDir=$([System.IO.Path]::GetFullPath('$(PublishDir)'));RuntimeIdentifier=;SelfContained=false;PublishAot=false;PublishSingleFile=false;PublishTrimmed=false;UseAppHost=false;_IsPublishing=true;MSBuildRestoreSessionId=$([System.Guid]::NewGuid())" />
+    <MSBuild Projects="..\..\..\tools\PokerBotHost\PokerBotHost.csproj" Targets="Restore;Publish" Properties="Configuration=$(Configuration);PublishDir=$([System.IO.Path]::GetFullPath('$(PublishDir)'));RuntimeIdentifier=$(RuntimeIdentifier);SelfContained=false;PublishAot=false;PublishSingleFile=false;PublishTrimmed=false;UseAppHost=true;_IsPublishing=true;MSBuildRestoreSessionId=$([System.Guid]::NewGuid())" />
   </Target>
 
 </Project>

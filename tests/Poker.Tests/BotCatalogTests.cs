@@ -18,7 +18,7 @@ public sealed class BotCatalogTests : IDisposable
         File.WriteAllText(Path.Combine(_folder, "broken.bot.json"), "{ nope");
         var host = new AgentCommand("dotnet", ["host.dll"]);
 
-        var entries = BotCatalog.Scan(_folder, host);
+        var entries = BotCatalog.Scan(_folder, host, []);
 
         entries.Select(e => e.Name).Should().Equal("broken", "Mine", "Prog");
         var program = entries.Single(e => e.Name == "Prog");
@@ -75,4 +75,24 @@ public sealed class BotCatalogTests : IDisposable
     [Fact]
     public void ACatalog_OfAMissingFolder_IsEmpty() =>
         BotCatalog.Scan(Path.Combine(_folder, "nowhere"), new AgentCommand("dotnet", [])).Should().BeEmpty();
+
+    [Fact]
+    public void ABareCommand_IsLookedUpInTheSearchFolders()
+    {
+        var bin = Directory.CreateDirectory(Path.Combine(_folder, "bin")).FullName;
+        var program = Path.Combine(bin, OperatingSystem.IsWindows() ? "my-interpreter.exe" : "my-interpreter");
+        File.WriteAllText(program, "");
+        if (!OperatingSystem.IsWindows())
+        {
+            File.SetUnixFileMode(program, UnixFileMode.UserRead | UnixFileMode.UserExecute);
+        }
+
+        File.WriteAllText(Path.Combine(_folder, "found.bot.json"), "{ \"command\": \"my-interpreter\" }");
+        File.WriteAllText(Path.Combine(_folder, "lost.bot.json"), "{ \"command\": \"no-such-interpreter\" }");
+
+        var entries = BotCatalog.Scan(_folder, new AgentCommand("dotnet", []), [Path.Combine(_folder, "nowhere"), bin]);
+
+        entries.Single(e => e.Name == "found").Command!.FileName.Should().Be(program);
+        entries.Single(e => e.Name == "lost").Command!.FileName.Should().Be("no-such-interpreter", "a program found nowhere is left to the system");
+    }
 }
