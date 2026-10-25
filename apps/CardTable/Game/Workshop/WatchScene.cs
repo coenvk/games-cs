@@ -479,14 +479,11 @@ internal sealed class WatchScene : Scene
     private void Finish()
     {
         _finished = true;
-        var at = DateTimeOffset.Now;
-        var match = Result(at);
-        string? path = null;
+        var match = MatchResult.FromTable(_table, DateTimeOffset.Now);
+        string? path;
         try
         {
-            Directory.CreateDirectory(_workshop.MatchesFolder);
-            path = Path.Combine(_workshop.MatchesFolder, at.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture) + ".json");
-            File.WriteAllText(path, MatchFile.Write(match));
+            path = MatchFile.Save(_workshop.MatchesFolder, match);
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
@@ -494,29 +491,6 @@ internal sealed class WatchScene : Scene
         }
 
         Scenes.Replace(_workshop.MatchResults(match, path));
-    }
-
-    // One result per seat: big blinds per 100 hands at the starting blinds, no margin for a single match.
-    private MatchResult Result(DateTimeOffset at)
-    {
-        var settings = _table.Settings;
-        var bigBlind = settings.SmallBlind * 2.0;
-        var results = _table.Results();
-        return new MatchResult(
-            settings,
-            null,
-            at,
-            [.. results.Select(r => r.Name)],
-            [.. results.Select(r => new BotResult(
-                r.Name,
-                r.Hands == 0 ? 0 : r.Net / bigBlind * 100 / r.Hands,
-                0,
-                r.Hands,
-                r.Late,
-                r.Illegal,
-                r.Gone ? 1 : 0,
-                r.Place is { } place ? [place] : []))],
-            [.. _table.Hands]);
     }
 
     /// <summary>
@@ -540,12 +514,34 @@ internal sealed class WatchScene : Scene
             return;
         }
 
-        running.ContinueWith(_ => Release(), CancellationToken.None, TaskContinuationOptions.None, TaskScheduler.Default);
+        running.ContinueWith(
+            finished =>
+            {
+                // Nobody waits for the step any more: its failure, if any, is looked at here so it is not left unobserved.
+                _ = finished.Exception;
+                Release();
+            },
+            CancellationToken.None,
+            TaskContinuationOptions.None,
+            TaskScheduler.Default);
     }
 
+    // Runs off the UI thread when the scene was left mid-step, where an exception would go unseen: the bots are
+    // stopped as well as they can be.
     private void Release()
     {
-        _table.Dispose();
-        _cancel.Dispose();
+        try
+        {
+            _table.Dispose();
+        }
+#pragma warning disable CA1031 // A seat failing to stop must not take the app down after the player has left.
+        catch (Exception)
+#pragma warning restore CA1031
+        {
+        }
+        finally
+        {
+            _cancel.Dispose();
+        }
     }
 }

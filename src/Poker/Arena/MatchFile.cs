@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Globalization;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using Jentl.Multiplayer;
 
@@ -36,7 +37,35 @@ public sealed record MatchResult(
     DateTimeOffset At,
     IReadOnlyList<string> Bots,
     IReadOnlyList<BotResult> Results,
-    IReadOnlyList<HandRecord> Hands);
+    IReadOnlyList<HandRecord> Hands)
+{
+    /// <summary>
+    /// The single match played at <paramref name="table"/> so far: one result per seat, in big blinds won per 100
+    /// hands at the starting blinds, with no margin, a gone count of 0 or 1 and the seat's place when it has one.
+    /// </summary>
+    public static MatchResult FromTable(ArenaTable table, DateTimeOffset at)
+    {
+        ArgumentNullException.ThrowIfNull(table);
+        var settings = table.Settings;
+        var bigBlind = settings.SmallBlind * 2.0;
+        var results = table.Results();
+        return new MatchResult(
+            settings,
+            null,
+            at,
+            [.. results.Select(r => r.Name)],
+            [.. results.Select(r => new BotResult(
+                r.Name,
+                r.Hands == 0 ? 0 : r.Net / bigBlind * 100 / r.Hands,
+                0,
+                r.Hands,
+                r.Late,
+                r.Illegal,
+                r.Gone ? 1 : 0,
+                r.Place is { } place ? [place] : []))],
+            [.. table.Hands]);
+    }
+}
 
 /// <summary>
 /// Saves a <see cref="MatchResult"/> as JSON and reads it back. Property names are camelCase and enums are written by
@@ -50,6 +79,37 @@ public static class MatchFile
     {
         ArgumentNullException.ThrowIfNull(match);
         return JsonSerializer.Serialize(MatchJson.From(match), MatchJsonContext.Default.MatchJson);
+    }
+
+    /// <summary>
+    /// Writes the match into <paramref name="folder"/> (made if need be) as a new file named after its time,
+    /// <c>yyyyMMdd-HHmmss.json</c>, with <c>-2</c>, <c>-3</c> and so on added when that name is taken; an existing file
+    /// is never overwritten. Returns the file's path.
+    /// </summary>
+    /// <exception cref="IOException">The file could not be written.</exception>
+    /// <exception cref="UnauthorizedAccessException">The folder may not be written to.</exception>
+    public static string Save(string folder, MatchResult match)
+    {
+        ArgumentNullException.ThrowIfNull(folder);
+        ArgumentNullException.ThrowIfNull(match);
+        Directory.CreateDirectory(folder);
+        var json = Write(match);
+        var stem = match.At.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture);
+        for (var number = 1; ; number++)
+        {
+            var path = Path.Combine(folder, number == 1 ? $"{stem}.json" : $"{stem}-{number}.json");
+            try
+            {
+                // CreateNew fails on a taken name, so two saves at once cannot both have it.
+                using var file = new FileStream(path, FileMode.CreateNew, FileAccess.Write);
+                using var writer = new StreamWriter(file);
+                writer.Write(json);
+                return path;
+            }
+            catch (IOException) when (File.Exists(path))
+            {
+            }
+        }
     }
 
     /// <summary>The match in <paramref name="json"/>, as <see cref="Write"/> wrote it.</summary>

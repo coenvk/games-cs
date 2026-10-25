@@ -98,4 +98,58 @@ public class MatchFileTests
 
         FluentActions.Invoking(() => MatchFile.Read(json)).Should().Throw<InvalidDataException>();
     }
+
+    [Fact]
+    public async Task AWatchedMatch_HasOneResultPerSeat_InBigBlindsPer100()
+    {
+        var at = new DateTimeOffset(2026, 10, 25, 12, 0, 0, TimeSpan.Zero);
+        using var table = new ArenaTable([new HouseSeat(new CallingBot()), new HouseSeat(new RaisingBot()), new HouseSeat(new CallingBot())], new ArenaSettings(TableFormat.SitAndGo, 50, 7, TimeSpan.FromSeconds(1)));
+        await table.RunAsync(CancellationToken.None);
+
+        var match = MatchResult.FromTable(table, at);
+
+        match.Settings.Should().Be(table.Settings);
+        match.Batch.Should().BeNull();
+        match.At.Should().Be(at);
+        match.Bots.Should().Equal(table.Results().Select(r => r.Name));
+        match.Hands.Should().Equal(table.Hands);
+        match.Results.Should().HaveCount(3);
+        for (var seat = 0; seat < 3; seat++)
+        {
+            var seatResult = table.Results()[seat];
+            var result = match.Results[seat];
+            result.Name.Should().Be(seatResult.Name);
+            result.BigBlindsPer100.Should().BeApproximately(seatResult.Net / 20.0 * 100 / seatResult.Hands, 1e-9);
+            result.Margin95.Should().Be(0);
+            result.Hands.Should().Be(seatResult.Hands);
+            result.Gone.Should().Be(0);
+            result.Places.Should().Equal(seatResult.Place!.Value);
+        }
+    }
+
+    [Fact]
+    public void Save_NamesTheFileByItsTime_AndNeverOverwrites()
+    {
+        var folder = Path.Combine(Path.GetTempPath(), "matchfile-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            var match = Match() with { At = new DateTimeOffset(2026, 10, 25, 21, 8, 53, TimeSpan.FromHours(1)) };
+
+            var first = MatchFile.Save(folder, match);
+            var second = MatchFile.Save(folder, match);
+            var third = MatchFile.Save(folder, match);
+
+            Path.GetFileName(first).Should().Be("20261025-210853.json");
+            Path.GetFileName(second).Should().Be("20261025-210853-2.json");
+            Path.GetFileName(third).Should().Be("20261025-210853-3.json");
+            MatchFile.Read(File.ReadAllText(second)).Results.Should().BeEquivalentTo(match.Results);
+        }
+        finally
+        {
+            if (Directory.Exists(folder))
+            {
+                Directory.Delete(folder, recursive: true);
+            }
+        }
+    }
 }

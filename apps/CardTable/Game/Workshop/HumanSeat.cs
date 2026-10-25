@@ -78,7 +78,8 @@ internal sealed class HumanSeat(string name) : IArenaSeat
             asked = _asked = new TaskCompletionSource<BotAction?>(TaskCreationOptions.RunContinuationsAsynchronously);
         }
 
-        cancel.Register(() => Answer(asked, null));
+        var registration = cancel.Register(() => Answer(asked, null));
+        asked.Task.ContinueWith(_ => registration.Dispose(), CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         return asked.Task;
     }
 
