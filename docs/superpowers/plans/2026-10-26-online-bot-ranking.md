@@ -468,7 +468,8 @@ bot protocol is `docs/poker-bots.md` (version 1, unchanged).
 [Fact] public void TheOwnersView_HidesFoldedOpponentCards_AndKeepsShownOnes() { /* a two-hand match: hand 1 opponent folds (cards gone), hand 2 showdown (cards kept); own cards always kept */ }
 [Fact] public async Task TwoConnectedBots_PlayARankedMatch_ThatIsStoredAndRated()
 {
-    // league with Hands = 20 over in-process relays (Task 4 test helper) running Poker.Tests.EchoBot-style bots that call
+    // league with Hands = 20; a RelayHost fed by in-memory socket pairs (a `SocketPair` helper in GameServer.Tests,
+    // like Jentl's test helper) with AgentRelays running Poker.Tests.EchoBot in a mode that calls
     await RunUntil(() => store.Of("A", 10).Count == 1);
     ratings.Of("A").Matches.Should().Be(1); ratings.Of("B").Matches.Should().Be(1);
     store.Load(store.Of("A", 1)[0].Id)!.Hands.Should().HaveCount(20);
@@ -584,7 +585,9 @@ bot protocol is `docs/poker-bots.md` (version 1, unchanged).
 - Produces: `sealed class OnlineClient(HttpClient http, Uri server)` with `Task<string> NewOwnerAsync(string name)`,
   `Task<(string Name, string Token)> NewBotAsync(string ownerToken, string name)`, `Task<string>
   NewBotTokenAsync(string ownerToken, string name)`, `Task<IReadOnlyList<RankingRowJson>> RankingAsync()`,
-  `Task<MineJson> MineAsync(string ownerToken)`, `Task<MatchResult> MatchAsync(string ownerToken, string id)`; errors
+  `Task<MineJson> MineAsync(string ownerToken)`, `Task<MatchResult> MatchAsync(string ownerToken, string id)`, with
+  its own JSON records for the answers (`RankingRowJson`, `MineJson`, … matching Task 11's shapes; the server's
+  `RankingRow` lives in `src/GameServer` and is not referenced); errors
   as `OnlineProblem` exceptions with the server's text. The server is `GameContext.GameServer` with `http(s)`.
 - The Online view: tabs Ranking (place, bot, owner, rating ± range, provisional mark, matches, W/D/L, bb/100 ±
   margin) and My bots (each bot: connected or not, its row, recent matches; Register a bot (name from the bots
