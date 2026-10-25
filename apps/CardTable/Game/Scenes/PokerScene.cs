@@ -53,6 +53,7 @@ internal sealed class PokerScene : Scene
     private readonly HashSet<int> _shown = [];
     private readonly PokerTableView _view;
     private readonly string[] _names;
+    private readonly Func<int, bool> _faceUp;
     private Match<HoldemHand, PokerAction> _runner;
     private int _raiseTo;
     private bool _endShown;
@@ -72,6 +73,7 @@ internal sealed class PokerScene : Scene
         _names = [.. setup.Players.Select(p => p.Name)];
         Table = new HoldemTable(setup.Players.Count, _seed, StartingStack);
         _runner = DealHand();
+        _faceUp = seat => seat == _runner.Viewer || _shown.Contains(seat);
     }
 
     public HoldemTable Table { get; }
@@ -194,7 +196,7 @@ internal sealed class PokerScene : Scene
         // The table between the header and the messages, with the viewer at the bottom.
         var area = new Rectangle(viewport.X + margin, hud.Bottom + margin, viewport.Width - 2 * margin, logTop - hud.Bottom - 2 * margin);
         _view.BottomSeat = _runner.Viewer ?? (_runner.Current.IsHuman ? _runner.Current.Seat : Players.First(p => p.IsHuman).Seat);
-        _view.Draw(batch, area, hand, _names, seat => seat == _runner.Viewer || _shown.Contains(seat), _lastAction);
+        _view.Draw(batch, area, hand, _names, _faceUp, _lastAction);
 
         _buttons.Draw(batch, buttonFont, buttons);
     }
