@@ -34,6 +34,9 @@ public class ArenaTableTests
         result.Hands.Should().Be(3);
         result.Place.Should().BeNull();
         table.Results().Sum(r => r.Net).Should().Be(0);
+
+        // With fixed stacks a standing's stack is the seat's net: what it won or lost over the match.
+        late.Messages.OfType<MatchEnd>().Single().Standings.Select(s => s.Stack).Should().Equal(table.Results().Select(r => r.Net));
     }
 
     [Fact]
@@ -62,22 +65,82 @@ public class ArenaTableTests
     [Fact]
     public async Task ALateAnswer_DoesNotLeakIntoTheNextDecision()
     {
-        // The first answer, all in, comes 100 ms after a 50 ms limit; every later answer comes at once.
-        var asked = 0;
-        var seat = new FakeSeat(
-            d => ++asked == 1 ? BotAction.Raise(d.Legal.MaxRaiseTo!.Value) : CheckOrCall(d),
-            n => n == 1 ? TimeSpan.FromMilliseconds(100) : TimeSpan.Zero);
+        // The first answer, all in (still legal at the next decision, so a leak would be played), is held back until
+        // the seat is asked again; the second answer is held back until the stale one has arrived.
+        var secondAsked = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        FakeSeat? seat = null;
+        seat = new FakeSeat(async (d, n) =>
+        {
+            switch (n)
+            {
+                case 1:
+                    await secondAsked.Task;
+                    return BotAction.Raise(d.Legal.MaxRaiseTo!.Value);
+                case 2:
+                    secondAsked.SetResult();
+                    await seat!.Answers[0];
+                    break;
+            }
+
+            return CheckOrCall(d);
+        });
         using var table = new ArenaTable([seat, new HouseSeat(new CallingBot())], Fixed(4));
 
         await table.RunAsync(CancellationToken.None);
-        await Task.Delay(150);
 
+        (await seat.Answers[0]).Should().Be(BotAction.Raise(2000));
         var mine = table.Hands.SelectMany(h => h.Actions).Where(a => a.Seat == 0).ToList();
-        mine.Should().HaveCount(seat.Asked);
+        mine.Should().HaveCount(seat.Asked).And.HaveCountGreaterThan(2);
         mine[0].Action.Should().Be(Fold.Instance);
-        mine.Skip(1).Should().OnlyContain(a => a.Action is Check || a.Action is CallBet);
+        mine[1].Action.Should().Be(Check.Instance);
+        mine.Should().NotContain(a => a.Action is AllIn || a.Action is RaiseTo);
         table.Hands.SelectMany(h => h.Faults).Should().Equal((0, Fault.Late));
         table.Results()[0].Late.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task ASeatGoneBeforeTheMatch_IsNeverAsked_AndFoldedThroughout()
+    {
+        var seat = new FakeSeat(CheckOrCall, startProblem: "could not start: no such file");
+        using var table = new ArenaTable([seat, new HouseSeat(new CallingBot()), new HouseSeat(new CallingBot())], Fixed(4));
+
+        await table.RunAsync(CancellationToken.None);
+
+        table.IsOver.Should().BeTrue();
+        table.Hands.Should().HaveCount(4);
+        seat.Asked.Should().Be(0);
+        var mine = table.Hands.SelectMany(h => h.Actions).Where(a => a.Seat == 0).ToList();
+        mine.Should().NotBeEmpty().And.OnlyContain(a => a.Action is Fold || a.Action is Check);
+        table.Hands.SelectMany(h => h.Faults).Should().HaveCount(mine.Count).And.OnlyContain(f => f.Seat == 0 && f.Fault == Fault.Gone);
+        var result = table.Results()[0];
+        result.Gone.Should().BeTrue();
+        result.Problem.Should().Be("could not start: no such file");
+        result.Late.Should().Be(0);
+        result.Illegal.Should().Be(0);
+        seat.Messages.OfType<MatchEnd>().Should().ContainSingle();
+    }
+
+    [Fact]
+    public async Task StepAsync_RefusesToRunTwiceAtOnce()
+    {
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var slow = new FakeSeat(async (d, _) =>
+        {
+            await release.Task;
+            return CheckOrCall(d);
+        });
+        using var table = new ArenaTable([slow, new HouseSeat(new CallingBot())], Fixed(1, TimeSpan.FromSeconds(10)));
+        await table.StartAsync();
+        await table.StepAsync(CancellationToken.None);
+
+        var first = table.StepAsync(CancellationToken.None);
+        first.IsCompleted.Should().BeFalse();
+        var second = () => table.StepAsync(CancellationToken.None);
+        await second.Should().ThrowAsync<InvalidOperationException>();
+        release.SetResult();
+
+        (await first).OfType<Acted>().Should().ContainSingle().Which.Should().Be(new Acted(0, CallBet.Instance, 10, 20));
+        table.Hands.SelectMany(h => h.Faults).Should().BeEmpty();
     }
 
     [Fact]
@@ -226,11 +289,37 @@ public class ArenaTableTests
     }
 }
 
-/// <summary>A seat for tests: answers from a function, after a delay that ignores cancellation (like a slow bot), or crashes.</summary>
-internal sealed class FakeSeat(Func<Decision, BotAction?> answer, Func<int, TimeSpan>? delay = null, bool fail = false) : IArenaSeat
+/// <summary>
+/// A seat for tests: answers from a function, after a delay that ignores cancellation (like a slow bot), or crashes;
+/// or answers from an asynchronous function given the ask number, for tests that steer the timing exactly.
+/// </summary>
+internal sealed class FakeSeat : IArenaSeat
 {
+    private readonly Func<Decision, int, Task<BotAction?>> _ask;
+    private readonly bool _fail;
+    private readonly string? _startProblem;
     private readonly List<Message> _messages = [];
+    private readonly List<Task<BotAction?>> _answers = [];
     private volatile string? _problem;
+
+    public FakeSeat(Func<Decision, BotAction?> answer, Func<int, TimeSpan>? delay = null, bool fail = false, string? startProblem = null)
+        : this(async (d, n) =>
+        {
+            var reply = answer(d);
+            var wait = delay?.Invoke(n) ?? TimeSpan.Zero;
+            if (wait > TimeSpan.Zero)
+            {
+                await Task.Delay(wait, CancellationToken.None);
+            }
+
+            return reply;
+        })
+    {
+        _fail = fail;
+        _startProblem = startProblem;
+    }
+
+    public FakeSeat(Func<Decision, int, Task<BotAction?>> ask) => _ask = ask;
 
     public string Name => "Fake";
 
@@ -240,6 +329,18 @@ internal sealed class FakeSeat(Func<Decision, BotAction?> answer, Func<int, Time
 
     /// <summary>How many times the seat was asked.</summary>
     public int Asked { get; private set; }
+
+    /// <summary>The answers given so far, in the order the seat was asked, including late ones still on their way.</summary>
+    public IReadOnlyList<Task<BotAction?>> Answers
+    {
+        get
+        {
+            lock (_answers)
+            {
+                return [.. _answers];
+            }
+        }
+    }
 
     public IReadOnlyList<Message> Messages
     {
@@ -254,6 +355,7 @@ internal sealed class FakeSeat(Func<Decision, BotAction?> answer, Func<int, Time
 
     public Task StartAsync(MatchStart start, TimeSpan limit)
     {
+        _problem = _startProblem;
         Notify(start);
         return Task.CompletedTask;
     }
@@ -266,7 +368,7 @@ internal sealed class FakeSeat(Func<Decision, BotAction?> answer, Func<int, Time
         }
     }
 
-    public async Task<BotAction?> AskAsync(Decision decision, CancellationToken cancel)
+    public Task<BotAction?> AskAsync(Decision decision, CancellationToken cancel)
     {
         if (_problem is not null)
         {
@@ -274,20 +376,19 @@ internal sealed class FakeSeat(Func<Decision, BotAction?> answer, Func<int, Time
         }
 
         Asked++;
-        if (fail)
+        if (_fail)
         {
             _problem = "crashed";
             throw new IOException(_problem);
         }
 
-        var reply = answer(decision);
-        var wait = delay?.Invoke(Asked) ?? TimeSpan.Zero;
-        if (wait > TimeSpan.Zero)
+        var answer = _ask(decision, Asked);
+        lock (_answers)
         {
-            await Task.Delay(wait, CancellationToken.None);
+            _answers.Add(answer);
         }
 
-        return reply;
+        return answer;
     }
 
     public void Dispose()

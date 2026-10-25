@@ -180,7 +180,8 @@ public sealed record MatchEnd(IReadOnlyList<Standing> Standings) : Message;
 /// <summary>A seat's result at the end of the match.</summary>
 /// <param name="Seat">The seat number.</param>
 /// <param name="Name">The player's name.</param>
-/// <param name="Stack">The chips it finished with.</param>
+/// <param name="Stack">The chips it finished with. In a <c>"fixed-stacks"</c> match, where every hand starts from the
+/// same stack, it is the chips won over the match instead (negative for a loss).</param>
 /// <param name="Place">Its finishing place, 1 for the winner.</param>
 public sealed record Standing(int Seat, string Name, int Stack, int Place);
 

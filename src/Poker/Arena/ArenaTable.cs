@@ -424,8 +424,9 @@ public sealed class ArenaTable : IDisposable
         }
         else
         {
-            var stack = _settings.StackBigBlinds * _series!.BigBlind;
-            stacks = [.. _net.Select(n => stack + n)];
+            // Every hand starts from the same stack, so a seat finishes with nothing of its own: its standing is its
+            // net, the chips it won (or, when negative, lost) over the match.
+            stacks = [.. _net];
             var order = Enumerable.Range(0, stacks.Length).OrderByDescending(s => stacks[s]).ThenBy(s => s).ToArray();
             for (var i = 0; i < order.Length; i++)
             {
