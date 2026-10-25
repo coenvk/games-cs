@@ -125,6 +125,41 @@ public class SeatTests
     }
 
     [Fact]
+    public async Task ABotThatDoesNotAnswerThreeTimesInARow_IsStopped()
+    {
+        using var seat = new ProcessSeat(EchoBot("skip:1,2,3"), "Echo");
+        await seat.StartAsync(Start, Limit);
+
+        for (var id = 1; id <= 3; id++)
+        {
+            seat.IsGone.Should().BeFalse();
+            (await seat.AskAsync(Decision with { Id = id }, ShortToken())).Should().BeNull();
+        }
+
+        seat.IsGone.Should().BeTrue();
+        seat.Problem.Should().Be("stopped: did not answer 3 times in a row");
+        var ask = () => seat.AskAsync(Decision with { Id = 4 }, TimeoutToken());
+        await ask.Should().ThrowAsync<IOException>();
+    }
+
+    [Fact]
+    public async Task AnAnswerInTime_StartsTheCountAgain()
+    {
+        using var seat = new ProcessSeat(EchoBot("skip:1,2,4,5"), "Echo");
+        await seat.StartAsync(Start, Limit);
+
+        var answers = new List<BotAction?>();
+        for (var id = 1; id <= 5; id++)
+        {
+            answers.Add(await seat.AskAsync(Decision with { Id = id }, id == 3 ? TimeoutToken() : ShortToken()));
+        }
+
+        answers.Should().Equal(null, null, BotAction.Call with { Id = 3 }, null, null);
+        seat.IsGone.Should().BeFalse();
+        seat.Problem.Should().BeNull();
+    }
+
+    [Fact]
     public async Task AHouseBotThatThrows_IsGone_WithItsProblem()
     {
         using var seat = new HouseSeat(new ThrowingBot());
@@ -153,4 +188,7 @@ public class SeatTests
     }
 
     private static CancellationToken TimeoutToken() => new CancellationTokenSource(Limit).Token;
+
+    // Long enough for an answer from a bot that is up, short enough to wait for three that never come.
+    private static CancellationToken ShortToken() => new CancellationTokenSource(TimeSpan.FromMilliseconds(400)).Token;
 }

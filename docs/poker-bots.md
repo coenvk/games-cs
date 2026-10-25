@@ -189,8 +189,11 @@ the chips the seat finished with. In a **fixed-stacks** match every hand starts 
   when no valid answer follows, the decision counts as late, not illegal.
 - **Crashes.** A bot that crashes or exits is folded every time it is asked for the rest of the run, and the match goes
   on. The seat shows what went wrong, with the last line the bot printed on stderr.
+- **Hanging.** A bot that does not answer 3 decisions in a row is stopped, and from then on it is treated as one that
+  crashed, with the problem "stopped: did not answer 3 times in a row". An answer in time starts the count again.
 - **Lines that are not protocol messages are ignored**, in both directions. A stray debug print on stdout does not break
-  a bot, but prefer stderr: it is captured, and its last line is shown with the bot's problem.
+  a bot, but prefer stderr: it is captured, and its last line is shown with the bot's problem. A line longer than 1 MiB
+  is cut, and of a flood of lines only the last 1,024 that the app has not read yet are kept.
 - **Ids.** An action may echo the decision's `id`; an action whose `id` does not match is ignored.
 - **Processes.** Every seat is its own process, started fresh for every run: a bot that sits in two seats is two
   processes that share nothing, and nothing carries over from one run to the next. In a duplicate batch a run plays the

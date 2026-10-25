@@ -37,7 +37,8 @@ public sealed record ArenaSettings(
 /// <param name="Hands">The hands it was dealt into.</param>
 /// <param name="Late">Its decisions that were not answered in time.</param>
 /// <param name="Illegal">Its decisions answered with nothing or with a move that was not allowed.</param>
-/// <param name="Gone">Whether the bot stopped playing (it crashed, exited or never started).</param>
+/// <param name="Gone">Whether the bot stopped playing (it crashed, exited, never started, or was stopped for not
+/// answering).</param>
 /// <param name="Problem">What is wrong with the bot, or null.</param>
 /// <param name="Place">Its finishing place in a sit-and-go, 1 for the winner; null for fixed stacks.</param>
 public sealed record SeatResult(int Seat, string Name, int Net, int Hands, int Late, int Illegal, bool Gone, string? Problem, int? Place);

@@ -1,10 +1,34 @@
 ﻿using PokerBots;
 
 // Modes (arguments): chatty (prints a debug line before each answer), slow:<ms> (the first answer takes that long),
-// stale (sends a wrong-id answer before each right one), protocol2 (greets with protocol 2 and then plays dead).
+// stale (sends a wrong-id answer before each right one), protocol2 (greets with protocol 2 and then plays dead),
+// skip:<n,m,...> (leaves those decisions unanswered).
 var chatty = args.Contains("chatty");
 var stale = args.Contains("stale");
 var slow = args.FirstOrDefault(a => a.StartsWith("slow:", StringComparison.Ordinal)) is { } s ? int.Parse(s[5..], System.Globalization.CultureInfo.InvariantCulture) : 0;
+
+// skip:<n,m,...> leaves those decisions (counting from 1) unanswered, as a bot that hangs would, and answers the others.
+if (args.FirstOrDefault(a => a.StartsWith("skip:", StringComparison.Ordinal)) is { } skip)
+{
+    var skipped = skip[5..].Split(',').Select(n => int.Parse(n, System.Globalization.CultureInfo.InvariantCulture)).ToHashSet();
+    var asked = 0;
+    while (Console.In.ReadLine() is { } line)
+    {
+        var reply = Protocol.Read(line) switch
+        {
+            Hello => new Hello(Protocol.Version, "Echo"),
+            Decision d when !skipped.Contains(++asked) => (d.Legal.Check ? BotAction.Check : BotAction.Call) with { Id = d.Id },
+            _ => (Message?)null,
+        };
+        if (reply is not null)
+        {
+            Console.Out.WriteLine(Protocol.Write(reply));
+            Console.Out.Flush();
+        }
+    }
+
+    return 0;
+}
 
 if (args.Contains("protocol2"))
 {

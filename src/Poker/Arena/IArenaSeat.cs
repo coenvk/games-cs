@@ -11,7 +11,7 @@ public interface IArenaSeat : IDisposable
     /// <summary>What is wrong with the bot ("could not start: …", "speaks protocol 2, the app speaks 1"), or null when all is well.</summary>
     string? Problem { get; }
 
-    /// <summary>Whether the bot can no longer play: it could not start, said the wrong thing at hello, or has exited.</summary>
+    /// <summary>Whether the bot can no longer play: it could not start, said the wrong thing at hello, has exited, or was stopped.</summary>
     bool IsGone { get; }
 
     /// <summary>Whether its decisions have to be made within the match's time limit; a person at the table has no limit.</summary>
