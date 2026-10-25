@@ -57,6 +57,9 @@ public sealed record HandShown(int Seat, IReadOnlyList<Card> Hole, HandValue Val
 /// <param name="Value">The winning hand, or null when everyone else folded.</param>
 public sealed record PotWon(int Seat, int Amount, HandValue? Value) : PokerEvent;
 
+/// <summary>Chips that the players in <paramref name="Seats"/> are contending for.</summary>
+public sealed record Pot(int Amount, IReadOnlyList<int> Seats);
+
 /// <summary>
 /// One hand of No-Limit Texas Hold'em: blinds, two hole cards each, four betting rounds around a five-card
 /// board, and a showdown that splits the pot into side pots when players are all in for different amounts.
@@ -151,6 +154,47 @@ public sealed class HoldemHand : ITurnBasedGame<PokerAction>
 
     /// <summary>Every chip put in this hand.</summary>
     public int Pot => _seats.Sum(s => s.Committed);
+
+    /// <summary>
+    /// The main pot first, then the side pots, at any moment of the hand. Each level of commitment is a pot for
+    /// the players still in the running who put in that much (or can still match it); levels with the same
+    /// contenders are one pot. Chips from players who folded stay in the pot they fall in.
+    /// </summary>
+    public IReadOnlyList<Pot> Pots
+    {
+        get
+        {
+            var live = Enumerable.Range(0, Seats).Where(IsLive).ToArray();
+            var levels = _seats.Select(s => s.Committed).Where(c => c > 0).Distinct().Order().ToArray();
+            var pots = new List<Pot>();
+            var previous = 0;
+            foreach (var level in levels)
+            {
+                var amount = _seats.Sum(s => Math.Min(s.Committed, level) - Math.Min(s.Committed, previous));
+                previous = level;
+
+                // During the hand a player with chips left can still match the level; an all-in player is in for what was put in.
+                var seats = live.Where(s => (!IsOver && _seats[s].Stack > 0) || _seats[s].Committed >= level).ToArray();
+                if (seats.Length == 0)
+                {
+                    // Chips put in by players who later folded, above every live player's stake.
+                    var top = live.Max(s => _seats[s].Committed);
+                    seats = [.. live.Where(s => _seats[s].Committed == top)];
+                }
+
+                if (pots.Count > 0 && pots[^1].Seats.SequenceEqual(seats))
+                {
+                    pots[^1] = pots[^1] with { Amount = pots[^1].Amount + amount };
+                }
+                else
+                {
+                    pots.Add(new Pot(amount, seats));
+                }
+            }
+
+            return pots;
+        }
+    }
 
     public bool IsOver { get; private set; }
 
@@ -389,26 +433,14 @@ public sealed class HoldemHand : ITurnBasedGame<PokerAction>
                 _events.Add(new HandShown(seat, _seats[seat].Hole, values[seat]));
             }
 
-            // Side pots: each level of commitment is a pot for those who put in at least that much.
-            var levels = _seats.Select(s => s.Committed).Where(c => c > 0).Distinct().Order().ToArray();
-            var previous = 0;
-            foreach (var level in levels)
+            foreach (var pot in Pots)
             {
-                var slice = _seats.Sum(s => Math.Min(s.Committed, level) - Math.Min(s.Committed, previous));
-                previous = level;
-                var eligible = live.Where(s => _seats[s].Committed >= level).ToArray();
-                if (eligible.Length == 0)
-                {
-                    // Chips put in by players who later folded, above every live player's stake.
-                    eligible = [.. live.Where(s => _seats[s].Committed == live.Max(l => _seats[l].Committed))];
-                }
-
-                var best = eligible.Max(s => values[s]);
-                var winners = Around(Button).Where(s => eligible.Contains(s) && values[s] == best).ToArray();
+                var best = pot.Seats.Max(s => values[s]);
+                var winners = Around(Button).Where(s => pot.Seats.Contains(s) && values[s] == best).ToArray();
                 for (var i = 0; i < winners.Length; i++)
                 {
                     // Odd chips go to the first winners left of the button.
-                    var share = slice / winners.Length + (i < slice % winners.Length ? 1 : 0);
+                    var share = pot.Amount / winners.Length + (i < pot.Amount % winners.Length ? 1 : 0);
                     winnings[winners[i]] = winnings.GetValueOrDefault(winners[i]) + share;
                 }
             }
