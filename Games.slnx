@@ -52,6 +52,7 @@
     <Project Path="tests/Paddock.Tests/Paddock.Tests.csproj" />
     <Project Path="tests/Poker.Bots.Tests/Poker.Bots.Tests.csproj" />
     <Project Path="tests/Poker.Tests/Poker.Tests.csproj" />
+    <Project Path="tests/Poker.Tests.EchoBot/Poker.Tests.EchoBot.csproj" />
     <Project Path="tests/Pyramid.Tests/Pyramid.Tests.csproj" />
     <Project Path="tests/Sokoban.Model.Tests/Sokoban.Model.Tests.csproj" />
     <Project Path="tests/Sokoban.Solver.Tests/Sokoban.Solver.Tests.csproj" />
