@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <!-- Jentl Lab in the browser: engine demos, not published. -->
+
+  <PropertyGroup>
+    <AppName>Lab</AppName>
+    <AppTitle>Jentl Lab</AppTitle>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\shell\Web.props" />
+
+</Project>

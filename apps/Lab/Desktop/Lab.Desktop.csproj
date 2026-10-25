@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Jentl Lab on the desktop: engine demos, not published. -->
+
+  <PropertyGroup>
+    <AppName>Lab</AppName>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\shell\Desktop.props" />
+
+</Project>

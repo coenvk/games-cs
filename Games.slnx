@@ -8,6 +8,8 @@
     <Project Path="apps/Solitaire/Web/Solitaire.Web.csproj" />
     <Project Path="apps/CardTable/Desktop/CardTable.Desktop.csproj" />
     <Project Path="apps/CardTable/Web/CardTable.Web.csproj" />
+    <Project Path="apps/Lab/Desktop/Lab.Desktop.csproj" />
+    <Project Path="apps/Lab/Web/Lab.Web.csproj" />
     <Project Path="apps/Mossbrook/Desktop/Mossbrook.Desktop.csproj" />
     <Project Path="apps/Mossbrook/Web/Mossbrook.Web.csproj" />
     <Project Path="apps/CodeLock/Desktop/CodeLock.Desktop.csproj" />
