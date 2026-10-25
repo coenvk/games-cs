@@ -3,7 +3,27 @@
 public class PotsTests
 {
     [Fact]
-    public void Pots_WithThreeAllInsOfDifferentSizes_AndAFoldedStake()
+    public void Pots_WithThreeAllInTiers_AndAFoldedStake_MatchThePayout()
+    {
+        var hand = new HoldemHand([100, 300, 600, 1000, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: 3);
+
+        hand.Apply(3, CallBet.Instance);
+        hand.Apply(4, CallBet.Instance);
+        hand.Apply(0, AllIn.Instance);
+        hand.Apply(1, AllIn.Instance);
+        hand.Apply(2, AllIn.Instance);
+        hand.Apply(3, CallBet.Instance);
+        hand.Apply(4, Fold.Instance);
+
+        hand.IsOver.Should().BeTrue();
+        hand.Pots.Select(p => p.Amount).Should().Equal(420, 600, 600);
+        hand.Pots.Select(p => string.Join(",", p.Seats)).Should().Equal("0,1,2,3", "1,2,3", "2,3");
+        hand.Winnings.Values.Sum().Should().Be(hand.Pots.Sum(p => p.Amount));
+        hand.Winnings.Keys.Should().NotContain(4, "the folded player cannot win");
+    }
+
+    [Fact]
+    public void Pots_WithAllInsOfDifferentSizes_AndAFold_SplitOffTheUncalledChips()
     {
         var hand = new HoldemHand([100, 300, 600, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: 3);
 
@@ -39,5 +59,21 @@ public class PotsTests
         hand.Pots.Select(p => p.Amount).Should().Equal(220, 200);
         hand.Pots[0].Seats.Should().Equal(0, 1, 2);
         hand.Pots[1].Seats.Should().Equal(1, 2);
+    }
+
+    [Fact]
+    public void ATie_WithFoldedStakes_SplitsTheMergedPotOnce_TheOddChipGoingLeftOfTheButton()
+    {
+        // Seats 0 and 3 are all in for 100 and tie on the board; seats 1 and 2 fold after posting 7 and 10.
+        var deck = HandEvaluatorTests.Cards("4C 4D 2D 2C 5C 5D 3D 3C AS KS QS JS 10S");
+        var hand = new HoldemHand([100, 1000, 1000, 100], button: 0, smallBlind: 7, bigBlind: 10, deck);
+
+        hand.Apply(3, AllIn.Instance);
+        hand.Apply(0, AllIn.Instance);
+        hand.Apply(1, Fold.Instance);
+        hand.Apply(2, Fold.Instance);
+
+        hand.Pots.Should().ContainSingle().Which.Amount.Should().Be(217);
+        hand.Winnings.Should().Equal(new Dictionary<int, int> { [3] = 109, [0] = 108 });
     }
 }

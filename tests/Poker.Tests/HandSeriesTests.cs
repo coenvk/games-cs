@@ -23,7 +23,7 @@ public class HandSeriesTests
         {
             var hand = series.Deal(index);
             hand.Button.Should().Be(index);
-            Enumerable.Range(0, 6).Sum(s => hand.Stack(s) + hand.Committed(s)).Should().Be(6 * 2000);
+            Enumerable.Range(0, 6).Should().OnlyContain(s => hand.Stack(s) + hand.Committed(s) == 2000);
             hand.BigBlind.Should().Be(20);
         }
     }
