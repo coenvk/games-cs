@@ -9,6 +9,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Poker;
 using Games.Input;
+using Games.Poker;
 using Games.UI;
 using Jentl.Core.UI;
 using static Games.UI.Tr;
@@ -41,8 +42,6 @@ internal sealed class PokerScene : Scene
     private const int StartingStack = 1000;
     private static readonly TimeSpan BotDelay = TimeSpan.FromMilliseconds(650);
     private static readonly TimeSpan FastBotDelay = TimeSpan.FromMilliseconds(250);
-    private static readonly Color Felt = new(28, 110, 70);
-    private static readonly Color Rim = new(92, 58, 34);
 
     private readonly GameContext _context;
     private readonly PokerSetup _setup;
@@ -52,7 +51,8 @@ internal sealed class PokerScene : Scene
     private readonly List<string> _log = [];
     private readonly Dictionary<int, string> _lastAction = [];
     private readonly HashSet<int> _shown = [];
-    private Texture2D? _circle;
+    private readonly PokerTableView _view;
+    private readonly string[] _names;
     private Match<HoldemHand, PokerAction> _runner;
     private int _raiseTo;
     private bool _endShown;
@@ -68,6 +68,8 @@ internal sealed class PokerScene : Scene
             tightness: 0.25 + 0.15 * (i % 4),
             aggression: 0.7 - 0.12 * (i % 4),
             bluff: 0.04 + 0.03 * (i % 3)))];
+        _view = new PokerTableView(context);
+        _names = [.. setup.Players.Select(p => p.Name)];
         Table = new HoldemTable(setup.Players.Count, _seed, StartingStack);
         _runner = DealHand();
     }
@@ -88,6 +90,7 @@ internal sealed class PokerScene : Scene
 
     public override void Update(TimeSpan elapsed, InputState input)
     {
+        _view.Update(elapsed, []);
         var actions = _context.Actions;
         if (actions.WasPressed(input, GameAction.Back))
         {
@@ -104,6 +107,12 @@ internal sealed class PokerScene : Scene
         if (_runner.AwaitingHandover)
         {
             Scenes.Push(new PokerHandoverScene(_context, this, _runner.Current.Name));
+            return;
+        }
+
+        // The bots wait while the chips fly.
+        if (_view.IsAnimating && !_runner.IsHumansTurn)
+        {
             return;
         }
 
@@ -152,7 +161,6 @@ internal sealed class PokerScene : Scene
 
     public override void Draw(SpriteBatch batch, Rectangle viewport)
     {
-        _circle ??= Circle(batch.GraphicsDevice);
         var fonts = _context.Fonts;
         var margin = fonts.Px(16);
         var hand = Hand;
@@ -183,54 +191,10 @@ internal sealed class PokerScene : Scene
             batch.DrawText(fonts.Small, lines[i], new Vector2(viewport.Center.X, logTop + i * lineHeight), i == lines.Length - 1 ? Palette.Text : Palette.Muted, Align.Center, shadow: false);
         }
 
-        // The table: an oval of felt with the seats around its edge.
+        // The table between the header and the messages, with the viewer at the bottom.
         var area = new Rectangle(viewport.X + margin, hud.Bottom + margin, viewport.Width - 2 * margin, logTop - hud.Bottom - 2 * margin);
-        var seatWidth = Math.Min(fonts.Px(190), area.Width / 3);
-        var seatHeight = Math.Min(fonts.Px(150), area.Height / 3);
-        var felt = new Rectangle(area.X + seatWidth / 3, area.Y + seatHeight / 2, area.Width - seatWidth * 2 / 3, area.Height - seatHeight);
-        var rim = felt;
-        rim.Inflate(fonts.Px(8), fonts.Px(8));
-        batch.Draw(_circle, rim, Rim);
-        batch.Draw(_circle, felt, Felt);
-
-        var cardHeight = Math.Min(Math.Min(felt.Height / 3, fonts.Px(110)), (int)((felt.Width * 0.8f - 4 * fonts.Px(6)) / 5 / Jentl.Core.Cards.CardArt.AspectRatio));
-        var cardWidth = (int)(cardHeight * Jentl.Core.Cards.CardArt.AspectRatio);
-        var boardWidth = 5 * cardWidth + 4 * fonts.Px(6);
-        var boardLeft = felt.Center.X - boardWidth / 2;
-        var boardTop = felt.Center.Y - cardHeight / 2;
-        for (var i = 0; i < 5; i++)
-        {
-            var bounds = new Rectangle(boardLeft + i * (cardWidth + fonts.Px(6)), boardTop, cardWidth, cardHeight);
-            if (i < hand.Board.Count)
-            {
-                _context.Cards.Draw(batch, new PlacedCard(hand.Board[i], FaceUp: true), bounds);
-            }
-            else
-            {
-                _context.Cards.DrawSlot(batch, bounds);
-            }
-        }
-
-        batch.DrawText(fonts.Body, T("Pot {0}", hand.Pot), new Vector2(felt.Center.X, boardTop - fonts.Body.LineHeight - fonts.Px(4)), Palette.Accent, Align.Center);
-
-        var viewer = _runner.Viewer ?? (_runner.Current.IsHuman ? _runner.Current.Seat : Players.First(p => p.IsHuman).Seat);
-        for (var k = 0; k < Players.Count; k++)
-        {
-            var seat = (viewer + k) % Players.Count;
-
-            // Clockwise round the oval from the viewer at the bottom: the others spread from lower left over the
-            // top to lower right, leaving the middle row to the board.
-            var angle = k == 0 ? MathF.PI / 2
-                : Players.Count == 2 ? MathF.PI * 1.5f
-                : MathF.PI * (5f / 6) + (k - 1) * (MathF.PI * 4f / 3) / (Players.Count - 2);
-            var centre = new Vector2(
-                felt.Center.X + MathF.Cos(angle) * (felt.Width / 2f),
-                felt.Center.Y + MathF.Sin(angle) * (felt.Height / 2f));
-            var box = new Rectangle((int)centre.X - seatWidth / 2, (int)centre.Y - seatHeight / 2, seatWidth, seatHeight);
-            box.X = Math.Clamp(box.X, area.X, area.Right - seatWidth);
-            box.Y = Math.Clamp(box.Y, area.Y, area.Bottom - seatHeight);
-            DrawSeat(batch, seat, box, felt.Center.ToVector2(), seat == _runner.Viewer || _shown.Contains(seat));
-        }
+        _view.BottomSeat = _runner.Viewer ?? (_runner.Current.IsHuman ? _runner.Current.Seat : Players.First(p => p.IsHuman).Seat);
+        _view.Draw(batch, area, hand, _names, seat => seat == _runner.Viewer || _shown.Contains(seat), _lastAction);
 
         _buttons.Draw(batch, buttonFont, buttons);
     }
@@ -239,31 +203,10 @@ internal sealed class PokerScene : Scene
     {
         if (disposing)
         {
-            _circle?.Dispose();
+            _view.Dispose();
         }
 
         base.Dispose(disposing);
-    }
-
-    /// <summary>A white disc, stretched into the table's oval and tinted.</summary>
-    private static Texture2D Circle(GraphicsDevice device)
-    {
-        const int Size = 256;
-        var pixels = new Color[Size * Size];
-        for (var y = 0; y < Size; y++)
-        {
-            for (var x = 0; x < Size; x++)
-            {
-                var dx = (x + 0.5f) / Size * 2 - 1;
-                var dy = (y + 0.5f) / Size * 2 - 1;
-                var edge = Math.Clamp((1 - MathF.Sqrt(dx * dx + dy * dy)) * Size / 2, 0, 1);
-                pixels[y * Size + x] = new Color(Color.White, edge);
-            }
-        }
-
-        var texture = new Texture2D(device, Size, Size);
-        texture.SetData(pixels);
-        return texture;
     }
 
     private Match<HoldemHand, PokerAction> DealHand()
@@ -273,11 +216,7 @@ internal sealed class PokerScene : Scene
         _shown.Clear();
         var runner = new Match<HoldemHand, PokerAction>(hand, Players, s => _bots[s], unchecked(_seed + Table.HandNumber)) { BotDelay = BotDelay };
         Say(T("Hand {0}, dealer: {1}", Table.HandNumber, Players[hand.Button].Name));
-        foreach (var e in hand.TakeEvents())
-        {
-            Describe(e);
-        }
-
+        Show(hand.TakeEvents());
         _raiseTo = hand.MinRaiseTo;
         return runner;
     }
@@ -318,8 +257,9 @@ internal sealed class PokerScene : Scene
     {
         if (_runner.IsHumansTurn)
         {
-            var seat = _runner.Current.Seat;
-            _raiseTo = Math.Clamp(_raiseTo + direction * Table.BigBlind, Hand.MinRaiseTo, Hand.MaxRaiseTo(seat));
+            // A short stack may have less than a full raise: then all it has is the only amount.
+            var max = Hand.MaxRaiseTo(_runner.Current.Seat);
+            _raiseTo = Math.Clamp(_raiseTo + direction * Table.BigBlind, Math.Min(Hand.MinRaiseTo, max), max);
         }
     }
 
@@ -391,6 +331,8 @@ internal sealed class PokerScene : Scene
         {
             Describe(e);
         }
+
+        _view.Update(TimeSpan.Zero, events);
     }
 
     private void Describe(PokerEvent e)
@@ -437,52 +379,6 @@ internal sealed class PokerScene : Scene
                     ? T("{0} wins {1}: {2}", Name(w.Seat), w.Amount, Describe(value))
                     : T("{0} takes {1}", Name(w.Seat), w.Amount));
                 break;
-        }
-    }
-
-    private void DrawSeat(SpriteBatch batch, int seat, Rectangle box, Vector2 middle, bool faceUp)
-    {
-        var fonts = _context.Fonts;
-        var hand = Hand;
-        var current = !hand.IsOver && hand.CurrentSeat == seat;
-        var isOut = !hand.InHand(seat);
-        batch.FillRectangle(box, current ? Palette.Accent : Palette.Panel);
-        var inner = box;
-        inner.Inflate(-3, -3);
-        batch.FillRectangle(inner, isOut || hand.HasFolded(seat) ? Palette.Background : Palette.Panel);
-
-        var nameLine = string.Create(CultureInfo.InvariantCulture, $"{Players[seat].Name}  {hand.Stack(seat)}");
-        batch.DrawText(fonts.Small, nameLine, new Vector2(box.Center.X, box.Y + fonts.Px(4)), current ? Palette.Accent : Palette.Text, Align.Center, shadow: false);
-
-        // Hole cards: face up for the viewer and at a showdown, backs otherwise, none once folded or out.
-        var cardHeight = box.Height - (int)fonts.Small.LineHeight * 2 - fonts.Px(14);
-        var cardWidth = (int)(cardHeight * Jentl.Core.Cards.CardArt.AspectRatio);
-        var hole = hand.Hole(seat);
-        if (!isOut && !hand.HasFolded(seat))
-        {
-            for (var i = 0; i < hole.Count; i++)
-            {
-                var bounds = new Rectangle(box.Center.X - cardWidth + i * (cardWidth + 2) - 1, box.Y + (int)fonts.Small.LineHeight + fonts.Px(6), cardWidth, cardHeight);
-                _context.Cards.Draw(batch, new PlacedCard(hole[i], faceUp), bounds);
-            }
-        }
-
-        var status = isOut ? T("Out") : _lastAction.GetValueOrDefault(seat) ?? (hand.IsAllIn(seat) ? T("All in") : "");
-        batch.DrawText(fonts.Small, status, new Vector2(box.Center.X, box.Bottom - fonts.Small.LineHeight - fonts.Px(4)), Palette.Muted, Align.Center, shadow: false);
-
-        // The bet in front of the seat, towards the middle, and the dealer button.
-        var towards = Vector2.Lerp(box.Center.ToVector2(), middle, 0.42f);
-        if (hand.Bet(seat) > 0)
-        {
-            batch.DrawText(fonts.Small, hand.Bet(seat).ToString(CultureInfo.InvariantCulture), towards, Palette.Accent, Align.Center);
-        }
-
-        if (seat == hand.Button)
-        {
-            var size = fonts.Px(26);
-            var at = new Rectangle(box.Right - size / 2 - fonts.Px(4), box.Y - size / 3, size, size);
-            batch.Draw(_circle!, at, Color.White);
-            batch.DrawText(fonts.Sized(size * 0.6f), "D", at, Palette.Ink, shadow: false);
         }
     }
 
