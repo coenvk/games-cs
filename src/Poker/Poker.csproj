@@ -7,6 +7,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Poker.Bots\Poker.Bots.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Jentl.Cards" Version="$(JentlVersion)" />
     <PackageReference Include="Jentl.Multiplayer" Version="$(JentlVersion)" />
   </ItemGroup>
