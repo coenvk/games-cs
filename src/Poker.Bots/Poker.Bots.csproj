@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The poker bot SDK: the message contract, its JSON wire protocol and a stdin/stdout runner. Framework-free,
+       it references nothing beyond the .NET base library so bot authors need only this one DLL. -->
+
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <PackageId>Poker.Bots</PackageId>
+    <Version>1.0.0</Version>
+    <Description>Write a Texas Hold'em bot: implement IPokerBot, or speak the JSON protocol from any language.</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Poker.Bots.Tests" />
+  </ItemGroup>
+
+</Project>
