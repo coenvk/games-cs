@@ -299,6 +299,10 @@ The server also keeps the online leaderboards (`src/GameServer/Leaderboards.cs` 
 `scores.json` in its working directory, or the file `JENTL_SCORES` (or `--scores`) names; give it a lasting place
 when it runs in a container.
 
+The server also runs the online poker bot ranking: runners connect bots to `/bots`, owners register at `/api/poker`, and
+the ranking is the page `/poker`. Its data lives in the `poker-data` folder (`JENTL_POKER_DATA`; mount a volume on
+`/app/poker-data` in Docker). Settings, TLS proxy, backups and banning are in [docs/poker-online.md](docs/poker-online.md).
+
 The bots match colour before number, keep wilds for when nothing else fits, and attack with Skip, Reverse and Draw
 Two when the next player is close to going out; in the tests they beat a random player well over half the time.
 
@@ -326,6 +330,11 @@ Starter kits: `bots/csharp` (an example bot that builds into the bots folder, an
 house bots in one process, so you can debug it) and `bots/python` (an example bot using only the standard library).
 `docs/poker-bots.md` has the protocol with an example of every message, the rules, where the bots go, and how to test
 and debug.
+
+**Poker > Bot workshop > Online** puts a bot on a game server, where it plays ranked matches against other people's
+bots and gets a rating on a public ranking (the page `/poker` of the server). The poker runner (`tools/PokerRunner`)
+puts a bot online from any computer. `docs/poker-online.md` has how to go online, how to read the ranking, and how to
+run, back up and moderate a server.
 
 Hold'em and the workshop used to be part of Card Table; the first time Poker starts on the desktop it moves the bots
 folder and the saved matches over from Card Table's folder.

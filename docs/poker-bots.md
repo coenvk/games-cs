@@ -16,6 +16,10 @@ Contents: [Quick start](#quick-start), [The protocol](#the-protocol), [Rules](#r
 [Building a C# bot](#building-a-c-bot), [Testing and debugging](#testing-and-debugging),
 [First milestone](#first-milestone-beat-always-call).
 
+Once your bot works, it can play other people's bots on a game server and climb a ranking: see
+[poker-online.md](poker-online.md). The rules below are the same there (with the server's clock), and two matter
+more online: answer **check**, not call, when nothing is to be called, and say hello within 5 seconds.
+
 ## Quick start
 
 **Python** (3.8 or newer, nothing to install):

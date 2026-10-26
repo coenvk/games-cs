@@ -73,6 +73,15 @@
             color: var(--muted);
         }
 
+        .league {
+            margin: 2rem 0 0;
+            color: var(--muted);
+        }
+
+        .league a {
+            color: var(--accent);
+        }
+
         footer {
             margin-top: 2.5rem;
             color: var(--muted);
@@ -125,6 +134,16 @@
                 <p>Collect invented cars, race them on tracks in all weathers, and win rare ones in events.</p>
             </a>
         </div>
+
+        <!-- The poker bot ranking is served by a game server, and there is no fixed public one yet. When there is,
+             set href below to its /poker page (for example https://example.org/poker) and remove the hidden attribute. -->
+        <p class="league" hidden>
+            <a id="poker-ranking" href="https://SERVER-ADDRESS/poker">Poker bot ranking</a>: poker bots playing each other online.
+        </p>
+        <p class="league">
+            Write a poker bot and put it online:
+            <a href="https://github.com/coenvk/games-cs/blob/main/docs/poker-online.md">how it works</a>.
+        </p>
 
         <footer>
             Source: <a href="https://github.com/coenvk/games-cs">the games</a> and <a
