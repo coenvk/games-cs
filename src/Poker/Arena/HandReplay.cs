@@ -22,7 +22,7 @@ public static class HandReplay
         try
         {
             hand = record.Seed == default
-                ? new HoldemHand(record.StartStacks, record.Button, record.SmallBlind, record.BigBlind, RecordedDeck(record))
+                ? Deal(record.Number, record.StartStacks, record.Button, record.SmallBlind, record.BigBlind, record.Holes, record.Board)
                 : new HoldemHand(record.StartStacks, record.Button, record.SmallBlind, record.BigBlind, record.Seed);
         }
         catch (ArgumentException e)
@@ -62,32 +62,48 @@ public static class HandReplay
     }
 
     /// <summary>
-    /// The deck that deals the record's cards in the engine's order: two rounds of one hole card each, starting left of
+    /// A hand dealt the cards that are known: <paramref name="holes"/> by seat (empty for a seat whose cards are not
+    /// known, which gets stand-in cards) and the <paramref name="board"/> so far, the rest of the deck being stand-ins.
+    /// </summary>
+    /// <exception cref="InvalidDataException">The cards make no deal: a card twice, or a seat with one card.</exception>
+    /// <exception cref="ArgumentException">The stacks, button or blinds make no hand.</exception>
+    internal static HoldemHand Deal(
+        int number,
+        IReadOnlyList<int> startStacks,
+        int button,
+        int smallBlind,
+        int bigBlind,
+        IReadOnlyList<IReadOnlyList<Card>> holes,
+        IReadOnlyList<Card> board) =>
+        new(startStacks, button, smallBlind, bigBlind, RecordedDeck(number, startStacks, button, holes, board));
+
+    /// <summary>
+    /// The deck that deals the known cards in the engine's order: two rounds of one hole card each, starting left of
     /// the button, then the board; a hidden seat gets cards no one else has, and the unused cards follow.
     /// </summary>
-    private static List<Card> RecordedDeck(HandRecord record)
+    private static List<Card> RecordedDeck(int number, IReadOnlyList<int> startStacks, int button, IReadOnlyList<IReadOnlyList<Card>> known, IReadOnlyList<Card> board)
     {
-        var seats = record.StartStacks.Count;
-        if (record.Holes.Count != seats)
+        var seats = startStacks.Count;
+        if (known.Count != seats)
         {
-            throw new InvalidDataException($"Hand {record.Number}: the hole cards do not match the seats.");
+            throw new InvalidDataException($"Hand {number}: the hole cards do not match the seats.");
         }
 
-        var known = record.Holes.SelectMany(h => h).Concat(record.Board).ToList();
-        if (known.Distinct().Count() != known.Count)
+        var dealt = known.SelectMany(h => h).Concat(board).ToList();
+        if (dealt.Distinct().Count() != dealt.Count)
         {
-            throw new InvalidDataException($"Hand {record.Number}: a card is dealt twice.");
+            throw new InvalidDataException($"Hand {number}: a card is dealt twice.");
         }
 
-        var spare = new Queue<Card>(Deck.Standard52().Except(known));
+        var spare = new Queue<Card>(Deck.Standard52().Except(dealt));
         var holes = new IReadOnlyList<Card>[seats];
         for (var seat = 0; seat < seats; seat++)
         {
-            var cards = record.Holes[seat];
-            holes[seat] = record.StartStacks[seat] <= 0 ? []
+            var cards = known[seat];
+            holes[seat] = startStacks[seat] <= 0 ? []
                 : cards.Count == 0 ? [spare.Dequeue(), spare.Dequeue()]
                 : cards.Count == 2 ? cards
-                : throw new InvalidDataException($"Hand {record.Number}: seat {seat} has {cards.Count} hole cards.");
+                : throw new InvalidDataException($"Hand {number}: seat {seat} has {cards.Count} hole cards.");
         }
 
         var deck = new List<Card>();
@@ -95,7 +111,7 @@ public static class HandReplay
         {
             for (var i = 1; i <= seats; i++)
             {
-                var seat = (record.Button + i) % seats;
+                var seat = (button + i) % seats;
                 if (holes[seat].Count == 2)
                 {
                     deck.Add(holes[seat][round]);
@@ -103,7 +119,7 @@ public static class HandReplay
             }
         }
 
-        deck.AddRange(record.Board);
+        deck.AddRange(board);
         deck.AddRange(spare);
         return deck;
     }

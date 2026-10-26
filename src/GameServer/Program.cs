@@ -3,6 +3,7 @@ using GameServer;
 using GameServer.Poker;
 using Jentl.Net;
 using Microsoft.AspNetCore.HttpOverrides;
+using Poker;
 using Poker.Online;
 using Uno;
 
@@ -36,6 +37,7 @@ builder.Services.AddSingleton(_ => new RoomServer(
     new Dictionary<string, Func<IRoomGame>>
     {
         [UnoOnline.Game] = () => new UnoRoomGame(),
+        [HoldemOnline.Game] = () => new HoldemRoomGame(),
     },
     scores: new ScoreServer(Leaderboards.Boards, TimeProvider.System, scoresFile)));
 builder.Services.AddHostedService<RoomTicker>();
