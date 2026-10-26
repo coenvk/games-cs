@@ -26,8 +26,9 @@ The first time, it asks for a name as an owner and makes the owner. Then:
 2. Choose the bot, then **Go online**. The app starts the poker runner for it, a child process that plays matches until
    you choose **Stop the runner** or quit the app. Its status shows under the bot.
 3. **Show token** shows the bot's token and copies it to the clipboard (there is no clipboard in some places: then copy
-   it from the screen). **New token** makes a new one and the old one stops working; it is copied too. If the bot is
-   running here, its runner is restarted with the new token.
+   it from the screen). **New token** makes a new one and the old one stops working; it is copied too. A runner still
+   connected with the old token, here or anywhere else, is cut off at once (it shows "refused: token replaced"). If the
+   bot is running here, its runner is restarted with the new token.
 4. **Practice against a house bot** plays one unranked match against one of the house bots, to see that your bot works
    online before it meets others. A practice match is not rated and is yours alone to see.
 5. **Open a match** downloads one of the bot's recent matches into the results screen, where you can step through
@@ -35,7 +36,10 @@ The first time, it asks for a name as an owner and makes the owner. Then:
 
 The app keeps your owner token and your bots' tokens in `workshop/online.json` in the Poker save folder. If that file
 cannot be read it is moved aside (the view says where) and you start without tokens: make a new owner, or put the old
-file back. Everything in the Online view needs the server; when it cannot be reached, the view says so and the rest of
+file back. If the server does not know your owner token (it lost its data, say, or it is another server than the one you
+registered on), the view says so and keeps the token: **Try again** once the server has its data back. **Make a new
+owner** there replaces it, but the old owner and its bots' tokens stay in `online.json` as a previous owner, and
+**Use the owner from before** takes it back. A banned owner is told so. Everything in the Online view needs the server; when it cannot be reached, the view says so and the rest of
 the workshop works as before. Which server is used is set the same way as for Uno (`--server`, `JENTL_SERVER`).
 
 ### From the command line, on any computer
@@ -55,7 +59,8 @@ Exit codes: **0** stopped with Ctrl+C, **1** wrong usage, **2** the path is no b
 **3** the server refused the token.
 
 **Keep tokens to yourself.** The token is passed to the runner as `--token`, so any other user of the same computer can
-see it in the process list. Whoever has a bot's token can play as that bot. If one leaks, choose **New token**.
+see it in the process list. Whoever has a bot's token can play as that bot. If one leaks, choose **New token**: a runner
+connected with the old one is cut off and cannot connect again.
 
 ### Registering without the app
 
@@ -73,8 +78,8 @@ The app does this for you; the endpoints are plain JSON over HTTP. An owner is k
 | `GET /api/poker/ranking` | the ranking (public); the same as the page at `/poker` |
 
 A refusal is status 400 with `{"error":"..."}`: "not a name", "name taken", "unknown owner", "unknown bot",
-"banned", "too many registrations today", "N bots already" and the like. `/api/poker/mine` answers 401 for an unknown
-owner. A match download answers 404 for anything that is not yours, whether the match exists or not.
+"banned", "too many registrations today", "N bots already" and the like. `/api/poker/mine` answers 401
+(`"unknown owner"`) for an owner token the server does not know, and 403 (`"banned"`) for a banned owner. A match download answers 404 for anything that is not yours, whether the match exists or not.
 
 ## What the server does with your bot
 
@@ -100,6 +105,28 @@ The rules are those of [poker-bots.md](poker-bots.md#rules), with the clock of t
   results, not as late. They do not count towards the "3 late in a row" stop. A runner that reconnects takes its seat
   back, and the match counts.
 - A bot that does not answer 3 decisions in a row is stopped for that match, as in the workshop.
+- **A runner that drops while its bot is still starting** keeps that bot process when it reconnects (the server sends
+  the start again; the runner sees it is for the match it already has), so a slow start and a dropped connection do not
+  add up to a missed hello.
+
+### Online limits
+
+The server limits what a runner sends, and the runner keeps to those limits itself, so that a bot that prints too much
+loses lines, not its connection:
+
+- **Line length.** A message from the runner may be at most **4,096 bytes**: one line of your bot's, in the relay's
+  JSON (quotes and backslashes in it count twice). Real answers are well under 100 bytes. A longer line, a big debug
+  print say, is dropped by the runner, which says so once ("dropped a line from the bot: longer than 4096 bytes").
+  Offline, in the workshop, a line may be 1 MiB.
+- **Extra lines.** Every message the server sends lets the bot send one line back. Besides those, the runner sends at
+  most **100 lines a second** (in bursts of up to 100); the server would cut a runner off above 200. A bot that prints
+  a debug line for every message it gets therefore loses some of its lines in a fast match, which can be an answer:
+  that decision then counts as late. The runner says so once ("dropped lines from the bot: more than 100 a second
+  besides its answers").
+- Lines the bot writes while the runner is disconnected wait (the last 1,024) and are sent within these limits once it
+  is back.
+
+Put debug output on stderr: it stays on your computer and costs nothing online.
 
 ## Reading the ranking
 
@@ -172,6 +199,7 @@ dotnet run --project src/GameServer -- ban <bot-or-owner>
 ```
 
 A bot is named by its name; an owner by its id, which is in `owners.json` in the data folder. Banning an owner bans all
-its bots. A banned bot is not matched any more and cannot get a new token. Use `--poker-data`
+its bots. A banned bot is not matched any more, cannot get a new token, and its runner is refused when it connects (a
+ban made while the server runs, from its own code, cuts the runner off at once with "refused: banned"). Use `--poker-data`
 (or `JENTL_POKER_DATA`) if the data is not in `poker-data`. **Stop the server first**: a running server keeps its own
 copy of the owners and bots and would overwrite the ban when it next saves.

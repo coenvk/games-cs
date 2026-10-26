@@ -1,9 +1,17 @@
 ﻿using PokerBots;
 
-// Modes (arguments): chatty (prints a debug line before each answer), slow:<ms> (the first answer takes that long),
+// Modes (arguments): chatty (prints a debug line before each answer), shout (prints a debug line of 10,000 characters
+// before its first answer), slow:<ms> (the first answer takes that long),
 // stale (sends a wrong-id answer before each right one), protocol2 (greets with protocol 2 and then plays dead),
-// skip:<n,m,...> (leaves those decisions unanswered).
+// skip:<n,m,...> (leaves those decisions unanswered), wait:<ms> (sleeps that long before reading anything, as a bot that is
+// slow to start).
+if (args.FirstOrDefault(a => a.StartsWith("wait:", StringComparison.Ordinal)) is { } wait)
+{
+    Thread.Sleep(int.Parse(wait[5..], System.Globalization.CultureInfo.InvariantCulture));
+}
+
 var chatty = args.Contains("chatty");
+var shout = args.Contains("shout");
 var stale = args.Contains("stale");
 var slow = args.FirstOrDefault(a => a.StartsWith("slow:", StringComparison.Ordinal)) is { } s ? int.Parse(s[5..], System.Globalization.CultureInfo.InvariantCulture) : 0;
 
@@ -44,9 +52,9 @@ if (args.Contains("protocol2"))
     return 0;
 }
 
-return BotRunner.Run(new CallingEchoBot(chatty, stale, slow), Console.In, Console.Out, Console.Error);
+return BotRunner.Run(new CallingEchoBot(chatty, stale, slow, shout), Console.In, Console.Out, Console.Error);
 
-internal sealed class CallingEchoBot(bool chatty, bool stale, int slowMs) : IPokerBot
+internal sealed class CallingEchoBot(bool chatty, bool stale, int slowMs, bool shout = false) : IPokerBot
 {
     private bool _answered;
 
@@ -54,6 +62,12 @@ internal sealed class CallingEchoBot(bool chatty, bool stale, int slowMs) : IPok
 
     public BotAction Decide(Decision d)
     {
+        if (shout && !_answered)
+        {
+            Console.Out.WriteLine(new string('x', 10_000));
+            Console.Out.Flush();
+        }
+
         if (chatty)
         {
             Console.Out.WriteLine("thinking…");

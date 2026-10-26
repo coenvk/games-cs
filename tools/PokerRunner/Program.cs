@@ -67,7 +67,7 @@ public static class Program
         };
 
         var refused = false;
-        using var relay = new AgentRelay(Connect(url), token, command);
+        using var relay = RunnerCommand.Relay(Connect(url), token, command);
         relay.Status += status =>
         {
             refused |= status.StartsWith("refused", StringComparison.Ordinal);

@@ -3,6 +3,7 @@ using GameServer;
 using GameServer.Poker;
 using Jentl.Net;
 using Microsoft.AspNetCore.HttpOverrides;
+using Poker.Online;
 using Uno;
 
 // The Jentl game server: players connect to /play with a WebSocket, then create or join rooms, or post and read
@@ -52,7 +53,20 @@ builder.Services.AddSingleton<Registry>();
 builder.Services.AddSingleton(s => new Registration(s.GetRequiredService<Registry>(), limits, s.GetRequiredService<TimeProvider>()));
 builder.Services.AddSingleton<Ratings>();
 builder.Services.AddSingleton<MatchStore>();
-builder.Services.AddSingleton(s => new RelayHost(token => s.GetRequiredService<Registry>().BotOfToken(token)?.Name));
+builder.Services.AddSingleton(s =>
+{
+    // A runner's messages are its bot's short lines (see OnlineLimits); a ban cuts the bot's runner off at once.
+    var registry = s.GetRequiredService<Registry>();
+    var relays = new RelayHost(token => registry.BotOfToken(token)?.Name) { MaxLength = OnlineLimits.MaxMessage };
+    registry.BotsBanned += bots =>
+    {
+        foreach (var bot in bots)
+        {
+            relays.Drop(bot, "banned");
+        }
+    };
+    return relays;
+});
 builder.Services.AddSingleton(s =>
 {
     var registry = s.GetRequiredService<Registry>();

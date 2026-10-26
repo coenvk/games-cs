@@ -2,6 +2,7 @@
 using System.Net.WebSockets;
 using Jentl.Net;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
 using Poker;
 using Poker.Online;
 
@@ -95,6 +96,28 @@ public sealed class OnlineClientTests : IDisposable
 
         var practice = () => _client.PractiseAsync(owner, "Alpha Bot", "Always call");
         (await practice.Should().ThrowAsync<OnlineProblem>()).Which.Message.Should().Contain("not connected");
+    }
+
+    [Fact]
+    public async Task AnOwnerTheServerDoesNotKnow_AndABannedOwner_AreToldApart()
+    {
+        var owner = await _client.NewOwnerAsync("Ann");
+        await _client.NewBotAsync(owner, "Alpha Bot");
+
+        // A token this server never issued: its data was started afresh, say, or this is another server.
+        var stranger = () => _client.MineAsync("a token from elsewhere");
+        var unknown = (await stranger.Should().ThrowAsync<OnlineProblem>()).Which;
+        unknown.IsUnknownOwner.Should().BeTrue();
+        unknown.IsBanned.Should().BeFalse();
+
+        var registry = _factory.Services.GetRequiredService<GameServer.Poker.Registry>();
+        registry.Ban(registry.Bot("Alpha Bot")!.OwnerId);
+        var mine = () => _client.MineAsync(owner);
+        var banned = (await mine.Should().ThrowAsync<OnlineProblem>()).Which;
+        banned.Status.Should().Be(HttpStatusCode.Forbidden);
+        banned.ServerText.Should().Be("banned");
+        banned.IsBanned.Should().BeTrue();
+        banned.IsUnknownOwner.Should().BeFalse("a banned owner is not told to make a new one");
     }
 
     [Fact]

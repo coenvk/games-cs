@@ -156,6 +156,30 @@ public sealed class RunnerEndToEndTests : IDisposable
     }
 
     [Fact]
+    public async Task AChattyBot_KeepsItsConnection_ItsExtraLinesDroppedByTheRunner()
+    {
+        // A bot that prints a debug line before each answer, and once a line far over the server's limit: at full speed
+        // that is more than the server takes besides the answers. The runner drops what is too much; the connection stays.
+        _http.Dispose();
+        await _factory.DisposeAsync();
+        (_factory, _http) = Start(hands: 200);
+        Online(await NewOwnerAndBot("Ann", "Alpha Bot"), EchoBot("chatty", "shout"));
+        Online(await NewOwnerAndBot("Bob", "Beta Bot"), EchoBot());
+
+        var store = _factory.Services.GetRequiredService<MatchStore>();
+        var deadline = DateTime.UtcNow + Patience;
+        while (store.Of("Alpha Bot", 1).Count == 0)
+        {
+            DateTime.UtcNow.Should().BeBefore(deadline, "the bots should have played a ranked match by now");
+            await Task.Delay(100);
+        }
+
+        _status.Should().NotContain(s => s.StartsWith("reconnecting", StringComparison.Ordinal), "no connection was dropped");
+        _status.Should().Contain(s => s.StartsWith("dropped a line from the bot: longer than", StringComparison.Ordinal));
+        store.Load(store.Of("Alpha Bot", 1)[0].Id)!.Results.Should().AllSatisfy(r => r.Gone.Should().Be(0));
+    }
+
+    [Fact]
     public void Resolve_ExplainsABadPath()
     {
         RunnerCommand.Resolve("nope.txt", Host, out var problem).Should().BeNull();
@@ -217,9 +241,13 @@ public sealed class RunnerEndToEndTests : IDisposable
         return JsonDocument.Parse(await response.Content.ReadAsStringAsync()).RootElement.GetProperty("botToken").GetString()!;
     }
 
+    private static AgentCommand EchoBot(params string[] arguments) =>
+        new("dotnet", [Path.Combine(AppContext.BaseDirectory, "EchoBot", "Poker.Tests.EchoBot.dll"), .. arguments]);
+
+    /// <summary>Puts a bot online as the runner does, with the runner's own relay.</summary>
     private void Online(string token, AgentCommand command)
     {
-        var relay = new AgentRelay(
+        var relay = RunnerCommand.Relay(
             cancel => _factory.Server.CreateWebSocketClient().ConnectAsync(new Uri("ws://localhost/bots"), cancel),
             token,
             command);

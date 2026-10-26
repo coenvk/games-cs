@@ -86,10 +86,17 @@ public static partial class PokerEndpoints
             : Refused(result.Refusal);
     }
 
-    private static IResult RenewToken(HttpContext context, string name, Registration registration)
+    /// <summary>Gives the bot a new token, and cuts off a runner still connected with the old one (which may have leaked).</summary>
+    private static IResult RenewToken(HttpContext context, string name, Registration registration, RelayHost relays)
     {
         var result = registration.RenewBotToken(OwnerToken(context), name);
-        return result.Ok ? Results.Json(new TokenIssued(result.Value.Token), PokerJson.Default.TokenIssued) : Refused(result.Refusal);
+        if (!result.Ok)
+        {
+            return Refused(result.Refusal);
+        }
+
+        relays.Drop(result.Value.Account.Name, "token replaced");
+        return Results.Json(new TokenIssued(result.Value.Token), PokerJson.Default.TokenIssued);
     }
 
     private static async Task<IResult> PractiseAsync(HttpContext context, string name, Registry registry, PokerLeague league)
@@ -125,11 +132,14 @@ public static partial class PokerEndpoints
         return Results.Json(new BotPage(ratings.Of(bot.Name), RankedOf(store, bot.Name)), PokerJson.Default.BotPage);
     }
 
+    /// <summary>The owner's bots; 401 "unknown owner" for a token the server does not know, 403 "banned" for a banned owner.</summary>
     private static IResult Mine(HttpContext context, Registry registry, Ratings ratings, MatchStore store, RelayHost relays)
     {
         if (registry.OwnerOfToken(OwnerToken(context)) is not { } owner)
         {
-            return Results.Json(new Refusal("unknown owner"), PokerJson.Default.Refusal, statusCode: StatusCodes.Status401Unauthorized);
+            return registry.AnyOwnerOfToken(OwnerToken(context)) is { Banned: true }
+                ? Results.Json(new Refusal("banned"), PokerJson.Default.Refusal, statusCode: StatusCodes.Status403Forbidden)
+                : Results.Json(new Refusal("unknown owner"), PokerJson.Default.Refusal, statusCode: StatusCodes.Status401Unauthorized);
         }
 
         var ranking = ratings.Ranking();

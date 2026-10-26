@@ -99,7 +99,64 @@ public sealed class OnlineAccount
 
     /// <summary>The file each bot is run from when it goes online (a <c>*.bot.json</c> or a DLL in the bots folder).</summary>
     public Dictionary<string, string> BotFiles { get; init; } = [];
+
+    /// <summary>
+    /// The owners this computer had on the server before, newest last, with their bots' tokens and files: a token the
+    /// server did not know may work again once it has its data back, so it is never thrown away.
+    /// </summary>
+    public List<OnlineOwner> Previous { get; init; } = [];
+
+    /// <summary>Makes <paramref name="ownerToken"/> the owner, with no bots yet, and keeps the owner before in <see cref="Previous"/>.</summary>
+    public void ReplaceOwner(string ownerToken)
+    {
+        ArgumentNullException.ThrowIfNull(ownerToken);
+        if (OwnerToken is not null)
+        {
+            Previous.Add(new OnlineOwner(OwnerToken, new Dictionary<string, string>(BotTokens), new Dictionary<string, string>(BotFiles)));
+        }
+
+        OwnerToken = ownerToken;
+        BotTokens.Clear();
+        BotFiles.Clear();
+    }
+
+    /// <summary>
+    /// Makes the last of <see cref="Previous"/> the owner again, with its bots, and keeps the current one there in its
+    /// place; false when there is none.
+    /// </summary>
+    public bool TakeBackPrevious()
+    {
+        if (Previous.Count == 0)
+        {
+            return false;
+        }
+
+        var back = Previous[^1];
+        Previous.RemoveAt(Previous.Count - 1);
+        if (OwnerToken is not null)
+        {
+            Previous.Add(new OnlineOwner(OwnerToken, new Dictionary<string, string>(BotTokens), new Dictionary<string, string>(BotFiles)));
+        }
+
+        OwnerToken = back.OwnerToken;
+        BotTokens.Clear();
+        BotFiles.Clear();
+        foreach (var (bot, token) in back.BotTokens)
+        {
+            BotTokens[bot] = token;
+        }
+
+        foreach (var (bot, file) in back.BotFiles)
+        {
+            BotFiles[bot] = file;
+        }
+
+        return true;
+    }
 }
+
+/// <summary>An owner this computer had on a server before, with the tokens and files of its bots.</summary>
+public sealed record OnlineOwner(string OwnerToken, Dictionary<string, string> BotTokens, Dictionary<string, string> BotFiles);
 
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, WriteIndented = true)]
 [JsonSerializable(typeof(OnlineAccounts))]

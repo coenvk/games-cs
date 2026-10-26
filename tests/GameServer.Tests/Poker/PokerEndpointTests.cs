@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Poker;
 using Poker.Arena;
+using Poker.Online;
 using Uno;
 
 namespace GameServer.Tests.Poker;
@@ -201,6 +202,93 @@ public sealed class PokerEndpointTests : IDisposable
         bool AgainstDelta(StoredMatch m) => m.BotA == "Delta Bot" || m.BotB == "Delta Bot";
         await Until(() => Task.FromResult(store.Of("Charlie Bot", 10).Any(AgainstDelta)));
         store.Of("Charlie Bot", 10).First(AgainstDelta).Hands.Should().Be(10);
+    }
+
+    [Fact]
+    public async Task ANewToken_CutsOffTheRunnerWithTheOldOne_WhichCannotComeBack()
+    {
+        var ann = await NewOwner("Ann");
+        var old = await NewBot(ann, "Alpha Bot");
+        var runner = Online(old);
+        await Until(async () => (await Get("/api/poker/mine", ann)).GetProperty("bots")[0].GetProperty("connected").GetBoolean());
+
+        using var renewed = await Post("/api/poker/bots/Alpha%20Bot/token", new { }, ann);
+        renewed.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        await Until(() => Task.FromResult(runner.Statuses.Contains("refused: token replaced")));
+        (await Get("/api/poker/mine", ann)).GetProperty("bots")[0].GetProperty("connected").GetBoolean().Should().BeFalse();
+        var again = Online(old);
+        await Until(() => Task.FromResult(again.Statuses.Contains("refused: unknown token")));
+    }
+
+    [Fact]
+    public async Task ABan_CutsOffTheRunnersOfTheBannedBots()
+    {
+        var registry = _factory.Services.GetRequiredService<Registry>();
+        var alpha = Online(await NewOwnerAndBot("Ann", "Alpha Bot"));
+        var bob = await NewOwner("Bob");
+        var beta = await NewBot(bob, "Beta Bot");
+        var gamma = await NewBot(bob, "Gamma Bot");
+        var betaRunner = Online(beta);
+        var gammaRunner = Online(gamma);
+        await Until(async () => (await Get("/api/poker/mine", bob)).GetProperty("bots").EnumerateArray().All(b => b.GetProperty("connected").GetBoolean()));
+        await Until(() => Task.FromResult(alpha.Statuses.Any(s => s.StartsWith("connected", StringComparison.Ordinal))));
+
+        registry.Ban("Alpha Bot");
+        registry.Ban(registry.Bot("Beta Bot")!.OwnerId);
+
+        foreach (var runner in new[] { alpha, betaRunner, gammaRunner })
+        {
+            await Until(() => Task.FromResult(runner.Statuses.Contains("refused: banned")));
+        }
+
+        var again = Online(beta);
+        await Until(() => Task.FromResult(again.Statuses.Contains("refused: unknown token")));
+    }
+
+    [Fact]
+    public async Task ABannedOwner_IsToldBanned_NotUnknown()
+    {
+        var registry = _factory.Services.GetRequiredService<Registry>();
+        var ann = await NewOwner("Ann");
+        await NewBot(ann, "Alpha Bot");
+        registry.Ban(registry.Bot("Alpha Bot")!.OwnerId);
+
+        using var mine = await Send(HttpMethod.Get, "/api/poker/mine", null, ann);
+
+        mine.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        (await Json(mine)).GetProperty("error").GetString().Should().Be("banned");
+    }
+
+    [Fact]
+    public async Task ARunnersMessage_IsLimitedToAFewKilobytes()
+    {
+        var token = await NewOwnerAndBot("Ann", "Alpha Bot");
+        _factory.Services.GetRequiredService<RelayHost>().MaxLength.Should().Be(OnlineLimits.MaxMessage);
+
+        using var socket = await _factory.Server.CreateWebSocketClient().ConnectAsync(new Uri("ws://localhost/bots"), _stop.Token);
+        await SendText(socket, Relay.Write(new RelayHello(token, Relay.Version)));
+        var closed = false;
+        try
+        {
+            await SendText(socket, Relay.Write(new RelayLine(new string('x', OnlineLimits.MaxMessage), 1)));
+            using var wait = new CancellationTokenSource(Patience);
+            var buffer = new byte[4096];
+            while (!closed)
+            {
+                closed = (await socket.ReceiveAsync(buffer, wait.Token)).MessageType == WebSocketMessageType.Close;
+            }
+        }
+        catch (Exception e) when (e is WebSocketException or IOException)
+        {
+            closed = true; // the server closed it while we were still sending
+        }
+        catch (OperationCanceledException)
+        {
+            // Not closed in time: the assertion below says so.
+        }
+
+        closed.Should().BeTrue("a message over the limit closes the connection");
     }
 
     [Fact]

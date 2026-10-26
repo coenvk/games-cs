@@ -1,13 +1,26 @@
-﻿using Jentl.Net;
+﻿using System.Net.WebSockets;
+using Jentl.Net;
 using Poker.Arena;
+using Poker.Online;
 
 namespace PokerRunner;
 
-/// <summary>What the runner needs to know before it connects: which command to run for a bot, and where the server is.</summary>
+/// <summary>
+/// What the runner needs to know before it connects: which command to run for a bot, and where the server is; and the
+/// relay that puts the bot online within the server's limits.
+/// </summary>
 public static class RunnerCommand
 {
     /// <summary>Where the runner connects when nothing says otherwise.</summary>
     public const string DefaultServer = "ws://localhost:5080/bots";
+
+    /// <summary>
+    /// The runner's relay for the bot that <paramref name="command"/> runs: it keeps to the poker server's limits, dropping
+    /// a line longer than <see cref="OnlineLimits.MaxMessage"/> and lines beyond what the server takes besides the answers
+    /// (see <see cref="AgentRelay.ExtraPerSecond"/>), so a bot that prints too much loses those lines, not its connection.
+    /// </summary>
+    public static AgentRelay Relay(Func<CancellationToken, Task<WebSocket>> connect, string token, AgentCommand command) =>
+        new(connect, token, command) { MaxLength = OnlineLimits.MaxMessage };
 
     /// <summary>
     /// The command that runs the bot at <paramref name="path"/>: a <c>*.bot.json</c> as it describes itself, or a DLL

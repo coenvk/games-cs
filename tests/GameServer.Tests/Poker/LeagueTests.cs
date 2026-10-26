@@ -176,13 +176,33 @@ public sealed class LeagueTests : IDisposable
         reconnectedWhilePlaying.Should().BeTrue("the runner came back during the match");
         var match = _store.Load(_store.Of("BotA", 1)[0].Id)!;
         var result = match.Results.Single(r => r.Name == "BotA");
-        result.Gone.Should().Be(0, "being away is not three missed answers");
+        result.Gone.Should().Be(0, $"being away is not three missed answers (its problem: {result.Problem})");
         (result.Late + result.Illegal).Should().BePositive("its decisions were folded while it was away");
         match.Hands.Should().HaveCount(50);
         _ratings.Of("BotA").Matches.Should().Be(1);
         _ratings.Of("BotB").Matches.Should().Be(1);
         _ratings.Of("BotA").Rating.Deviation.Should().BeLessThan(350);
         _ratings.Of("BotB").Rating.Deviation.Should().BeLessThan(350);
+    }
+
+    [Fact]
+    public async Task ARunnerThatDropsBeforeItsBotSaidHello_KeepsThatBot_AndTheSeatIsNotGone()
+    {
+        // A bot slow to start (3 s): its runner drops at 2 s, before the hello, and is back a second later. The server
+        // sends the start again, as it heard nothing since; the runner keeps the bot that is starting, which says hello
+        // within the 5 s. Starting it over would take it to about 6 s: too late, and the seat gone for the match.
+        StartLeague(hands: 10);
+        var a = Online("Ann", "BotA", EchoBot("wait:3000"));
+        Online("Bob", "BotB");
+
+        await RunUntil(() => League.Playing.Contains("BotA"));
+        await Task.Delay(2000);
+        a.Drop();
+        await RunUntil(() => _store.Of("BotA", 10).Count == 1);
+
+        var result = _store.Load(_store.Of("BotA", 1)[0].Id)!.Results.Single(r => r.Name == "BotA");
+        result.Gone.Should().Be(0, $"the bot that was starting said hello in time (its problem: {result.Problem})");
+        result.Problem.Should().BeNull();
     }
 
     [Fact]

@@ -90,6 +90,7 @@ internal sealed partial class OnlineScene : Scene
         Typing,
         Token,
         Offline,
+        UnknownOwner,
     }
 
     private enum Typing
@@ -197,6 +198,13 @@ internal sealed partial class OnlineScene : Scene
             case Mode.Offline:
                 DrawText(batch, content, [(T("The server cannot be reached: {0}", _offline ?? ""), Problem), (T("The rest of the workshop works without it. Try again when the server is up."), Palette.Muted)]);
                 break;
+            case Mode.UnknownOwner:
+                DrawText(batch, content,
+                [
+                    (T("The server does not know this computer's owner: it may have lost its data, or this is a different server."), Problem),
+                    (T("The owner token stays on this computer. Try again once the server has its data back, or make a new owner: the token from before is kept as well."), Palette.Muted),
+                ]);
+                break;
             case Mode.Typing:
                 DrawTyping(batch, content);
                 break;
@@ -238,7 +246,7 @@ internal sealed partial class OnlineScene : Scene
     {
         switch (_mode)
         {
-            case Mode.Main or Mode.Offline:
+            case Mode.Main or Mode.Offline or Mode.UnknownOwner:
                 Scenes.Pop();
                 break;
             case Mode.Bot:
@@ -395,7 +403,24 @@ internal sealed partial class OnlineScene : Scene
             _typed.Append(_context.PlayerName);
         }
 
-        _menu = new Menu(_context.Sounds, new MenuItem(T("Back"), Leave));
+        _menu = new Menu(_context.Sounds, new MenuItem(T("Back"), CancelTyping));
+    }
+
+    /// <summary>Stops typing: back to where the typing began, or out of the view when there is no owner to go back to.</summary>
+    private void CancelTyping()
+    {
+        if (_typing != Typing.Owner)
+        {
+            Leave();
+        }
+        else if (Account.OwnerToken is not null)
+        {
+            UnknownOwner(); // the player chose to make a new owner there
+        }
+        else
+        {
+            Scenes.Pop();
+        }
     }
 
     /// <summary>Letters, digits, spaces and a few signs; Backspace takes one back, Enter is done, Escape cancels.</summary>
@@ -403,15 +428,7 @@ internal sealed partial class OnlineScene : Scene
     {
         if (input.WasPressed(Keys.Escape))
         {
-            if (_typing == Typing.Owner)
-            {
-                Scenes.Pop();
-            }
-            else
-            {
-                Leave();
-            }
-
+            CancelTyping();
             return;
         }
 
@@ -504,16 +521,49 @@ internal sealed partial class OnlineScene : Scene
             return;
         }
 
-        if (problem.Status == HttpStatusCode.Unauthorized || problem.Message == "unknown owner")
+        if (problem.IsBanned)
         {
-            // The server's data was started afresh, say: the token kept here names no owner there.
-            Account.OwnerToken = null;
-            StartTyping(Typing.Owner);
-            Note(T("The server does not know this computer's owner token. Make a new owner to go on."), problem: true);
+            Note(T("This owner is banned from the league."), problem: true);
+            return;
+        }
+
+        if (problem.IsUnknownOwner)
+        {
+            // The server lost its data, say, or this is another server: the token kept here is still the owner's, and
+            // may work again. It is only ever replaced when the player makes a new owner, and kept then too.
+            UnknownOwner();
             return;
         }
 
         Note(T("The server said: {0}", Describe(problem)), problem: true);
+    }
+
+    /// <summary>The server does not know the owner: try again, make a new owner, or take back the owner from before.</summary>
+    private void UnknownOwner()
+    {
+        _mode = Mode.UnknownOwner;
+        _bot = null;
+        _shownToken = null;
+        _note = null;
+        List<MenuItem> items = [new MenuItem(T("Try again"), () => Refresh()), new MenuItem(T("Make a new owner"), () => StartTyping(Typing.Owner))];
+        if (Account.Previous.Count > 0)
+        {
+            items.Add(new MenuItem(T("Use the owner from before"), TakeBackPrevious));
+        }
+
+        items.Add(new MenuItem(T("Back"), () => Scenes.Pop()));
+        _menu = new Menu(_context.Sounds, [.. items]);
+    }
+
+    /// <summary>Makes the owner this computer had before the current one the owner again, and asks the server.</summary>
+    private void TakeBackPrevious()
+    {
+        if (Account.TakeBackPrevious())
+        {
+            Keep();
+            Note(T("The owner from before is this computer's owner again."));
+            Refresh();
+        }
     }
 
     /// <summary>
@@ -593,7 +643,7 @@ internal sealed partial class OnlineScene : Scene
                 _ranking = ranking;
                 _mine = mine;
                 _rankingFirst = Math.Min(_rankingFirst, Math.Max(0, ranking.Count - 1));
-                var wasOffline = _mode == Mode.Offline;
+                var wasOffline = _mode is Mode.Offline or Mode.UnknownOwner;
                 _offline = null;
                 if (owner is null && _mode != Mode.Typing)
                 {
@@ -627,9 +677,7 @@ internal sealed partial class OnlineScene : Scene
             var token = await client.NewOwnerAsync(name).ConfigureAwait(false);
             return () =>
             {
-                Account.OwnerToken = token;
-                Account.BotTokens.Clear();
-                Account.BotFiles.Clear();
+                Account.ReplaceOwner(token); // an owner before is kept: the server may know it again
                 Keep();
                 Note(T("Welcome, {0}. Register a bot to put it online.", name));
                 _tab = Tab.Mine;

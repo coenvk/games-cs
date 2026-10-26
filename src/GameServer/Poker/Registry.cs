@@ -43,6 +43,12 @@ public sealed class Registry
         }
     }
 
+    /// <summary>
+    /// Raised after a ban with the names of the bots it banned (the bot, or all of the owner's), so their runners can be
+    /// cut off at once: a bot's token is checked only when its runner connects.
+    /// </summary>
+    public event Action<IReadOnlyList<string>>? BotsBanned;
+
     /// <summary>The time, for when something was registered.</summary>
     internal DateTimeOffset Now => _clock.GetUtcNow();
 
@@ -112,24 +118,32 @@ public sealed class Registry
     /// </summary>
     public void Ban(string botOrOwner)
     {
+        List<string> banned = [];
         lock (_lock)
         {
             if (_bots.TryGetValue(botOrOwner, out var bot))
             {
                 _bots[bot.Name] = bot with { Banned = true };
+                banned.Add(bot.Name);
                 SaveBots();
             }
             else if (_owners.TryGetValue(botOrOwner, out var owner))
             {
                 _owners[owner.Id] = owner with { Banned = true };
-                foreach (var theirs in _bots.Values.Where(b => b.OwnerId == owner.Id && !b.Banned).ToList())
+                foreach (var theirs in _bots.Values.Where(b => b.OwnerId == owner.Id).ToList())
                 {
                     _bots[theirs.Name] = theirs with { Banned = true };
+                    banned.Add(theirs.Name);
                 }
 
                 SaveOwners();
                 SaveBots();
             }
+        }
+
+        if (banned.Count > 0)
+        {
+            BotsBanned?.Invoke(banned);
         }
     }
 

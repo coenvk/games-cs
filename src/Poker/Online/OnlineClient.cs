@@ -80,6 +80,15 @@ public sealed class OnlineProblem : Exception
 
     /// <summary>Whether no answer came: the server is down, or this computer is offline.</summary>
     public bool IsUnreachable => Status is null;
+
+    /// <summary>
+    /// Whether the server does not know the owner token: it may have lost its data, or be another server than the one
+    /// the token is from. The token is still the owner's, and may work again once the server has its data back.
+    /// </summary>
+    public bool IsUnknownOwner => Status == HttpStatusCode.Unauthorized || ServerText == "unknown owner";
+
+    /// <summary>Whether the server refused because the owner or the bot is banned from the league.</summary>
+    public bool IsBanned => ServerText == "banned";
 }
 
 /// <summary>
@@ -137,7 +146,10 @@ public sealed class OnlineClient(HttpClient http, Uri server)
     public async Task<IReadOnlyList<RankingRowJson>> RankingAsync(CancellationToken cancel = default) =>
         await SendAsync(HttpMethod.Get, "api/poker/ranking", null, null, OnlineJson.Default.IReadOnlyListRankingRowJson, cancel).ConfigureAwait(false);
 
-    /// <summary>The owner's bots, with their practice matches.</summary>
+    /// <summary>
+    /// The owner's bots, with their practice matches. An owner the server does not know is refused with 401 (see
+    /// <see cref="OnlineProblem.IsUnknownOwner"/>), a banned one with 403 (<see cref="OnlineProblem.IsBanned"/>).
+    /// </summary>
     public Task<MineJson> MineAsync(string ownerToken, CancellationToken cancel = default) =>
         SendAsync(HttpMethod.Get, "api/poker/mine", ownerToken, null, OnlineJson.Default.MineJson, cancel);
 
