@@ -100,7 +100,7 @@ internal sealed class WorkshopContext
         }
 
         var command = bot.Command ?? throw new InvalidOperationException($"{bot.Name} cannot be run: {bot.Source}");
-        return _running.Track(new ProcessSeat(command, name ?? bot.Name));
+        return _running.Track(ProcessSeat.Start(command, name ?? bot.Name));
     }
 }
 

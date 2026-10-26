@@ -23,7 +23,7 @@ public class BotHostTests
     [Fact]
     public async Task TheHost_RunsACSharpBot()
     {
-        using var seat = new ProcessSeat(Host(SampleDll, "GoodBot"), "Good");
+        using var seat = ProcessSeat.Start(Host(SampleDll, "GoodBot"), "Good");
         await seat.StartAsync(Start, Limit);
         seat.IsGone.Should().BeFalse();
 
@@ -36,7 +36,7 @@ public class BotHostTests
         var command = AgentCommand.DotNet(Path.Combine(AppContext.BaseDirectory, "BotHost", "PokerBotHost.dll"), [SampleDll, "GoodBot"]);
         command.FileName.Should().NotBe("dotnet", "the host is built with its apphost");
 
-        using var seat = new ProcessSeat(command, "Good");
+        using var seat = ProcessSeat.Start(command, "Good");
         await seat.StartAsync(Start, Limit);
         seat.IsGone.Should().BeFalse();
 
@@ -46,7 +46,7 @@ public class BotHostTests
     [Fact]
     public async Task ABotThatPrintsPartialLines_StillAnswers()
     {
-        using var seat = new ProcessSeat(Host(SampleDll, "ChattyBot"), "Chatty");
+        using var seat = ProcessSeat.Start(Host(SampleDll, "ChattyBot"), "Chatty");
         await seat.StartAsync(Start, Limit);
 
         (await seat.AskAsync(Decision, TimeoutToken())).Should().Be(BotAction.Call with { Id = 7 });
@@ -56,7 +56,7 @@ public class BotHostTests
     [Fact]
     public async Task TheHost_FindsABotByItsFullName()
     {
-        using var seat = new ProcessSeat(Host(SampleDll, "Poker.SampleBots.GoodBot"), "Good");
+        using var seat = ProcessSeat.Start(Host(SampleDll, "Poker.SampleBots.GoodBot"), "Good");
         await seat.StartAsync(Start, Limit);
 
         (await seat.AskAsync(Decision, TimeoutToken())).Should().Be(BotAction.Call with { Id = 7 });
@@ -65,7 +65,7 @@ public class BotHostTests
     [Fact]
     public async Task ADllWithSeveralBots_NeedsAName()
     {
-        using var seat = new ProcessSeat(Host(SampleDll), "Many");
+        using var seat = ProcessSeat.Start(Host(SampleDll), "Many");
         await seat.StartAsync(Start, Limit);
 
         seat.IsGone.Should().BeTrue();
@@ -75,7 +75,7 @@ public class BotHostTests
     [Fact]
     public async Task AnUnknownBotName_IsGone_WithItsProblem()
     {
-        using var seat = new ProcessSeat(Host(SampleDll, "NoSuchBot"), "Nobody");
+        using var seat = ProcessSeat.Start(Host(SampleDll, "NoSuchBot"), "Nobody");
         await seat.StartAsync(Start, Limit);
 
         seat.IsGone.Should().BeTrue();
@@ -86,7 +86,7 @@ public class BotHostTests
     public async Task ADllWithoutABot_IsGone_WithItsProblem()
     {
         // The SDK itself holds no bot.
-        using var seat = new ProcessSeat(Host(Path.Combine(AppContext.BaseDirectory, "BotHost", "Poker.Bots.dll")), "Empty");
+        using var seat = ProcessSeat.Start(Host(Path.Combine(AppContext.BaseDirectory, "BotHost", "Poker.Bots.dll")), "Empty");
         await seat.StartAsync(Start, Limit);
 
         seat.IsGone.Should().BeTrue();
@@ -96,7 +96,7 @@ public class BotHostTests
     [Fact]
     public async Task AMissingDll_IsGone_WithItsProblem()
     {
-        using var seat = new ProcessSeat(Host(Path.Combine(Path.GetTempPath(), "no-such-bot.dll")), "Missing");
+        using var seat = ProcessSeat.Start(Host(Path.Combine(Path.GetTempPath(), "no-such-bot.dll")), "Missing");
         await seat.StartAsync(Start, Limit);
 
         seat.IsGone.Should().BeTrue();
@@ -111,7 +111,7 @@ public class BotHostTests
         {
             var dll = Path.Combine(folder, "Mine.dll");
             File.Copy(SampleDll, dll);
-            using var seat = new ProcessSeat(Host(dll, "GoodBot"), "Good");
+            using var seat = ProcessSeat.Start(Host(dll, "GoodBot"), "Good");
             await seat.StartAsync(Start, Limit);
             (await seat.AskAsync(Decision, TimeoutToken())).Should().Be(BotAction.Call with { Id = 7 });
 
@@ -129,7 +129,7 @@ public class BotHostTests
     [Fact]
     public async Task AThrowingBot_DoesNotStopTheHost()
     {
-        using var seat = new ProcessSeat(Host(SampleDll, "ThrowingBot"), "Thrower");
+        using var seat = ProcessSeat.Start(Host(SampleDll, "ThrowingBot"), "Thrower");
         await seat.StartAsync(Start, Limit);
         using var shortWait = new CancellationTokenSource(TimeSpan.FromSeconds(1));
 
@@ -141,7 +141,7 @@ public class BotHostTests
     [Fact]
     public async Task AnExitingBot_EndsOnlyItsOwnProcess()
     {
-        using var seat = new ProcessSeat(Host(SampleDll, "ExitingBot"), "Quitter");
+        using var seat = ProcessSeat.Start(Host(SampleDll, "ExitingBot"), "Quitter");
         await seat.StartAsync(Start, Limit);
 
         var ask = () => seat.AskAsync(Decision, TimeoutToken());

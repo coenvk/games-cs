@@ -21,7 +21,7 @@ public class SeatTests
     [Fact]
     public async Task AProcessSeat_PlaysThroughTheProtocol()
     {
-        using var seat = new ProcessSeat(EchoBot(), "Echo");
+        using var seat = ProcessSeat.Start(EchoBot(), "Echo");
         await seat.StartAsync(Start, Limit);
         seat.IsGone.Should().BeFalse();
 
@@ -33,7 +33,7 @@ public class SeatTests
     [Fact]
     public async Task DebugPrints_AreNotAnswers()
     {
-        using var seat = new ProcessSeat(EchoBot("chatty"), "Echo");
+        using var seat = ProcessSeat.Start(EchoBot("chatty"), "Echo");
         await seat.StartAsync(Start, Limit);
 
         var action = await seat.AskAsync(Decision, TimeoutToken());
@@ -44,7 +44,7 @@ public class SeatTests
     [Fact]
     public async Task ABotThatCannotStart_IsGone_WithItsProblem()
     {
-        using var seat = new ProcessSeat(new AgentCommand("no-such-program", []), "Ghost");
+        using var seat = ProcessSeat.Start(new AgentCommand("no-such-program", []), "Ghost");
         await seat.StartAsync(Start, Limit);
 
         seat.IsGone.Should().BeTrue();
@@ -56,7 +56,7 @@ public class SeatTests
     [Fact]
     public async Task ACancelledAsk_ReturnsNullWithoutWaiting()
     {
-        using var seat = new ProcessSeat(EchoBot(), "Echo");
+        using var seat = ProcessSeat.Start(EchoBot(), "Echo");
         await seat.StartAsync(Start, Limit);
         using var cancelled = new CancellationTokenSource();
         await cancelled.CancelAsync();
@@ -110,7 +110,7 @@ public class SeatTests
     [Fact]
     public async Task AStaleAnswer_IsSkipped_AndTheRightOneTaken()
     {
-        using var seat = new ProcessSeat(EchoBot("stale"), "Echo");
+        using var seat = ProcessSeat.Start(EchoBot("stale"), "Echo");
         await seat.StartAsync(Start, Limit);
 
         (await seat.AskAsync(Decision, TimeoutToken())).Should().Be(BotAction.Call with { Id = 7 });
@@ -119,7 +119,7 @@ public class SeatTests
     [Fact]
     public async Task AWrongProtocolMajor_IsGone_WithItsProblem()
     {
-        using var seat = new ProcessSeat(EchoBot("protocol2"), "Old");
+        using var seat = ProcessSeat.Start(EchoBot("protocol2"), "Old");
         await seat.StartAsync(Start, Limit);
 
         seat.IsGone.Should().BeTrue();
@@ -129,7 +129,7 @@ public class SeatTests
     [Fact]
     public async Task ACancelledSlowAsk_DoesNotTakeTheNextAnswer()
     {
-        using var seat = new ProcessSeat(EchoBot("slow:700"), "Echo");
+        using var seat = ProcessSeat.Start(EchoBot("slow:700"), "Echo");
         await seat.StartAsync(Start, Limit);
         using var first = new CancellationTokenSource(TimeSpan.FromMilliseconds(200));
         var abandoned = seat.AskAsync(Decision with { Id = 1 }, first.Token);
@@ -143,7 +143,7 @@ public class SeatTests
     [Fact]
     public async Task ABotThatDoesNotAnswerThreeTimesInARow_IsStopped()
     {
-        using var seat = new ProcessSeat(EchoBot("skip:1,2,3"), "Echo");
+        using var seat = ProcessSeat.Start(EchoBot("skip:1,2,3"), "Echo");
         await seat.StartAsync(Start, Limit);
 
         for (var id = 1; id <= 3; id++)
@@ -161,7 +161,7 @@ public class SeatTests
     [Fact]
     public async Task AnAnswerInTime_StartsTheCountAgain()
     {
-        using var seat = new ProcessSeat(EchoBot("skip:1,2,4,5"), "Echo");
+        using var seat = ProcessSeat.Start(EchoBot("skip:1,2,4,5"), "Echo");
         await seat.StartAsync(Start, Limit);
 
         var answers = new List<BotAction?>();
@@ -201,6 +201,139 @@ public class SeatTests
         public void OnMatchEnd(MatchEnd m) => throw new InvalidOperationException("hook");
 
         public BotAction Decide(Decision d) => throw new InvalidOperationException("boom");
+    }
+
+    [Fact]
+    public async Task AnAwayAgent_IsFolded_ButNotStopped()
+    {
+        var agent = new FakeAgent { IsAway = true };
+        using var seat = new AgentSeat(agent, "Remote");
+        for (var i = 0; i < 5; i++)
+        {
+            (await seat.AskAsync(Decision with { Id = i }, TimeoutToken())).Should().BeNull();
+        }
+
+        seat.IsGone.Should().BeFalse("being away is not three late answers");
+        seat.IsAway.Should().BeTrue();
+        agent.Asked.Should().Be(0, "an away agent is not asked");
+
+        agent.IsAway = false;
+        agent.Answer = """{"type":"action","action":"call"}""";
+        (await seat.AskAsync(Decision with { Id = 5 }, TimeoutToken())).Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task ThreeLateAnswers_WhileConnected_StillStopTheSeat()
+    {
+        var agent = new FakeAgent();
+        using var seat = new AgentSeat(agent, "Remote");
+        for (var i = 0; i < AgentSeat.MaxMissed; i++)
+        {
+            seat.IsGone.Should().BeFalse();
+            (await seat.AskAsync(Decision with { Id = i }, ShortToken())).Should().BeNull();
+        }
+
+        seat.IsGone.Should().BeTrue();
+        seat.Problem.Should().Contain("did not answer");
+        agent.Stopped.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task AnAgentThatGoesAwayDuringADecision_IsFolded_WithoutCounting()
+    {
+        var agent = new FakeAgent();
+        using var seat = new AgentSeat(agent, "Remote");
+        for (var i = 0; i < AgentSeat.MaxMissed + 2; i++)
+        {
+            agent.IsAway = false;
+            var ask = seat.AskAsync(Decision with { Id = i }, ShortToken());
+            await Task.Delay(100);
+            agent.IsAway = true;
+            (await ask).Should().BeNull();
+        }
+
+        seat.IsGone.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task StartAsync_WaitsForAnAwayAgentToComeBack()
+    {
+        var agent = new FakeAgent { IsAway = true, Answer = $$"""{"type":"hello","protocol":{{PokerBots.Protocol.Version}}}""" };
+        using var seat = new AgentSeat(agent, "Remote");
+        var start = seat.StartAsync(Start, Limit);
+        await Task.Delay(150);
+        start.IsCompleted.Should().BeFalse();
+
+        agent.IsAway = false;
+        await start;
+
+        seat.IsGone.Should().BeFalse();
+        agent.Sent.Should().Contain(l => l.Contains("hello"));
+    }
+
+    [Fact]
+    public async Task StartAsync_GivesUpOnAnAgentThatStaysAway()
+    {
+        var agent = new FakeAgent { IsAway = true };
+        using var seat = new AgentSeat(agent, "Remote");
+        await seat.StartAsync(Start, TimeSpan.FromMilliseconds(200));
+
+        seat.IsGone.Should().BeTrue();
+        seat.Problem.Should().Contain("hello");
+    }
+
+    // An agent that answers every line with Answer (when set), or with nothing; IsAway makes it silent at once.
+    private sealed class FakeAgent : IAgent
+    {
+        private readonly Lock _lock = new();
+
+        public bool IsAway { get; set; }
+
+        public string? Answer { get; set; }
+
+        public int Asked { get; private set; }
+
+        public bool Stopped { get; private set; }
+
+        public List<string> Sent { get; } = [];
+
+        public bool HasExited => Stopped;
+
+        public string? Problem => Stopped ? "stopped" : null;
+
+        public IReadOnlyList<string> ErrorOutput => [];
+
+        public void Send(string line)
+        {
+            lock (_lock)
+            {
+                Sent.Add(line);
+            }
+        }
+
+        public async Task<string?> ReadAsync(TimeSpan limit)
+        {
+            if (IsAway || Answer is null)
+            {
+                await Task.Delay(IsAway ? TimeSpan.Zero : TimeSpan.FromMilliseconds(Math.Clamp(limit.TotalMilliseconds, 0, 50))).ConfigureAwait(false);
+                return null;
+            }
+
+            return Answer;
+        }
+
+        public Task<string?> AskAsync(string line, TimeSpan limit)
+        {
+            Asked++;
+            Send(line);
+            return ReadAsync(limit);
+        }
+
+        public void Stop() => Stopped = true;
+
+        public void Dispose()
+        {
+        }
     }
 
     private static CancellationToken TimeoutToken() => new CancellationTokenSource(Limit).Token;

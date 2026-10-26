@@ -169,7 +169,7 @@ public class ArenaBatchTests
     public async Task ABotThatCannotPlay_SaysWhyInItsResult(BatchFormat format)
     {
         var batch = new ArenaBatch(
-            [() => new ProcessSeat(new Jentl.Net.AgentCommand("no-such-program-anywhere", []), "Ghost"), House(() => new CallingBot())],
+            [() => ProcessSeat.Start(new Jentl.Net.AgentCommand("no-such-program-anywhere", []), "Ghost"), House(() => new CallingBot())],
             new BatchSettings(format, 2, Seed: DealSeed.FromNumber(6), Limit));
 
         var result = await batch.RunAsync(new Reports(), CancellationToken.None);
@@ -184,7 +184,7 @@ public class ArenaBatchTests
     public async Task AWatchedMatch_SaysWhyABotCouldNotPlay()
     {
         using var table = new ArenaTable(
-            [new ProcessSeat(new Jentl.Net.AgentCommand("no-such-program-anywhere", []), "Ghost"), new HouseSeat(new CallingBot())],
+            [ProcessSeat.Start(new Jentl.Net.AgentCommand("no-such-program-anywhere", []), "Ghost"), new HouseSeat(new CallingBot())],
             new ArenaSettings(TableFormat.FixedStacks, 2, Seed: DealSeed.FromNumber(6), Limit));
         await table.RunAsync(CancellationToken.None);
 
