@@ -1,7 +1,9 @@
 ﻿using System.Net.Http.Json;
 using System.Text.Json;
+using GameServer.Poker;
 using Jentl.Net;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
 using PokerRunner;
 
 namespace GameServer.Tests.Poker;
@@ -82,6 +84,33 @@ public sealed class RunnerEndToEndTests : IDisposable
             DateTime.UtcNow.Should().BeBefore(deadline, "both bots should have played a ranked match by now");
             await Task.Delay(100);
         }
+    }
+
+    [Fact]
+    public async Task ABotThatPlaysLegally_PlaysLegallyOnline()
+    {
+        var command = RunnerCommand.Resolve(SampleDll, Host, out var problem, "GoodBot");
+        problem.Should().BeNull();
+        Online(await NewOwnerAndBot("Ann", "Alpha Bot"), command!);
+        Online(await NewOwnerAndBot("Bob", "Beta Bot"), command!);
+
+        var store = _factory.Services.GetRequiredService<MatchStore>();
+        var deadline = DateTime.UtcNow + Patience;
+        while (store.Of("Alpha Bot", 1).Count == 0)
+        {
+            DateTime.UtcNow.Should().BeBefore(deadline, "the bots should have played a ranked match by now");
+            await Task.Delay(100);
+        }
+
+        // GoodBot checks when that is free and calls otherwise: every decision online is its own, legal, answer in time.
+        var match = store.Load(store.Of("Alpha Bot", 1)[0].Id)!;
+        match.Hands.Should().HaveCount(10);
+        match.Results.Should().AllSatisfy(r =>
+        {
+            r.Illegal.Should().Be(0, $"{r.Name} answers every decision legally");
+            r.Late.Should().Be(0, $"{r.Name} answers at once");
+            r.Gone.Should().Be(0);
+        });
     }
 
     [Fact]

@@ -2,14 +2,18 @@
 
 namespace Poker.SampleBots;
 
-/// <summary>Always calls.</summary>
+/// <summary>Checks when that is free and calls otherwise: always a legal answer (a call with nothing to call is not).</summary>
 public sealed class GoodBot : IPokerBot
 {
     /// <inheritdoc />
     public string Name => "GoodBot";
 
     /// <inheritdoc />
-    public BotAction Decide(Decision d) => BotAction.Call;
+    public BotAction Decide(Decision d)
+    {
+        ArgumentNullException.ThrowIfNull(d);
+        return d.Legal.Check ? BotAction.Check : BotAction.Call;
+    }
 }
 
 /// <summary>Takes five seconds to call.</summary>
