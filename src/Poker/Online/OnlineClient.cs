@@ -72,6 +72,12 @@ public sealed class OnlineProblem : Exception
     /// <summary>The server's answer, or null when there was none.</summary>
     public HttpStatusCode? Status { get; }
 
+    /// <summary>
+    /// The server's own words when it refused (its <c>{ "error": "…" }</c>), or null when the answer had none: no answer, a
+    /// 404, or a page from something in between, such as a proxy's 502. <see cref="Exception.Message"/> then says it in English.
+    /// </summary>
+    public string? ServerText { get; init; }
+
     /// <summary>Whether no answer came: the server is down, or this computer is offline.</summary>
     public bool IsUnreachable => Status is null;
 }
@@ -210,12 +216,13 @@ public sealed class OnlineClient(HttpClient http, Uri server)
 
         using (response)
         {
-            throw new OnlineProblem(await RefusalAsync(response, cancel).ConfigureAwait(false), response.StatusCode);
+            var refusal = await RefusalAsync(response, cancel).ConfigureAwait(false);
+            throw new OnlineProblem(refusal ?? Fallback(response), response.StatusCode) { ServerText = refusal };
         }
     }
 
-    // The server's { "error": "…" }, or what the status says when there is none (a 404 has no body).
-    private static async Task<string> RefusalAsync(HttpResponseMessage response, CancellationToken cancel)
+    // The server's { "error": "…" }, or null when there is none (a 404 has no body; a proxy sends a page of its own).
+    private static async Task<string?> RefusalAsync(HttpResponseMessage response, CancellationToken cancel)
     {
         try
         {
@@ -225,17 +232,21 @@ public sealed class OnlineClient(HttpClient http, Uri server)
                 return refusal.Error;
             }
         }
-        catch (JsonException)
+        catch (Exception e) when (e is JsonException or NotSupportedException)
         {
         }
 
-        return response.StatusCode switch
+        return null;
+    }
+
+    // What the status says, in English, when the server gave no words of its own.
+    private static string Fallback(HttpResponseMessage response) =>
+        response.StatusCode switch
         {
             HttpStatusCode.NotFound => "not found",
             HttpStatusCode.Unauthorized => "unknown owner",
             _ => $"the server answered {(int)response.StatusCode} {response.ReasonPhrase}",
         };
-    }
 }
 
 internal sealed record NameRequest(string? Name);

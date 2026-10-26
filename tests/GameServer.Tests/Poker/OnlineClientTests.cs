@@ -149,6 +149,31 @@ public sealed class OnlineClientTests : IDisposable
         (await notHers.Should().ThrowAsync<OnlineProblem>()).Which.Status.Should().Be(HttpStatusCode.NotFound);
     }
 
+    [Fact]
+    public async Task AnAnswerWithoutTheServersWords_IsAProblemWithItsStatusOnly()
+    {
+        using var proxy = new HttpClient(new Answering(HttpStatusCode.BadGateway, "<html>Bad Gateway</html>", "text/html"));
+        var client = new OnlineClient(proxy, new Uri("http://games.example.org/"));
+
+        var ranking = () => client.RankingAsync();
+
+        var problem = (await ranking.Should().ThrowAsync<OnlineProblem>()).Which;
+        problem.Status.Should().Be(HttpStatusCode.BadGateway);
+        problem.ServerText.Should().BeNull("a proxy's page is not the server's refusal");
+        problem.IsUnreachable.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task TheServersRefusal_IsKeptAsItsText()
+    {
+        var owner = await _client.NewOwnerAsync("Ann");
+        await _client.NewBotAsync(owner, "Alpha Bot");
+
+        var taken = () => _client.NewBotAsync(owner, "Alpha Bot");
+
+        (await taken.Should().ThrowAsync<OnlineProblem>()).Which.ServerText.Should().Be("name taken");
+    }
+
     [Theory]
     [InlineData("ws://localhost:5080/play", "http://localhost:5080/", "ws://localhost:5080/bots")]
     [InlineData("wss://games.example.org/play", "https://games.example.org/", "wss://games.example.org/bots")]
@@ -157,6 +182,13 @@ public sealed class OnlineClientTests : IDisposable
     {
         OnlineClient.ApiAddress(new Uri(server)).Should().Be(new Uri(api));
         OnlineClient.RunnerAddress(new Uri(server)).Should().Be(new Uri(runner));
+    }
+
+    /// <summary>Gives every request the same answer, as a proxy in front of a server that is down does.</summary>
+    private sealed class Answering(HttpStatusCode status, string body, string mediaType) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>
+            Task.FromResult(new HttpResponseMessage(status) { Content = new StringContent(body, System.Text.Encoding.UTF8, mediaType) });
     }
 
     private static AgentCommand EchoBot() =>

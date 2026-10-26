@@ -518,7 +518,8 @@ internal sealed partial class OnlineScene : Scene
 
     /// <summary>
     /// The problem in the player's language: the server's known refusals and the client's own words translated, anything
-    /// else (a new refusal, the system's words for a failed connection) as it came.
+    /// else (a new refusal, the system's words for a failed connection) as it came, and an answer without the server's own
+    /// words by its status code.
     /// </summary>
     private static string Describe(OnlineProblem problem)
     {
@@ -537,12 +538,18 @@ internal sealed partial class OnlineScene : Scene
             return T("not found");
         }
 
-        if (BotsAlready().Match(problem.Message) is { Success: true } bots)
+        // No words of the server's own: a proxy's page (a 502, say), or a bare error status.
+        if (problem.ServerText is not { } text)
+        {
+            return T("it answered {0}", (int)problem.Status!.Value);
+        }
+
+        if (BotsAlready().Match(text) is { Success: true } bots)
         {
             return T("you have {0} bots already, the most there may be", bots.Groups[1].Value);
         }
 
-        return problem.Message switch
+        return text switch
         {
             "unknown owner" => T("it does not know this owner"),
             "not a name" => T("that is not a name it takes"),
