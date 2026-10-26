@@ -158,8 +158,7 @@ internal sealed partial class OnlineScene : Scene
         batch.FillRectangle(viewport, Palette.Dim);
         var margin = fonts.Px(24);
         var panel = new Rectangle(viewport.X + margin, viewport.Y + margin, viewport.Width - 2 * margin, viewport.Height - 2 * margin);
-        batch.FillRectangle(panel, Palette.Panel);
-        batch.FillRectangle(new Rectangle(panel.X, panel.Y, panel.Width, 6), Palette.Accent);
+        Theme.DrawPanel(batch, panel);
         var padding = fonts.Px(28);
         var y = panel.Y + fonts.Px(20);
         batch.DrawText(fonts.Heading, T("Online"), new Vector2(panel.Center.X, y), Palette.Text, Align.Center);

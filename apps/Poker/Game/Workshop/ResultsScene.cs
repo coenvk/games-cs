@@ -141,8 +141,7 @@ internal sealed class ResultsScene : Scene
         batch.FillRectangle(viewport, Palette.Dim);
         var margin = fonts.Px(24);
         var panel = new Rectangle(viewport.X + margin, viewport.Y + margin, viewport.Width - 2 * margin, viewport.Height - 2 * margin);
-        batch.FillRectangle(panel, Palette.Panel);
-        batch.FillRectangle(new Rectangle(panel.X, panel.Y, panel.Width, 6), Palette.Accent);
+        Theme.DrawPanel(batch, panel);
         var padding = fonts.Px(28);
         var inner = new Rectangle(panel.X + padding, panel.Y + fonts.Px(20), panel.Width - 2 * padding, panel.Height - fonts.Px(20) - padding / 2);
 

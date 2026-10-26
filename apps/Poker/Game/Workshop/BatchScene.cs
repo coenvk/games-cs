@@ -105,8 +105,7 @@ internal sealed class BatchScene : Scene
         var width = Math.Min(viewport.Width - 2 * padding, fonts.Px(900));
         var height = Math.Min(viewport.Height - fonts.Px(40), fonts.Px(400));
         var panel = new Rectangle(viewport.Center.X - width / 2, viewport.Center.Y - height / 2, width, height);
-        batch.FillRectangle(panel, Palette.Panel);
-        batch.FillRectangle(new Rectangle(panel.X, panel.Y, panel.Width, 6), Palette.Accent);
+        Theme.DrawPanel(batch, panel);
 
         var y = panel.Y + fonts.Px(24);
         batch.DrawText(fonts.Heading, T("Running a batch"), new Vector2(panel.Center.X, y), Palette.Text, Align.Center);

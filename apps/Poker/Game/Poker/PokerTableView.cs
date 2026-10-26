@@ -537,10 +537,12 @@ internal sealed class PokerTableView(GameContext context) : IDisposable
         var box = layout.Boxes[seat];
         var current = !hand.IsOver && hand.CurrentSeat == seat;
         var isOut = !hand.InHand(seat);
-        batch.FillRectangle(box, current ? Palette.Accent : Palette.Panel);
+        // A panel of the theme, edged in the accent while it is this seat's turn, and darker once the seat is out of the hand.
+        var panel = Theme.Current.Panel;
+        var style = panel with { Border = 3, BorderColor = current ? Palette.Accent : panel.BorderColor ?? Palette.Panel };
+        style.Draw(batch, box, isOut || hand.HasFolded(seat) ? Palette.Background : Palette.Panel);
         var inner = box;
         inner.Inflate(-3, -3);
-        batch.FillRectangle(inner, isOut || hand.HasFolded(seat) ? Palette.Background : Palette.Panel);
 
         // The name and the stack's number on top, the hole cards under them, the stack's chips, then the last action.
         var pad = fonts.Px(6);

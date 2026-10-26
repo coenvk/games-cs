@@ -65,8 +65,7 @@ internal sealed class MatchesScene : Scene
         var width = Math.Min(viewport.Width - 2 * padding, fonts.Px(1100));
         var height = Math.Min(viewport.Height - fonts.Px(40), fonts.Px(600));
         var panel = new Rectangle(viewport.Center.X - width / 2, viewport.Center.Y - height / 2, width, height);
-        batch.FillRectangle(panel, Palette.Panel);
-        batch.FillRectangle(new Rectangle(panel.X, panel.Y, panel.Width, 6), Palette.Accent);
+        Theme.DrawPanel(batch, panel);
         batch.DrawText(fonts.Heading, T("Past matches"), new Vector2(panel.Center.X, panel.Y + fonts.Px(24)), Palette.Text, Align.Center);
 
         var top = panel.Y + fonts.Px(24) + (int)fonts.Heading.LineHeight + fonts.Px(20);
