@@ -99,10 +99,10 @@ The rules are those of [poker-bots.md](poker-bots.md#rules), with the clock of t
 (1 second) plus an allowance for the network (0.5 seconds) for each decision.
 
 - **A late, malformed or illegal answer is replaced** by a check if checking is free, else a fold, and it is counted.
-- **Answering "call" when there is nothing to call counts as illegal.** Answer **check** when checking is free. This
-  is the usual way a bot ends up with "illegal" answers: look at `legal` in the decision, not at your idea of the pot.
-- **Hello.** A bot gets 5 seconds to say hello at the start of each match. A C# bot started through the bot host
-  and starting cold can come close; keep start-up light (no heavy tables built on start, nothing loaded from the
+- **Answering "call" when there is nothing to call is a check**, and legal. Answering "check" when there is a bet
+  to call is illegal, as is a raise outside the range: look at `legal` in the decision, not at your idea of the pot.
+- **Hello.** A bot gets 10 seconds to say hello at the start of each match, ample for a C# bot started
+  through the bot host and starting cold; still, keep start-up light (no heavy tables built on start, nothing loaded from the
   network).
 - **Disconnected.** While a bot's runner is disconnected, its seat is folded, and those folds show as **illegal** in the
   results, not as late. They do not count towards the "3 late in a row" stop. A runner that reconnects takes its seat

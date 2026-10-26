@@ -170,6 +170,22 @@ public class ArenaTableTests
     }
 
     [Fact]
+    public async Task ASeatThatAlwaysCalls_PlaysLegally_ChecksWhenCheckingIsFree()
+    {
+        var seat = new FakeSeat(_ => BotAction.Call);
+        using var table = new ArenaTable([seat, new HouseSeat(new CallingBot())], Fixed(5));
+
+        await table.RunAsync(CancellationToken.None);
+
+        var result = table.Results()[0];
+        result.Illegal.Should().Be(0);
+        result.Late.Should().Be(0);
+        table.Hands.SelectMany(h => h.Faults).Should().BeEmpty();
+        table.Hands.SelectMany(h => h.Actions).Where(a => a.Seat == 0).Select(a => a.Action)
+            .Should().Contain(a => a is Check, "a call with nothing to call is a check").And.Contain(a => a is CallBet);
+    }
+
+    [Fact]
     public async Task AGoneSeat_IsNeverAskedAgain()
     {
         var seat = new FakeSeat(CheckOrCall, fail: true);

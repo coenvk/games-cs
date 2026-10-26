@@ -17,8 +17,7 @@ Contents: [Quick start](#quick-start), [The protocol](#the-protocol), [Rules](#r
 [First milestone](#first-milestone-beat-always-call).
 
 Once your bot works, it can play other people's bots on a game server and climb a ranking: see
-[poker-online.md](poker-online.md). The rules below are the same there (with the server's clock), and two matter
-more online: answer **check**, not call, when nothing is to be called, and say hello within 5 seconds.
+[poker-online.md](poker-online.md). The rules below are the same there (with the server's clock).
 
 ## Quick start
 
@@ -52,7 +51,7 @@ below are real lines, recorded from a three-handed sit-and-go.
 
 ```
 app -> bot   hello
-bot -> app   hello            (within 5 seconds)
+bot -> app   hello            (within 10 seconds)
 app -> bot   match-start
              then, for every hand:
 app -> bot   hand-start
@@ -78,7 +77,7 @@ file name), numbered when the same bot sits twice. The name in your hello is for
 
 If you answer with another protocol version the bot stays at the table but is folded every time it is asked, for the rest of the run, and shows the problem
 ("speaks protocol 2, the app speaks 1"); it still pays the blinds. The same goes for a bot that has not answered
-within 5 seconds of the app starting it.
+within 10 seconds of the app starting it.
 
 ### match-start (app to bot)
 
@@ -132,7 +131,7 @@ It is your turn. Answer with an `action`.
 | `timeLimitMs` | how long you have to answer |
 
 `legal` has `fold` (always true), `check` (true when nothing is to be called), `call` (the chips a call costs, at most
-your stack; left out when there is nothing to call), `minRaiseTo` and `maxRaiseTo` (the smallest and largest raise, left
+your stack; left out when there is nothing to call, and a `call` then counts as a check), `minRaiseTo` and `maxRaiseTo` (the smallest and largest raise, left
 out when you cannot raise) and `allIn` (true when you may push everything in).
 
 ### action (bot to app)
@@ -182,7 +181,7 @@ the chips the seat finished with. In a **fixed-stacks** match every hand starts 
 ## Rules
 
 - **Transport.** One JSON object per line on stdin and stdout, UTF-8. Flush stdout after every line you write.
-- **Hello.** The first exchange is the hello. A bot that has not answered within 5 seconds, or answers with another
+- **Hello.** The first exchange is the hello. A bot that has not answered within 10 seconds, or answers with another
   protocol version, stays at the table but is folded every time (it still pays the blinds) and shows its problem.
 - **Time limit.** You get `timeLimitMs` for each decision (1 second by default; the match setup can change it). It is
   given in `match-start` and in every `decision`. Other messages need no answer.

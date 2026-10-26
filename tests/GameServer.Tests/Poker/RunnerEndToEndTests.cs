@@ -119,6 +119,30 @@ public sealed class RunnerEndToEndTests : IDisposable
     }
 
     [Fact]
+    public async Task ABotThatAlwaysCalls_PlaysLegallyOnline_ItsCallsWhenCheckingIsFreeAreChecks()
+    {
+        Online(await NewOwnerAndBot("Ann", "Alpha Bot"), EchoBot("calls"));
+        Online(await NewOwnerAndBot("Bob", "Beta Bot"), EchoBot("calls"));
+
+        var store = _factory.Services.GetRequiredService<MatchStore>();
+        var deadline = DateTime.UtcNow + Patience;
+        while (store.Of("Alpha Bot", 1).Count == 0)
+        {
+            DateTime.UtcNow.Should().BeBefore(deadline, "the bots should have played a ranked match by now");
+            await Task.Delay(100);
+        }
+
+        var match = store.Load(store.Of("Alpha Bot", 1)[0].Id)!;
+        match.Hands.Should().HaveCount(10);
+        match.Results.Should().AllSatisfy(r =>
+        {
+            r.Illegal.Should().Be(0, $"{r.Name} answers call when checking is free, which is a check");
+            r.Late.Should().Be(0);
+            r.Gone.Should().Be(0);
+        });
+    }
+
+    [Fact]
     public async Task FastBots_PlayALongMatchAtFullSpeed_WithoutLosingTheirConnection()
     {
         // Two bots that answer at once play a long match in about a second: hundreds of lines a second each way. Neither

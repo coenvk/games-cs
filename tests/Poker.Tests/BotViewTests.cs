@@ -119,7 +119,6 @@ public class BotViewTests
 
     [Theory]
     [InlineData("check-facing-a-bet")]
-    [InlineData("call-with-nothing-to-call")]
     [InlineData("raise-below-the-minimum")]
     [InlineData("raise-above-the-maximum")]
     [InlineData("raise-when-only-a-call-is-possible")]
@@ -131,7 +130,6 @@ public class BotViewTests
         var (hand, seat, answer) = scenario switch
         {
             "check-facing-a-bet" => (FacingARaise(), 1, BotAction.Check),
-            "call-with-nothing-to-call" => (BigBlindWithTheOption(), 2, BotAction.Call),
             "raise-below-the-minimum" => (FacingARaise(), 1, BotAction.Raise(99)),
             "raise-above-the-maximum" => (FacingARaise(), 1, BotAction.Raise(1001)),
             "raise-when-only-a-call-is-possible" => (OnlyACallIsPossible(), 2, BotAction.Raise(1000)),
@@ -163,6 +161,16 @@ public class BotViewTests
         BotView.ToAction(BotAction.Raise(1000), hand, 1, 5).Should().Be(AllIn.Instance);
         BotView.ToAction(BotAction.Call with { Id = 5 }, hand, 1, 5).Should().Be(CallBet.Instance);
         BotView.ToAction(BotAction.Check, BigBlindWithTheOption(), 2, 5).Should().Be(Check.Instance);
+    }
+
+    [Fact]
+    public void ACall_WithNothingToCall_IsACheck()
+    {
+        var hand = BigBlindWithTheOption();
+
+        BotView.ToAction(BotAction.Call, hand, 2, 5).Should().Be(Check.Instance);
+        BotView.ToAction(BotAction.Call with { Id = 5 }, hand, 2, 5).Should().Be(Check.Instance);
+        BotView.ToAction(BotAction.Call with { Id = 6 }, hand, 2, 5).Should().BeNull("an answer to another decision is still illegal");
     }
 
     [Fact]

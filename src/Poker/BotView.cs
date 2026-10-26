@@ -136,8 +136,8 @@ public static class BotView
 
     /// <summary>
     /// The engine's action for a bot's answer, or null when the answer is not legal now: it answers another
-    /// decision, checks facing a bet, calls with nothing to call, raises out of bounds or when raising is not
-    /// possible, or is not a known action. A raise below the minimum is only legal as an all-in.
+    /// decision, checks facing a bet, raises out of bounds or when raising is not possible, or is not a known
+    /// action. A call with nothing to call is a check. A raise below the minimum is only legal as an all-in.
     /// </summary>
     public static PokerAction? ToAction(BotAction answer, HoldemHand hand, int seat, int decisionId)
     {
@@ -157,7 +157,7 @@ public static class BotView
             case "check":
                 return toCall == 0 ? Check.Instance : null;
             case "call":
-                return toCall > 0 ? CallBet.Instance : null;
+                return toCall > 0 ? CallBet.Instance : Check.Instance;
             case "all-in":
                 return moves.Contains(AllIn.Instance) ? AllIn.Instance : null;
             case "raise":

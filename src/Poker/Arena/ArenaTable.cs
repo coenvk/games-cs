@@ -55,8 +55,11 @@ public sealed record SeatResult(int Seat, string Name, int Net, int Hands, int L
 /// </remarks>
 public sealed class ArenaTable : IDisposable
 {
-    /// <summary>How long a bot gets to get ready for the match.</summary>
-    public static readonly TimeSpan StartLimit = TimeSpan.FromSeconds(5);
+    /// <summary>
+    /// How long a bot gets to get ready for the match: to say hello. Generous, as a C# bot started through the bot host can
+    /// take several seconds on a cold start; decisions keep their own, short limit.
+    /// </summary>
+    public static readonly TimeSpan StartLimit = TimeSpan.FromSeconds(10);
 
     private readonly IReadOnlyList<IArenaSeat> _seats;
     private readonly ArenaSettings _settings;

@@ -117,6 +117,16 @@ public class SeatTests
     }
 
     [Fact]
+    public async Task ABotThatSaysHelloAfterSevenSeconds_StillPlays()
+    {
+        using var seat = ProcessSeat.Start(EchoBot("wait:7000"), "Echo");
+        await seat.StartAsync(Start, ArenaTable.StartLimit);
+
+        seat.IsGone.Should().BeFalse(seat.Problem);
+        (await seat.AskAsync(Decision, TimeoutToken())).Should().Be(BotAction.Call with { Id = 7 });
+    }
+
+    [Fact]
     public async Task AWrongProtocolMajor_IsGone_WithItsProblem()
     {
         using var seat = ProcessSeat.Start(EchoBot("protocol2"), "Old");

@@ -188,21 +188,36 @@ public sealed class LeagueTests : IDisposable
     [Fact]
     public async Task ARunnerThatDropsBeforeItsBotSaidHello_KeepsThatBot_AndTheSeatIsNotGone()
     {
-        // A bot slow to start (3 s): its runner drops at 2 s, before the hello, and is back a second later. The server
+        // A bot slow to start (6 s): its runner drops at 4 s, before the hello, and is back a second later. The server
         // sends the start again, as it heard nothing since; the runner keeps the bot that is starting, which says hello
-        // within the 5 s. Starting it over would take it to about 6 s: too late, and the seat gone for the match.
+        // within the 10 s. Starting it over would take it to about 11 s: too late, and the seat gone for the match.
         StartLeague(hands: 10);
-        var a = Online("Ann", "BotA", EchoBot("wait:3000"));
+        var a = Online("Ann", "BotA", EchoBot("wait:6000"));
         Online("Bob", "BotB");
 
         await RunUntil(() => League.Playing.Contains("BotA"));
-        await Task.Delay(2000);
+        await Task.Delay(4000);
         a.Drop();
         await RunUntil(() => _store.Of("BotA", 10).Count == 1);
 
         var result = _store.Load(_store.Of("BotA", 1)[0].Id)!.Results.Single(r => r.Name == "BotA");
         result.Gone.Should().Be(0, $"the bot that was starting said hello in time (its problem: {result.Problem})");
         result.Problem.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task ABotThatSaysHelloAfterSevenSeconds_StillPlaysTheMatch()
+    {
+        StartLeague(hands: 10);
+        Online("Ann", "BotA", EchoBot("wait:7000"));
+        Online("Bob", "BotB");
+
+        await RunUntil(() => _store.Of("BotA", 10).Count == 1);
+
+        var result = _store.Load(_store.Of("BotA", 1)[0].Id)!.Results.Single(r => r.Name == "BotA");
+        result.Gone.Should().Be(0, $"it said hello in time (its problem: {result.Problem})");
+        result.Problem.Should().BeNull();
+        result.Late.Should().Be(0);
     }
 
     [Fact]

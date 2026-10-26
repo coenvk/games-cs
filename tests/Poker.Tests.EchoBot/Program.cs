@@ -4,7 +4,7 @@
 // before its first answer), slow:<ms> (the first answer takes that long),
 // stale (sends a wrong-id answer before each right one), protocol2 (greets with protocol 2 and then plays dead),
 // skip:<n,m,...> (leaves those decisions unanswered), wait:<ms> (sleeps that long before reading anything, as a bot that is
-// slow to start).
+// slow to start), calls (answers "call" even when checking is free, as a bot that never looks at `legal.check`).
 if (args.FirstOrDefault(a => a.StartsWith("wait:", StringComparison.Ordinal)) is { } wait)
 {
     Thread.Sleep(int.Parse(wait[5..], System.Globalization.CultureInfo.InvariantCulture));
@@ -13,6 +13,7 @@ if (args.FirstOrDefault(a => a.StartsWith("wait:", StringComparison.Ordinal)) is
 var chatty = args.Contains("chatty");
 var shout = args.Contains("shout");
 var stale = args.Contains("stale");
+var calls = args.Contains("calls");
 var slow = args.FirstOrDefault(a => a.StartsWith("slow:", StringComparison.Ordinal)) is { } s ? int.Parse(s[5..], System.Globalization.CultureInfo.InvariantCulture) : 0;
 
 // skip:<n,m,...> leaves those decisions (counting from 1) unanswered, as a bot that hangs would, and answers the others.
@@ -52,9 +53,9 @@ if (args.Contains("protocol2"))
     return 0;
 }
 
-return BotRunner.Run(new CallingEchoBot(chatty, stale, slow, shout), Console.In, Console.Out, Console.Error);
+return BotRunner.Run(new CallingEchoBot(chatty, stale, slow, shout, calls), Console.In, Console.Out, Console.Error);
 
-internal sealed class CallingEchoBot(bool chatty, bool stale, int slowMs, bool shout = false) : IPokerBot
+internal sealed class CallingEchoBot(bool chatty, bool stale, int slowMs, bool shout = false, bool calls = false) : IPokerBot
 {
     private bool _answered;
 
@@ -86,6 +87,6 @@ internal sealed class CallingEchoBot(bool chatty, bool stale, int slowMs, bool s
         }
 
         _answered = true;
-        return d.Legal.Check ? BotAction.Check : BotAction.Call;
+        return d.Legal.Check && !calls ? BotAction.Check : BotAction.Call;
     }
 }
