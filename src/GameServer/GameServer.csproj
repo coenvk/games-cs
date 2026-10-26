@@ -4,6 +4,8 @@
 
   <ItemGroup>
     <PackageReference Include="Jentl.Net" Version="$(JentlVersion)" />
+    <ProjectReference Include="..\Poker\Poker.csproj" />
+    <ProjectReference Include="..\Poker.Bots\Poker.Bots.csproj" />
     <ProjectReference Include="..\Uno\Uno.csproj" />
   </ItemGroup>
 
