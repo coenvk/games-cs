@@ -12,4 +12,16 @@
     <ProjectReference Include="..\..\src\Uno\Uno.csproj" />
   </ItemGroup>
 
+  <!-- The stand-in bot the league tests put online through runners: built first, and copied next to the tests (run as dotnet EchoBot/Poker.Tests.EchoBot.dll). -->
+  <ItemGroup>
+    <ProjectReference Include="..\Poker.Tests.EchoBot\Poker.Tests.EchoBot.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <Target Name="CopyEchoBot" AfterTargets="Build">
+    <ItemGroup>
+      <EchoBotFile Include="..\Poker.Tests.EchoBot\bin\$(Configuration)\$(TargetFramework)\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(EchoBotFile)" DestinationFiles="@(EchoBotFile->'$(OutDir)EchoBot\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  </Target>
+
 </Project>
