@@ -60,7 +60,7 @@ internal sealed class ShellGame : JentlGame
     protected override void LoadContent()
     {
         base.LoadContent();
-        _fonts = new Fonts(GameFiles.ReadAllBytes("Assets/fonts/LilitaOne-Regular.ttf"));
+        _fonts = new Fonts(GameFiles.ReadAllBytes(_app.Font));
         Scenes.Debug.Text = new FontTextDrawer(_fonts);
         Scenes.Debug.IsVisible = _options.Debug;
         var store = _store;

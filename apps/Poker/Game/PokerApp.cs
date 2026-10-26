@@ -24,6 +24,9 @@ internal sealed class PokerApp : IGameApp
 
     public string SaveName => "Poker";
 
+    /// <summary>Abril Fatface: a heavy poster serif, like the signs of an old card room (OFL, see its licence next to it).</summary>
+    public string Font => "Assets/fonts/AbrilFatface-Regular.ttf";
+
     public void Load(GameContext context, GraphicsDevice device)
     {
         PokerStyle.Apply();

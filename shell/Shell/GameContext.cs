@@ -48,6 +48,9 @@ internal interface IGameApp
     /// <summary>The name players see: the window title and the title screen.</summary>
     string Title { get; }
 
+    /// <summary>The UI's font, a path among the game's files: the shared Lilita One unless the game brings its own (in its Assets/fonts).</summary>
+    string Font => "Assets/fonts/LilitaOne-Regular.ttf";
+
     /// <summary>Where its saves live: a folder in the user's data folder on the desktop, a key prefix in the browser.</summary>
     string SaveName { get; }
 
