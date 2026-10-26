@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using System.Net;
+using System.Text;
+using System.Text.RegularExpressions;
 using FontStashSharp;
 using Jentl.Core.Graphics;
 using Jentl.Core.Input;
@@ -26,7 +28,7 @@ namespace Games.Workshop;
 /// the tokens are kept on this computer (see <see cref="OnlineAccounts"/>). When the server cannot be reached the view
 /// says so; the rest of the workshop does not need it. Requests run off the UI thread, one at a time.
 /// </summary>
-internal sealed class OnlineScene : Scene
+internal sealed partial class OnlineScene : Scene
 {
     private const int MaxName = 32;
     private static readonly Color Problem = new(236, 120, 108);
@@ -46,10 +48,10 @@ internal sealed class OnlineScene : Scene
     private MineJson? _mine;
     private string? _bot;
     private string? _shownToken;
+    private bool _copied;
     private string? _offline;
     private (string Text, bool IsProblem)? _note;
-    private Task<Action>? _pending;
-    private string? _waiting;
+    private readonly OnlineRequests _requests = new();
     private TimeSpan _sinceRefresh;
     private int _rankingFirst;
 
@@ -60,6 +62,15 @@ internal sealed class OnlineScene : Scene
         _context = workshop.Game;
         _session = workshop.OnlineSession;
         _menu = new Menu(_context.Sounds, new MenuItem(T("Back"), () => Scenes.Pop()));
+        if (_session.BrokenCopy is { } copy)
+        {
+            Note(T("The file with your tokens could not be read; it was kept as {0}. Make a new owner, or put the old one back.", _workshop.Shown(copy)), problem: true);
+        }
+        else if (_session.Unreadable is { } why)
+        {
+            Note(T("The file with your tokens could not be read, so nothing is kept now: {0}", why), problem: true);
+        }
+
         Refresh();
     }
 
@@ -95,18 +106,9 @@ internal sealed class OnlineScene : Scene
 
     public override void Update(TimeSpan elapsed, InputState input)
     {
-        if (_pending is { IsCompleted: true } done)
+        if (_requests.Finish() is { } failure)
         {
-            _pending = null;
-            _waiting = null;
-            try
-            {
-                done.GetAwaiter().GetResult()();
-            }
-            catch (OnlineProblem e)
-            {
-                Failed(e);
-            }
+            Failed(failure);
         }
 
         if (_mode == Mode.Typing)
@@ -141,7 +143,7 @@ internal sealed class OnlineScene : Scene
 
         // The ranking and the bots' state keep themselves up to date while they are shown.
         _sinceRefresh += elapsed;
-        if (_mode is Mode.Main or Mode.Bot && _sinceRefresh >= RefreshEvery && _pending is null && Account.OwnerToken is not null)
+        if (_mode is Mode.Main or Mode.Bot && _sinceRefresh >= RefreshEvery && !_requests.IsBusy && Account.OwnerToken is not null)
         {
             Refresh(quietly: true);
         }
@@ -166,7 +168,7 @@ internal sealed class OnlineScene : Scene
         y += (int)small.LineHeight + fonts.Px(12);
 
         var bottom = panel.Bottom - padding / 2;
-        var status = _waiting ?? _note?.Text;
+        var status = _requests.Waiting ?? _note?.Text;
         if (status is not null)
         {
             var lines = small.Wrap(status, panel.Width - 2 * padding);
@@ -174,7 +176,7 @@ internal sealed class OnlineScene : Scene
             var at = bottom;
             foreach (var line in lines)
             {
-                batch.DrawText(small, line, new Vector2(panel.Center.X, at), _waiting is null && _note?.IsProblem == true ? Problem : Palette.Accent, Align.Center, shadow: false);
+                batch.DrawText(small, line, new Vector2(panel.Center.X, at), _requests.Waiting is null && _note?.IsProblem == true ? Problem : Palette.Accent, Align.Center, shadow: false);
                 at += (int)small.LineHeight + 2;
             }
 
@@ -416,7 +418,7 @@ internal sealed class OnlineScene : Scene
         if (input.WasPressed(Keys.Enter))
         {
             var name = _typed.ToString().Trim();
-            if (name.Length > 0 && _pending is null)
+            if (name.Length > 0 && !_requests.IsBusy)
             {
                 if (_typing == Typing.Owner)
                 {
@@ -482,29 +484,27 @@ internal sealed class OnlineScene : Scene
     /// Runs <paramref name="work"/> off the UI thread, saying <paramref name="waiting"/> meanwhile; what it returns is
     /// done on the UI thread when it is over. Nothing starts while another request is under way.
     /// </summary>
-    private void Request(string? waiting, Func<Task<Action>> work)
+    private void Request(string? waiting, Func<Task<Action>> work) => _requests.Start(waiting, work);
+
+    /// <summary>What went wrong with a request, told to the player; anything else than the server's answer is shown as a note too.</summary>
+    private void Failed(Exception failure)
     {
-        if (_pending is not null)
+        if (failure is not OnlineProblem problem)
         {
+            Note(T("Something went wrong: {0}", failure.Message), problem: true);
             return;
         }
 
-        _waiting = waiting;
-        _pending = Task.Run(work);
-    }
-
-    private void Failed(OnlineProblem problem)
-    {
         if (problem.IsUnreachable)
         {
-            _offline = problem.Message;
+            _offline = Describe(problem);
             _mode = Mode.Offline;
             _note = null;
             _menu = new Menu(_context.Sounds, new MenuItem(T("Try again"), () => Refresh()), new MenuItem(T("Back"), () => Scenes.Pop()));
             return;
         }
 
-        if (problem.Status == System.Net.HttpStatusCode.Unauthorized)
+        if (problem.Status == HttpStatusCode.Unauthorized || problem.Message == "unknown owner")
         {
             // The server's data was started afresh, say: the token kept here names no owner there.
             Account.OwnerToken = null;
@@ -513,8 +513,52 @@ internal sealed class OnlineScene : Scene
             return;
         }
 
-        Note(T("The server said: {0}", problem.Message), problem: true);
+        Note(T("The server said: {0}", Describe(problem)), problem: true);
     }
+
+    /// <summary>
+    /// The problem in the player's language: the server's known refusals and the client's own words translated, anything
+    /// else (a new refusal, the system's words for a failed connection) as it came.
+    /// </summary>
+    private static string Describe(OnlineProblem problem)
+    {
+        if (problem.IsUnreachable)
+        {
+            return problem.InnerException is TaskCanceledException ? T("it did not answer in time") : problem.Message;
+        }
+
+        if (problem.Status is { } status && (int)status is >= 200 and < 300)
+        {
+            return T("its answer could not be read");
+        }
+
+        if (problem.Status == HttpStatusCode.NotFound)
+        {
+            return T("not found");
+        }
+
+        if (BotsAlready().Match(problem.Message) is { Success: true } bots)
+        {
+            return T("you have {0} bots already, the most there may be", bots.Groups[1].Value);
+        }
+
+        return problem.Message switch
+        {
+            "unknown owner" => T("it does not know this owner"),
+            "not a name" => T("that is not a name it takes"),
+            "name taken" => T("that name is taken"),
+            "too many registrations today" => T("too many registrations from this address today"),
+            "banned" => T("banned from the league"),
+            "unknown bot" => T("it does not know that bot"),
+            "unknown house bot" => T("it does not know that house bot"),
+            "the bot cannot practise now: it is not connected, already playing, banned or named like that house bot"
+                => T("the bot cannot practise now: it is not connected, already playing, banned or named like that house bot"),
+            var other => other,
+        };
+    }
+
+    [GeneratedRegex(@"^(\d+) bots already$")]
+    private static partial Regex BotsAlready();
 
     private void Note(string text, bool problem = false) => _note = (text, problem);
 
@@ -661,6 +705,7 @@ internal sealed class OnlineScene : Scene
         }
 
         _shownToken = token;
+        _copied = Clipboard.TrySetText(token);
         _mode = Mode.Token;
         _menu = new Menu(_context.Sounds, new MenuItem(T("Done"), Leave));
     }
@@ -792,7 +837,8 @@ internal sealed class OnlineScene : Scene
         DrawText(batch, new Rectangle(area.X, y, area.Width, area.Bottom - y),
         [
             (T("With it, the poker runner puts this bot online from another computer: PokerRunner <bot> --token <token> --server {0}", _session.RunnerServer), Palette.Muted),
-            (T("It is shown only now. Whoever has it can play as your bot; New token makes it useless."), Palette.Muted),
+            _copied ? (T("Copied to the clipboard."), Palette.Accent) : (T("There is no clipboard here: copy it from the screen."), Palette.Muted),
+            (T("It is kept on this computer, so Show token shows it again. Whoever has it can play as your bot; New token makes it useless."), Palette.Muted),
         ]);
     }
 
@@ -801,7 +847,7 @@ internal sealed class OnlineScene : Scene
         var fonts = _context.Fonts;
         if (_ranking.Count == 0)
         {
-            DrawText(batch, area, [(_pending is null ? T("No bot has played a ranked match yet.") : T("Asking the server"), Palette.Muted)]);
+            DrawText(batch, area, [(!_requests.IsBusy ? T("No bot has played a ranked match yet.") : T("Asking the server"), Palette.Muted)]);
             return;
         }
 

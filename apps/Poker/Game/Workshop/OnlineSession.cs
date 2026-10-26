@@ -1,74 +1,8 @@
 ﻿using System.Text.Json;
-using System.Text.Json.Serialization;
 using Jentl.Net;
 using Poker.Online;
 
 namespace Games.Workshop;
-
-/// <summary>
-/// What this computer keeps of the player's place in a poker league: the owner token and each bot's token and bot file,
-/// per server (the HTTP address). Kept in <c>workshop/online.json</c> in the save folder, never in the settings and
-/// never shown, since a token is all it takes to act as the owner.
-/// </summary>
-internal sealed class OnlineAccounts
-{
-    public Dictionary<string, OnlineAccount> Servers { get; init; } = [];
-
-    /// <summary>The accounts in <paramref name="path"/>; none when the file is not there or cannot be read.</summary>
-    public static OnlineAccounts Load(string path)
-    {
-        try
-        {
-            return File.Exists(path) ? JsonSerializer.Deserialize(File.ReadAllText(path), OnlineAccountsJson.Default.OnlineAccounts) ?? new() : new();
-        }
-        catch (Exception e) when (e is IOException or UnauthorizedAccessException or JsonException)
-        {
-            return new();
-        }
-    }
-
-    /// <summary>
-    /// Writes the accounts to <paramref name="path"/>: to a file beside it first, readable by this user only where the
-    /// system has such modes, which then takes the old one's place, so a crash leaves the old file whole.
-    /// </summary>
-    /// <exception cref="IOException">The file could not be written.</exception>
-    /// <exception cref="UnauthorizedAccessException">The folder may not be written to.</exception>
-    public void Save(string path)
-    {
-        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        var temporary = path + ".new";
-        var options = new FileStreamOptions { Mode = FileMode.Create, Access = FileAccess.Write };
-        if (!OperatingSystem.IsWindows() && !OperatingSystem.IsBrowser())
-        {
-            options.UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
-        }
-
-        using (var writer = new StreamWriter(temporary, System.Text.Encoding.UTF8, options))
-        {
-            writer.Write(JsonSerializer.Serialize(this, OnlineAccountsJson.Default.OnlineAccounts));
-        }
-
-        File.Move(temporary, path, overwrite: true);
-    }
-}
-
-/// <summary>
-/// The player's owner token on one server, and the tokens and bot files of the bots registered there, by the names the
-/// server gives the bots.
-/// </summary>
-internal sealed class OnlineAccount
-{
-    public string? OwnerToken { get; set; }
-
-    public Dictionary<string, string> BotTokens { get; init; } = [];
-
-    /// <summary>The file each bot is run from when it goes online (a <c>*.bot.json</c> or a DLL in the bots folder).</summary>
-    public Dictionary<string, string> BotFiles { get; init; } = [];
-}
-
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, WriteIndented = true)]
-[JsonSerializable(typeof(OnlineAccounts))]
-internal sealed partial class OnlineAccountsJson : JsonSerializerContext;
 
 /// <summary>
 /// The app's link to the poker league on the game server, one for the whole app: the HTTP client, the account kept
@@ -93,8 +27,24 @@ internal sealed class OnlineSession : IDisposable
         Client = new OnlineClient(_http, Api);
         _file = file;
         _running = running;
-        _accounts = OnlineAccounts.Load(file);
+        try
+        {
+            _accounts = OnlineAccounts.Load(file);
+            BrokenCopy = _accounts.BrokenCopy;
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            // Saving now could overwrite tokens that are still in the file.
+            _accounts = new OnlineAccounts();
+            Unreadable = e.Message;
+        }
     }
+
+    /// <summary>Where a file of tokens that could not be read was moved aside to, or null.</summary>
+    public string? BrokenCopy { get; }
+
+    /// <summary>Why the file of tokens could not be read (nothing is saved then), or null.</summary>
+    public string? Unreadable { get; }
 
     /// <summary>The server's HTTP address.</summary>
     public Uri Api { get; }
@@ -105,24 +55,16 @@ internal sealed class OnlineSession : IDisposable
     public OnlineClient Client { get; }
 
     /// <summary>The account on this server (an empty one until an owner is made).</summary>
-    public OnlineAccount Account
-    {
-        get
-        {
-            var key = Api.ToString();
-            if (!_accounts.Servers.TryGetValue(key, out var account))
-            {
-                account = new OnlineAccount();
-                _accounts.Servers[key] = account;
-            }
+    public OnlineAccount Account => _accounts.For(Api.ToString());
 
-            return account;
-        }
-    }
-
-    /// <summary>Keeps the accounts on disk; false when they could not be written.</summary>
+    /// <summary>Keeps the accounts on disk; false when they could not be written, or the file there could not be read.</summary>
     public bool Save()
     {
+        if (Unreadable is not null)
+        {
+            return false;
+        }
+
         try
         {
             _accounts.Save(_file);

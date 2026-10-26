@@ -21,7 +21,7 @@ namespace Games.Workshop;
 /// margin, or for sit-and-gos, where that means nothing, the place (a series: the average place and how often each
 /// place was taken). Under the table, why each bot that could not play could not. Below: Replay hands, Export hand
 /// histories (into the workshop's histories folder, named after the match file), Run again (the same bots, rules and
-/// seed) and Back.
+/// seed; not for a match downloaded from the server) and Back.
 /// </summary>
 internal sealed class ResultsScene : Scene
 {
@@ -62,6 +62,12 @@ internal sealed class ResultsScene : Scene
     public override bool IsOverlay => true;
 
     private bool CanReplay => _match.Hands.Count > 0;
+
+    // A match downloaded from the server (kept in the online folder, or not kept at all and without a seed) cannot be run
+    // again: it has no seed, and its opponent is someone else's bot.
+    private bool IsDownloaded => _path is null
+        ? _match.Settings.Seed == default && (_match.Batch?.Seed ?? default) == default
+        : string.Equals(Path.GetDirectoryName(Path.GetFullPath(_path)), Path.GetFullPath(_workshop.OnlineMatchesFolder), StringComparison.Ordinal);
 
     /// <summary>What a batch is called on screen.</summary>
     public static string FormatName(BatchSettings batch)
@@ -178,7 +184,11 @@ internal sealed class ResultsScene : Scene
         }
 
         buttons.Add((T("Export hand histories"), Export));
-        buttons.Add((T("Run again"), RunAgain));
+        if (!IsDownloaded)
+        {
+            buttons.Add((T("Run again"), RunAgain));
+        }
+
         buttons.Add((T("Back"), () => Scenes.Pop()));
         _actions = [.. buttons.Select(b => b.Press)];
         _selected = Math.Clamp(_selected, 0, _actions.Length - 1);
