@@ -215,6 +215,10 @@ Only Caddy is reachable from outside (ports 80 and 443); the game server's port 
 what `JENTL_TRUST_PROXY=true` (set by the compose file) requires.
 
 1. **A host.** Any VPS with Docker and the Compose plugin, and ports 80 and 443 open (also 443/udp for HTTP/3).
+   Step 4 also needs the **.NET SDK 10 and git** on the host: `build/jentl.sh` packs the Jentl engine there (it clones
+   `coenvk/jentl-cs` at the version in `dependencies.props`, unless a checkout sits in `../jentl`), and the image build
+   copies the result (`.jentl-packages`). On a host with Docker alone, run `bash build/jentl.sh` on another machine and
+   copy the `.jentl-packages` folder into the checkout on the host.
 2. **DNS.** Point an `A` record (and `AAAA` if the host has IPv6) of your domain at the host's address. Caddy can only get a
    certificate once that resolves.
 3. **Settings.** On the host, in a checkout of this repository, copy `deploy/.env.example` to `deploy/.env` and set
@@ -236,8 +240,13 @@ what `JENTL_TRUST_PROXY=true` (set by the compose file) requires.
 certificates in `games_caddy-data`); they survive `down` and rebuilds, but not `down -v`.
 
 **Backups.** `bash deploy/backup.sh [folder]` writes `games-data-<date>.tar.gz` (default folder `backups/`) with the
-whole data volume, mounted read-only. Run it from cron, and copy the files off the host. To restore, stop the server and
-unpack the archive into the volume.
+whole data volume, mounted read-only. Run it from cron, and copy the files off the host. To restore, stop the server, unpack, start it:
+
+```
+docker compose -f deploy/docker-compose.yml stop game-server
+docker run --rm -v games_poker-data:/data -v "$PWD/backups":/backup alpine tar xzf /backup/<file> -C /data
+docker compose -f deploy/docker-compose.yml start game-server
+```
 
 **Updating.** `git pull`, `bash build/jentl.sh`, then `docker compose -f deploy/docker-compose.yml up -d --build` again.
 The data stays.

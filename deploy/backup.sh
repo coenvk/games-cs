@@ -9,6 +9,9 @@ volume="${VOLUME:-games_poker-data}"
 target="$(mkdir -p "${1:-backups}" && cd "${1:-backups}" && pwd)"
 name="games-data-$(date +%Y-%m-%d-%H%M%S).tar.gz"
 
+# docker run would create a missing volume, empty: fail instead
+docker volume inspect "$volume" >/dev/null
+
 docker run --rm -v "$volume":/data:ro -v "$target":/backup alpine \
     tar czf "/backup/$name" -C /data .
 

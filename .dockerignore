@@ -1,0 +1,8 @@
+# Keeps the Docker build context (the repository root) small and free of local state.
+.git
+.superpowers
+**/bin
+**/obj
+poker-data
+**/poker-data
+deploy/.env
