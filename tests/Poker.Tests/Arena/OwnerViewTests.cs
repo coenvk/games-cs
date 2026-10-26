@@ -80,6 +80,26 @@ public class OwnerViewTests
     }
 
     [Fact]
+    public void TheOwnersView_KeepsItsOwnBotsProblem_ButNotTheOpponents()
+    {
+        var match = Match() with
+        {
+            Results =
+            [
+                new BotResult("Mine", 75, 0, 2, 0, 0, 0, [], "could not start: /home/me/bots/mine.py missing"),
+                new BotResult("Theirs", -75, 0, 2, 0, 0, 1, [], "exited: /Users/them/secret/bot.py line 3"),
+            ],
+        };
+
+        var view = OwnerView.For(match, "Mine");
+
+        view.Results[0].Problem.Should().Be("could not start: /home/me/bots/mine.py missing");
+        view.Results[1].Problem.Should().Be("had a problem", "the opponent's runner's text may tell of its owner's computer");
+        view.Results[1].Gone.Should().Be(1);
+        OwnerView.For(Match(), "Mine").Results[1].Problem.Should().BeNull("an opponent without a problem has none");
+    }
+
+    [Fact]
     public void TheOwnersView_KeepsEverythingElse_AndIsAMatchFile()
     {
         var match = Match();

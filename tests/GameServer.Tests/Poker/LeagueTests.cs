@@ -15,21 +15,25 @@ public sealed class LeagueTests : IDisposable
     private readonly string _folder = Path.Combine(Path.GetTempPath(), "poker-league-" + Guid.NewGuid().ToString("N"));
     private readonly CancellationTokenSource _stop = new();
     private readonly List<Runner> _runners = [];
-    private readonly Registry _registry;
-    private readonly Registration _registration;
-    private readonly Ratings _ratings;
-    private readonly MatchStore _store;
     private readonly RelayHost _host;
+    private Registry _registry;
+    private Registration _registration;
+    private Ratings _ratings;
+    private MatchStore _store;
     private PokerLeague? _league;
 
     public LeagueTests()
     {
-        var data = new PokerData(_folder);
-        _registry = new Registry(data, TimeProvider.System);
-        _registration = new Registration(_registry, new RegistrationLimits(), TimeProvider.System);
-        _ratings = new Ratings(data, _registry);
-        _store = new MatchStore(data);
+        (_registry, _registration, _ratings, _store) = Open();
         _host = new RelayHost(token => _registry.BotOfToken(token)?.Name);
+    }
+
+    /// <summary>The registry, ratings and matches as the data folder holds them now, as a server starting up reads them.</summary>
+    private (Registry, Registration, Ratings, MatchStore) Open()
+    {
+        var data = new PokerData(_folder);
+        var registry = new Registry(data, TimeProvider.System);
+        return (registry, new Registration(registry, new RegistrationLimits(), TimeProvider.System), new Ratings(data, registry), new MatchStore(data));
     }
 
     private PokerLeague League => _league ?? throw new InvalidOperationException("Start the league first.");
@@ -85,9 +89,11 @@ public sealed class LeagueTests : IDisposable
         return _registration.NewBot(issued.Token, bot, null).Value.Token;
     }
 
-    private Runner Online(string owner, string bot, AgentCommand? command = null)
+    private Runner Online(string owner, string bot, AgentCommand? command = null) => OnlineWith(Token(owner, bot), command);
+
+    private Runner OnlineWith(string token, AgentCommand? command = null)
     {
-        var runner = new Runner(_host, Token(owner, bot), command ?? EchoBot(), _stop.Token);
+        var runner = new Runner(_host, token, command ?? EchoBot(), _stop.Token);
         _runners.Add(runner);
         return runner;
     }
@@ -221,6 +227,59 @@ public sealed class LeagueTests : IDisposable
         var registry = new Registry(data, TimeProvider.System);
         new MatchStore(data).Of("BotA", 10).Should().ContainSingle("the earlier match is still there after a restart");
         new Ratings(data, registry).Of("BotA").Matches.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task AMatchThatCannotBeStored_IsNotRated_AndTheFailureIsReported()
+    {
+        var league = StartLeague(hands: 10);
+        var failures = new ConcurrentQueue<LeagueFailure>();
+        league.Failed += failures.Enqueue;
+        var matches = Path.Combine(_folder, "matches");
+        Directory.Delete(matches);
+        await File.WriteAllTextAsync(matches, "not a folder"); // the disk refuses the match file
+        Online("Ann", "BotA");
+        Online("Bob", "BotB");
+
+        await RunUntil(() => !failures.IsEmpty);
+
+        var failure = failures.First();
+        new[] { failure.BotA, failure.BotB }.Should().BeEquivalentTo("BotA", "BotB");
+        failure.Error.Should().NotBeNull();
+        _ratings.Of("BotA").Matches.Should().Be(0, "a match is rated only once it is stored");
+        _ratings.Of("BotB").Matches.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task AFinishedHandlerThatThrows_IsReported_AndTheLeagueGoesOn()
+    {
+        var league = StartLeague(hands: 10, cooldown: 0);
+        var failures = new ConcurrentQueue<LeagueFailure>();
+        league.Failed += failures.Enqueue;
+        league.Finished += _ => throw new InvalidOperationException("handler broke");
+        Online("Ann", "BotA");
+        Online("Bob", "BotB");
+
+        await RunUntil(() => _store.Of("BotA", 10).Count >= 2);
+
+        failures.Should().Contain(f => f.Error is InvalidOperationException && f.Error.Message == "handler broke");
+    }
+
+    [Fact]
+    public async Task ABotNamedLikeAHouseBot_CannotPractiseAgainstItsNamesake()
+    {
+        // A bot registered before house bot names were refused.
+        await File.WriteAllTextAsync(Path.Combine(_folder, "owners.json"),
+            $$"""[{"id":"o1","tokenHash":"{{Registry.Hash("owner")}}","name":"Old","created":"2026-01-01T00:00:00+00:00","address":null,"banned":false}]""");
+        await File.WriteAllTextAsync(Path.Combine(_folder, "bots.json"),
+            $$"""[{"name":"Random","ownerId":"o1","tokenHash":"{{Registry.Hash("legacy")}}","created":"2026-01-01T00:00:00+00:00","banned":false}]""");
+        (_registry, _registration, _ratings, _store) = Open();
+        StartLeague(hands: 10);
+        OnlineWith("legacy");
+        await RunUntil(() => _host.Agent("Random") is { IsAway: false });
+
+        League.Practise("Random", "Random").Should().BeFalse("two seats with one name are ambiguous");
+        League.Practise("Random", "Tight").Should().BeTrue();
     }
 
     [Fact]

@@ -1,5 +1,6 @@
 ﻿using System.Security.Cryptography;
 using System.Text.RegularExpressions;
+using Poker;
 
 namespace GameServer.Poker;
 
@@ -95,7 +96,8 @@ public sealed partial class Registration(Registry registry, RegistrationLimits l
                 return RegisterResult<BotAccount>.Refused($"{limits.BotsPerOwner} bots already");
             }
 
-            if (registry.Bot(botName) is not null)
+            // A house bot's name is taken too: a practice match against it would seat two bots of one name.
+            if (registry.Bot(botName) is not null || HouseBots.All.Any(h => string.Equals(h.Name, botName, StringComparison.OrdinalIgnoreCase)))
             {
                 return RegisterResult<BotAccount>.Refused("name taken");
             }

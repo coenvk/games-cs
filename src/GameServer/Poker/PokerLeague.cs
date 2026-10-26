@@ -3,6 +3,8 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Jentl.Net;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Poker;
 using Poker.Arena;
 
@@ -30,9 +32,10 @@ public sealed record LeagueSettings(int Hands = 1000, TimeSpan? TimeLimit = null
 /// A runner that disconnects leaves the queue, but a match it is playing goes on: its seat folds while it is away and it
 /// takes the seat back when it reconnects (see <see cref="AgentSeat"/>); the match counts. <see cref="Dispose"/> (the
 /// server stopping) drops the matches that are running: they are neither stored nor rated. The league listens to the
-/// relay host's <see cref="RelayHost.Connected"/> and <see cref="RelayHost.Disconnected"/> itself.
+/// relay host's <see cref="RelayHost.Connected"/> and <see cref="RelayHost.Disconnected"/> itself. A match that fails
+/// (it cannot be played, stored or rated) is logged and raised as <see cref="Failed"/>, and the league carries on.
 /// </remarks>
-public sealed class PokerLeague : IDisposable
+public sealed partial class PokerLeague : IDisposable
 {
     private const int StackBigBlinds = 100;
 
@@ -43,6 +46,7 @@ public sealed class PokerLeague : IDisposable
     private readonly MatchStore _store;
     private readonly LeagueSettings _settings;
     private readonly TimeProvider _clock;
+    private readonly ILogger<PokerLeague> _logger;
     private readonly CancellationTokenSource _stopping = new();
 
     private readonly object _lock = new();
@@ -55,7 +59,8 @@ public sealed class PokerLeague : IDisposable
     // Taken to rate and store a finished match, and to stop the league: no match is kept once Dispose has begun.
     private readonly object _finishing = new();
 
-    public PokerLeague(RelayHost relays, Registry registry, Ratings ratings, Matchmaker matchmaker, MatchStore store, LeagueSettings settings, TimeProvider clock)
+    /// <param name="logger">Where failed matches are logged; nowhere when null.</param>
+    public PokerLeague(RelayHost relays, Registry registry, Ratings ratings, Matchmaker matchmaker, MatchStore store, LeagueSettings settings, TimeProvider clock, ILogger<PokerLeague>? logger = null)
     {
         _relays = relays ?? throw new ArgumentNullException(nameof(relays));
         _registry = registry ?? throw new ArgumentNullException(nameof(registry));
@@ -64,6 +69,7 @@ public sealed class PokerLeague : IDisposable
         _store = store ?? throw new ArgumentNullException(nameof(store));
         _settings = settings ?? throw new ArgumentNullException(nameof(settings));
         _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+        _logger = logger ?? NullLogger<PokerLeague>.Instance;
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(settings.Hands);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(settings.ConcurrentMatches);
         _relays.Connected += Connected;
@@ -72,6 +78,12 @@ public sealed class PokerLeague : IDisposable
 
     /// <summary>Raised when a match was stored, ranked or practice, on the match's own task.</summary>
     public event Action<StoredMatch>? Finished;
+
+    /// <summary>
+    /// Raised when something went wrong with a match: it could not be played, stored or rated (it is then not rated), or a
+    /// <see cref="Finished"/> handler threw. Raised on the match's own task; the failure is logged too.
+    /// </summary>
+    public event Action<LeagueFailure>? Failed;
 
     /// <summary>The bots in a match now, or about to start a practice match.</summary>
     public IReadOnlyCollection<string> Playing
@@ -112,13 +124,14 @@ public sealed class PokerLeague : IDisposable
     /// <summary>
     /// Has <paramref name="bot"/> play an unranked match against the house bot <paramref name="houseBot"/> (one of
     /// <see cref="HouseBots.All"/>) instead of waiting for a ranked one; it starts on the next tick that has room. False
-    /// when there is no such house bot, or the bot is unknown, banned, not connected or already playing.
+    /// when there is no such house bot, or it has the bot's own name (two seats of one name), or the bot is unknown,
+    /// banned, not connected or already playing.
     /// </summary>
     public bool Practise(string bot, string houseBot)
     {
         ArgumentNullException.ThrowIfNull(bot);
         ArgumentNullException.ThrowIfNull(houseBot);
-        if (!HouseBots.All.Any(h => h.Name == houseBot) || !CanPlay(bot))
+        if (!HouseBots.All.Any(h => h.Name == houseBot) || string.Equals(bot, houseBot, StringComparison.OrdinalIgnoreCase) || !CanPlay(bot))
         {
             return false;
         }
@@ -264,8 +277,9 @@ public sealed class PokerLeague : IDisposable
 
     /// <summary>
     /// Plays one match: <paramref name="a"/> in seat 0 against the bot <paramref name="b"/> (ranked) or the house bot
-    /// <paramref name="house"/> (practice), then keeps it and tells the runners how it went. Its bots are free again
-    /// afterwards, whatever happened.
+    /// <paramref name="house"/> (practice), then stores it, rates it once it is stored (a ranked match), and tells the
+    /// runners how it went. A failure is reported (see <see cref="Failed"/>). Its bots are free again afterwards, whatever
+    /// happened.
     /// </summary>
     private async Task PlayAsync(string a, string? b, string? house)
     {
@@ -315,13 +329,17 @@ public sealed class PokerLeague : IDisposable
 
                 if (ranked)
                 {
-                    var score = results[0].Net > results[1].Net ? 1 : results[0].Net < results[1].Net ? 0 : 0.5;
-                    var perHand = match.Hands.Select(hand => ArenaBatch.HandNet(hand, 0)).ToList();
                     _matchmaker.Played(botA.Name, botB!.Name);
-                    _ratings.Record(new RankedOutcome(botA.Name, botB.Name, score, perHand.Count, perHand));
                 }
 
+                // Stored first: a match is rated only once it is kept, so a rating never rests on a match that is gone.
                 stored = _store.Add(match, ranked);
+                if (ranked)
+                {
+                    var score = results[0].Net > results[1].Net ? 1 : results[0].Net < results[1].Net ? 0 : 0.5;
+                    var perHand = match.Hands.Select(hand => ArenaBatch.HandNet(hand, 0)).ToList();
+                    _ratings.Record(new RankedOutcome(botA.Name, botB!.Name, score, perHand.Count, perHand));
+                }
             }
 
             Tell(agentA, Ended(seatB.Name, ranked, results[0], match.Hands.Count, ranked ? _ratings.Of(botA.Name) : null));
@@ -335,9 +353,10 @@ public sealed class PokerLeague : IDisposable
             // The league stopped: the match is dropped.
         }
 #pragma warning disable CA1031 // A match that fails (a full disk, say) must not take the league down; its bots play on.
-        catch (Exception)
+        catch (Exception e)
 #pragma warning restore CA1031
         {
+            Report(a, opponent, e);
         }
         finally
         {
@@ -357,11 +376,43 @@ public sealed class PokerLeague : IDisposable
             }
         }
 
-        if (stored is not null)
+        if (stored is not null && Finished is { } finished)
         {
-            Finished?.Invoke(stored);
+            // Each handler on its own, so one that throws neither stops the others nor goes unseen.
+            foreach (var handler in finished.GetInvocationList().Cast<Action<StoredMatch>>())
+            {
+                try
+                {
+                    handler(stored);
+                }
+#pragma warning disable CA1031 // Whatever a handler throws is reported, not passed on to a task nobody awaits.
+                catch (Exception e)
+#pragma warning restore CA1031
+                {
+                    Report(stored.BotA, stored.BotB, e);
+                }
+            }
         }
     }
+
+    /// <summary>Logs a failure and raises <see cref="Failed"/>; a <see cref="Failed"/> handler that throws is only logged.</summary>
+    private void Report(string a, string b, Exception error)
+    {
+        LogFailure(_logger, error, a, b);
+        try
+        {
+            Failed?.Invoke(new LeagueFailure(a, b, error));
+        }
+#pragma warning disable CA1031 // A failing report must not fail the match's task.
+        catch (Exception e)
+#pragma warning restore CA1031
+        {
+            LogFailure(_logger, e, a, b);
+        }
+    }
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "The poker match between {BotA} and {BotB} failed")]
+    private static partial void LogFailure(ILogger logger, Exception error, string botA, string botB);
 
     /// <summary>Whether <paramref name="bot"/> is registered, not banned, and its runner is connected.</summary>
     private bool CanPlay(string bot) => _registry.Bot(bot) is { Banned: false } && _relays.Agent(bot) is { IsAway: false };
@@ -423,6 +474,9 @@ public sealed class PokerLeague : IDisposable
         };
     }
 }
+
+/// <summary>What went wrong with the match between <paramref name="BotA"/> and <paramref name="BotB"/> (a house bot in practice).</summary>
+public sealed record LeagueFailure(string BotA, string BotB, Exception Error);
 
 /// <summary>
 /// What the league tells a runner to show its owner: <paramref name="State"/> "playing" at the start of a match and

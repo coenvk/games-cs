@@ -79,6 +79,17 @@ public sealed class RegistryTests : IDisposable
     }
 
     [Theory]
+    [InlineData("Random")]
+    [InlineData("always call")]
+    [InlineData("TIGHT")]
+    public void AHouseBotsName_IsTaken(string name)
+    {
+        var owner = _registration.NewOwner("Coen", null).Value;
+
+        _registration.NewBot(owner.Token, name, null).Refusal.Should().Be("name taken");
+    }
+
+    [Theory]
     [InlineData("ab")]
     [InlineData("a name that is far too long")]
     [InlineData(" Shark")]
