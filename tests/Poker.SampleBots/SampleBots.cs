@@ -2,7 +2,7 @@
 
 namespace Poker.SampleBots;
 
-/// <summary>Checks when that is free and calls otherwise: always a legal answer (a call with nothing to call is not).</summary>
+/// <summary>Checks when that is free and calls otherwise: always a legal answer (a call with nothing to call would count as a check).</summary>
 public sealed class GoodBot : IPokerBot
 {
     /// <inheritdoc />

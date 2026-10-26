@@ -125,7 +125,7 @@ public sealed record Pot(int Amount, IReadOnlyList<int> Seats);
 /// <summary>What the player to act may do. Answering with anything else is replaced: a check when that is free, otherwise a fold.</summary>
 /// <param name="Fold">Always true.</param>
 /// <param name="Check">True when there is nothing to call.</param>
-/// <param name="Call">The chips a call costs (at most your stack), or null when there is nothing to call.</param>
+/// <param name="Call">The chips a call costs (at most your stack), or null when there is nothing to call (answering call then counts as a check).</param>
 /// <param name="MinRaiseTo">The smallest legal raise, as the total bet for this street, or null when you cannot raise.</param>
 /// <param name="MaxRaiseTo">The largest raise, as the total bet for this street (your whole stack), or null.</param>
 /// <param name="AllIn">True when you may push all your chips in.</param>
@@ -204,7 +204,7 @@ public sealed record BotAction(string Action, int? To = null, int? Id = null) : 
     /// <summary>Pass without betting; only legal when <see cref="Decision.ToCall"/> is zero.</summary>
     public static BotAction Check { get; } = new("check");
 
-    /// <summary>Match the current bet.</summary>
+    /// <summary>Match the current bet; when there is nothing to call it counts as a check.</summary>
     public static BotAction Call { get; } = new("call");
 
     /// <summary>Push all your chips in.</summary>

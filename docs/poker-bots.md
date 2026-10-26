@@ -131,8 +131,8 @@ It is your turn. Answer with an `action`.
 | `timeLimitMs` | how long you have to answer |
 
 `legal` has `fold` (always true), `check` (true when nothing is to be called), `call` (the chips a call costs, at most
-your stack; left out when there is nothing to call, and a `call` then counts as a check), `minRaiseTo` and `maxRaiseTo` (the smallest and largest raise, left
-out when you cannot raise) and `allIn` (true when you may push everything in).
+your stack; left out when there is nothing to call, and a `call` then counts as a check),
+`minRaiseTo` and `maxRaiseTo` (the smallest and largest raise, left out when you cannot raise) and `allIn` (true when you may push everything in).
 
 ### action (bot to app)
 
@@ -187,8 +187,9 @@ the chips the seat finished with. In a **fixed-stacks** match every hand starts 
   given in `match-start` and in every `decision`. Other messages need no answer.
 - **Late, malformed or illegal answers** are replaced: the app checks when checking is free and folds otherwise. Each
   replacement is counted and shown with the bot's results ("late 3, illegal 1"). Illegal means an action that is not in
-  `legal` right now, an action name the app does not know, or a raise outside `[minRaiseTo, maxRaiseTo]` (a raise to
-  `maxRaiseTo` is all in, and fine). A malformed line (not a valid message) is skipped like any other stray line, so
+  `legal` right now (except `call` with nothing to call, which counts as a check), an action name the app does not
+  know, or a raise outside `[minRaiseTo, maxRaiseTo]`
+  (a raise to `maxRaiseTo` is all in, and fine). A malformed line (not a valid message) is skipped like any other stray line, so
   when no valid answer follows, the decision counts as late, not illegal.
 - **Crashes.** A bot that crashes or exits is folded every time it is asked for the rest of the run, and the match goes
   on. The seat shows what went wrong, with the last line the bot printed on stderr.
