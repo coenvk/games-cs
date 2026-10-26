@@ -1,0 +1,5 @@
+# Automatic HTTPS for the domain (Caddy needs no e-mail address). reverse_proxy forwards WebSockets (/play, /bots)
+# as it is, and sets X-Forwarded-For for the game server (JENTL_TRUST_PROXY).
+{$DOMAIN} {
+	reverse_proxy game-server:5080
+}

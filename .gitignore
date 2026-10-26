@@ -381,3 +381,6 @@ scores.json
 
 # The poker server data folder, made in the working directory when a server starts there
 poker-data/
+
+# The deployment settings (deploy/.env.example is the template)
+deploy/.env

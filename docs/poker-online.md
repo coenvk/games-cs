@@ -203,3 +203,55 @@ its bots. A banned bot is not matched any more, cannot get a new token, and its 
 ban made while the server runs, from its own code, cuts the runner off at once with "refused: banned"). Use `--poker-data`
 (or `JENTL_POKER_DATA`) if the data is not in `poker-data`. **Stop the server first**: a running server keeps its own
 copy of the owners and bots and would overwrite the ban when it next saves.
+
+## Hosting it
+
+`deploy/` holds everything to host the server on a machine of your own: the game server and [Caddy](https://caddyserver.com)
+(which fetches and renews the TLS certificate and forwards everything, WebSockets included) in one Docker Compose file.
+Only Caddy is reachable from outside (ports 80 and 443); the game server's port 5080 stays on the compose network, which is
+what `JENTL_TRUST_PROXY=true` (set by the compose file) requires.
+
+1. **A host.** Any VPS with Docker and the Compose plugin, and ports 80 and 443 open (also 443/udp for HTTP/3).
+2. **DNS.** Point an `A` record (and `AAAA` if the host has IPv6) of your domain at the host's address. Caddy can only get a
+   certificate once that resolves.
+3. **Settings.** On the host, in a checkout of this repository, copy `deploy/.env.example` to `deploy/.env` and set
+   `DOMAIN` in it. The poker settings in it are commented out with their defaults; see the table above. `deploy/.env` is
+   in `.gitignore`.
+4. **Start it.** The image is built from the repository, after the engine has been packed:
+
+   ```
+   bash build/jentl.sh
+   docker compose -f deploy/docker-compose.yml up -d --build
+   ```
+
+5. **Check it.** Open `https://DOMAIN/poker`: the ranking page. `docker compose -f deploy/docker-compose.yml logs -f` shows
+   the logs (a certificate that cannot be obtained shows up in Caddy's).
+6. **Connect.** A runner uses `--server wss://DOMAIN/bots`. The workshop app and the Uno client use the server's address,
+   `--server wss://DOMAIN/play` or `JENTL_SERVER=wss://DOMAIN/play`.
+
+**Where the data is.** The poker data and `scores.json` are in the named volume `games_poker-data` (and Caddy's
+certificates in `games_caddy-data`); they survive `down` and rebuilds, but not `down -v`.
+
+**Backups.** `bash deploy/backup.sh [folder]` writes `games-data-<date>.tar.gz` (default folder `backups/`) with the
+whole data volume, mounted read-only. Run it from cron, and copy the files off the host. To restore, stop the server and
+unpack the archive into the volume.
+
+**Updating.** `git pull`, `bash build/jentl.sh`, then `docker compose -f deploy/docker-compose.yml up -d --build` again.
+The data stays.
+
+**Banning on a hosted server.** The server must be stopped first (see Banning). The container's entrypoint is the game
+server, so the arguments after the service name are its own:
+
+```
+docker compose -f deploy/docker-compose.yml stop game-server
+docker compose -f deploy/docker-compose.yml run --rm --no-deps game-server ban <bot-or-owner>
+docker compose -f deploy/docker-compose.yml start game-server
+```
+
+The one-off container has the same environment and volume, so it finds the data folder by itself.
+
+### Switching on the link on the Pages site
+
+`build/site/index.html` has a hidden link to the ranking. Once the server is up, set the `href` of `#poker-ranking` to
+`https://DOMAIN/poker`, remove the `hidden` attribute from the `<p class="league">` around it, and push; the Pages
+workflow publishes it.

@@ -1,0 +1,50 @@
+# The game server (Uno rooms and the poker bot league) behind Caddy, which gets the TLS certificate and
+# proxies everything, WebSockets included. See "Hosting it" in docs/poker-online.md.
+#
+#   bash build/jentl.sh
+#   cp deploy/.env.example deploy/.env       # and set DOMAIN
+#   docker compose -f deploy/docker-compose.yml up -d --build
+name: games
+
+services:
+  game-server:
+    build:
+      context: ..
+      dockerfile: src/GameServer/Dockerfile
+    restart: unless-stopped
+    environment:
+      JENTL_POKER_DATA: /app/poker-data
+      JENTL_SCORES: /app/poker-data/scores.json
+      JENTL_TRUST_PROXY: "true"
+      JENTL_POKER_HANDS: ${POKER_HANDS:-1000}
+      JENTL_POKER_TIME_LIMIT_MS: ${POKER_TIME_LIMIT_MS:-1000}
+      JENTL_POKER_ALLOWANCE_MS: ${POKER_ALLOWANCE_MS:-500}
+      JENTL_POKER_CONCURRENT: ${POKER_CONCURRENT:-8}
+      JENTL_POKER_BOTS_PER_OWNER: ${POKER_BOTS_PER_OWNER:-5}
+      JENTL_POKER_REGISTRATIONS_PER_DAY: ${POKER_REGISTRATIONS_PER_DAY:-10}
+    volumes:
+      - poker-data:/app/poker-data
+    # Port 5080 is not published: only Caddy, on the compose network, can reach the server.
+    expose:
+      - "5080"
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on:
+      - game-server
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN in deploy/.env}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  poker-data:
+  caddy-data:
+  caddy-config:
