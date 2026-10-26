@@ -59,6 +59,16 @@ public sealed class Registry
         }
     }
 
+    /// <summary>The owner a token belongs to, banned or not, so a refusal can say "banned" rather than "unknown".</summary>
+    internal Owner? AnyOwnerOfToken(string token)
+    {
+        var hash = Hash(token);
+        lock (_lock)
+        {
+            return _owners.Values.FirstOrDefault(o => Same(o.TokenHash, hash));
+        }
+    }
+
     /// <summary>The bot a token belongs to, or null when it is unknown or the bot or its owner is banned.</summary>
     public BotAccount? BotOfToken(string token)
     {
@@ -87,7 +97,10 @@ public sealed class Registry
         }
     }
 
-    /// <summary>Bans a bot by name, or an owner by id; an owner's ban takes its bots off the ladder too.</summary>
+    /// <summary>
+    /// Bans a bot by name, or an owner by id. An owner's ban marks every bot of theirs banned too, so
+    /// <see cref="Bot"/> and <see cref="BotsOf"/> tell the whole truth: <c>Banned</c> on a bot is all that later code needs to read.
+    /// </summary>
     public void Ban(string botOrOwner)
     {
         lock (_lock)
@@ -100,7 +113,13 @@ public sealed class Registry
             else if (_owners.TryGetValue(botOrOwner, out var owner))
             {
                 _owners[owner.Id] = owner with { Banned = true };
+                foreach (var theirs in _bots.Values.Where(b => b.OwnerId == owner.Id && !b.Banned).ToList())
+                {
+                    _bots[theirs.Name] = theirs with { Banned = true };
+                }
+
                 SaveOwners();
+                SaveBots();
             }
         }
     }
@@ -130,13 +149,23 @@ public sealed class Registry
         }
     }
 
-    /// <summary>Replaces the bot of the same name, for a new token.</summary>
-    internal void Replace(BotAccount bot)
+    /// <summary>
+    /// Swaps the token hash on the bot's current record, under the registry lock, so a ban that landed since the caller
+    /// looked is kept. Null, and nothing changed, when the bot is unknown or banned.
+    /// </summary>
+    internal BotAccount? ReplaceToken(string name, string tokenHash)
     {
         lock (_lock)
         {
-            _bots[bot.Name] = bot;
+            if (!_bots.TryGetValue(name, out var bot) || bot.Banned || IsOwnerBanned(bot))
+            {
+                return null;
+            }
+
+            var renewed = bot with { TokenHash = tokenHash };
+            _bots[renewed.Name] = renewed;
             SaveBots();
+            return renewed;
         }
     }
 

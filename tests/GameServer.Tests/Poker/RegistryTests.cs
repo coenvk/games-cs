@@ -83,6 +83,7 @@ public sealed class RegistryTests : IDisposable
     [InlineData("a name that is far too long")]
     [InlineData(" Shark")]
     [InlineData("Shark!")]
+    [InlineData("Shark\n")]
     public void BadNames_AreRefused(string name)
     {
         var owner = _registration.NewOwner("Coen", null).Value;
@@ -147,7 +148,90 @@ public sealed class RegistryTests : IDisposable
 
         _registry.OwnerOfToken(owner.Token).Should().BeNull();
         _registry.BotOfToken(bot.Token).Should().BeNull();
-        _registration.NewBot(owner.Token, "Other", null).Refusal.Should().Be("unknown owner");
+        _registration.NewBot(owner.Token, "Other", null).Refusal.Should().Be("banned");
+    }
+
+    [Fact]
+    public void ABannedOwner_GetsBanned_NotUnknownOwner()
+    {
+        var owner = _registration.NewOwner("Coen", null).Value;
+        var bot = _registration.NewBot(owner.Token, "Shark", null).Value;
+        _registry.Ban(owner.Account.Id);
+
+        _registration.NewBot(owner.Token, "Other", null).Refusal.Should().Be("banned");
+        _registration.RenewBotToken(owner.Token, "Shark").Refusal.Should().Be("banned");
+        _registration.RenewBotToken("nonsense", "Shark").Refusal.Should().Be("unknown owner");
+        _registration.NewBotToken(owner.Token, "Shark").Should().BeNull();
+        bot.Account.Name.Should().Be("Shark");
+    }
+
+    [Fact]
+    public void ABannedBot_AskingForANewToken_GetsBanned()
+    {
+        var owner = _registration.NewOwner("Coen", null).Value;
+        _registration.NewBot(owner.Token, "Shark", null);
+        _registry.Ban("Shark");
+
+        _registration.RenewBotToken(owner.Token, "Shark").Refusal.Should().Be("banned");
+    }
+
+    [Fact]
+    public async Task ABan_IsNotUndoneByARacingNewToken()
+    {
+        for (var i = 0; i < 200; i++)
+        {
+            var owner = _registration.NewOwner($"Owner {i}", null).Value;
+            var name = $"Bot {i}";
+            _registration.NewBot(owner.Token, name, null);
+
+            var renewing = Task.Run(() =>
+            {
+                for (var n = 0; n < 50; n++)
+                {
+                    _registration.NewBotToken(owner.Token, name);
+                }
+            });
+            var banning = Task.Run(() => _registry.Ban(name));
+            await Task.WhenAll(renewing, banning);
+
+            _registry.Bot(name)!.Banned.Should().BeTrue();
+            new Registry(new PokerData(_folder), _clock).Bot(name)!.Banned.Should().BeTrue();
+        }
+    }
+
+    [Fact]
+    public void ABannedOwner_BansTheirBotsToo_AlsoAfterARestart()
+    {
+        var owner = _registration.NewOwner("Coen", null).Value;
+        _registration.NewBot(owner.Token, "Shark", null);
+        _registration.NewBot(owner.Token, "Tiger", null);
+
+        _registry.Ban(owner.Account.Id);
+
+        _registry.Bot("Shark")!.Banned.Should().BeTrue();
+        _registry.BotsOf(owner.Account.Id).Should().OnlyContain(b => b.Banned);
+        var restarted = new Registry(new PokerData(_folder), _clock);
+        restarted.Bot("Tiger")!.Banned.Should().BeTrue();
+        restarted.BotsOf(owner.Account.Id).Should().OnlyContain(b => b.Banned);
+    }
+
+    [Fact]
+    public void ABrokenFile_IsMovedAside_NotOverwritten()
+    {
+        var owner = _registration.NewOwner("Coen", null).Value;
+        _registration.NewBot(owner.Token, "Shark", null);
+        File.WriteAllText(Path.Combine(_folder, "bots.json"), "{ this is not json");
+
+        var data = new PokerData(_folder);
+        var restarted = new Registry(data, _clock);
+        new Registration(restarted, new RegistrationLimits(), _clock).NewBot(owner.Token, "Tiger", null);
+
+        data.Problems.Should().ContainSingle().Which.Should().Contain("bots.json");
+
+        var aside = Directory.GetFiles(_folder, "bots.json.broken-*");
+        aside.Should().ContainSingle();
+        File.ReadAllText(aside[0]).Should().Be("{ this is not json");
+        restarted.Bot("Tiger").Should().NotBeNull();
     }
 
     /// <summary>A clock that stands still until told to move.</summary>

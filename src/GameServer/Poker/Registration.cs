@@ -79,10 +79,15 @@ public sealed partial class Registration(Registry registry, RegistrationLimits l
 
         lock (_lock)
         {
-            var owner = registry.OwnerOfToken(ownerToken);
+            var owner = registry.AnyOwnerOfToken(ownerToken);
             if (owner is null)
             {
                 return RegisterResult<BotAccount>.Refused("unknown owner");
+            }
+
+            if (owner.Banned)
+            {
+                return RegisterResult<BotAccount>.Refused("banned");
             }
 
             if (registry.BotsOf(owner.Id).Count >= limits.BotsPerOwner)
@@ -112,28 +117,45 @@ public sealed partial class Registration(Registry registry, RegistrationLimits l
         }
     }
 
-    /// <summary>Gives a bot a new token; the old one stops working. Null when the owner or the bot is not theirs (or banned).</summary>
-    public string? NewBotToken(string ownerToken, string botName)
+    /// <summary>
+    /// Gives a bot a new token; the old one stops working. Refused as "unknown owner", "unknown bot" (not this owner's)
+    /// or "banned" (the owner or the bot is banned).
+    /// </summary>
+    public RegisterResult<BotAccount> RenewBotToken(string ownerToken, string botName)
     {
         lock (_lock)
         {
-            var owner = registry.OwnerOfToken(ownerToken);
-            var bot = registry.Bot(botName);
-            if (owner is null || bot is null || bot.OwnerId != owner.Id || bot.Banned)
+            var owner = registry.AnyOwnerOfToken(ownerToken);
+            if (owner is null)
             {
-                return null;
+                return RegisterResult<BotAccount>.Refused("unknown owner");
+            }
+
+            var bot = registry.Bot(botName);
+            if (bot is null || bot.OwnerId != owner.Id)
+            {
+                return RegisterResult<BotAccount>.Refused("unknown bot");
             }
 
             var token = NewToken();
-            registry.Replace(bot with { TokenHash = Registry.Hash(token) });
-            return token;
+
+            // The registry swaps the token on its current record, so a ban that lands meanwhile is never undone.
+            var renewed = owner.Banned ? null : registry.ReplaceToken(bot.Name, Registry.Hash(token));
+            return renewed is null ? RegisterResult<BotAccount>.Refused("banned") : RegisterResult<BotAccount>.Success(renewed, token);
         }
+    }
+
+    /// <summary>The new token of <see cref="RenewBotToken"/>, or null when it was refused.</summary>
+    public string? NewBotToken(string ownerToken, string botName)
+    {
+        var result = RenewBotToken(ownerToken, botName);
+        return result.Ok ? result.Value.Token : null;
     }
 
     /// <summary>Whether this is an acceptable name: 3 to 24 letters, digits, spaces, dashes, underscores or dots, not starting or ending in a space.</summary>
     public static bool IsName(string? name) => name is not null && NamePattern().IsMatch(name);
 
-    [GeneratedRegex(@"^(?! )[A-Za-z0-9 _.\-]{3,24}(?<! )$")]
+    [GeneratedRegex(@"^(?! )[A-Za-z0-9 _.\-]{3,24}(?<! )\z")]
     private static partial Regex NamePattern();
 
     private static string NewToken() => Base64Url(RandomNumberGenerator.GetBytes(32));

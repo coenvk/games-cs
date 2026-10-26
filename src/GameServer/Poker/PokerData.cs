@@ -11,6 +11,8 @@ namespace GameServer.Poker;
 /// </summary>
 public sealed class PokerData
 {
+    private readonly object _lock = new();
+    private readonly List<string> _problems = [];
     private readonly string _folder;
 
     /// <param name="folder">Where the files live; it is created when it does not exist yet.</param>
@@ -25,7 +27,25 @@ public sealed class PokerData
     /// <summary>Where the finished matches are kept, one file each.</summary>
     public string MatchesFolder => Path.Combine(_folder, "matches");
 
-    /// <summary>Reads a file, or null when it is missing or broken: a bad file starts empty rather than stopping the server.</summary>
+    /// <summary>
+    /// What went wrong while reading, for the operator: each broken file and where it was moved to. Nothing is
+    /// logged yet (no logging is wired), so the server can print these at start-up.
+    /// </summary>
+    public IReadOnlyList<string> Problems
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return [.. _problems];
+            }
+        }
+    }
+
+    /// <summary>
+    /// Reads a file, or null when it is missing. A broken file is moved aside to <c>name.broken-&lt;time&gt;</c> (so the
+    /// next save cannot wipe it), noted in <see cref="Problems"/>, and read as missing: the server starts rather than stops.
+    /// </summary>
     public T? Read<T>(string name, JsonTypeInfo<T> info)
     {
         ArgumentNullException.ThrowIfNull(info);
@@ -34,8 +54,15 @@ public sealed class PokerData
         {
             return File.Exists(file) ? JsonSerializer.Deserialize(File.ReadAllText(file), info) : default;
         }
-        catch (JsonException)
+        catch (JsonException ex)
         {
+            var aside = $"{file}.broken-{DateTime.UtcNow:yyyyMMddHHmmssfff}";
+            File.Move(file, aside, overwrite: true);
+            lock (_lock)
+            {
+                _problems.Add($"{name} could not be read ({ex.Message}); it was moved to {Path.GetFileName(aside)} and started empty.");
+            }
+
             return default;
         }
     }
