@@ -48,9 +48,7 @@ internal sealed class PokerScene : Scene
     private readonly PokerBot[] _bots;
     private readonly ButtonBar _buttons = new();
     private readonly HoldemControls _controls = new();
-    private readonly List<string> _log = [];
-    private readonly Dictionary<int, string> _lastAction = [];
-    private readonly HashSet<int> _shown = [];
+    private readonly HoldemLog _log;
     private readonly PokerTableView _view;
     private readonly string[] _names;
     private readonly Func<int, bool> _faceUp;
@@ -69,10 +67,11 @@ internal sealed class PokerScene : Scene
             aggression: 0.7 - 0.12 * (i % 4),
             bluff: 0.04 + 0.03 * (i % 3)))];
         _view = new PokerTableView(context);
+        _log = new HoldemLog(context);
         _names = [.. setup.Players.Select(p => p.Name)];
         Table = new HoldemTable(setup.Players.Count, DealSeed.FromNumber(_seed), StartingStack);
         _runner = DealHand();
-        _faceUp = seat => seat == _runner.Viewer || _shown.Contains(seat);
+        _faceUp = seat => seat == _runner.Viewer || _log.Showed(seat);
     }
 
     public HoldemTable Table { get; }
@@ -166,7 +165,7 @@ internal sealed class PokerScene : Scene
         var lineHeight = (int)fonts.Small.LineHeight;
         var buttons = new Rectangle(viewport.X + margin, viewport.Bottom - buttonsHeight, viewport.Width - 2 * margin, buttonsHeight);
         var logTop = buttons.Top - LogLines * lineHeight - fonts.Px(6);
-        var lines = _log.TakeLast(LogLines).ToArray();
+        var lines = _log.Lines.TakeLast(LogLines).ToArray();
         for (var i = 0; i < lines.Length; i++)
         {
             batch.DrawText(fonts.Small, lines[i], new Vector2(viewport.Center.X, logTop + i * lineHeight), i == lines.Length - 1 ? Palette.Text : Palette.Muted, Align.Center, shadow: false);
@@ -175,7 +174,7 @@ internal sealed class PokerScene : Scene
         // The table between the header and the messages, with the viewer at the bottom.
         var area = new Rectangle(viewport.X + margin, hud.Bottom + margin, viewport.Width - 2 * margin, logTop - hud.Bottom - 2 * margin);
         _view.BottomSeat = _runner.Viewer ?? (_runner.Current.IsHuman ? _runner.Current.Seat : Players.First(p => p.IsHuman).Seat);
-        _view.Draw(batch, area, hand, _names, _faceUp, _lastAction);
+        _view.Draw(batch, area, hand, _names, _faceUp, _log.LastAction);
 
         _buttons.Draw(batch, buttonFont, buttons);
     }
@@ -193,10 +192,9 @@ internal sealed class PokerScene : Scene
     private Match<HoldemHand, PokerAction> DealHand()
     {
         var hand = Table.DealHand();
-        _lastAction.Clear();
-        _shown.Clear();
+        _log.NewHand();
         var runner = new Match<HoldemHand, PokerAction>(hand, Players, s => _bots[s], unchecked(_seed + Table.HandNumber)) { BotDelay = BotDelay };
-        Say(T("Hand {0}, dealer: {1}", Table.HandNumber, Players[hand.Button].Name));
+        _log.Say(T("Hand {0}, dealer: {1}", Table.HandNumber, Players[hand.Button].Name));
         Show(hand.TakeEvents());
         _controls.Reset(hand);
         return runner;
@@ -256,55 +254,7 @@ internal sealed class PokerScene : Scene
 
     private void Show(IReadOnlyList<PokerEvent> events)
     {
-        foreach (var e in events)
-        {
-            Describe(e);
-        }
-
+        _log.Show(events, _names);
         _view.Update(TimeSpan.Zero, events);
-    }
-
-    private void Describe(PokerEvent e)
-    {
-        string Name(int seat) => Players[seat].Name;
-        switch (e)
-        {
-            case BlindPosted b:
-                _lastAction[b.Seat] = b.Big ? T("Big blind") : T("Small blind");
-                break;
-            case Acted a:
-                if (a.Amount > 0)
-                {
-                    _context.Sounds.Play(Sound.Chips);
-                }
-
-                var label = HoldemText.Action(a);
-                _lastAction[a.Seat] = label;
-                Say($"{Name(a.Seat)}: {label}");
-                break;
-            case StreetDealt d:
-                HoldemText.NewStreet(_lastAction);
-                Say(T("{0}: {1}", HoldemText.StreetName(d.Street), Card.Symbols(d.Cards)));
-                break;
-            case HandShown s:
-                _shown.Add(s.Seat);
-                _lastAction[s.Seat] = HoldemText.Describe(s.Value);
-                break;
-            case PotWon w:
-                _context.Sounds.Play(Sound.Chips);
-                Say(w.Value is { } value
-                    ? T("{0} wins {1}: {2}", Name(w.Seat), w.Amount, HoldemText.Describe(value))
-                    : T("{0} takes {1}", Name(w.Seat), w.Amount));
-                break;
-        }
-    }
-
-    private void Say(string message)
-    {
-        _log.Add(message);
-        if (_log.Count > 20)
-        {
-            _log.RemoveAt(0);
-        }
     }
 }

@@ -120,6 +120,20 @@ internal sealed class PokerTableView(GameContext context) : IDisposable
     }
 
     /// <summary>
+    /// <paramref name="from"/> dealt again as <paramref name="to"/>, with more of it played or known (an online hand
+    /// rebuilt from the server's latest state): if <paramref name="from"/> is the hand being drawn, <paramref name="to"/>
+    /// is drawn from now on as the same hand, so the chips in flight and the pots carry on.
+    /// </summary>
+    public void Carry(HoldemHand from, HoldemHand to)
+    {
+        ArgumentNullException.ThrowIfNull(to);
+        if (ReferenceEquals(_hand, from))
+        {
+            _hand = to;
+        }
+    }
+
+    /// <summary>
     /// Draws the table in <paramref name="viewport"/>: <paramref name="names"/> by seat, hole cards face up where
     /// <paramref name="faceUp"/> says so, and each seat's last action (or blind, or hand at a showdown) under it.
     /// </summary>

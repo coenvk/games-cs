@@ -9,27 +9,39 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Games.Input;
 using Games.UI;
-using Uno;
 using static Games.UI.Tr;
 
 namespace Games.Scenes;
 
 /// <summary>
-/// The online lobby: connects to the game server, then creates a room (and shows its code to share) or joins
-/// one by its code. In a room it lists who has come; the host starts, and bots take the empty seats.
+/// The online lobby of a game on the game server: connects, then creates a room (and shows its code to share) or joins
+/// one by its code. In a room it lists who has come; the host starts, bots take the empty seats, and the game's own
+/// screen takes over the connection.
 /// </summary>
-internal sealed class UnoOnlineScene : PanelScene
+internal sealed class RoomLobbyScene : PanelScene
 {
     private readonly NetClient _client;
+    private readonly string _title;
+    private readonly string _game;
+    private readonly IReadOnlyList<int> _sizes;
+    private readonly Func<NetClient, RoomJoined, Scene> _table;
     private string? _problem;
     private RoomJoined? _room;
     private IReadOnlyList<SeatInfo> _seats = [];
     private bool _handedOver;
     private Stage _stage = Stage.Connecting;
 
-    public UnoOnlineScene(GameContext context)
+    /// <param name="title">The lobby's title before a room is chosen ("Uno online").</param>
+    /// <param name="game">The game's name on the server.</param>
+    /// <param name="sizes">The room sizes on offer.</param>
+    /// <param name="table">The game's screen for a started room, which takes over the connection.</param>
+    public RoomLobbyScene(GameContext context, string title, string game, IReadOnlyList<int> sizes, Func<NetClient, RoomJoined, Scene> table)
         : base(context)
     {
+        _title = title;
+        _game = game;
+        _sizes = sizes;
+        _table = table;
         Server = context.GameServer;
         _client = new NetClient(Server);
         Menu = BuildMenu();
@@ -45,7 +57,7 @@ internal sealed class UnoOnlineScene : PanelScene
 
     public Uri Server { get; }
 
-    protected override string Title => _room is { } room ? T("Room {0}", room.Code) : T("Uno online");
+    protected override string Title => _room is { } room ? T("Room {0}", room.Code) : _title;
 
     protected override IReadOnlyList<PanelLine> Lines
     {
@@ -146,8 +158,7 @@ internal sealed class UnoOnlineScene : PanelScene
                 case GameStarted:
                     // The table takes the connection from here; its states follow in the queue.
                     _handedOver = true;
-                    var table = new OnlineUnoTable(_client, _room!.Code, _room.Seat);
-                    Scenes.Replace(new UnoScene(Context, table), Navigation.Fade());
+                    Scenes.Replace(_table(_client, _room!), Navigation.Fade());
                     break;
             }
         }
@@ -176,11 +187,11 @@ internal sealed class UnoOnlineScene : PanelScene
         {
             Stage.Choosing => new Menu(
                 sounds,
-                new MenuItem(T("New room for 2"), () => Create(2)),
-                new MenuItem(T("New room for 3"), () => Create(3)),
-                new MenuItem(T("New room for 4"), () => Create(4)),
-                new MenuItem(T("Join a room"), () => Scenes.Push(new UnoJoinScene(Context, this))),
-                back),
+                [
+                    .. _sizes.Select(n => new MenuItem(T("New room for {0}", n), () => Create(n))),
+                    new MenuItem(T("Join a room"), () => Scenes.Push(new RoomCodeScene(Context, Join))),
+                    back,
+                ]),
             Stage.InRoom when _room!.IsHost => new Menu(sounds, new MenuItem(T("Start"), Start), new MenuItem(T("Leave"), Leave)),
             Stage.InRoom => new Menu(sounds, new MenuItem(T("Leave"), Leave)),
             _ => new Menu(sounds, back),
@@ -189,7 +200,7 @@ internal sealed class UnoOnlineScene : PanelScene
 
     private void Create(int seats)
     {
-        _client.Send(new CreateRoom(UnoOnline.Game, seats));
+        _client.Send(new CreateRoom(_game, seats));
         Wait();
     }
 
@@ -210,7 +221,7 @@ internal sealed class UnoOnlineScene : PanelScene
 }
 
 /// <summary>A keypad for a four-digit room code: tap the keys, type digits, or move with arrows and press.</summary>
-internal sealed class UnoJoinScene(GameContext context, UnoOnlineScene lobby) : Scene
+internal sealed class RoomCodeScene(GameContext context, Action<string> join) : Scene
 {
     private const int Length = 4;
     private static readonly string[] Keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "Del", "0", "Join"];
@@ -320,7 +331,7 @@ internal sealed class UnoJoinScene(GameContext context, UnoOnlineScene lobby) : 
                 break;
             case "Join" when _code.Length == Length:
                 Scenes.Pop();
-                lobby.Join(_code);
+                join(_code);
                 break;
             case "Join":
                 break;

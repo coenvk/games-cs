@@ -11,7 +11,7 @@ the engine now lives in its own repository and comes in here as packages.
 | **Sokoban** | Push every crate onto a goal: 100 classic levels, 20 ice levels, generated levels, hints from a solver |
 | **Solitaire** | Klondike, Easthaven, Forty Thieves, FreeCell, Golf, Pyramid, Spider, TriPeaks and Yukon |
 | **Card Table** | Uno against bots, passing the device round, or online |
-| **Poker** | No-limit Texas Hold'em against bots or passing the device round, and a workshop for your own poker bots |
+| **Poker** | No-limit Texas Hold'em against bots, passing the device round, or online, and a workshop for your own poker bots |
 | **Mossbrook** | A small turn-based adventure: a village, a cellar and a lost amulet |
 | **Code Lock** | Mastermind on a combination lock |
 | **Bricks** | A brick breaker with power-ups |
@@ -29,10 +29,10 @@ Each is its own app, on the desktop and in the browser (each in its own folder o
 | `shell` | What every app shares: the host (`ShellGame`), the context, options, title screen, panels, audio, controls and translations (`shell/Shell`); the desktop and browser entry points; shared assets (font, sounds, `lang/nl.json`); and `Desktop.props` and `Web.props`, which turn an app folder into an app |
 | `src/Sokoban.Model`, `src/Sokoban.Solver` | Sokoban's rules on the puzzle kit, and its solver and level generator |
 | `src/Klondike` ... `src/Yukon` | The solitaire games' rules on the card kit |
-| `src/Uno`, `src/Poker` | Uno (rules, bots, its online room) and Texas Hold'em |
+| `src/Uno`, `src/Poker` | Uno and Texas Hold'em (rules, bots, their online rooms) |
 | `src/Mossbrook`, `src/CodeLock`, `src/Bricks` | The adventure on the RPG kit, the code lock and its solver, and the brick breaker on the ECS and physics |
 | `src/Paddock` | Paddock's cars, race simulation, upgrades and fusing, matches, events, campaign and economy |
-| `src/GameServer` | The online game server (rooms over WebSockets, hosting Uno), with a Dockerfile |
+| `src/GameServer` | The online game server (rooms over WebSockets, hosting Uno and Hold'em), with a Dockerfile |
 | `tests/*` | xUnit tests for every game library and the server; `tests/Apps.Tests` checks the apps' translations and assets |
 | `tools/LevelConverter`, `tools/SolverBench`, `tools/RpgArt`, `tools/CarArt` | The old level converter, the solver bench, the RPG tileset drawn in code, and Paddock's cars drawn in code |
 | `levels` | Sokoban's level packs |
@@ -313,6 +313,15 @@ every ten hands, and the last player with chips wins. Play against 1, 3 or 5 bot
 2 to 4 people (hole cards stay hidden between turns). Fold, Check or Call, Bet or Raise (- and + step the amount by
 the big blind), or All in; on a keyboard Enter checks or calls, Up raises, Left/Right change the amount and F folds.
 Showdowns name the hands ("Two pair, sevens and threes"), and all-ins for different amounts make side pots.
+
+**Play online** (in the Texas Hold'em menu) plays the same sit-and-go with people on other devices, through the game
+server Uno's rooms use. "New room for 2" to "New room for 6" shows a four-digit code to share; the others pick "Join a
+room" and type it; the host starts, and house bots take the empty seats and the seat of anyone who leaves. Each
+device is sent only its own hole cards (and the cards shown at a showdown): the server deals from a secret seed of
+its own and checks every move. Whoever is to act has 60 seconds, counted down for everyone; then the server checks
+for them when that is free and folds otherwise. A finished hand stays on the table for a few seconds, or until
+everyone taps Next hand. [docs/poker-online.md](docs/poker-online.md#playing-online-with-friends) has how to reach a
+server at home from other devices.
 
 The bots deal out the unknown cards a hundred and fifty times to estimate their chances, then weigh that against
 the pot odds; each seat plays its own style, from tight and careful to loose and pushy, with the odd bluff. The

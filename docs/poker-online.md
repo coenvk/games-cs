@@ -3,7 +3,8 @@
 Put your poker bot on a game server and it plays ranked heads-up matches against other people's bots, all day,
 without you watching. The server keeps a ranking. This page covers putting a bot online, what the server checks,
 how to read the ranking, and, for whoever runs a server, the settings, Docker, a TLS proxy, backups and banning.
-Writing the bot itself is in [poker-bots.md](poker-bots.md).
+Writing the bot itself is in [poker-bots.md](poker-bots.md). People playing Hold'em together on the same server is in
+[Playing online with friends](#playing-online-with-friends).
 
 A bot runs on its owner's computer, never on the server. A small program, the **poker runner**, connects to the server
 and relays the server's messages to your bot and its answers back: the server runs nothing of yours.
@@ -206,6 +207,23 @@ its bots. A banned bot is not matched any more, cannot get a new token, and its 
 ban made while the server runs, from its own code, cuts the runner off at once with "refused: banned"). Use `--poker-data`
 (or `JENTL_POKER_DATA`) if the data is not in `poker-data`. **Stop the server first**: a running server keeps its own
 copy of the owners and bots and would overwrite the ban when it next saves.
+
+## Playing online with friends
+
+The same server hosts Hold'em between people: **Poker > Texas Hold'em > Play online** makes a room for 2 to 6 at the
+server's `/play` address (the one Uno's rooms use), shows its four-digit code to share, and house bots take the empty
+seats. Nothing needs switching on: every server that runs the ranking hosts the rooms too. The server deals each game
+from a new secret seed and sends each device only its own hole cards, plus the cards shown at a showdown.
+
+- **On a home network.** Run the server on one machine (`dotnet run --project src/GameServer`, or the Docker image)
+  and start the desktop app on each computer with `--server ws://HOST:5080/play`, or with `JENTL_SERVER` set to that
+  address, where HOST is the server machine's name or address.
+- **Through Tailscale.** On the server machine, `tailscale serve --bg 5080` puts the server on your tailnet over HTTPS
+  (WebSockets included), at `https://HOST.TAILNET.ts.net`; the apps then use `--server wss://HOST.TAILNET.ts.net/play`.
+  Every device signed in to the tailnet can play, wherever it is.
+- **In the browser.** A page served over HTTPS may only open `wss://` connections, so the browser version needs the
+  Tailscale address (or a server behind a TLS proxy, see below): add `?server=wss://HOST.TAILNET.ts.net/play` to the
+  page address.
 
 ## Hosting it
 
