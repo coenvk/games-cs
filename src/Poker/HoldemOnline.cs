@@ -16,8 +16,11 @@ namespace Poker;
 [JsonDerivedType(typeof(HoldemNewGame), "new-game")]
 public abstract record HoldemOnlineAction;
 
-/// <summary>A betting decision, in the words a bot uses: fold, check, call, raise (to <paramref name="To"/>) or all-in.</summary>
-public sealed record HoldemMove(string Move, int? To = null) : HoldemOnlineAction;
+/// <summary>
+/// A betting decision, in the words a bot uses: fold, check, call, raise (to <paramref name="To"/>) or all-in, for hand
+/// <paramref name="Hand"/> of game <paramref name="Game"/>, so that a move that arrives late is not played in another hand.
+/// </summary>
+public sealed record HoldemMove(int Game, int Hand, string Move, int? To = null) : HoldemOnlineAction;
 
 public sealed record HoldemNextHand : HoldemOnlineAction;
 
@@ -45,11 +48,13 @@ public sealed record HoldemSeatHand(
     IReadOnlyList<HoldemPlay> Actions);
 
 /// <summary>What the server sends a seat: the hand as it may see it, everyone's names and the table's clocks.</summary>
+/// <param name="Game">Which game this is in the room, from 1: a new game starts again at hand 1.</param>
 /// <param name="TurnMilliseconds">While a person is to act: the time they have left before the server plays for them.</param>
 /// <param name="NextHandMilliseconds">Once a hand is over and the game goes on: the time until the next is dealt.</param>
 /// <param name="Ready">The seats that asked for the next hand.</param>
 /// <param name="GameOver">Someone has every chip, or no person has any: a new game can start.</param>
 public sealed record HoldemOnlineState(
+    int Game,
     int Seat,
     IReadOnlyList<string> Names,
     int HandNumber,
@@ -81,6 +86,8 @@ public static class HoldemOnline
     /// <summary>The state in <paramref name="json"/>, or null when it isn't a whole one.</summary>
     public static HoldemOnlineState? ReadState(JsonElement json) =>
         Read(() => json.Deserialize(HoldemJson.Default.HoldemOnlineState)) is { Names: not null, Ready: not null, Hand: { StartStacks: not null, Holes: not null, Board: not null, Actions: not null } } state
+            && state.Names.Count == state.Hand.StartStacks.Count && state.Hand.Holes.Count == state.Hand.StartStacks.Count
+            && state.Hand.Holes.All(h => h is not null) && state.Hand.Actions.All(a => a is not null)
             ? state
             : null;
 
@@ -184,6 +191,66 @@ public static class HoldemOnline
     }
 }
 
+/// <summary>A state followed on a device: the hand as it now stands, the one it carries on from (null on a fresh hand), and what happened since.</summary>
+public sealed record HoldemStep(HoldemHand Hand, HoldemHand? Previous, IReadOnlyList<PokerEvent> Events)
+{
+    /// <summary>A hand that starts afresh: a new hand, a new game, or one that cannot follow on from what was shown.</summary>
+    public bool Fresh => Previous is null;
+}
+
+/// <summary>
+/// What a device has shown of an online table, and how each new state follows on from it: the hand is dealt again from
+/// the state (see <see cref="HoldemOnline.Rebuild"/>), and only the moves not shown yet produce events. A state of another
+/// game or hand, or with fewer moves than shown, starts the hand afresh.
+/// </summary>
+public sealed class HoldemFollower
+{
+    private int _game = -1;
+    private int _handNumber = -1;
+
+    /// <summary>The hand as last followed; null before the first state and after a bad one.</summary>
+    public HoldemHand? Hand { get; private set; }
+
+    /// <summary>The moves of <see cref="Hand"/> shown so far.</summary>
+    public int Applied { get; private set; }
+
+    /// <summary>Follows <paramref name="state"/>; null when it brings no new move.</summary>
+    /// <exception cref="InvalidDataException">The state's hand does not deal or play out; the next state starts afresh.</exception>
+    public HoldemStep? Follow(HoldemOnlineState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        try
+        {
+            var moves = state.Hand.Actions.Count;
+            var fresh = Hand is null || state.Game != _game || state.HandNumber != _handNumber || moves < Applied;
+            if (!fresh && moves == Applied)
+            {
+                return null;
+            }
+
+            // The events up to the moves already shown come out the same, however much more is known now.
+            var shown = fresh ? 0 : HoldemOnline.Rebuild(state.Hand, Applied).TakeEvents().Count;
+            var hand = HoldemOnline.Rebuild(state.Hand, moves);
+            var step = new HoldemStep(hand, fresh ? null : Hand, [.. hand.TakeEvents().Skip(shown)]);
+            Hand = hand;
+            Applied = moves;
+            _game = state.Game;
+            _handNumber = state.HandNumber;
+            return step;
+        }
+#pragma warning disable CA1031 // Whatever is wrong with what the server sent, the device must not go down: it waits for the next state.
+        catch (Exception e)
+#pragma warning restore CA1031
+        {
+            Hand = null;
+            Applied = 0;
+            _game = -1;
+            _handNumber = -1;
+            throw e as InvalidDataException ?? new InvalidDataException($"The hand cannot be followed: {e.Message}", e);
+        }
+    }
+}
+
 /// <summary>
 /// A Hold'em sit-and-go on a room server: the table lives here and nowhere else. The engine checks each seat's moves,
 /// house bots play their seats (and the seats of people who leave), a person who lets the minute run out checks or
@@ -239,6 +306,9 @@ public sealed class HoldemRoomGame : IRoomGame
 
     public int Version { get; private set; }
 
+    /// <summary>Which game this is in the room: 1, then one more for every new game.</summary>
+    public int GameNumber { get; private set; }
+
     /// <summary>The table, for tests and tools; null before the start.</summary>
     public HoldemTable? Table { get; private set; }
 
@@ -285,6 +355,11 @@ public sealed class HoldemRoomGame : IRoomGame
                     return "It's not your turn.";
                 }
 
+                if (move.Game != GameNumber || move.Hand != Table.HandNumber)
+                {
+                    return "That move was for another hand.";
+                }
+
                 if (move.Move is null || BotView.ToAction(new BotAction(move.Move, move.To), hand, seat, 0) is not { } chosen)
                 {
                     return "You can't do that now.";
@@ -293,12 +368,13 @@ public sealed class HoldemRoomGame : IRoomGame
                 Play(seat, chosen);
                 break;
             case HoldemNextHand when hand.IsOver && !GameOver:
-                _ready.Add(seat);
-                if (_players.Where(p => p.IsHuman).All(p => _ready.Contains(p.Seat)))
+                if (!_ready.Add(seat))
                 {
-                    NextHand();
+                    // Asked already: nothing changes, so nobody is sent anything.
+                    return null;
                 }
 
+                DealIfAllReady();
                 break;
             case HoldemNewGame when GameOver:
                 NewGame();
@@ -359,6 +435,13 @@ public sealed class HoldemRoomGame : IRoomGame
 
         _players[seat] = new Player(seat, $"{_players[seat].Name} (bot)", PlayerKind.Bot);
         _ready.Remove(seat);
+
+        // Everyone still at the table may have been waiting for the one who left.
+        if (Table?.Hand is { IsOver: true } && !GameOver)
+        {
+            DealIfAllReady();
+        }
+
         Version++;
     }
 
@@ -377,6 +460,7 @@ public sealed class HoldemRoomGame : IRoomGame
         var over = GameOver;
         var personToAct = !hand.IsOver && !IsBot(hand.CurrentSeat);
         return HoldemOnline.Write(new HoldemOnlineState(
+            GameNumber,
             seat,
             [.. _players.Select(p => p.Name)],
             Table.HandNumber,
@@ -397,8 +481,18 @@ public sealed class HoldemRoomGame : IRoomGame
 
     private static int Milliseconds(TimeSpan time) => (int)Math.Max(0, time.TotalMilliseconds);
 
+    /// <summary>Deals the next hand once every person at the table has asked for it.</summary>
+    private void DealIfAllReady()
+    {
+        if (_players.Where(p => p.IsHuman).All(p => _ready.Contains(p.Seat)))
+        {
+            NextHand();
+        }
+    }
+
     private void NewGame()
     {
+        GameNumber++;
         Table = new HoldemTable(_players.Length, _seed ?? DealSeed.New(), StartingStack);
         NextHand();
     }

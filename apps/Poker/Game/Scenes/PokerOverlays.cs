@@ -166,6 +166,17 @@ internal sealed class PokerOnlineEndScene : PokerOnlinePanel
             new MenuItem(T("Main menu"), () => game.Leave()));
     }
 
+    public override void Update(TimeSpan elapsed, InputState input)
+    {
+        base.Update(elapsed, input);
+
+        // Someone else started a new game: back to the table.
+        if (Game.State is { GameOver: false } && Scenes.Top == this)
+        {
+            Scenes.Pop();
+        }
+    }
+
     protected override string Title => Game.State?.Champion is { } champion
         ? champion == Game.Seat ? T("You win the table!") : T("{0} wins the table", Game.Names[champion])
         : T("You're out");

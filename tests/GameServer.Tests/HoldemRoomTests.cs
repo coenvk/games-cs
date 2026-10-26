@@ -56,7 +56,7 @@ public sealed class HoldemRoomTests(WebApplicationFactory<Program> factory) : IC
             }
             else
             {
-                _server.Received(people[hand.CurrentSeat], Act(new HoldemMove("call")));
+                _server.Received(people[hand.CurrentSeat], Act(new HoldemMove(state.Game, state.HandNumber, "call")));
             }
         }
 
@@ -107,7 +107,7 @@ public sealed class HoldemRoomTests(WebApplicationFactory<Program> factory) : IC
             var hand = HoldemOnline.Rebuild(state.Hand, state.Hand.Actions.Count);
             if (!hand.IsOver && hand.CurrentSeat == 0)
             {
-                _server.Received(host, Act(new HoldemMove("call")));
+                _server.Received(host, Act(new HoldemMove(state.Game, state.HandNumber, "call")));
             }
 
             _server.Update(TimeSpan.FromSeconds(1));

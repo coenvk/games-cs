@@ -32,11 +32,11 @@ internal sealed class PokerOnlineScene : Scene
     private readonly HoldemLog _log;
     private readonly PokerTableView _view;
     private readonly Func<int, bool> _faceUp;
+    private readonly HoldemFollower _follower = new();
     private HoldemOnlineState? _state;
     private HoldemHand? _hand;
     private string[] _names = [];
-    private int _handNumber;
-    private int _applied;
+    private int _game;
     private bool _waitingForServer;
     private TimeSpan? _turnLeft;
     private TimeSpan? _nextHandLeft;
@@ -63,7 +63,7 @@ internal sealed class PokerOnlineScene : Scene
         _client = client;
         Code = room.Code;
         Seat = room.Seat;
-        _log = new HoldemLog(context);
+        _log = new HoldemLog(context) { You = Seat };
         _view = new PokerTableView(context) { BottomSeat = Seat };
         _faceUp = seat => seat == Seat || (_state is { } state && seat < state.Hand.Holes.Count && state.Hand.Holes[seat].Count > 0);
     }
@@ -107,7 +107,7 @@ internal sealed class PokerOnlineScene : Scene
 
     public override IEnumerable<string> DebugInfo =>
     [
-        string.Create(CultureInfo.InvariantCulture, $"room {Code}  seat {Seat}  hand {_handNumber}  moves {_applied}"),
+        string.Create(CultureInfo.InvariantCulture, $"room {Code}  seat {Seat}  game {_game}  hand {_state?.HandNumber}  moves {_follower.Applied}"),
     ];
 
     public override void Update(TimeSpan elapsed, InputState input)
@@ -251,7 +251,7 @@ internal sealed class PokerOnlineScene : Scene
         }
 
         var (move, to) = HoldemOnline.Move(action);
-        _client.Send(new PlayerAction(HoldemOnline.Write(new HoldemMove(move, to))));
+        _client.Send(new PlayerAction(HoldemOnline.Write(new HoldemMove(_state!.Game, _state.HandNumber, move, to))));
         _waitingForServer = true;
     }
 
@@ -299,38 +299,38 @@ internal sealed class PokerOnlineScene : Scene
         _nextHandLeft = state.NextHandMilliseconds is { } next ? TimeSpan.FromMilliseconds(next) : null;
         _shownSeconds = -1;
 
-        var fresh = _hand is null || state.HandNumber != _handNumber;
-        var moves = state.Hand.Actions.Count;
-        if (!fresh && moves == _applied)
+        if (state.Game != _game)
         {
-            return;
+            // A new game, whoever started it: its end is shown again.
+            _game = state.Game;
+            _endShown = false;
         }
 
         try
         {
-            // The events up to the moves already shown come out the same, however much more is known now.
-            var shown = fresh ? 0 : HoldemOnline.Rebuild(state.Hand, _applied).TakeEvents().Count;
-            var hand = HoldemOnline.Rebuild(state.Hand, moves);
-            var events = hand.TakeEvents().Skip(shown).ToArray();
-            if (fresh)
+            if (_follower.Follow(state) is not { } step)
             {
-                _handNumber = state.HandNumber;
-                _log.NewHand();
-                _log.Say(T("Hand {0}, dealer: {1}", state.HandNumber, _names[hand.Button]));
-                _controls.Reset(hand);
+                return;
+            }
+
+            if (step.Previous is { } previous && ReferenceEquals(previous, _hand))
+            {
+                _view.Carry(previous, step.Hand);
             }
             else
             {
-                _view.Carry(_hand!, hand);
+                _log.NewHand();
+                _log.Say(T("Hand {0}, dealer: {1}", state.HandNumber, _names[step.Hand.Button]));
+                _controls.Reset(step.Hand);
             }
 
-            _hand = hand;
-            _applied = moves;
-            _log.Show(events, _names);
-            _view.Update(TimeSpan.Zero, events);
+            _hand = step.Hand;
+            _log.Show(step.Events, _names);
+            _view.Update(TimeSpan.Zero, step.Events);
         }
         catch (InvalidDataException)
         {
+            // The table stays as it was until a state that adds up comes.
             _problem = T("The server's hand does not add up.");
             _log.Say(_problem);
         }

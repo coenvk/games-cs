@@ -13,7 +13,7 @@ public class HoldemRoomTests
     [Fact]
     public void ActionsAndStates_SurviveJson()
     {
-        HoldemOnlineAction[] actions = [new HoldemMove("raise", 60), new HoldemMove("fold"), new HoldemNextHand(), new HoldemNewGame()];
+        HoldemOnlineAction[] actions = [new HoldemMove(1, 3, "raise", 60), new HoldemMove(2, 1, "fold"), new HoldemNextHand(), new HoldemNewGame()];
         foreach (var action in actions)
         {
             HoldemOnline.ReadAction(HoldemOnline.Write(action)).Should().Be(action);
@@ -56,13 +56,13 @@ public class HoldemRoomTests
         var hand = game.Table!.Hand!;
         var turn = hand.CurrentSeat;
 
-        game.Act(1 - turn, Move("call")).Should().Contain("not your turn");
-        game.Act(turn, Move("check")).Should().Contain("can't");
-        game.Act(turn, Move("raise", 5)).Should().Contain("can't");
-        game.Act(turn, Move("dance")).Should().Contain("can't");
+        game.Act(1 - turn, Move(game, "call")).Should().Contain("not your turn");
+        game.Act(turn, Move(game, "check")).Should().Contain("can't");
+        game.Act(turn, Move(game, "raise", 5)).Should().Contain("can't");
+        game.Act(turn, Move(game, "dance")).Should().Contain("can't");
         game.Act(turn, HoldemOnline.Write(new HoldemNextHand())).Should().Be("Not now.");
         game.Act(turn, JsonDocument.Parse("{\"action\":\"teleport\"}").RootElement).Should().Contain("isn't");
-        game.Act(turn, Move("raise", 60)).Should().BeNull();
+        game.Act(turn, Move(game, "raise", 60)).Should().BeNull();
         hand.CurrentBet.Should().Be(60);
     }
 
@@ -85,7 +85,7 @@ public class HoldemRoomTests
         game.Act(1, HoldemOnline.Write(new HoldemNextHand())).Should().BeNull();
         var next = game.Table.Hand!;
         next.Should().NotBeSameAs(hand, "everyone asked for the next hand");
-        game.Act(next.CurrentSeat, Move("call")).Should().BeNull();
+        game.Act(next.CurrentSeat, Move(game, "call")).Should().BeNull();
         var big = next.CurrentSeat;
         game.Update(TimeSpan.FromSeconds(60));
         next.Street.Should().Be(Street.Flop, "the big blind's free option was a check");
@@ -130,7 +130,7 @@ public class HoldemRoomTests
     {
         var game = Started(People(2));
         var hand = game.Table!.Hand!;
-        game.Act(hand.CurrentSeat, Move("fold")).Should().BeNull();
+        game.Act(hand.CurrentSeat, Move(game, "fold")).Should().BeNull();
         hand.IsOver.Should().BeTrue();
 
         var state = HoldemOnline.ReadState(game.StateFor(0, -1))!;
@@ -160,9 +160,56 @@ public class HoldemRoomTests
 
         game.Act(1, HoldemOnline.Write(new HoldemNewGame())).Should().BeNull();
 
+        state.Game.Should().Be(1);
         game.Table.HandNumber.Should().Be(1);
         game.Table.Hand!.Stack(0).Should().BeLessThanOrEqualTo(1000);
         HoldemOnline.ReadState(game.StateFor(0, -1))!.GameOver.Should().BeFalse();
+        HoldemOnline.ReadState(game.StateFor(0, -1))!.Game.Should().Be(2, "the device can tell a new game's hand 1 from the old one's");
+    }
+
+    [Fact]
+    public void AskingForTheNextHandAgain_ChangesNothing()
+    {
+        var game = Started(People(3));
+        game.Act(game.Table!.Hand!.CurrentSeat, Move(game, "fold")).Should().BeNull();
+        game.Act(game.Table.Hand!.CurrentSeat, Move(game, "fold")).Should().BeNull();
+        game.Table.Hand!.IsOver.Should().BeTrue();
+        game.Act(0, HoldemOnline.Write(new HoldemNextHand())).Should().BeNull();
+        var version = game.Version;
+
+        for (var i = 0; i < 5; i++)
+        {
+            game.Act(0, HoldemOnline.Write(new HoldemNextHand())).Should().BeNull();
+        }
+
+        game.Version.Should().Be(version, "a repeat would send everyone the same state again");
+    }
+
+    [Fact]
+    public void WhenALeaverWasTheOnlyOneNotReady_TheNextHandIsDealtAtOnce()
+    {
+        var game = Started(People(3));
+        game.Act(game.Table!.Hand!.CurrentSeat, Move(game, "fold")).Should().BeNull();
+        game.Act(game.Table.Hand!.CurrentSeat, Move(game, "fold")).Should().BeNull();
+        game.Act(0, HoldemOnline.Write(new HoldemNextHand())).Should().BeNull();
+        game.Act(1, HoldemOnline.Write(new HoldemNextHand())).Should().BeNull();
+        game.Table.HandNumber.Should().Be(1);
+
+        game.Replace(2);
+
+        game.Table.HandNumber.Should().Be(2, "everyone left at the table is ready");
+    }
+
+    [Fact]
+    public void AMoveForAnotherHandOrGame_IsRefused()
+    {
+        var game = Started(People(2));
+        var turn = game.Table!.Hand!.CurrentSeat;
+
+        game.Act(turn, HoldemOnline.Write(new HoldemMove(1, 2, "call"))).Should().Contain("another hand");
+        game.Act(turn, HoldemOnline.Write(new HoldemMove(2, 1, "call"))).Should().Contain("another hand");
+        game.Table.Hand!.CurrentSeat.Should().Be(turn);
+        game.Act(turn, HoldemOnline.Write(new HoldemMove(1, 1, "call"))).Should().BeNull();
     }
 
     /// <summary>
@@ -251,7 +298,7 @@ public class HoldemRoomTests
         return game;
     }
 
-    private static JsonElement Move(string move, int? to = null) => HoldemOnline.Write(new HoldemMove(move, to));
+    private static JsonElement Move(HoldemRoomGame game, string move, int? to = null) => HoldemOnline.Write(new HoldemMove(game.GameNumber, game.Table!.HandNumber, move, to));
 
     /// <summary>
     /// Plays the game to its end: the people's seats as a bot would (with an occasional fold to the clock), the bots'
@@ -289,7 +336,7 @@ public class HoldemRoomTests
             }
 
             var (move, to) = HoldemOnline.Move(bot.Choose(hand, turn, random));
-            game.Act(turn, HoldemOnline.Write(new HoldemMove(move, to))).Should().BeNull();
+            game.Act(turn, HoldemOnline.Write(new HoldemMove(game.GameNumber, game.Table.HandNumber, move, to))).Should().BeNull();
         }
 
         check(game);

@@ -16,6 +16,9 @@ internal sealed class HoldemLog(GameContext context)
     private readonly Dictionary<int, string> _lastAction = [];
     private readonly HashSet<int> _shown = [];
 
+    /// <summary>The seat of the person holding the device, if one is "You": its wins read "You win 40".</summary>
+    public int? You { get; init; }
+
     /// <summary>The log, oldest first.</summary>
     public IReadOnlyList<string> Lines => _lines;
 
@@ -79,9 +82,13 @@ internal sealed class HoldemLog(GameContext context)
                 break;
             case PotWon w:
                 context.Sounds.Play(Sound.Chips);
-                Say(w.Value is { } value
-                    ? T("{0} wins {1}: {2}", names[w.Seat], w.Amount, HoldemText.Describe(value))
-                    : T("{0} takes {1}", names[w.Seat], w.Amount));
+                Say((w.Value, w.Seat == You) switch
+                {
+                    ({ } value, true) => T("You win {0}: {1}", w.Amount, HoldemText.Describe(value)),
+                    ({ } value, false) => T("{0} wins {1}: {2}", names[w.Seat], w.Amount, HoldemText.Describe(value)),
+                    (null, true) => T("You take {0}", w.Amount),
+                    (null, false) => T("{0} takes {1}", names[w.Seat], w.Amount),
+                });
                 break;
         }
     }

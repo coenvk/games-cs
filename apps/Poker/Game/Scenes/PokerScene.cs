@@ -67,7 +67,7 @@ internal sealed class PokerScene : Scene
             aggression: 0.7 - 0.12 * (i % 4),
             bluff: 0.04 + 0.03 * (i % 3)))];
         _view = new PokerTableView(context);
-        _log = new HoldemLog(context);
+        _log = new HoldemLog(context) { You = setup.Players.Count(p => p.IsHuman) == 1 ? setup.Players.First(p => p.IsHuman).Seat : null };
         _names = [.. setup.Players.Select(p => p.Name)];
         Table = new HoldemTable(setup.Players.Count, DealSeed.FromNumber(_seed), StartingStack);
         _runner = DealHand();
