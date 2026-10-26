@@ -28,8 +28,8 @@ public sealed class PokerData
     public string MatchesFolder => Path.Combine(_folder, "matches");
 
     /// <summary>
-    /// What went wrong while reading, for the operator: each broken file and where it was moved to. Nothing is
-    /// logged yet (no logging is wired), so the server can print these at start-up.
+    /// What went wrong while reading, for the operator: each broken file and where it was moved to. The server
+    /// logs these as warnings at start-up (see <see cref="LeagueTicker"/>).
     /// </summary>
     public IReadOnlyList<string> Problems
     {
