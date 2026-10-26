@@ -10,6 +10,7 @@
     <PackageReference Include="Jentl.Net" Version="$(JentlVersion)" />
     <ProjectReference Include="..\..\src\GameServer\GameServer.csproj" />
     <ProjectReference Include="..\..\src\Uno\Uno.csproj" />
+    <ProjectReference Include="..\..\tools\PokerRunner\PokerRunner.csproj" />
   </ItemGroup>
 
   <!-- The stand-in bot the league tests put online through runners: built first, and copied next to the tests (run as dotnet EchoBot/Poker.Tests.EchoBot.dll). -->
@@ -22,6 +23,21 @@
       <EchoBotFile Include="..\Poker.Tests.EchoBot\bin\$(Configuration)\$(TargetFramework)\**\*" />
     </ItemGroup>
     <Copy SourceFiles="@(EchoBotFile)" DestinationFiles="@(EchoBotFile->'$(OutDir)EchoBot\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  </Target>
+
+  <!-- The bot host and the sample bots library the runner tests put online (as dotnet BotHost/PokerBotHost.dll SampleBots/Poker.SampleBots.dll GoodBot). -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\tools\PokerBotHost\PokerBotHost.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\Poker.SampleBots\Poker.SampleBots.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <Target Name="CopyBotHost" AfterTargets="Build">
+    <ItemGroup>
+      <BotHostFile Include="..\..\tools\PokerBotHost\bin\$(Configuration)\$(TargetFramework)\**\*" />
+      <SampleBotsFile Include="..\Poker.SampleBots\bin\$(Configuration)\$(TargetFramework)\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(BotHostFile)" DestinationFiles="@(BotHostFile->'$(OutDir)BotHost\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(SampleBotsFile)" DestinationFiles="@(SampleBotsFile->'$(OutDir)SampleBots\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
   </Target>
 
 </Project>

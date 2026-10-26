@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Puts a poker bot online: runs it on this computer and relays it to the game server's /bots, so it plays ranked matches. -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Poker\Poker.csproj" />
+  </ItemGroup>
+
+  <!-- A C# bot (a DLL) runs through the bot host, which sits next to the runner: built with it and copied into its folder (PokerBotHost, or dotnet PokerBotHost.dll). -->
+  <ItemGroup>
+    <ProjectReference Include="..\PokerBotHost\PokerBotHost.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <Target Name="CopyBotHost" AfterTargets="Build">
+    <ItemGroup>
+      <BotHostFile Include="..\PokerBotHost\bin\$(Configuration)\$(TargetFramework)\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(BotHostFile)" DestinationFiles="@(BotHostFile->'$(OutDir)%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>

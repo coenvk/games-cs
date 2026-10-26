@@ -31,4 +31,20 @@
     <MSBuild Projects="..\..\..\tools\PokerBotHost\PokerBotHost.csproj" Targets="Restore;Publish" Properties="Configuration=$(Configuration);PublishDir=$([System.IO.Path]::GetFullPath('$(PublishDir)'));RuntimeIdentifier=$(RuntimeIdentifier);SelfContained=false;PublishAot=false;PublishSingleFile=false;PublishTrimmed=false;UseAppHost=true;_IsPublishing=true;MSBuildRestoreSessionId=$([System.Guid]::NewGuid())" />
   </Target>
 
+  <!-- The runner that puts a bot online sits next to the app too (PokerRunner), so it finds the bot host beside itself: the same two steps as for the bot host. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\tools\PokerRunner\PokerRunner.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <Target Name="CopyRunner" AfterTargets="Build">
+    <ItemGroup>
+      <RunnerFile Include="..\..\..\tools\PokerRunner\bin\$(Configuration)\$(TargetFramework)\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(RunnerFile)" DestinationFiles="@(RunnerFile->'$(OutDir)%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="PublishRunner" AfterTargets="Publish">
+    <MSBuild Projects="..\..\..\tools\PokerRunner\PokerRunner.csproj" Targets="Restore;Publish" Properties="Configuration=$(Configuration);PublishDir=$([System.IO.Path]::GetFullPath('$(PublishDir)'));RuntimeIdentifier=$(RuntimeIdentifier);SelfContained=false;PublishAot=false;PublishSingleFile=false;PublishTrimmed=false;UseAppHost=true;_IsPublishing=true;MSBuildRestoreSessionId=$([System.Guid]::NewGuid())" />
+  </Target>
+
 </Project>

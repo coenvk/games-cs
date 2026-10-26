@@ -68,6 +68,7 @@
     <Project Path="tools/CarArt/CarArt.csproj" />
     <Project Path="tools/LevelConverter/LevelConverter.csproj" />
     <Project Path="tools/PokerBotHost/PokerBotHost.csproj" />
+    <Project Path="tools/PokerRunner/PokerRunner.csproj" />
     <Project Path="tools/RpgArt/RpgArt.csproj" />
     <Project Path="tools/SolverBench/SolverBench.csproj" />
   </Folder>
