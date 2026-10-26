@@ -51,28 +51,57 @@ public sealed class Matchmaker(Func<string, (string Owner, double Rating)> looku
 
     /// <summary>
     /// Pairs the waiting bots, longest waiting first, each with the closest rating that fits, and takes the paired bots
-    /// out of the queue. Call it regularly: windows grow with time.
+    /// out of the queue. Call it regularly: windows grow with time. A bot the lookup cannot describe (for instance one
+    /// deleted while it waited) is dropped from the queue, so it cannot hold up the others.
     /// </summary>
     public IReadOnlyList<(string A, string B)> Pair()
     {
+        List<string> queue;
         lock (_lock)
         {
+            queue = _waiting.OrderBy(w => w.Value).Select(w => w.Key).ToList();
+        }
+
+        // The lookup takes other locks (registry, ratings), so it runs outside ours, once per bot.
+        var info = new Dictionary<string, (string Owner, double Rating)>();
+        var unknown = new List<string>();
+        foreach (var bot in queue)
+        {
+            try
+            {
+                info[bot] = lookup(bot);
+            }
+            catch (Exception)
+            {
+                unknown.Add(bot);
+            }
+        }
+
+        lock (_lock)
+        {
+            foreach (var bot in unknown)
+            {
+                _waiting.Remove(bot);
+            }
+
             var now = clock.GetUtcNow();
             var pairs = new List<(string A, string B)>();
-            var queue = _waiting.OrderBy(w => w.Value).Select(w => w.Key).ToList();
+
+            // Bots removed or paired elsewhere while the lookups ran are no longer waiting.
+            var present = queue.Where(b => info.ContainsKey(b) && _waiting.ContainsKey(b)).ToList();
             var taken = new HashSet<string>();
 
-            foreach (var bot in queue)
+            foreach (var bot in present)
             {
                 if (taken.Contains(bot))
                 {
                     continue;
                 }
 
-                var (owner, rating) = lookup(bot);
-                var candidates = queue
-                    .Where(other => other != bot && !taken.Contains(other) && lookup(other).Owner != owner
-                        && Math.Abs(lookup(other).Rating - rating) <= Reach(bot, other, now))
+                var (owner, rating) = info[bot];
+                var candidates = present
+                    .Where(other => other != bot && !taken.Contains(other) && info[other].Owner != owner
+                        && Math.Abs(info[other].Rating - rating) <= Reach(bot, other, now))
                     .ToList();
                 var fresh = candidates.Where(other => !PlayedRecently(bot, other)).ToList();
                 var pool = fresh.Count > 0
@@ -83,7 +112,7 @@ public sealed class Matchmaker(Func<string, (string Owner, double Rating)> looku
                     continue;
                 }
 
-                var best = pool.MinBy(other => Math.Abs(lookup(other).Rating - rating))!;
+                var best = pool.MinBy(other => Math.Abs(info[other].Rating - rating))!;
                 taken.Add(bot);
                 taken.Add(best);
                 pairs.Add((bot, best));

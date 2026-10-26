@@ -145,6 +145,24 @@ public sealed class MatchmakerTests
 
         matchmaker.Pair().Should().ContainSingle().Which.Should().Be(("A", "B"));
     }
+    [Fact]
+    public void ABotTheLookupCannotFind_IsDropped_AndTheOthersStillPair()
+    {
+        Add("A", "x", 1500);
+        Add("B", "y", 1500);
+        var matchmaker = Create();
+        matchmaker.Enqueue("Ghost");
+        matchmaker.Enqueue("A");
+        matchmaker.Enqueue("B");
+
+        matchmaker.Pair().Should().ContainSingle().Which.Should().Be(("A", "B"));
+
+        Add("Ghost", "z", 1500);
+        Add("C", "w", 1500);
+        matchmaker.Enqueue("C");
+        matchmaker.Pair().Should().BeEmpty();
+    }
+
 
     /// <summary>A clock that stands still until told to move.</summary>
     private sealed class Clock : TimeProvider
