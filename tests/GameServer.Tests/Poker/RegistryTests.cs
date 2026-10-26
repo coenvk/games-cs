@@ -177,13 +177,13 @@ public sealed class RegistryTests : IDisposable
     }
 
     [Fact]
-    public void ABannedBot_AskingForANewToken_GetsBanned()
+    public void ABannedBot_AskingForANewToken_GetsBotBanned()
     {
         var owner = _registration.NewOwner("Coen", null).Value;
         _registration.NewBot(owner.Token, "Shark", null);
         _registry.Ban("Shark");
 
-        _registration.RenewBotToken(owner.Token, "Shark").Refusal.Should().Be("banned");
+        _registration.RenewBotToken(owner.Token, "Shark").Refusal.Should().Be("bot banned", "the bot is banned, not its owner");
     }
 
     [Fact]

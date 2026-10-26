@@ -526,6 +526,12 @@ internal sealed partial class OnlineScene : Scene
             return;
         }
 
+        if (problem.IsBotBanned)
+        {
+            Note(T("This bot is banned from the league."), problem: true);
+            return;
+        }
+
         if (problem.IsUnknownOwner)
         {
             // The server lost its data, say, or this is another server: the token kept here is still the owner's, and
@@ -605,6 +611,7 @@ internal sealed partial class OnlineScene : Scene
             "name taken" => T("that name is taken"),
             "too many registrations today" => T("too many registrations from this address today"),
             "banned" => T("banned from the league"),
+            "bot banned" => T("this bot is banned from the league"),
             "unknown bot" => T("it does not know that bot"),
             "unknown house bot" => T("it does not know that house bot"),
             "the bot cannot practise now: it is not connected, already playing, banned or named like that house bot"

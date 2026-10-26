@@ -87,8 +87,11 @@ public sealed class OnlineProblem : Exception
     /// </summary>
     public bool IsUnknownOwner => Status == HttpStatusCode.Unauthorized || ServerText == "unknown owner";
 
-    /// <summary>Whether the server refused because the owner or the bot is banned from the league.</summary>
+    /// <summary>Whether the server refused because the owner is banned from the league (and so are all of their bots).</summary>
     public bool IsBanned => ServerText == "banned";
+
+    /// <summary>Whether the server refused because the bot is banned from the league, while its owner is not.</summary>
+    public bool IsBotBanned => ServerText == "bot banned";
 }
 
 /// <summary>

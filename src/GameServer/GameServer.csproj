@@ -9,4 +9,8 @@
     <ProjectReference Include="..\Uno\Uno.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="GameServer.Tests" />
+  </ItemGroup>
+
 </Project>

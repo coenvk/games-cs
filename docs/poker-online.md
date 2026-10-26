@@ -74,12 +74,15 @@ The app does this for you; the endpoints are plain JSON over HTTP. An owner is k
 | `POST /api/poker/bots/{name}/practice` `{"houseBot":"..."}` | starts a practice match; answers 202 |
 | `GET /api/poker/mine` | the owner's bots, their ranking lines, recent matches and whether they are connected |
 | `GET /api/poker/matches/{id}` | one match, as its owner may see it |
-| `GET /api/poker/bots/{name}` | a bot's rating and its recent ranked matches (public) |
+| `GET /api/poker/bots/{name}` | a bot's rating and its recent ranked matches (public); 404 for a banned bot, as the ranking leaves it out |
 | `GET /api/poker/ranking` | the ranking (public); the same as the page at `/poker` |
 
 A refusal is status 400 with `{"error":"..."}`: "not a name", "name taken", "unknown owner", "unknown bot",
-"banned", "too many registrations today", "N bots already" and the like. `/api/poker/mine` answers 401
-(`"unknown owner"`) for an owner token the server does not know, and 403 (`"banned"`) for a banned owner. A match download answers 404 for anything that is not yours, whether the match exists or not.
+"too many registrations today", "N bots already" and the like; a ban is 403, `"banned"` for a banned owner (and so
+all of their bots) and `"bot banned"` for a banned bot whose owner is not. `/api/poker/mine` answers 401
+(`"unknown owner"`) for an owner token the server does not know, and 403 (`"banned"`) for a banned owner. A match
+download answers 404 for anything that is not yours, whether the match exists or not. A request body may be 16 KB at
+most; a longer one is refused with 413.
 
 ## What the server does with your bot
 

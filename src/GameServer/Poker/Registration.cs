@@ -120,8 +120,8 @@ public sealed partial class Registration(Registry registry, RegistrationLimits l
     }
 
     /// <summary>
-    /// Gives a bot a new token; the old one stops working. Refused as "unknown owner", "unknown bot" (not this owner's)
-    /// or "banned" (the owner or the bot is banned).
+    /// Gives a bot a new token; the old one stops working. Refused as "unknown owner", "unknown bot" (not this owner's),
+    /// "banned" (the owner is banned, and so all of their bots) or "bot banned" (the bot is, while its owner is not).
     /// </summary>
     public RegisterResult<BotAccount> RenewBotToken(string ownerToken, string botName)
     {
@@ -139,11 +139,19 @@ public sealed partial class Registration(Registry registry, RegistrationLimits l
                 return RegisterResult<BotAccount>.Refused("unknown bot");
             }
 
-            var token = NewToken();
+            if (owner.Banned)
+            {
+                return RegisterResult<BotAccount>.Refused("banned");
+            }
 
             // The registry swaps the token on its current record, so a ban that lands meanwhile is never undone.
-            var renewed = owner.Banned ? null : registry.ReplaceToken(bot.Name, Registry.Hash(token));
-            return renewed is null ? RegisterResult<BotAccount>.Refused("banned") : RegisterResult<BotAccount>.Success(renewed, token);
+            var token = NewToken();
+            if (registry.ReplaceToken(bot.Name, Registry.Hash(token)) is { } renewed)
+            {
+                return RegisterResult<BotAccount>.Success(renewed, token);
+            }
+
+            return RegisterResult<BotAccount>.Refused(registry.OwnerById(owner.Id) is { Banned: true } ? "banned" : "bot banned");
         }
     }
 

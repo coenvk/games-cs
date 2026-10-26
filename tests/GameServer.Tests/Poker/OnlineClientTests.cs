@@ -121,6 +121,31 @@ public sealed class OnlineClientTests : IDisposable
     }
 
     [Fact]
+    public async Task ABannedBot_AndABannedOwner_AreToldApart_WhenANewTokenIsAskedFor()
+    {
+        var owner = await _client.NewOwnerAsync("Ann");
+        await _client.NewBotAsync(owner, "Alpha Bot");
+        await _client.NewBotAsync(owner, "Beta Bot");
+        var registry = _factory.Services.GetRequiredService<GameServer.Poker.Registry>();
+
+        registry.Ban("Alpha Bot");
+        var renewBot = () => _client.NewBotTokenAsync(owner, "Alpha Bot");
+        var bot = (await renewBot.Should().ThrowAsync<OnlineProblem>()).Which;
+        bot.Status.Should().Be(HttpStatusCode.Forbidden);
+        bot.IsBotBanned.Should().BeTrue();
+        bot.IsBanned.Should().BeFalse("the owner is not banned, only this bot");
+
+        registry.Ban(registry.Bot("Beta Bot")!.OwnerId);
+        var renewOwners = () => _client.NewBotTokenAsync(owner, "Beta Bot");
+        var owners = (await renewOwners.Should().ThrowAsync<OnlineProblem>()).Which;
+        owners.Status.Should().Be(HttpStatusCode.Forbidden);
+        owners.IsBanned.Should().BeTrue();
+        owners.IsBotBanned.Should().BeFalse("it is the owner who is banned");
+        var register = () => _client.NewBotAsync(owner, "Gamma Bot");
+        (await register.Should().ThrowAsync<OnlineProblem>()).Which.IsBanned.Should().BeTrue();
+    }
+
+    [Fact]
     public async Task AServerThatIsNotThere_IsAnUnreachableProblem()
     {
         using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };

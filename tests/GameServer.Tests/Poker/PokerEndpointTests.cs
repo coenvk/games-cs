@@ -7,7 +7,9 @@ using System.Text.Json;
 using GameServer.Poker;
 using Jentl.Net;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Poker;
 using Poker.Arena;
 using Poker.Online;
@@ -29,6 +31,7 @@ public sealed class PokerEndpointTests : IDisposable
     private readonly List<AgentRelay> _runners = [];
     private readonly WebApplicationFactory<Program> _factory;
     private readonly HttpClient _http;
+    private readonly LogSink _logs = new();
 
     public PokerEndpointTests()
     {
@@ -37,7 +40,8 @@ public sealed class PokerEndpointTests : IDisposable
             .UseSetting("poker-hands", "10")
             .UseSetting("poker-time-limit-ms", "300")
             .UseSetting("poker-allowance-ms", "100")
-            .UseSetting("scores", Path.Combine(_folder, "scores.json")));
+            .UseSetting("scores", Path.Combine(_folder, "scores.json"))
+            .ConfigureLogging(logging => logging.AddProvider(_logs)));
         _http = _factory.CreateClient();
     }
 
@@ -328,6 +332,75 @@ public sealed class PokerEndpointTests : IDisposable
         (await Get("/api/poker/ranking")).GetArrayLength().Should().Be(0);
     }
 
+    [Fact]
+    public async Task ARequestBodyOverSixteenKilobytes_IsRefusedAsTooLarge()
+    {
+        var big = new string('x', 20_000);
+
+        // With its length said up front, and streamed without one.
+        using var sized = await Send(HttpMethod.Post, "/api/poker/owners", new StringContent($$"""{"name":"{{big}}"}""", Encoding.UTF8, "application/json"), null);
+        sized.StatusCode.Should().Be(HttpStatusCode.RequestEntityTooLarge);
+        using var streamed = await Send(HttpMethod.Post, "/api/poker/owners", new UnsizedContent(Encoding.UTF8.GetBytes($$"""{"name":"{{big}}"}""")), null);
+        streamed.StatusCode.Should().Be(HttpStatusCode.RequestEntityTooLarge);
+
+        var owner = await NewOwner("Ann");
+        using var bot = await Send(HttpMethod.Post, "/api/poker/bots", new UnsizedContent(Encoding.UTF8.GetBytes("""{"name":"Alpha Bot"}""")), owner);
+        bot.StatusCode.Should().Be(HttpStatusCode.OK, "a body within the limit is read as before");
+    }
+
+    [Fact]
+    public async Task ABannedBot_AndTheBotsOfABannedOwner_HaveNoPublicPage()
+    {
+        var registry = _factory.Services.GetRequiredService<Registry>();
+        await NewOwnerAndBot("Ann", "Alpha Bot");
+        var bob = await NewOwner("Bob");
+        await NewBot(bob, "Beta Bot");
+        await NewOwnerAndBot("Cyril", "Gamma Bot");
+        await Get("/api/poker/bots/Alpha%20Bot");
+
+        registry.Ban("Alpha Bot");
+        registry.Ban(registry.Bot("Beta Bot")!.OwnerId);
+
+        using var alpha = await Send(HttpMethod.Get, "/api/poker/bots/Alpha%20Bot", null, null);
+        alpha.StatusCode.Should().Be(HttpStatusCode.NotFound, "the ranking leaves a banned bot out, and so does its page");
+        using var beta = await Send(HttpMethod.Get, "/api/poker/bots/Beta%20Bot", null, null);
+        beta.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        await Get("/api/poker/bots/Gamma%20Bot");
+    }
+
+    [Fact]
+    public async Task ABrokenMatchFile_IsNotFound_AndLogged()
+    {
+        var owner = await NewOwner("Ann");
+        var folder = _factory.Services.GetRequiredService<PokerData>().MatchesFolder;
+        const string NotGzip = "20260101-000000-0123456789abcdef";
+        const string NotJson = "20260101-000000-fedcba9876543210";
+        await File.WriteAllTextAsync(Path.Combine(folder, NotGzip + ".json.gz"), "not a match");
+        await using (var file = File.Create(Path.Combine(folder, NotJson + ".json.gz")))
+        await using (var gzip = new System.IO.Compression.GZipStream(file, System.IO.Compression.CompressionLevel.Fastest))
+        {
+            await gzip.WriteAsync(Encoding.UTF8.GetBytes("{\"bots\": [nonsense"));
+        }
+
+        using var notGzip = await Download(NotGzip, owner);
+        notGzip.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        using var notJson = await Download(NotJson, owner);
+        notJson.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        _logs.Messages.Should().Contain(m => m.Contains(NotGzip, StringComparison.Ordinal)).And.Contain(m => m.Contains(NotJson, StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task ARunnersCloseReason_IsLoggedWithoutItsControlCharacters()
+    {
+        using var socket = await _factory.Server.CreateWebSocketClient().ConnectAsync(new Uri("ws://localhost/bots"), _stop.Token);
+
+        await socket.CloseAsync(WebSocketCloseStatus.ProtocolError, "bye\r\n[CRIT] forged line\u001b[0m", _stop.Token);
+
+        await Until(() => Task.FromResult(_logs.Messages.Any(m => m.Contains("closed its connection", StringComparison.Ordinal))));
+        var logged = _logs.Messages.First(m => m.Contains("closed its connection", StringComparison.Ordinal));
+        logged.Should().Contain("forged line").And.NotContainAny("\r", "\n", "\u001b");
+    }
+
     private static AgentCommand EchoBot(params string[] arguments) =>
         new("dotnet", [Path.Combine(AppContext.BaseDirectory, "EchoBot", "Poker.Tests.EchoBot.dll"), .. arguments]);
 
@@ -411,5 +484,40 @@ public sealed class PokerEndpointTests : IDisposable
 
         /// <summary>What the runner showed its owner.</summary>
         public ConcurrentQueue<string> Statuses { get; } = new();
+    }
+
+    /// <summary>A body that does not say its length, so the server reads it as it streams in.</summary>
+    private sealed class UnsizedContent(byte[] body) : HttpContent
+    {
+        protected override Task SerializeToStreamAsync(Stream stream, TransportContext? context) => stream.WriteAsync(body).AsTask();
+
+        protected override bool TryComputeLength(out long length)
+        {
+            length = 0;
+            return false;
+        }
+    }
+
+    /// <summary>Everything the server logs, as formatted messages.</summary>
+    private sealed class LogSink : ILoggerProvider
+    {
+        public ConcurrentQueue<string> Messages { get; } = new();
+
+        public ILogger CreateLogger(string categoryName) => new Logger(Messages);
+
+        public void Dispose()
+        {
+        }
+
+        private sealed class Logger(ConcurrentQueue<string> messages) : ILogger
+        {
+            public IDisposable? BeginScope<TState>(TState state)
+                where TState : notnull => null;
+
+            public bool IsEnabled(LogLevel logLevel) => true;
+
+            public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter) =>
+                messages.Enqueue(formatter(state, exception));
+        }
     }
 }
