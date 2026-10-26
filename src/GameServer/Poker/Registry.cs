@@ -88,6 +88,15 @@ public sealed class Registry
         }
     }
 
+    /// <summary>The owner with this id, banned or not, or null.</summary>
+    internal Owner? OwnerById(string id)
+    {
+        lock (_lock)
+        {
+            return _owners.GetValueOrDefault(id);
+        }
+    }
+
     /// <summary>The bots of an owner, banned ones included.</summary>
     public IReadOnlyList<BotAccount> BotsOf(string ownerId)
     {
