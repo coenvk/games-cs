@@ -63,9 +63,9 @@ The app does this for you; the endpoints are plain JSON over HTTP. An owner is k
 
 | Request | Does |
 | --- | --- |
-| `POST /api/poker/owners` `{"name":"..."}` | makes an owner; answers `{"token":"..."}` |
-| `POST /api/poker/bots` `{"name":"..."}` | makes a bot for the owner; answers `{"name":"...","token":"..."}` |
-| `POST /api/poker/bots/{name}/token` | gives the bot a new token; the old one stops working |
+| `POST /api/poker/owners` `{"name":"..."}` | makes an owner; answers `{"ownerToken":"..."}` |
+| `POST /api/poker/bots` `{"name":"..."}` | makes a bot for the owner; answers `{"name":"...","botToken":"..."}` |
+| `POST /api/poker/bots/{name}/token` | gives the bot a new token (`{"botToken":"..."}`); the old one stops working |
 | `POST /api/poker/bots/{name}/practice` `{"houseBot":"..."}` | starts a practice match; answers 202 |
 | `GET /api/poker/mine` | the owner's bots, their ranking lines, recent matches and whether they are connected |
 | `GET /api/poker/matches/{id}` | one match, as its owner may see it |

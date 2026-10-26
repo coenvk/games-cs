@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using System.Net.WebSockets;
 using System.Text.Json.Serialization.Metadata;
 using Jentl.Net;
 using Poker;
@@ -12,7 +13,7 @@ namespace GameServer.Poker;
 /// response that issues them; public lists show ranked matches only, and a match is served only to an owner of one of
 /// its bots, as that bot's owner may see it (<see cref="OwnerView"/>).
 /// </summary>
-public static class PokerEndpoints
+public static partial class PokerEndpoints
 {
     /// <summary>The header that carries an owner's token.</summary>
     public const string OwnerHeader = "X-Owner-Token";
@@ -38,8 +39,11 @@ public static class PokerEndpoints
         api.MapGet("/matches/{id}", Download);
     }
 
-    /// <summary>Serves one runner's connection until it ends (see <see cref="RelayHost.RunAsync"/>).</summary>
-    private static async Task ServeRunnerAsync(HttpContext context, RelayHost relays)
+    /// <summary>
+    /// Serves one runner's connection until it ends (see <see cref="RelayHost.RunAsync"/>), and logs why it ended when
+    /// that was not an ordinary close: the limit the runner broke, or what the runner said when it closed for a problem.
+    /// </summary>
+    private static async Task ServeRunnerAsync(HttpContext context, RelayHost relays, ILogger<RelayHost> log)
     {
         if (!context.WebSockets.IsWebSocketRequest)
         {
@@ -49,8 +53,22 @@ public static class PokerEndpoints
         }
 
         using var socket = await context.WebSockets.AcceptWebSocketAsync().ConfigureAwait(false);
-        await relays.RunAsync(socket, context.RequestAborted).ConfigureAwait(false);
+        var problem = await relays.RunAsync(socket, context.RequestAborted).ConfigureAwait(false);
+        if (problem is not null)
+        {
+            LogLimitBroken(log, AddressOf(context), problem);
+        }
+        else if (socket.CloseStatus is { } status and not WebSocketCloseStatus.NormalClosure and not WebSocketCloseStatus.EndpointUnavailable)
+        {
+            LogRunnerClosed(log, AddressOf(context), status, socket.CloseStatusDescription);
+        }
     }
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Closed a bot connection from {Address}: {Problem}")]
+    private static partial void LogLimitBroken(ILogger logger, string? address, string problem);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "A runner from {Address} closed its connection: {Status} {Reason}")]
+    private static partial void LogRunnerClosed(ILogger logger, string? address, WebSocketCloseStatus status, string? reason);
 
     private static async Task<IResult> NewOwnerAsync(HttpContext context, Registration registration)
     {

@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Json;
+﻿using System.Collections.Concurrent;
+using System.Net.Http.Json;
 using System.Text.Json;
 using GameServer.Poker;
 using Jentl.Net;
@@ -24,16 +25,20 @@ public sealed class RunnerEndToEndTests : IDisposable
     private readonly string _folder = Path.Combine(Path.GetTempPath(), "poker-runner-" + Guid.NewGuid().ToString("N"));
     private readonly CancellationTokenSource _stop = new();
     private readonly List<AgentRelay> _relays = [];
-    private readonly WebApplicationFactory<Program> _factory;
-    private readonly HttpClient _http;
+    private readonly ConcurrentQueue<string> _status = new();
+    private WebApplicationFactory<Program> _factory;
+    private HttpClient _http;
 
-    public RunnerEndToEndTests()
+    public RunnerEndToEndTests() => (_factory, _http) = Start(hands: 10);
+
+    /// <summary>A server whose matches are <paramref name="hands"/> hands long, and a client for it.</summary>
+    private (WebApplicationFactory<Program> Factory, HttpClient Http) Start(int hands)
     {
-        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(b => b
+        var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(b => b
             .UseSetting("poker-data", _folder)
-            .UseSetting("poker-hands", "10")
+            .UseSetting("poker-hands", hands.ToString(System.Globalization.CultureInfo.InvariantCulture))
             .UseSetting("scores", Path.Combine(_folder, "scores.json")));
-        _http = _factory.CreateClient();
+        return (factory, factory.CreateClient());
     }
 
     public void Dispose()
@@ -114,6 +119,43 @@ public sealed class RunnerEndToEndTests : IDisposable
     }
 
     [Fact]
+    public async Task FastBots_PlayALongMatchAtFullSpeed_WithoutLosingTheirConnection()
+    {
+        // Two bots that answer at once play a long match in about a second: hundreds of lines a second each way. Neither
+        // connection may be cut for that, or the seat is folded while away and its owner sees illegal moves.
+        _http.Dispose();
+        await _factory.DisposeAsync();
+        (_factory, _http) = Start(hands: 200);
+        var python = AgentCommand.Find("python3", AgentCommand.SearchFolders()) is not null;
+        var first = RunnerCommand.Resolve(SampleDll, Host, out var problem, "GoodBot");
+        problem.Should().BeNull();
+        var second = python
+            ? RunnerCommand.Resolve(Path.Combine(RepositoryRoot(), "bots", "python", "example.bot.json"), Host, out problem)
+            : RunnerCommand.Resolve(SampleDll, Host, out problem, "GoodBot");
+        problem.Should().BeNull();
+        Online(await NewOwnerAndBot("Ann", "Alpha Bot"), first!);
+        Online(await NewOwnerAndBot("Bob", "Beta Bot"), second!);
+
+        var store = _factory.Services.GetRequiredService<MatchStore>();
+        var deadline = DateTime.UtcNow + Patience;
+        while (store.Of("Alpha Bot", 1).Count == 0)
+        {
+            DateTime.UtcNow.Should().BeBefore(deadline, "the bots should have played a ranked match by now");
+            await Task.Delay(100);
+        }
+
+        _status.Should().NotContain(s => s.StartsWith("reconnecting", StringComparison.Ordinal), "no connection was dropped");
+        var match = store.Load(store.Of("Alpha Bot", 1)[0].Id)!;
+        match.Hands.Should().HaveCount(200);
+        match.Results.Should().AllSatisfy(r =>
+        {
+            r.Illegal.Should().Be(0, $"{r.Name} answers every decision legally");
+            r.Late.Should().Be(0, $"{r.Name} answers at once");
+            r.Gone.Should().Be(0);
+        });
+    }
+
+    [Fact]
     public void Resolve_ExplainsABadPath()
     {
         RunnerCommand.Resolve("nope.txt", Host, out var problem).Should().BeNull();
@@ -181,6 +223,7 @@ public sealed class RunnerEndToEndTests : IDisposable
             cancel => _factory.Server.CreateWebSocketClient().ConnectAsync(new Uri("ws://localhost/bots"), cancel),
             token,
             command);
+        relay.Status += _status.Enqueue;
         _relays.Add(relay);
         _ = relay.RunAsync(_stop.Token);
     }
