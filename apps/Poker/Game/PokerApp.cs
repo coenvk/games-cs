@@ -26,6 +26,7 @@ internal sealed class PokerApp : IGameApp
 
     public void Load(GameContext context, GraphicsDevice device)
     {
+        PokerStyle.Apply();
         CardTableArt.Load(context, device);
 
         // Hold'em and the workshop used to be part of Card Table: the player's bots and matches come along once.
