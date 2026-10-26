@@ -280,7 +280,7 @@ internal sealed class PokerTableView(GameContext context) : IDisposable
 
         // The board across the middle, the pots above it.
         var gap = fonts.Px(6);
-        var chipWidth = (float)fonts.Px(20);
+        var chipWidth = (float)fonts.Px(30);
         var potHeight = chipWidth * 1.4f + fonts.Small.LineHeight * 2;
         var cardHeight = Math.Min(Math.Min(felt.Height / 4, fonts.Px(100)), (int)((felt.Width * 0.45f - 4 * gap) / 5 / CardArt.AspectRatio));
         var cardWidth = (int)(cardHeight * CardArt.AspectRatio);
@@ -293,7 +293,7 @@ internal sealed class PokerTableView(GameContext context) : IDisposable
         }
 
         var pot = new Vector2(felt.Center.X, boardTop - gap - fonts.Small.LineHeight * 2);
-        _layout = new Layout(viewport, BottomSeat, fonts.Scale, felt, rim, boxes, centres, bets, board, pot, chipWidth, fonts.Px(16));
+        _layout = new Layout(viewport, BottomSeat, fonts.Scale, felt, rim, boxes, centres, bets, board, pot, chipWidth, fonts.Px(22));
         _texts = new SeatText[seats];
         for (var seat = 0; seat < seats; seat++)
         {
@@ -565,7 +565,7 @@ internal sealed class PokerTableView(GameContext context) : IDisposable
         var statusTop = inner.Bottom - (int)font.LineHeight - fonts.Px(2);
         var chipsBottom = statusTop - fonts.Px(2);
         var cardTop = top.Bottom + fonts.Px(4);
-        var cardHeight = Math.Max(0, (int)(chipsBottom - layout.SeatChipWidth * (0.45f + 0.2f * (MaxPerStack - 1)) - fonts.Px(4)) - cardTop);
+        var cardHeight = Math.Max(0, (int)(chipsBottom - ChipRenderer.StackHeight(layout.SeatChipWidth, MaxPerStack) - fonts.Px(4)) - cardTop);
         var cardWidth = (int)(cardHeight * CardArt.AspectRatio);
         var hole = hand.Hole(seat);
         if (!isOut && !hand.HasFolded(seat))

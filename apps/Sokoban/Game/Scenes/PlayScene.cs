@@ -34,7 +34,7 @@ internal sealed class PlayScene : Scene
     private static readonly TimeSpan CompleteDelay = TimeSpan.FromMilliseconds(450);
 
     private readonly GameContext _context;
-    private readonly Theme _theme;
+    private readonly Games.Rendering.Theme _theme;
     private readonly BoardRenderer _renderer;
     private readonly Sokoban.Solver.Solver _solver;
     private readonly HintRunner _hints;

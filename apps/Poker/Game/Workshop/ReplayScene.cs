@@ -1,4 +1,5 @@
-﻿using Jentl.Core.Graphics;
+﻿using Jentl.Cards;
+using Jentl.Core.Graphics;
 using Jentl.Core.Input;
 using Jentl.Core.Scenes;
 using Jentl.Core.UI;
@@ -256,7 +257,7 @@ internal sealed class ReplayScene : Scene
             var line = e switch
             {
                 Acted a => $"{names[a.Seat]}: {HoldemText.Action(a)}",
-                StreetDealt d => T("{0}: {1}", HoldemText.StreetName(d.Street), string.Join(" ", d.Cards)),
+                StreetDealt d => T("{0}: {1}", HoldemText.StreetName(d.Street), Card.Symbols(d.Cards)),
                 PotWon { Value: { } value } w => T("{0} wins {1}: {2}", names[w.Seat], w.Amount, HoldemText.Describe(value)),
                 PotWon w => T("{0} takes {1}", names[w.Seat], w.Amount),
                 _ => null,

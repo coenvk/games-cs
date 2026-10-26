@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup>
     <!-- The engine: github.com/coenvk/jentl-cs. build/jentl.sh packs this version. -->
-    <JentlVersion>0.6.10</JentlVersion>
+    <JentlVersion>0.6.11</JentlVersion>
     <!-- Game -->
     <MonoGameVersion>3.8.4.1</MonoGameVersion>
     <FontStashSharpVersion>1.6.2</FontStashSharpVersion>

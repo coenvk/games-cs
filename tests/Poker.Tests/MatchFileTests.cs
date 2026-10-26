@@ -1,4 +1,5 @@
-﻿using Jentl.Multiplayer;
+﻿using Jentl.Collect;
+using Jentl.Multiplayer;
 using Poker.Arena;
 
 namespace Poker.Tests;
@@ -156,6 +157,30 @@ public class MatchFileTests
             result.Hands.Should().Be(seatResult.Hands);
             result.Gone.Should().Be(0);
             result.Places.Should().Equal(seatResult.Place!.Value);
+        }
+    }
+
+    [Fact]
+    public async Task AWatchedFixedStacksMatch_HasAMargin_FromItsHands()
+    {
+        using var table = new ArenaTable([new HouseSeat(new CallingBot()), new HouseSeat(new RaisingBot()), new HouseSeat(new CallingBot())], new ArenaSettings(TableFormat.FixedStacks, 60, DealSeed.FromNumber(7), TimeSpan.FromSeconds(1)));
+        await table.RunAsync(CancellationToken.None);
+
+        var match = MatchResult.FromTable(table, DateTimeOffset.UnixEpoch);
+
+        for (var seat = 0; seat < 3; seat++)
+        {
+            // Each hand the seat was dealt into is one sample of its result, in big blinds.
+            var stats = new RunningStats();
+            foreach (var hand in table.Hands.Where(h => h.Holes[seat].Count > 0))
+            {
+                stats.Add(ArenaBatch.HandNet(hand, seat) / 20.0);
+            }
+
+            var result = match.Results[seat];
+            result.Margin95.Should().BeGreaterThan(0);
+            result.Margin95.Should().BeApproximately(stats.Margin95 * 100, 1e-9);
+            result.BigBlindsPer100.Should().BeApproximately(stats.Mean * 100, 1e-9, "the margin is of the same per-hand results");
         }
     }
 

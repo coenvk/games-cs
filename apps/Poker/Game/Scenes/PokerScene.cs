@@ -284,7 +284,7 @@ internal sealed class PokerScene : Scene
                 break;
             case StreetDealt d:
                 HoldemText.NewStreet(_lastAction);
-                Say(T("{0}: {1}", HoldemText.StreetName(d.Street), string.Join(" ", d.Cards)));
+                Say(T("{0}: {1}", HoldemText.StreetName(d.Street), Card.Symbols(d.Cards)));
                 break;
             case HandShown s:
                 _shown.Add(s.Seat);

@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using Jentl.Cards;
 using Jentl.Core.Graphics;
 using Jentl.Core.Input;
 using Jentl.Core.Scenes;
@@ -408,7 +409,7 @@ internal sealed class WatchScene : Scene
                 break;
             case StreetDealt d:
                 HoldemText.NewStreet(_lastAction);
-                Say(T("{0}: {1}", HoldemText.StreetName(d.Street), string.Join(" ", d.Cards)));
+                Say(T("{0}: {1}", HoldemText.StreetName(d.Street), Card.Symbols(d.Cards)));
                 break;
             case HandShown s:
                 _shown.Add(s.Seat);

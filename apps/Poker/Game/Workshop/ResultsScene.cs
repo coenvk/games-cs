@@ -314,7 +314,8 @@ internal sealed class ResultsScene : Scene
         return ([.. header], rows, [.. faulty]);
     }
 
-    // "+4.2 ± 1.3" for a batch, "+4.2" for a watched match (no margin), a place for a sit-and-go, "—" for nothing.
+    // "+4.2 ± 1.3" with a margin (a batch, a watched match with fixed stacks), "+4.2" for a watched match saved before
+    // those had one, a place for a sit-and-go, "—" for nothing.
     private static string Score(BotResult result, bool sitAndGo, bool series, bool batch)
     {
         if (sitAndGo)
@@ -330,7 +331,7 @@ internal sealed class ResultsScene : Scene
         }
 
         var value = result.BigBlindsPer100.ToString("+0.0;-0.0;0.0", Tr.Culture);
-        return batch ? $"{value} ± {result.Margin95.ToString("0.0", Tr.Culture)}" : value;
+        return batch || result.Margin95 > 0 ? $"{value} ± {result.Margin95.ToString("0.0", Tr.Culture)}" : value;
     }
 
     private static string Percent(double rate) => (rate * 100).ToString("0", Tr.Culture) + "%";

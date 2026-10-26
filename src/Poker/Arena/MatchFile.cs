@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Jentl.Collect;
 using Jentl.Multiplayer;
 
 namespace Poker.Arena;
@@ -8,7 +9,7 @@ namespace Poker.Arena;
 /// <summary>How one bot did over a match or a batch.</summary>
 /// <param name="Name">The bot's name.</param>
 /// <param name="BigBlindsPer100">Its result in big blinds won per hundred hands.</param>
-/// <param name="Margin95">The 95% margin of error of <paramref name="BigBlindsPer100"/>; 0 for a single watched match.</param>
+/// <param name="Margin95">The 95% margin of error of <paramref name="BigBlindsPer100"/>; 0 for a sit-and-go.</param>
 /// <param name="Hands">The hands it was dealt into.</param>
 /// <param name="Late">Its decisions that were not answered in time.</param>
 /// <param name="Illegal">Its decisions answered with nothing or with a move that was not allowed.</param>
@@ -31,7 +32,7 @@ public sealed record BotResult(
 /// <param name="Batch">The rules of the batch it was part of, or null for a single match.</param>
 /// <param name="At">When it was played.</param>
 /// <param name="Bots">The names of the bots that took part.</param>
-/// <param name="Results">How each bot did; a watched match has one per seat, with margin 0.</param>
+/// <param name="Results">How each bot did; a watched match has one per seat.</param>
 /// <param name="Hands">Every hand played.</param>
 public sealed record MatchResult(
     ArenaSettings Settings,
@@ -43,8 +44,9 @@ public sealed record MatchResult(
 {
     /// <summary>
     /// The single match played at <paramref name="table"/> so far: one result per seat, in big blinds won per 100
-    /// hands at the starting blinds, with no margin, a gone count of 0 or 1, the seat's place when it has one and what
-    /// was wrong with its bot.
+    /// hands at the starting blinds, a gone count of 0 or 1, the seat's place when it has one and what was wrong with
+    /// its bot. With fixed stacks every hand the seat was dealt into is one sample, as a batch counts its deals, and the
+    /// margin is theirs; a sit-and-go's blinds rise and its stacks run out, so it has no margin (0).
     /// </summary>
     public static MatchResult FromTable(ArenaTable table, DateTimeOffset at)
     {
@@ -60,7 +62,7 @@ public sealed record MatchResult(
             [.. results.Select(r => new BotResult(
                 r.Name,
                 r.Hands == 0 ? 0 : r.Net / bigBlind * 100 / r.Hands,
-                0,
+                settings.Format == TableFormat.FixedStacks ? Margin(table.Hands, r.Seat, bigBlind) : 0,
                 r.Hands,
                 r.Late,
                 r.Illegal,
@@ -68,6 +70,21 @@ public sealed record MatchResult(
                 r.Place is { } place ? [place] : [],
                 r.Problem))],
             [.. table.Hands]);
+    }
+
+    // The 95% margin of a seat's big blinds per 100 hands, from its result in each hand it was dealt into.
+    private static double Margin(IReadOnlyList<HandRecord> hands, int seat, double bigBlind)
+    {
+        var stats = new RunningStats();
+        foreach (var hand in hands)
+        {
+            if (hand.Holes[seat].Count > 0)
+            {
+                stats.Add(ArenaBatch.HandNet(hand, seat) / bigBlind);
+            }
+        }
+
+        return stats.Margin95 * 100;
     }
 }
 
