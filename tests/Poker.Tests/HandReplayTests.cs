@@ -37,6 +37,61 @@ public class HandReplayTests
     }
 
     [Fact]
+    public async Task ADownloadedMatch_WithoutSeeds_IsDealtFromItsRecordedCards_AndPlaysOutAsRecorded()
+    {
+        List<Func<IArenaSeat>> bots = [House(() => new RandomBot(4)), House(() => new CallingBot())];
+        var batch = new ArenaBatch(bots, new BatchSettings(BatchFormat.DuplicateHeadsUp, 40, Seed: DealSeed.FromNumber(23), Limit));
+        var full = await batch.RunAsync(new Progress<double>(), CancellationToken.None);
+        var mine = full.Bots[0];
+
+        // As the server sends it to the first bot's owner: no seeds, the opponent's folded cards removed.
+        var downloaded = MatchFile.Read(MatchFile.Write(OwnerView.For(full, mine)));
+        var hidden = 0;
+        for (var i = 0; i < downloaded.Hands.Count; i++)
+        {
+            var record = downloaded.Hands[i];
+            var original = full.Hands[i];
+            record.Seed.Should().Be(default(DealSeed));
+            var played = HandReplay.Rebuild(record, record.Actions.Count);
+            played.IsOver.Should().BeTrue();
+            played.Board.Should().Equal(original.Board, "hand {0} deals its recorded board", record.Number);
+            played.Winnings.Should().BeEquivalentTo(original.Won);
+            played.TakeEvents().OfType<Acted>().Select(a => (a.Seat, a.Action, a.Amount, a.Total))
+                .Should().Equal(original.Actions.Select(a => (a.Seat, a.Action, a.Amount, a.Total)));
+
+            var seats = Enumerable.Range(0, record.Names.Count).ToList();
+            foreach (var seat in seats)
+            {
+                if (HandReplay.IsHidden(record, seat))
+                {
+                    hidden++;
+                    record.Names[seat].Should().NotBe(mine);
+                    played.Hole(seat).Should().HaveCount(2, "a hidden seat is dealt stand-in cards, shown face down")
+                        .And.NotIntersectWith(record.Board).And.NotIntersectWith(seats.SelectMany(s => record.Holes[s]));
+                }
+                else
+                {
+                    played.Hole(seat).Should().Equal(original.Holes[seat]);
+                }
+            }
+        }
+
+        hidden.Should().BeGreaterThan(0, "the random bot folds now and then");
+    }
+
+    [Fact]
+    public void ASeatIsHidden_OnlyWhenItWasDealtInAndItsCardsAreMissing()
+    {
+        var hand = TestHands.Showdown();
+        var view = hand with { Holes = [hand.Holes[0], hand.Holes[1], []] };
+
+        HandReplay.IsHidden(view, 2).Should().BeTrue();
+        HandReplay.IsHidden(view, 0).Should().BeFalse();
+        HandReplay.IsHidden(hand, 2).Should().BeFalse();
+        HandReplay.IsHidden(view with { StartStacks = [1000, 1000, 0] }, 2).Should().BeFalse("a seat that was out was dealt nothing");
+    }
+
+    [Fact]
     public void Rebuild_StopsAfterTheGivenNumberOfActions()
     {
         var record = Record(new HoldemHand([1000, 1000, 1000], button: 0, smallBlind: 10, bigBlind: 20, seed: DealSeed.FromNumber(5)), seed: DealSeed.FromNumber(5),

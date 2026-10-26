@@ -153,8 +153,8 @@ public static class HandHistoryText
 
     /// <summary>
     /// The history of <paramref name="hand"/> as text with LF line endings. Amounts are chips; the table is called
-    /// <paramref name="table"/> and the hand is dated <paramref name="at"/> (in UTC). Every seat's hole cards are
-    /// written, as the record knows them all.
+    /// <paramref name="table"/> and the hand is dated <paramref name="at"/> (in UTC). Every seat's hole cards the record
+    /// knows are written; a downloaded match knows only the owner's bot's and those shown (see <see cref="OwnerView"/>).
     /// The number in the header is <paramref name="id"/>; without one it is the low 32 bits of the hand's seed as a
     /// number, followed by the hand number in six digits. That is the same for the same deal in every run of a
     /// duplicate batch, so a whole match is written with <see cref="WriteMatch"/>, which numbers every hand apart.
@@ -164,7 +164,7 @@ public static class HandHistoryText
         ArgumentNullException.ThrowIfNull(hand);
         ArgumentNullException.ThrowIfNull(table);
         var replay = new BettingReplay(hand);
-        var inHand = Enumerable.Range(0, hand.Names.Count).Where(s => hand.Holes[s].Count > 0).ToArray();
+        var inHand = Enumerable.Range(0, hand.Names.Count).Where(s => hand.StartStacks[s] > 0).ToArray();
         var text = new StringBuilder();
         Line($"PokerStars Hand #{id?.ToString(CultureInfo.InvariantCulture) ?? $"{(uint)hand.Seed.Value}{hand.Number:D6}"}: Hold'em No Limit ({hand.SmallBlind}/{hand.BigBlind}) - {at.UtcDateTime.ToString("yyyy/MM/dd HH:mm:ss", CultureInfo.InvariantCulture)} UTC");
         Line($"Table '{table}' 9-max Seat #{hand.Button + 1} is the button");
@@ -176,7 +176,7 @@ public static class HandHistoryText
         Line($"{hand.Names[replay.SmallBlindSeat]}: posts small blind {replay.SmallBlindPosted}{AllInSuffix(hand, replay.SmallBlindSeat, replay.SmallBlindPosted)}");
         Line($"{hand.Names[replay.BigBlindSeat]}: posts big blind {replay.BigBlindPosted}{AllInSuffix(hand, replay.BigBlindSeat, replay.BigBlindPosted)}");
         Line("*** HOLE CARDS ***");
-        foreach (var seat in inHand)
+        foreach (var seat in inHand.Where(s => hand.Holes[s].Count > 0))
         {
             Line($"Dealt to {hand.Names[seat]} [{Cards(hand.Holes[seat])}]");
         }

@@ -40,4 +40,13 @@ public class PokerStatsTests
     [Fact]
     public void ABotWithoutCalls_HasNoAggressionFactor() =>
         PokerStats.For([TestHands.BigBlindWins()], "Ann").AggressionFactor.Should().BeNull();
+
+    [Fact]
+    public void ABotWhoseCardsAreHidden_StillCountsItsHands()
+    {
+        // A downloaded match keeps an opponent's folded cards on the server; the hands it played still count.
+        var hidden = Hands.Select(h => h with { Holes = [h.Holes[0], [], .. h.Holes.Skip(2)] }).ToArray();
+
+        PokerStats.For(hidden, "Bob").Should().Be(PokerStats.For(Hands, "Bob"));
+    }
 }

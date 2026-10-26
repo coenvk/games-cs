@@ -51,6 +51,18 @@ public class HandHistoryTests
     }
 
     [Fact]
+    public void AnOpponentsHiddenCards_LeaveItsSeatAndActions_ButNoDealtLine()
+    {
+        // A downloaded match keeps an opponent's folded cards on the server; the seat still played the hand.
+        var hand = TestHands.Showdown();
+        var lines = Lines(hand with { Holes = [hand.Holes[0], hand.Holes[1], []] });
+
+        lines.Should().Contain("Seat 3: Cy (1000 in chips)").And.Contain("Cy: folds").And.Contain("Seat 3: Cy (big blind) folded")
+            .And.Contain("Dealt to Ann [Ac Jc]");
+        lines.Should().NotContain(l => l.StartsWith("Dealt to Cy", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void AnAllInHeadsUp_HasTheButtonPostTheSmallBlind_AndReturnsTheUncalledChips()
     {
         var lines = Lines(TestHands.AllInCall());

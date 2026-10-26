@@ -16,8 +16,8 @@ namespace Games.Workshop;
 
 /// <summary>
 /// The bot workshop: the bots there are (the house bots and the ones in the bots folder, with what is wrong with
-/// those that cannot run) beside the choices: watch a match, run a batch, look at past matches, refresh the list,
-/// open the folder.
+/// those that cannot run) beside the choices: watch a match, run a batch, look at past matches, the poker league
+/// online, refresh the list, open the folder.
 /// </summary>
 internal sealed class WorkshopScene : Scene
 {
@@ -39,6 +39,7 @@ internal sealed class WorkshopScene : Scene
             new MenuItem(T("Watch a match"), () => Scenes.Push(new MatchSetupScene(workshop, batch: false))),
             new MenuItem(T("Run a batch"), () => Scenes.Push(new MatchSetupScene(workshop, batch: true))),
             new MenuItem(T("Past matches"), () => Scenes.Push(workshop.PastMatches())),
+            new MenuItem(T("Online"), () => Scenes.Push(workshop.Online())),
             new MenuItem(T("Refresh"), Refresh),
             new MenuItem(T("Open bots folder"), OpenFolder),
             new MenuItem(T("Back"), () => Scenes.Pop()));
@@ -63,7 +64,7 @@ internal sealed class WorkshopScene : Scene
         batch.FillRectangle(viewport, Palette.Dim);
         var padding = fonts.Px(40);
         var width = Math.Min(viewport.Width - 2 * padding, fonts.Px(1000));
-        var height = Math.Min(viewport.Height - fonts.Px(40), fonts.Px(520));
+        var height = Math.Min(viewport.Height - fonts.Px(40), fonts.Px(600));
         var panel = new Rectangle(viewport.Center.X - width / 2, viewport.Center.Y - height / 2, width, height);
         batch.FillRectangle(panel, Palette.Panel);
         batch.FillRectangle(new Rectangle(panel.X, panel.Y, panel.Width, 6), Palette.Accent);

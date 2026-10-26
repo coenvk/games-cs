@@ -53,7 +53,9 @@ internal sealed class ResultsScene : Scene
         _match = match;
         _path = path;
         (_header, _rows, _faulty) = Table(match);
-        _problems = [.. match.Results.Where(r => r.Problem is not null).Select(r => T("{0} could not play: {1}", r.Name, r.Problem!))];
+        _problems = [.. match.Results.Where(r => r.Problem is not null).Select(r => r.Problem == OwnerView.OpponentProblem
+            ? T("{0} had a problem", r.Name)
+            : T("{0} could not play: {1}", r.Name, r.Problem!))];
         SetButtons();
     }
 
@@ -236,8 +238,11 @@ internal sealed class ResultsScene : Scene
     private IEnumerable<(string Text, Color Color)> Summary()
     {
         var hands = N(_match.Hands.Count, "{0} hand", "{0} hands");
-        var seed = (_match.Batch?.Seed ?? _match.Settings.Seed).ToString();
-        yield return ($"{FormatName(_match)}  ·  {When(_match)}  ·  {hands}  ·  {T("seed {0}", seed)}", Palette.Muted);
+        // A match downloaded from the server has no seed: it would deal the opponent's hidden cards again.
+        var seed = _match.Batch?.Seed ?? _match.Settings.Seed;
+        yield return seed == default
+            ? ($"{FormatName(_match)}  ·  {When(_match)}  ·  {hands}", Palette.Muted)
+            : ($"{FormatName(_match)}  ·  {When(_match)}  ·  {hands}  ·  {T("seed {0}", seed.ToString())}", Palette.Muted);
         yield return _path is null
             ? (T("The match could not be saved."), Problem)
             : (T("Saved to {0}", _workshop.Shown(_path)), Palette.Muted);

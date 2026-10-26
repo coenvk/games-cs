@@ -33,6 +33,7 @@ internal sealed class WorkshopContext
         RunBatch = request => new BatchScene(this, request);
         PastMatches = () => new MatchesScene(this);
         MatchResults = (match, path) => new ResultsScene(this, match, path);
+        Online = () => new OnlineScene(this);
     }
 
     public GameContext Game { get; }
@@ -49,6 +50,23 @@ internal sealed class WorkshopContext
     /// <summary>The scene that shows a finished match, with the file it was saved to (null when saving failed).</summary>
     public Func<MatchResult, string?, Scene> MatchResults { get; set; }
 
+    /// <summary>The scene that shows the poker league on the game server: the ranking and the player's bots there.</summary>
+    public Func<Scene> Online { get; set; }
+
+    /// <summary>
+    /// The app's link to the poker league on <see cref="GameContext.GameServer"/>, made the first time it is needed and
+    /// kept for the whole app, so that the bots put online keep running when the player leaves the workshop.
+    /// </summary>
+    public OnlineSession OnlineSession => Game.Has<OnlineSession>()
+        ? Game.Get<OnlineSession>()
+        : Game.Add(new OnlineSession(Game.GameServer, OnlineAccountsFile, _running));
+
+    /// <summary>Where the owner and bot tokens are kept (see <see cref="OnlineAccounts"/>).</summary>
+    public string OnlineAccountsFile => Path.Combine(SaveFolder, "workshop", "online.json");
+
+    /// <summary>The matches downloaded from the server, one file each, named after the match's id there.</summary>
+    public string OnlineMatchesFolder => Path.Combine(SaveFolder, "workshop", "online");
+
     /// <summary>The player's bots: <c>*.bot.json</c> descriptions and C# DLLs.</summary>
     public string BotsFolder => Path.Combine(SaveFolder, "bots");
 
@@ -64,6 +82,9 @@ internal sealed class WorkshopContext
     /// with <c>dotnet</c> when it has none.
     /// </summary>
     public AgentCommand Host { get; } = AgentCommand.DotNet(Path.Combine(AppContext.BaseDirectory, "PokerBotHost.dll"));
+
+    /// <summary>How a bot is put online: the poker runner that was copied next to the app (and finds the bot host beside itself).</summary>
+    public AgentCommand Runner { get; } = AgentCommand.DotNet(Path.Combine(AppContext.BaseDirectory, "PokerRunner.dll"));
 
     // The save folder of the desktop app; scripted runs without one keep their workshop in a temporary folder.
     private string SaveFolder => Game.Store is SaveStore store ? store.Directory : Path.Combine(Path.GetTempPath(), Game.App.SaveName);
@@ -105,13 +126,15 @@ internal sealed class WorkshopContext
 }
 
 /// <summary>
-/// The bots running in processes of their own that are seated now. A seat leaves the list when it is disposed; when
-/// the app quits, the game context disposes this list, which stops every bot still in it, so that a bot stuck in a
-/// loop does not outlive the app even while a match or a batch is being played.
+/// The bots running in processes of their own that are seated now, and the runners that put bots online. A seat or a
+/// runner leaves the list when it is disposed; when the app quits, the game context disposes this list, which stops
+/// every bot and runner still in it, so that a bot stuck in a loop does not outlive the app even while a match or a
+/// batch is being played.
 /// </summary>
 internal sealed class RunningBots : IDisposable
 {
     private readonly HashSet<IArenaSeat> _seats = [];
+    private readonly HashSet<IDisposable> _others = [];
     private readonly Lock _lock = new();
     private bool _stopped;
 
@@ -136,15 +159,37 @@ internal sealed class RunningBots : IDisposable
         throw new ObjectDisposedException(nameof(RunningBots), "The app is quitting.");
     }
 
-    /// <summary>Stops every bot in the list, and every one seated from now on.</summary>
+    /// <summary>
+    /// Keeps <paramref name="process"/> (a runner putting a bot online) in the list, to be disposed when the app quits,
+    /// until the entry returned is disposed, which only takes it off the list.
+    /// </summary>
+    /// <exception cref="ObjectDisposedException">The app is quitting; <paramref name="process"/> has been disposed.</exception>
+    public IDisposable Keep(IDisposable process)
+    {
+        ArgumentNullException.ThrowIfNull(process);
+        lock (_lock)
+        {
+            if (!_stopped)
+            {
+                _others.Add(process);
+                return new Entry(this, process);
+            }
+        }
+
+        process.Dispose();
+        throw new ObjectDisposedException(nameof(RunningBots), "The app is quitting.");
+    }
+
+    /// <summary>Stops every bot and runner in the list, and every one started from now on.</summary>
     public void Dispose()
     {
-        IArenaSeat[] seats;
+        IDisposable[] seats;
         lock (_lock)
         {
             _stopped = true;
-            seats = [.. _seats];
+            seats = [.. _seats, .. _others];
             _seats.Clear();
+            _others.Clear();
         }
 
         foreach (var seat in seats)
@@ -166,6 +211,18 @@ internal sealed class RunningBots : IDisposable
         lock (_lock)
         {
             _seats.Remove(seat);
+        }
+    }
+
+    /// <summary>A runner's place in the list; disposing it takes the runner off the list.</summary>
+    private sealed class Entry(RunningBots list, IDisposable process) : IDisposable
+    {
+        public void Dispose()
+        {
+            lock (list._lock)
+            {
+                list._others.Remove(process);
+            }
         }
     }
 

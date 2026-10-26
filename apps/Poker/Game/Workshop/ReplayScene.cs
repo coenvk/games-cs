@@ -17,7 +17,8 @@ namespace Games.Workshop;
 
 /// <summary>
 /// A recorded hand played again on the chip table with every seat's cards face up, one action at a time: the hand is
-/// dealt again from its seed and its actions applied (see <see cref="HandReplay"/>). Previous and Next action step
+/// dealt again from its seed and its actions applied (see <see cref="HandReplay"/>). In a match downloaded from the
+/// server, an opponent's cards that were not shown stay face down. Previous and Next action step
 /// through it (going back deals it again up to the action before), Previous and Next hand move through the match.
 /// What has happened so far is logged on the right, with the bots' faults in this hand at the top.
 /// </summary>
@@ -109,7 +110,8 @@ internal sealed class ReplayScene : Scene
         var title = T("Replay: hand {0} of {1}, blinds {2}/{3}", _index + 1, _match.Hands.Count, record.SmallBlind, record.BigBlind);
         batch.DrawText(fonts.Body, title, text, Palette.Text, Align.Left);
         var where = T("Action {0} of {1}", _step, record.Actions.Count);
-        batch.DrawText(fonts.Small, $"{where}  ·  {T("Every bot's cards are face up")}", text, Palette.Muted, Align.Right, shadow: false);
+        var cards = Hidden(record) ? T("Cards not shown at the table stay face down") : T("Every bot's cards are face up");
+        batch.DrawText(fonts.Small, $"{where}  ·  {cards}", text, Palette.Muted, Align.Right, shadow: false);
 
         var buttonFont = _buttons.Width(fonts.Body) <= viewport.Width - 2 * margin ? fonts.Body : fonts.Small;
         var buttonsHeight = ButtonBar.Height(buttonFont) + fonts.Px(20);
@@ -121,7 +123,7 @@ internal sealed class ReplayScene : Scene
         var area = new Rectangle(viewport.X + margin, hud.Bottom + margin, log.Left - viewport.X - 4 * margin, buttons.Top - hud.Bottom - 2 * margin);
         if (_hand is { } hand)
         {
-            _view.Draw(batch, area, hand, record.Names, _ => true, _labels);
+            _view.Draw(batch, area, hand, record.Names, seat => !HandReplay.IsHidden(record, seat), _labels);
         }
         else
         {
@@ -140,6 +142,8 @@ internal sealed class ReplayScene : Scene
 
         base.Dispose(disposing);
     }
+
+    private static bool Hidden(HandRecord record) => Enumerable.Range(0, record.Names.Count).Any(seat => HandReplay.IsHidden(record, seat));
 
     private static string FaultLine(string name, Fault fault) => fault switch
     {
