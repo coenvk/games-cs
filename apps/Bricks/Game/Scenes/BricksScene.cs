@@ -53,6 +53,10 @@ internal sealed class BricksScene : Scene
         string.Create(CultureInfo.InvariantCulture, $"Bodies {Game.Physics.Bodies.Count}  contacts {Game.Physics.Contacts.Count}"),
     ];
 
+    // F4: the scene, the game's rules and every body, outlined where it is drawn and draggable.
+    public override IEnumerable<Inspectable> Inspectables =>
+        [new(nameof(BricksScene), this), new(nameof(BricksGame), Game), .. Inspectable.Bodies(Game.Physics, Screen, _scale)];
+
     public void NewGame() => Scenes.Replace(new BricksScene(_context), Navigation.Fade());
 
     protected override void OnEnter() => _context.Sounds.PlayMusic(Music.Puzzle);
