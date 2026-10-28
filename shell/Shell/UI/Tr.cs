@@ -47,5 +47,6 @@ internal static class Tr
 
         UiText.On = T("On");
         UiText.Off = T("Off");
+        UiText.PressKey = T("Press a key");
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Jentl.Core.Input;
 using Jentl.Core.UI;
 using Microsoft.Xna.Framework.Input;
+using static Games.UI.Tr;
 
 namespace Games.Input;
 
@@ -65,24 +66,63 @@ internal static class Controls
             [GameAction.Wait] = [Buttons.RightShoulder],
         });
 
-    /// <summary>The same keys and buttons for the UI widgets (menus, forms).</summary>
-    public static ActionMap<UiAction> Ui { get; } = new(
+    /// <summary>
+    /// The same keys and buttons for the UI widgets (menus, forms): the player's, once <see cref="Follow"/> has been
+    /// given their map.
+    /// </summary>
+    public static ActionMap<UiAction> Ui { get; private set; } = UiFor(Default);
+
+    /// <summary>Makes <see cref="Ui"/> use <paramref name="game"/>'s keys, after loading or rebinding them.</summary>
+    public static void Follow(ActionMap<GameAction> game) => Ui = UiFor(game);
+
+    /// <summary>The player's controls from <c>controls.json</c>, on top of <see cref="Default"/>.</summary>
+    /// <exception cref="InvalidDataException">The file is not bindings.</exception>
+    public static ActionMap<GameAction> Parse(string json)
+    {
+        var map = Default.Copy();
+        map.Load(json);
+        return map;
+    }
+
+    /// <summary>What a control is called on the Controls screen.</summary>
+    public static string Name(GameAction action) => action switch
+    {
+        GameAction.Up => T("Move up"),
+        GameAction.Down => T("Move down"),
+        GameAction.Left => T("Move left"),
+        GameAction.Right => T("Move right"),
+        GameAction.Undo => T("Undo"),
+        GameAction.Redo => T("Redo"),
+        GameAction.Restart => T("Restart"),
+        GameAction.Hint => T("Hint"),
+        GameAction.SwitchPack => T("Switch pack"),
+        GameAction.Confirm => T("Confirm"),
+        GameAction.NextLevel => T("Next level"),
+        GameAction.PreviousLevel => T("Previous level"),
+        GameAction.Back => T("Back"),
+        GameAction.Inventory => T("Inventory"),
+        GameAction.Journal => T("Journal"),
+        GameAction.Wait => T("Wait"),
+        _ => action.ToString(),
+    };
+
+    private static ActionMap<UiAction> UiFor(ActionMap<GameAction> game) => new(
         new Dictionary<UiAction, Keys[]>
         {
-            [UiAction.Up] = [.. Default.KeysFor(GameAction.Up)],
-            [UiAction.Down] = [.. Default.KeysFor(GameAction.Down)],
-            [UiAction.Left] = [.. Default.KeysFor(GameAction.Left)],
-            [UiAction.Right] = [.. Default.KeysFor(GameAction.Right)],
-            [UiAction.Confirm] = [.. Default.KeysFor(GameAction.Confirm)],
-            [UiAction.Back] = [.. Default.KeysFor(GameAction.Back)],
+            [UiAction.Up] = [.. game.KeysFor(GameAction.Up)],
+            [UiAction.Down] = [.. game.KeysFor(GameAction.Down)],
+            [UiAction.Left] = [.. game.KeysFor(GameAction.Left)],
+            [UiAction.Right] = [.. game.KeysFor(GameAction.Right)],
+            [UiAction.Confirm] = [.. game.KeysFor(GameAction.Confirm)],
+            [UiAction.Back] = [.. game.KeysFor(GameAction.Back)],
         },
         new Dictionary<UiAction, Buttons[]>
         {
-            [UiAction.Up] = [.. Default.ButtonsFor(GameAction.Up)],
-            [UiAction.Down] = [.. Default.ButtonsFor(GameAction.Down)],
-            [UiAction.Left] = [.. Default.ButtonsFor(GameAction.Left)],
-            [UiAction.Right] = [.. Default.ButtonsFor(GameAction.Right)],
-            [UiAction.Confirm] = [.. Default.ButtonsFor(GameAction.Confirm)],
-            [UiAction.Back] = [.. Default.ButtonsFor(GameAction.Back)],
+            [UiAction.Up] = [.. game.ButtonsFor(GameAction.Up)],
+            [UiAction.Down] = [.. game.ButtonsFor(GameAction.Down)],
+            [UiAction.Left] = [.. game.ButtonsFor(GameAction.Left)],
+            [UiAction.Right] = [.. game.ButtonsFor(GameAction.Right)],
+            [UiAction.Confirm] = [.. game.ButtonsFor(GameAction.Confirm)],
+            [UiAction.Back] = [.. game.ButtonsFor(GameAction.Back)],
         });
 }

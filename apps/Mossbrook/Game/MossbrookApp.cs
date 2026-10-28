@@ -1,4 +1,5 @@
 ﻿using Jentl.Core.Scenes;
+using Games.Input;
 using Games.Scenes;
 using Microsoft.Xna.Framework.Graphics;
 using static Games.UI.Tr;
@@ -17,6 +18,8 @@ internal sealed class MossbrookApp : IGameApp
     public string Title => "Mossbrook";
 
     public string SaveName => "Mossbrook";
+
+    public IReadOnlyList<GameAction> ControlActions => [GameAction.Up, GameAction.Down, GameAction.Left, GameAction.Right, GameAction.Inventory, GameAction.Journal, GameAction.Wait, GameAction.Confirm];
 
     public void Load(GameContext context, GraphicsDevice device) => context.Add(new AdventureSaves(context.Store));
 

@@ -91,7 +91,9 @@ internal sealed class ShellGame : JentlGame
             SetFullscreen(settings.Value.Fullscreen);
         }
 
-        var context = _context = new GameContext(_app, _options, _fonts, Controls.Default, _sounds, settings, SetFullscreen, _platform, Assets, store);
+        var controls = SavedFile<ActionMap<GameAction>>.Load(store, "controls.json", Controls.Parse, c => c.Save(), Controls.Default.Copy);
+        Controls.Follow(controls.Value);
+        var context = _context = new GameContext(_app, _options, _fonts, controls, _sounds, settings, SetFullscreen, _platform, Assets, store);
         _app.Load(context, GraphicsDevice);
         Scenes.Reset(_app.Start(context));
     }

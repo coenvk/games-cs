@@ -63,6 +63,9 @@ internal interface IGameApp
     /// <summary>The scenes to start with, bottom first: the title screen, perhaps with a game on top (<c>--level</c>).</summary>
     IReadOnlyList<Scene> Start(GameContext context) => [MainMenu(context)];
 
+    /// <summary>The controls its scenes use, which the player can rebind on the Controls screen (not Back: Escape stays the way out).</summary>
+    IReadOnlyList<GameAction> ControlActions => [GameAction.Up, GameAction.Down, GameAction.Left, GameAction.Right, GameAction.Confirm];
+
     /// <summary>The game's own rows in the Options panel, shown above Back.</summary>
     IEnumerable<FormRow> Options(GameContext context) => [];
 }
@@ -76,7 +79,7 @@ internal sealed class GameContext(
     IGameApp app,
     GameOptions options,
     Fonts fonts,
-    ActionMap<GameAction> actions,
+    SavedFile<ActionMap<GameAction>> controls,
     SoundPlayer sounds,
     SavedFile<Settings> settings,
     Action<bool> setFullscreen,
@@ -92,7 +95,11 @@ internal sealed class GameContext(
 
     public Fonts Fonts { get; } = fonts;
 
-    public ActionMap<GameAction> Actions { get; } = actions;
+    /// <summary>The player's controls: <see cref="ControlsFile"/>'s map.</summary>
+    public ActionMap<GameAction> Actions => ControlsFile.Value;
+
+    /// <summary>The player's controls as saved in <c>controls.json</c>; save it after rebinding.</summary>
+    public SavedFile<ActionMap<GameAction>> ControlsFile { get; } = controls;
 
     public SoundPlayer Sounds { get; } = sounds;
 

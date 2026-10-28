@@ -1,4 +1,5 @@
 ﻿using Jentl.Core.Scenes;
+using Games.Input;
 using Games.Scenes;
 using Microsoft.Xna.Framework.Graphics;
 using static Games.UI.Tr;
@@ -17,6 +18,8 @@ internal sealed class SolitaireApp : IGameApp
     public string Title => "Solitaire";
 
     public string SaveName => "Solitaire";
+
+    public IReadOnlyList<GameAction> ControlActions => [GameAction.Undo, GameAction.Redo, GameAction.Hint, GameAction.Confirm];
 
     public void Load(GameContext context, GraphicsDevice device) => CardTableArt.Load(context, device);
 

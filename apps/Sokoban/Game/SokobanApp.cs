@@ -1,4 +1,5 @@
 ﻿using Jentl.Core.Content;
+using Games.Input;
 using Jentl.Core.Scenes;
 using Games.Rendering;
 using Games.Scenes;
@@ -35,6 +36,8 @@ internal sealed class SokobanApp : IGameApp
 
     // Kept from when Sokoban was the only game, so earlier progress carries over.
     public string SaveName => "Sokoban";
+
+    public IReadOnlyList<GameAction> ControlActions => [GameAction.Up, GameAction.Down, GameAction.Left, GameAction.Right, GameAction.Undo, GameAction.Redo, GameAction.Restart, GameAction.Hint, GameAction.SwitchPack, GameAction.NextLevel, GameAction.PreviousLevel, GameAction.Confirm];
 
     public void Load(GameContext context, GraphicsDevice device)
     {
