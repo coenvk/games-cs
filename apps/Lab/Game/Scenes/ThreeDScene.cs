@@ -8,6 +8,7 @@ using Jentl.Core.Scenes;
 using Jentl.Core.UI;
 using Jentl.Geometry;
 using Jentl.Raster;
+using Jentl.Scene3D;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Numerics = System.Numerics;
@@ -16,8 +17,9 @@ using RasterTexture = Jentl.Raster.Texture;
 namespace Games.Scenes;
 
 /// <summary>
-/// A spinning low-poly car on a field, drawn by the software renderer (320×180, scaled up) or on the GPU (full size):
-/// switch with Enter or a tap, and compare the time each takes to draw.
+/// A low-poly car driving round a field, a windmill turning and a lamp glowing, built as a tree of nodes and drawn by
+/// the software renderer (320×180, scaled up) or on the GPU (full size): switch with Enter or a tap, and compare the
+/// time each takes to draw. Drag to turn the camera round the field, scroll to zoom, and click a thing to name it.
 /// </summary>
 internal sealed class ThreeDScene : Scene
 {
@@ -39,6 +41,16 @@ internal sealed class ThreeDScene : Scene
     private readonly RasterTexture _wood = DemoTextures.Crate();
     private readonly RasterTexture _paint = DemoTextures.CarSide();
     private readonly Stopwatch _clock = new();
+    private readonly Node _world = new("world");
+    private readonly Node _car;
+    private readonly List<Node> _wheels = [];
+    private readonly AnimationPlayer _windmill;
+    private readonly OrbitCamera _orbit = new() { Target = new Numerics.Vector3(0, 0.5f, 0), Yaw = 0.6f, Pitch = 0.35f, Distance = 9, MinDistance = 3, MaxDistance = 30, MinPitch = 0.05f };
+    private readonly Camera _camera = new() { FieldOfView = MathF.PI / 3.5f, Near = 0.1f, Far = 100 };
+    private readonly RenderList _list = new();
+    private Vector2? _dragFrom;
+    private Rectangle _picture;
+    private string _picked = "nothing";
     private IMeshView? _view;
     private bool _gpu;
     private bool _affine;
@@ -52,6 +64,43 @@ internal sealed class ThreeDScene : Scene
         _context = context;
         _buttons = new ButtonBar();
         SetButtons();
+
+        var dark = new Material(new Numerics.Vector4(0.1f, 0.1f, 0.12f, 1));
+        _world.Add("field", _ground, new Material(Numerics.Vector4.One, Shading.Flat, _grass));
+        var crate = _world.Add("crate", _crate, new Material(Numerics.Vector4.One, Shading.Flat, _wood));
+        (crate.Position, crate.Rotation) = (new Numerics.Vector3(2.8f, 0.6f, -1.5f), Numerics.Quaternion.CreateFromAxisAngle(Numerics.Vector3.UnitY, 0.4f));
+        _world.Add("ball", _ball, new Material(new Numerics.Vector4(0.9f, 0.8f, 0.2f, 1)) { Specular = new Numerics.Vector3(0.9f), Shininess = 40 })
+            .Position = new Numerics.Vector3(-3, 0.8f, -2);
+
+        // The car's body faces +X as built; a child turns it to face +Z, the way nodes go.
+        _car = _world.Add(new Node("car"));
+        var body = _car.Add("body", _body, new Material(Numerics.Vector4.One, Shading.Flat, _paint));
+        body.Rotation = Numerics.Quaternion.CreateFromAxisAngle(Numerics.Vector3.UnitY, -MathF.PI / 2);
+        foreach (var (x, z) in new[] { (-1.2f, 0.8f), (1.2f, 0.8f), (-1.2f, -0.8f), (1.2f, -0.8f) })
+        {
+            var wheel = body.Add($"wheel {_wheels.Count + 1}", _wheel, dark);
+            wheel.Position = new Numerics.Vector3(x, 0.35f, z);
+            _wheels.Add(wheel);
+        }
+
+        var lamp = _world.Add("lamp post", MeshBuilder.Cylinder(0.06f, 2.2f, 8), dark);
+        lamp.Position = new Numerics.Vector3(-1.5f, 1.1f, 3.2f);
+        lamp.Add("bulb", MeshBuilder.Sphere(0.18f, 10, 6), new Material(new Numerics.Vector4(0.2f, 0.2f, 0.1f, 1)) { Emissive = new Numerics.Vector3(1, 0.9f, 0.5f) })
+            .Position = new Numerics.Vector3(0, 1.2f, 0);
+
+        // A windmill whose sails turn by an animation: a quarter turn per key, round and round.
+        var mill = _world.Add("windmill", MeshBuilder.Cone(0.6f, 3, 6), new Material(new Numerics.Vector4(0.85f, 0.8f, 0.7f, 1), Shading.Flat));
+        mill.Position = new Numerics.Vector3(3.5f, 1.5f, 3);
+        var hub = mill.Add(new Node("sails") { Position = new Numerics.Vector3(0, 1.2f, 0.45f) });
+        foreach (var angle in new[] { 0f, MathF.PI / 2 })
+        {
+            var sail = hub.Add("sail", MeshBuilder.Box(new Numerics.Vector3(0.25f, 2.6f, 0.04f)), new Material(new Numerics.Vector4(0.95f, 0.95f, 0.9f, 1), Shading.Flat) { DoubleSided = true });
+            sail.Rotation = Numerics.Quaternion.CreateFromAxisAngle(Numerics.Vector3.UnitZ, angle);
+        }
+
+        var quarter = Enumerable.Range(0, 5).Select(i => (i * 0.75f, Numerics.Quaternion.CreateFromAxisAngle(Numerics.Vector3.UnitZ, -i * MathF.PI / 2))).ToArray();
+        _windmill = new AnimationPlayer([hub]);
+        _windmill.Play(new AnimationClip("turn", [AnimationChannel.Turn(0, quarter)]));
     }
 
     public override void Update(TimeSpan elapsed, InputState input)
@@ -72,7 +121,19 @@ internal sealed class ThreeDScene : Scene
             Switch();
         }
 
+        Steer(input);
         _angle += elapsed.TotalSeconds * 0.6;
+
+        // The car drives a circle, facing along it, its wheels rolling as far as it goes.
+        var around = (float)_angle;
+        _car.Position = new Numerics.Vector3(MathF.Sin(around) * 1.2f, 0, MathF.Cos(around) * 1.2f);
+        _car.Rotation = Numerics.Quaternion.CreateFromAxisAngle(Numerics.Vector3.UnitY, around + (MathF.PI / 2));
+        foreach (var wheel in _wheels)
+        {
+            wheel.Turn(Numerics.Vector3.UnitZ, -(float)elapsed.TotalSeconds * 0.6f * 1.2f / 0.35f);
+        }
+
+        _windmill.Update(elapsed);
         _frameMs = (_frameMs * 0.9) + (elapsed.TotalMilliseconds * 0.1);
     }
 
@@ -86,25 +147,18 @@ internal sealed class ThreeDScene : Scene
             _view = _gpu ? new GpuView(device, size.X, size.Y) : new SoftwareView(device, size.X, size.Y);
         }
 
-        var camera = new Camera { Position = new Numerics.Vector3(4, 3, 6), Target = new Numerics.Vector3(0, 0.5f, 0), FieldOfView = MathF.PI / 3.5f, Near = 0.1f, Far = 100 };
-        _view.ViewProjection = camera.ViewProjection(size.X / (float)size.Y);
+        // Sun from the front left, and a cool bounce from below the other way.
+        _view.Lighting = Lighting.Default with { Fill = [new ParallelLight(new Numerics.Vector3(0.5f, 0.6f, 0.4f), new Numerics.Vector3(0.15f, 0.18f, 0.25f))] };
+        _orbit.Apply(_camera);
+        _view.Look(_camera);
         _clock.Restart();
         _view.Begin(Sky);
-        var spin = Numerics.Matrix4x4.CreateRotationY((float)_angle);
         if (_view is SoftwareView software)
         {
             software.Renderer.Mapping = _affine ? TextureMapping.Affine : TextureMapping.PerspectiveCorrect;
         }
 
-        _view.DrawMesh(_ground, Numerics.Matrix4x4.Identity, new Material(Numerics.Vector4.One, Shading.Flat, _grass));
-        _view.DrawMesh(_crate, Numerics.Matrix4x4.CreateRotationY(0.4f) * Numerics.Matrix4x4.CreateTranslation(2.8f, 0.6f, -1.5f), new Material(Numerics.Vector4.One, Shading.Flat, _wood));
-        _view.DrawMesh(_body, spin, new Material(Numerics.Vector4.One, Shading.Flat, _paint));
-        foreach (var (x, z) in new[] { (-1.2f, 0.8f), (1.2f, 0.8f), (-1.2f, -0.8f), (1.2f, -0.8f) })
-        {
-            _view.DrawMesh(_wheel, Numerics.Matrix4x4.CreateTranslation(x, 0.35f, z) * spin, new Material(new Numerics.Vector4(0.1f, 0.1f, 0.12f, 1)));
-        }
-
-        _view.DrawMesh(_ball, Numerics.Matrix4x4.CreateTranslation(-3, 0.8f, -2), new Material(new Numerics.Vector4(0.9f, 0.8f, 0.2f, 1)));
+        _view.DrawScene(_world, _camera, _list);
         var drawn = _clock.Elapsed.TotalMilliseconds;
         _view.Finish();
         _finishMs = (_finishMs * 0.9) + ((_clock.Elapsed.TotalMilliseconds - drawn) * 0.1);
@@ -121,6 +175,7 @@ internal sealed class ThreeDScene : Scene
             var scale = MathF.Min(viewport.Width / (float)texture.Width, viewport.Height / (float)texture.Height);
             var size = new Point((int)(texture.Width * scale), (int)(texture.Height * scale));
             var at = new Rectangle(viewport.Center.X - (size.X / 2), viewport.Center.Y - (size.Y / 2), size.X, size.Y);
+            _picture = at;
             batch.Restart(sampler: SamplerState.PointClamp);
             batch.Draw(texture, at, Color.White);
             batch.Restart();
@@ -134,9 +189,10 @@ internal sealed class ThreeDScene : Scene
         [
             name,
             string.Create(CultureInfo.InvariantCulture, $"{size2.X}x{size2.Y}, draw {_drawMs:0.00} ms (of which upload {_finishMs:0.00}), frame {_frameMs:0.0} ms"),
-            "Enter or Switch to change",
+            string.Create(CultureInfo.InvariantCulture, $"{_list.Drawn} meshes drawn, {_list.Culled} out of view; clicked: {_picked}"),
+            "Enter or Switch to change; drag to turn, scroll to zoom, click to pick",
         ];
-        var box = new Rectangle(viewport.X + pad, viewport.Y + pad, fonts.Px(640), (int)(fonts.Small.LineHeight * 3) + pad);
+        var box = new Rectangle(viewport.X + pad, viewport.Y + pad, fonts.Px(640), (int)(fonts.Small.LineHeight * lines.Length) + pad);
         batch.FillRectangle(box, new Color(0, 0, 0, 160));
         for (var i = 0; i < lines.Length; i++)
         {
@@ -150,6 +206,39 @@ internal sealed class ThreeDScene : Scene
     {
         _view?.Dispose();
         base.Dispose(disposing);
+    }
+
+    /// <summary>Drags turn the camera, the wheel zooms, and a click names what is under it.</summary>
+    private void Steer(InputState input)
+    {
+        if (input.Cursor.IsDown)
+        {
+            if (_dragFrom is { } from)
+            {
+                var moved = input.Cursor.Position - from;
+                _orbit.Rotate(-moved.X * 0.01f, moved.Y * 0.01f);
+            }
+
+            _dragFrom = input.Cursor.Position;
+        }
+        else
+        {
+            _dragFrom = null;
+        }
+
+        if (input.Wheel != 0)
+        {
+            _orbit.Zoom(MathF.Pow(0.9f, input.Wheel));
+        }
+
+        if (input.Tap is { } tap && _picture.Contains(tap) && _view is not null)
+        {
+            // From the screen to the picture, which may be smaller and scaled up.
+            var size = new Numerics.Vector2(_view.Size.X, _view.Size.Y);
+            var point = new Numerics.Vector2((tap.X - _picture.X) / (float)_picture.Width * size.X, (tap.Y - _picture.Y) / (float)_picture.Height * size.Y);
+            var hit = _world.Pick(_camera.RayThrough(point, size));
+            _picked = hit?.Node.Name ?? "nothing";
+        }
     }
 
     private void Switch()
