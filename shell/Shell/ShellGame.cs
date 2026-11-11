@@ -35,6 +35,7 @@ internal sealed class ShellGame : JentlGame
     private int _settledFrames;
     private Fonts? _fonts;
     private SoundPlayer? _sounds;
+    private MusicLibrary? _music;
     private GameContext? _context;
 
     /// <param name="store">Where to keep progress and settings; null keeps them in memory only.</param>
@@ -94,8 +95,8 @@ internal sealed class ShellGame : JentlGame
         var controls = SavedFile<ActionMap<GameAction>>.Load(store, "controls.json", Controls.Parse, c => c.Save(), Controls.Default.Copy);
         Controls.Follow(controls.Value);
         var context = _context = new GameContext(_app, _options, _fonts, controls, _sounds, settings, SetFullscreen, _platform, Assets, store);
-        var music = context.Add(new MusicLibrary(store, _sounds, _fonts));
-        Scenes.Overlay = music.DrawNotice;
+        _music = context.Add(new MusicLibrary(store, _sounds, _fonts));
+        Scenes.Overlay = _music.DrawNotice;
         _app.Load(context, GraphicsDevice);
         Scenes.Reset(_app.Start(context));
     }
@@ -133,6 +134,7 @@ internal sealed class ShellGame : JentlGame
             Scenes.Debug.TextSize = MathF.Max(13, 17 * _fonts.Scale);
         }
         _sounds?.Update(gameTime.ElapsedGameTime);
+        _music?.Update();
         base.Update(gameTime);
     }
 

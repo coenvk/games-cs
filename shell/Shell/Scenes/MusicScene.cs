@@ -38,10 +38,25 @@ internal sealed class MusicScene : PanelScene
         _ => T("in Bricks"),
     };
 
+    private static string ModeLabel(MusicMode mode) => mode switch
+    {
+        MusicMode.Loop => T("Mode: loop the chosen song"),
+        MusicMode.Shuffle => T("Mode: shuffle"),
+        _ => T("Mode: by place"),
+    };
+
     private Menu Build(int selected)
     {
         var music = Context.Music;
-        List<MenuItem> items = [];
+        List<MenuItem> items =
+        [
+            new(ModeLabel(music.Mode), () =>
+            {
+                music.Mode = (MusicMode)(((int)music.Mode + 1) % 3);
+                _hint = null;
+                Menu = Build(Menu.Selected);
+            }),
+        ];
         foreach (var track in Soundtrack.Tracks)
         {
             var known = music.IsUnlocked(track);
@@ -50,7 +65,7 @@ internal sealed class MusicScene : PanelScene
                 if (music.IsUnlocked(track))
                 {
                     _hint = null;
-                    music.Play(track);
+                    music.Choose(track);
                 }
                 else
                 {
@@ -59,7 +74,8 @@ internal sealed class MusicScene : PanelScene
                 }
 
                 Menu = Build(Menu.Selected);
-            }));
+            })
+            { Dimmed = !known });
         }
 
         items.Add(new MenuItem(T("Back"), () => Scenes.Pop()));

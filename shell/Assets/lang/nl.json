@@ -766,5 +766,8 @@
   "in the puzzles": "in de puzzels",
   "in the word games": "in de woordspellen",
   "on the title screens": "op de titelschermen",
-  "{0} of {1} tracks unlocked": "{0} van {1} nummers vrijgespeeld"
+  "{0} of {1} tracks unlocked": "{0} van {1} nummers vrijgespeeld",
+  "Mode: by place": "Modus: per plek",
+  "Mode: loop the chosen song": "Modus: gekozen nummer herhalen",
+  "Mode: shuffle": "Modus: willekeurig"
 }

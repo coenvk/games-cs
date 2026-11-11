@@ -26,10 +26,6 @@ internal static class Sound
 /// </summary>
 internal static class GameAudio
 {
-    // The chiptune voices the effects are made of.
-    private static readonly Instrument Lead = new(Wave.Pulse, Volume: 0.16f, Decay: 0.15f, Sustain: 0.5f, Release: 0.12f, Vibrato: 0.08f);
-    private static readonly Instrument Bass = new(Wave.Triangle, Volume: 0.45f, Decay: 0.2f, Sustain: 0.6f, Release: 0.06f);
-
     /// <summary>Adds every track and effect to <paramref name="sounds"/>; tracks are rendered when first played.</summary>
     public static void Register(SoundPlayer sounds)
     {
@@ -135,11 +131,19 @@ internal static class GameAudio
         // Picking something up: a rising coin blip.
         yield return (Sound.Pickup, new Tune(900, new Voice(blip, "E6 B6 -")));
 
-        // Levelling up, cracking a lock: a quick arpeggio.
-        yield return (Sound.LevelUp, new Tune(720, new Voice(blip, "C5 E5 G5 C6 - -")));
+        // Levelling up, cracking a lock: a harp running up, a celesta sparkling on top.
+        yield return (Sound.LevelUp, new Tune(
+            720,
+            new Voice(Instruments.Harp, "C5 E5 G5 C6 - - - -"),
+            new Voice(Instruments.Celesta with { Volume = 0.2f }, ". . . C6 - - - -")) { Reverb = 0.2f });
 
-        // Winning a game or a hand: a little fanfare.
-        yield return (Sound.Fanfare, new Tune(360, new Voice(Lead with { Volume = 0.3f }, "G4 C5 E5 G5 - E5 G5 - - -"), new Voice(Bass, "C3 - - - - C3 - - - -")));
+        // Winning a game or a hand: a fanfare, as a level gained: trumpet and horn over a harp and the timpani.
+        yield return (Sound.Fanfare, new Tune(
+            360,
+            new Voice(Instruments.Trumpet with { Volume = 0.26f }, "G4 C5 E5 G5 - E5 G5 - - - - -"),
+            new Voice(Instruments.Horn with { Volume = 0.2f }, "E4 G4 C5 E5 - C5 E5 - - - - -"),
+            new Voice(Instruments.Harp, "C4 E4 G4 C5 E5 G5 C6 . . . . ."),
+            new Voice(Instruments.Timpani, "C2 . . . . . C2 . . . . .")) { Reverb = 0.25f });
 
         // Chips on the poker table: two quick clicks.
         yield return (Sound.Chips, new Tune(900, new Voice(new Instrument(Wave.Noise, Volume: 0.2f, Decay: 0.015f, Sustain: 0, Release: 0.01f), "x . x")));
@@ -153,8 +157,12 @@ internal static class GameAudio
         // Burning feet: a hiss of noise.
         yield return (Sound.Sizzle, new Tune(240, new Voice(new Instrument(Wave.Noise, Volume: 0.16f, Attack: 0.01f, Decay: 0.3f, Sustain: 0, Release: 0.1f), "x - -")));
 
-        // Something bad: losing a game, falling in the cellar.
-        yield return (Sound.Lose, new Tune(200, new Voice(Lead with { Volume = 0.25f, Slide = -1 }, "E4 - D4 - C4 - - -")));
+        // Something bad: losing a game, falling in the cellar: an oboe sinking over the cellos and a soft drum.
+        yield return (Sound.Lose, new Tune(
+            200,
+            new Voice(Instruments.Oboe with { Volume = 0.3f }, "E4 - D4 - C4 - - -"),
+            new Voice(Instruments.Cello, "A2 - G2 - F2 - - -"),
+            new Voice(Instruments.Timpani with { Volume = 0.4f }, "A1 . . . . . . .")) { Reverb = 0.3f });
     }
 
     private static string Twice(string steps) => $"{steps} | {steps}";
