@@ -23,6 +23,10 @@ internal sealed class LabApp : IGameApp
 
     public Scene MainMenu(GameContext context) => new TitleScene(
         context,
-        title => [new("3D: software and GPU", () => title.Open(new ThreeDScene(context)))],
+        title =>
+        [
+            new("3D: software and GPU", () => title.Open(new ThreeDScene(context))),
+            new("Traffic", () => title.Open(new TrafficScene(context))),
+        ],
         () => "Engine demos");
 }
