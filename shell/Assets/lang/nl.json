@@ -714,5 +714,20 @@
   "{0}: Uno!": "{0}: Uno!",
   "{0}: {1}": "{0}: {1}",
   "{1} draws a card": "{1} pakt een kaart",
-  "{1} draws {0} cards": "{1} pakt {0} kaarten"
+  "{1} draws {0} cards": "{1} pakt {0} kaarten",
+  "Each game here is a ruleset file read by the card kit": "Elk spel hier is een regelbestand dat de kaartenkit leest",
+  "From a ruleset": "Uit een regelbestand",
+  "Keep it": "Houden",
+  "Name a suit": "Kies een kleur",
+  "Pass": "Passen",
+  "Suit: {0}": "Kleur: {0}",
+  "That doesn't go on {0}": "Die past niet op {0}",
+  "Your turn": "Jouw beurt",
+  "{0} drew": "{0} pakte een kaart",
+  "{0} named {1}": "{0} koos {1}",
+  "{0} passed": "{0} paste",
+  "{0} played {1}": "{0} speelde {1}",
+  "{0} won, scoring {1}": "{0} won, met {1} punten",
+  "{0}'s turn": "{0} is aan de beurt",
+  "Tap a card to play it, or the stock to draw": "Tik op een kaart om hem te spelen, of op de stapel om te pakken"
 }

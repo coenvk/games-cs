@@ -37,6 +37,13 @@ internal sealed class SolitaireApp : IGameApp
             new("Spider", () => title.Open(new SpiderSuitsScene(context), fade: false)),
             new("TriPeaks", () => title.Open(new TriPeaksScene(context))),
             new("Yukon", () => title.Open(new YukonScene(context))),
+            new(T("From a ruleset"), () => title.Open(new RulesetsScene(context, solitaire: true, ruleset => new RulesetSolitaireScene(context, ruleset)), fade: false)),
         ],
         () => T("Nine solitaire games"));
+
+    // A ruleset from the command line opens over the menu.
+    public IReadOnlyList<Scene> Start(GameContext context) =>
+        RulesetsScene.FromOptions(context) is { IsSolitaire: true } ruleset
+            ? [MainMenu(context), new RulesetSolitaireScene(context, ruleset)]
+            : [MainMenu(context)];
 }

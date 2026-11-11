@@ -16,6 +16,7 @@ using Games;
 //   --debug true         start with the debug overlay (F3) showing
 //   --server <url>       the game server for online play (default ws://localhost:5080/play, or JENTL_SERVER)
 //   --watch <folder>     reload assets from this folder as they change: apps/<App> for the game's, shell for shared ones
+//   --ruleset <file>     play the card game this ruleset (JSON) describes: solitaires in Solitaire, games for players in Card Table
 var options = new GameOptions();
 for (var i = 0; i + 1 < args.Length; i += 2)
 {
@@ -45,6 +46,9 @@ for (var i = 0; i + 1 < args.Length; i += 2)
             break;
         case "--watch":
             options = options with { Watch = args[i + 1] };
+            break;
+        case "--ruleset":
+            options = options with { Ruleset = File.ReadAllText(args[i + 1]) };
             break;
         case "--server":
             options = options with { Server = new Uri(args[i + 1]) };

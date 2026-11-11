@@ -246,7 +246,7 @@ internal abstract class CardGameScene : Scene
     }
 
     /// <summary>"ace of spades", in the player's language.</summary>
-    protected static string CardName(Card card) => T(
+    protected static string CardName(Card card) => !card.IsStandard ? card.Face.Code : T(
         "{0} of {1}",
         card.Rank switch
         {
