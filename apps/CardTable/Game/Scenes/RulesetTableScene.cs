@@ -150,6 +150,12 @@ internal sealed class RulesetTableScene : Scene
             : turn.Has("drew") ? T("{0} drew", who)
             : turn.Has("pass") ? T("{0} passed", who)
             : _message;
+        // What the ruleset's script said, after what happened.
+        foreach (var said in turn.Tags.Where(t => t.StartsWith("say:", StringComparison.Ordinal)))
+        {
+            _message += " · " + said[4..];
+        }
+
         if (turn.Has("win"))
         {
             _message = T("{0} won, scoring {1}", who, _game.Score(seat));
