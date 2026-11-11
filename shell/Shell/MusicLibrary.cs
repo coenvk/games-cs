@@ -121,7 +121,8 @@ internal sealed class MusicLibrary
     /// <summary>Moves on to the next song when the one playing has been heard through; call once a frame.</summary>
     public void Update()
     {
-        if (_song is { } song && Mode != MusicMode.Loop && _songClock.Elapsed >= Length(song))
+        // Only while the song is still what plays: a screen may have stopped it or played something of its own.
+        if (_song is { } song && Mode != MusicMode.Loop && _sounds.CurrentMusic == song.Id && _songClock.Elapsed >= Length(song))
         {
             PlayNext();
         }

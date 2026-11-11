@@ -49,7 +49,7 @@ one if there is one, otherwise from GitHub at the version in `dependencies.props
 ```bash
 build/jentl.sh
 dotnet test Games.slnx
-dotnet run --project apps/Sokoban/Desktop        # or Solitaire, CardTable, Poker, Mossbrook, CodeLock, Bricks, Paddock, HotPan, ConnectWord, AssociateWords
+dotnet run --project apps/Sokoban/Desktop        # or Solitaire, CardTable, Poker, Mossbrook, CodeLock, Bricks, Paddock, HotPan, ConnectWord, AssociateWords, Composer
 dotnet run --project apps/Sokoban/Web            # in the browser
 ```
 
@@ -78,7 +78,7 @@ dotnet run --project apps/Sokoban/Desktop -- --keys "Down Enter Wait" --screensh
 
 ## Progress
 
-Each game keeps its files in a folder of its own (`Sokoban`, `Solitaire`, `CardTable`, `Poker`, `Mossbrook`, `CodeLock`, `Bricks`, `Paddock`, `HotPan`, `ConnectWord`, `AssociateWords`); for Sokoban, progress (best moves, pushes, time and the fewest-moves solution per level) is saved as JSON after every improvement:
+Each game keeps its files in a folder of its own (`Sokoban`, `Solitaire`, `CardTable`, `Poker`, `Mossbrook`, `CodeLock`, `Bricks`, `Paddock`, `HotPan`, `ConnectWord`, `AssociateWords`, `Composer`); for Sokoban, progress (best moves, pushes, time and the fewest-moves solution per level) is saved as JSON after every improvement:
 
 - macOS: `~/Library/Application Support/Sokoban/progress.json`
 - Windows: `%LOCALAPPDATA%\Sokoban\progress.json`

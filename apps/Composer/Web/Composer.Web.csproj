@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <!-- Composer in the browser. -->
+
+  <PropertyGroup>
+    <AppName>Composer.Game</AppName>
+    <AppTitle>Composer</AppTitle>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\shell\Web.props" />
+
+</Project>

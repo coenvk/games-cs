@@ -24,6 +24,8 @@
     <Project Path="apps/ConnectWord/Web/ConnectWord.Web.csproj" />
     <Project Path="apps/HotPan/Desktop/HotPan.Desktop.csproj" />
     <Project Path="apps/HotPan/Web/HotPan.Web.csproj" />
+    <Project Path="apps/Composer/Desktop/Composer.Desktop.csproj" />
+    <Project Path="apps/Composer/Web/Composer.Web.csproj" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Bricks/Bricks.csproj" />
@@ -55,6 +57,7 @@
     <Project Path="tests/AssociateWords.Tests/AssociateWords.Tests.csproj" />
     <Project Path="tests/ConnectWord.Tests/ConnectWord.Tests.csproj" />
     <Project Path="tests/HotPan.Tests/HotPan.Tests.csproj" />
+    <Project Path="tests/Composer.Tests/Composer.Tests.csproj" />
     <Project Path="tests/CodeLock.Tests/CodeLock.Tests.csproj" />
     <Project Path="tests/Easthaven.Tests/Easthaven.Tests.csproj" />
     <Project Path="tests/FortyThieves.Tests/FortyThieves.Tests.csproj" />

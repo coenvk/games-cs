@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Composer on the desktop. -->
+
+  <PropertyGroup>
+    <AppName>Composer.Game</AppName>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\shell\Desktop.props" />
+
+</Project>

@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The Composer's editing model, compiled from the app's own files (it needs Jentl.Core, which the app brings). -->
+
+  <Import Project="..\..\test.props" />
+
+  <ItemGroup>
+    <PackageReference Include="Jentl.Core" Version="$(JentlVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\apps\Composer\Game\Model\*.cs" LinkBase="Model" />
+  </ItemGroup>
+
+</Project>

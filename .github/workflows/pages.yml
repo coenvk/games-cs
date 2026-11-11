@@ -65,6 +65,7 @@ jobs:
           publish CodeLock code-lock
           publish Bricks bricks
           publish HotPan hot-pan
+          publish Composer composer
           publish ConnectWord connect-word
           publish AssociateWords associate-words
           publish Paddock paddock
