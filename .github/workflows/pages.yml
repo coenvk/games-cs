@@ -64,6 +64,7 @@ jobs:
           publish Mossbrook mossbrook
           publish CodeLock code-lock
           publish Bricks bricks
+          publish HotPan hot-pan
           publish Paddock paddock
 
       # Without this, Pages runs Jekyll, which drops the _framework and _content folders.

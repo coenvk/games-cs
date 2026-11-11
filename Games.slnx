@@ -18,9 +18,12 @@
     <Project Path="apps/CodeLock/Web/CodeLock.Web.csproj" />
     <Project Path="apps/Bricks/Desktop/Bricks.Desktop.csproj" />
     <Project Path="apps/Bricks/Web/Bricks.Web.csproj" />
+    <Project Path="apps/HotPan/Desktop/HotPan.Desktop.csproj" />
+    <Project Path="apps/HotPan/Web/HotPan.Web.csproj" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Bricks/Bricks.csproj" />
+    <Project Path="src/HotPan/HotPan.csproj" />
     <Project Path="src/CodeLock/CodeLock.csproj" />
     <Project Path="src/Easthaven/Easthaven.csproj" />
     <Project Path="src/FortyThieves/FortyThieves.csproj" />
@@ -43,6 +46,7 @@
   <Folder Name="/tests/">
     <Project Path="tests/Apps.Tests/Apps.Tests.csproj" />
     <Project Path="tests/Bricks.Tests/Bricks.Tests.csproj" />
+    <Project Path="tests/HotPan.Tests/HotPan.Tests.csproj" />
     <Project Path="tests/CodeLock.Tests/CodeLock.Tests.csproj" />
     <Project Path="tests/Easthaven.Tests/Easthaven.Tests.csproj" />
     <Project Path="tests/FortyThieves.Tests/FortyThieves.Tests.csproj" />

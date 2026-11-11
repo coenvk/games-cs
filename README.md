@@ -15,6 +15,7 @@ the engine now lives in its own repository and comes in here as packages.
 | **Mossbrook** | A small turn-based adventure: a village, a cellar and a lost amulet |
 | **Code Lock** | Mastermind on a combination lock |
 | **Bricks** | A brick breaker with power-ups |
+| **Hot Pan** | Stand in a frying pan and jump onto chicken that's still cool, before your feet burn |
 | **Paddock** | Collect invented cars, race hands of five on tracks in all weathers, upgrade and fuse them, win rare ones in events |
 
 Each is its own app, on the desktop and in the browser (each in its own folder of the site above).
@@ -30,7 +31,7 @@ Each is its own app, on the desktop and in the browser (each in its own folder o
 | `src/Sokoban.Model`, `src/Sokoban.Solver` | Sokoban's rules on the puzzle kit, and its solver and level generator |
 | `src/Klondike` ... `src/Yukon` | The solitaire games' rules on the card kit |
 | `src/Uno`, `src/Poker` | Uno and Texas Hold'em (rules, bots, their online rooms) |
-| `src/Mossbrook`, `src/CodeLock`, `src/Bricks` | The adventure on the RPG kit, the code lock and its solver, and the brick breaker on the ECS and physics |
+| `src/Mossbrook`, `src/CodeLock`, `src/Bricks`, `src/HotPan` | The adventure on the RPG kit, the code lock and its solver, the brick breaker on the ECS and physics, and Hot Pan's pan |
 | `src/Paddock` | Paddock's cars, race simulation, upgrades and fusing, matches, events, campaign and economy |
 | `src/GameServer` | The online game server (rooms over WebSockets, hosting Uno and Hold'em), with a Dockerfile |
 | `tests/*` | xUnit tests for every game library and the server; `tests/Apps.Tests` checks the apps' translations and assets |
@@ -46,7 +47,7 @@ one if there is one, otherwise from GitHub at the version in `dependencies.props
 ```bash
 build/jentl.sh
 dotnet test Games.slnx
-dotnet run --project apps/Sokoban/Desktop        # or Solitaire, CardTable, Poker, Mossbrook, CodeLock, Bricks, Paddock
+dotnet run --project apps/Sokoban/Desktop        # or Solitaire, CardTable, Poker, Mossbrook, CodeLock, Bricks, Paddock, HotPan
 dotnet run --project apps/Sokoban/Web            # in the browser
 ```
 
@@ -75,7 +76,7 @@ dotnet run --project apps/Sokoban/Desktop -- --keys "Down Enter Wait" --screensh
 
 ## Progress
 
-Each game keeps its files in a folder of its own (`Sokoban`, `Solitaire`, `CardTable`, `Poker`, `Mossbrook`, `CodeLock`, `Bricks`, `Paddock`); for Sokoban, progress (best moves, pushes, time and the fewest-moves solution per level) is saved as JSON after every improvement:
+Each game keeps its files in a folder of its own (`Sokoban`, `Solitaire`, `CardTable`, `Poker`, `Mossbrook`, `CodeLock`, `Bricks`, `Paddock`, `HotPan`); for Sokoban, progress (best moves, pushes, time and the fewest-moves solution per level) is saved as JSON after every improvement:
 
 - macOS: `~/Library/Application Support/Sokoban/progress.json`
 - Windows: `%LOCALAPPDATA%\Sokoban\progress.json`
@@ -278,6 +279,16 @@ and the debug overlay (F3) outlines every physics body.
 online. Every finished game's score goes on both, under a made-up name such as "Swift Otter 27" (Options >
 Leaderboard name picks another; there is no typing, and nobody's own words reach a public board). Online needs the
 game server, as Uno does; the shell's `ScoreBoard` and `LeaderboardScene` work for any game.
+
+## Hot Pan
+
+**Hot Pan** puts you in a frying pan. Pieces of chicken drop in and warm up from the pan, and the pan itself gets
+hotter as the game goes on. Stand on the bare pan, or on a piece that has got too hot, and your feet burn away your
+health; jump onto the chicken that is still cool. The colour tells: raw pink and pale are safe, golden (steaming,
+with an orange line along the top) burns, and black pieces are flicked out of the pan. Nuggets heat through fastest,
+breasts slowest. Ten points a second survived, on the same leaderboards as Bricks. Walk with the arrow keys, A and D
+or the gamepad and jump with Space, Up or A; on a touch screen hold to walk towards your finger and tap or swipe up to
+jump. A short tap jumps lower than a held one. `--deal` picks the seed: the same seed drops the same chicken.
 
 ## Uno
 

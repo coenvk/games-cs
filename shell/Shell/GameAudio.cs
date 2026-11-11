@@ -12,6 +12,7 @@ internal static class Music
     public const string Village = "music-village";
     public const string Cellar = "music-cellar";
     public const string Race = "music-race";
+    public const string Kitchen = "music-kitchen";
 }
 
 /// <summary>
@@ -104,6 +105,18 @@ internal static class GameAudio
             new Voice(Kick, Repeat("C2 . . C2 C2 . . . ", 16)),
             new Voice(snare, Repeat(". . x . . . x . ", 16)),
             new Voice(Hat, Repeat("x x x x x x x x ", 16))));
+
+        // Hot Pan: a busy, bouncy kitchen in G, as if a cooking show were running late.
+        yield return (Music.Kitchen, new Tune(
+            138,
+            new Voice(Lead, "G5 . D5 G5 . B5 A5 G5 | E5 . C5 E5 . G5 F#5 E5 | D5 . A4 D5 . F#5 E5 D5 | G5 - . . D5 . . . | "
+                + "C6 . G5 C6 . E6 D6 C6 | B5 . G5 B5 . D6 C6 B5 | A5 . F#5 A5 . C6 B5 A5 | G5 - - - . . . ."),
+            new Voice(Arp, ". B3 . B3 . B3 . B3 | . E4 . E4 . E4 . E4 | . F#4 . F#4 . F#4 . F#4 | . B3 . B3 . B3 . B3 | "
+                + ". E4 . E4 . E4 . E4 | . B3 . B3 . B3 . B3 | . F#4 . F#4 . F#4 . F#4 | . B3 . B3 . . . ."),
+            new Voice(Bass, "G2 . D3 . G2 . D3 . | C3 . G2 . C3 . G2 . | D3 . A2 . D3 . A2 . | G2 . D3 . G2 . F#2 . | "
+                + "C3 . G3 . C3 . G3 . | G2 . D3 . G2 . D3 . | D3 . A2 . D3 . F#2 . | G2 . D3 . G2 . . ."),
+            new Voice(Kick, Repeat("C2 . . . C2 . . . ", 8)),
+            new Voice(Hat, Repeat(". x . x . x . x ", 8))));
     }
 
     public static IEnumerable<(string Name, Tune Tune)> Effects()
@@ -134,6 +147,12 @@ internal static class GameAudio
 
         // Turning a code lock wheel.
         yield return (Sound.Click, new Tune(900, new Voice(blip with { Volume = 0.12f, Decay = 0.02f, Sustain = 0 }, "A6")));
+
+        // A jump: a quick rising blip.
+        yield return (Sound.Jump, new Tune(600, new Voice(new Instrument(Wave.Square, Volume: 0.13f, Decay: 0.09f, Sustain: 0, Release: 0.02f, Slide: 12), "C5")));
+
+        // Burning feet: a hiss of noise.
+        yield return (Sound.Sizzle, new Tune(240, new Voice(new Instrument(Wave.Noise, Volume: 0.16f, Attack: 0.01f, Decay: 0.3f, Sustain: 0, Release: 0.1f), "x - -")));
 
         // Something bad: losing a game, falling in the cellar.
         yield return (Sound.Lose, new Tune(200, new Voice(Lead with { Volume = 0.25f, Slide = -1 }, "E4 - D4 - C4 - - -")));

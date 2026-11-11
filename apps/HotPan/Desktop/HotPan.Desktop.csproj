@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- HotPan on the desktop. -->
+
+  <PropertyGroup>
+    <AppName>HotPan.Game</AppName>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\shell\Desktop.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\HotPan\HotPan.csproj" />
+  </ItemGroup>
+
+</Project>

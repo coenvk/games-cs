@@ -22,6 +22,8 @@ internal static class Sound
     public const string Chips = "chips";
     public const string Click = "click";
     public const string Lose = "lose";
+    public const string Jump = "jump";
+    public const string Sizzle = "sizzle";
 }
 
 /// <summary>What the platform supports; a browser tab cannot quit or switch to fullscreen by itself.</summary>

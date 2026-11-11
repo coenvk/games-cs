@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Hot Pan's rules: the pan, the chicken heating in it and the cook jumping across; plain C#, framework-free. -->
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="HotPan.Tests" />
+  </ItemGroup>
+
+</Project>

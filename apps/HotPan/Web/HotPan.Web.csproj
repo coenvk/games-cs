@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <!-- HotPan in the browser. -->
+
+  <PropertyGroup>
+    <AppName>HotPan.Game</AppName>
+    <AppTitle>Hot Pan</AppTitle>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\shell\Web.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\HotPan\HotPan.csproj" />
+  </ItemGroup>
+
+</Project>

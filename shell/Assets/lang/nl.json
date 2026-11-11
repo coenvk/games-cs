@@ -729,5 +729,11 @@
   "{0} played {1}": "{0} speelde {1}",
   "{0} won, scoring {1}": "{0} won, met {1} punten",
   "{0}'s turn": "{0} is aan de beurt",
-  "Tap a card to play it, or the stock to draw": "Tik op een kaart om hem te spelen, of op de stapel om te pakken"
+  "Tap a card to play it, or the stock to draw": "Tik op een kaart om hem te spelen, of op de stapel om te pakken",
+  "Arrows or A/D to walk, Space or Up to jump; or hold to walk, tap to jump": "Pijlen of A/D om te lopen, spatie of omhoog om te springen; of vasthouden om te lopen, tikken om te springen",
+  "Jump onto chicken that's still cool: the pan burns your feet": "Spring op kip die nog koel is: de pan verbrandt je voeten",
+  "Keep your feet off the pan": "Hou je voeten van de pan",
+  "The pan reached {0}°C": "De pan werd {0}°C",
+  "You lasted {0}": "Je hield het {0} vol",
+  "Your feet are done": "Je voeten zijn gaar"
 }
