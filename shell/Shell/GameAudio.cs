@@ -26,14 +26,9 @@ internal static class Sound
 /// </summary>
 internal static class GameAudio
 {
-    // Instruments shared by the tunes.
+    // The chiptune voices the effects are made of.
     private static readonly Instrument Lead = new(Wave.Pulse, Volume: 0.16f, Decay: 0.15f, Sustain: 0.5f, Release: 0.12f, Vibrato: 0.08f);
-    private static readonly Instrument Flute = new(Wave.Sine, Volume: 0.3f, Attack: 0.03f, Decay: 0.2f, Sustain: 0.7f, Release: 0.2f, Vibrato: 0.12f);
     private static readonly Instrument Bass = new(Wave.Triangle, Volume: 0.45f, Decay: 0.2f, Sustain: 0.6f, Release: 0.06f);
-    private static readonly Instrument Arp = new(Wave.Square, Volume: 0.07f, Decay: 0.08f, Sustain: 0.3f, Release: 0.05f);
-    private static readonly Instrument Pad = new(Wave.Sine, Volume: 0.16f, Attack: 0.25f, Decay: 0.3f, Sustain: 0.8f, Release: 0.6f);
-    private static readonly Instrument Hat = new(Wave.Noise, Volume: 0.06f, Decay: 0.03f, Sustain: 0, Release: 0.01f);
-    private static readonly Instrument Kick = new(Wave.Sine, Volume: 0.5f, Decay: 0.12f, Sustain: 0, Release: 0.02f, Slide: -24);
 
     /// <summary>Adds every track and effect to <paramref name="sounds"/>; tracks are rendered when first played.</summary>
     public static void Register(SoundPlayer sounds)
@@ -41,7 +36,7 @@ internal static class GameAudio
         ArgumentNullException.ThrowIfNull(sounds);
         foreach (var track in Soundtrack.Tracks)
         {
-            sounds.AddMusic(track.Id, () => Synth.Render(track.Tune(), loop: true));
+            sounds.AddMusic(track.Id, () => Synth.Normalise(Synth.Render(track.Tune(), loop: true)));
         }
 
         foreach (var (name, tune) in Effects())
@@ -55,73 +50,72 @@ internal static class GameAudio
         // The main menu: bright and simple, in C major.
         yield return (Music.Menu, new Tune(
             100,
-            new Voice(Lead, Twice("E5 - G5 - C6 - B5 A5 | G5 - E5 - D5 - C5 - | F5 - A5 - G5 - E5 D5 | C5 - - - . . . .")),
-            new Voice(Arp, Twice("C4 E4 G4 E4 C4 E4 G4 E4 | A3 C4 E4 C4 A3 C4 E4 C4 | F3 A3 C4 A3 G3 B3 D4 B3 | C4 E4 G4 E4 C4 E4 G4 E4")),
-            new Voice(Bass, Twice("C3 - - - G2 - - - | A2 - - - E2 - - - | F2 - - - G2 - - - | C3 - - - G2 - - -"))));
+            new Voice(Instruments.Flute, Twice("E5 - G5 - C6 - B5 A5 | G5 - E5 - D5 - C5 - | F5 - A5 - G5 - E5 D5 | C5 - - - . . . .")),
+            new Voice(Instruments.Harp with { Volume = 0.3f }, Twice("C4 E4 G4 E4 C4 E4 G4 E4 | A3 C4 E4 C4 A3 C4 E4 C4 | F3 A3 C4 A3 G3 B3 D4 B3 | C4 E4 G4 E4 C4 E4 G4 E4")),
+            new Voice(Instruments.Cello, Twice("C3 - - - G2 - - - | A2 - - - E2 - - - | F2 - - - G2 - - - | C3 - - - G2 - - -"))));
 
         // Sokoban and the code lock: calm, thinking music in A minor.
         yield return (Music.Puzzle, new Tune(
             84,
-            new Voice(Flute, ". . . . . . . . | . . . . . . . . | . . . . . . . . | . . . . . . . . | E5 - - D5 C5 - - . | A4 - - - . . . . | G4 - C5 - E5 - D5 - | B4 - - - . . . ."),
-            new Voice(Arp, Twice("A3 C4 E4 C4 A3 C4 E4 C4 | F3 A3 C4 A3 F3 A3 C4 A3 | C4 E4 G4 E4 C4 E4 G4 E4 | G3 B3 D4 B3 G3 B3 D4 B3")),
-            new Voice(Pad, Twice("A2 - - - - - - - | F2 - - - - - - - | C3 - - - - - - - | G2 - - - - - - -"))));
+            new Voice(Instruments.Flute, ". . . . . . . . | . . . . . . . . | . . . . . . . . | . . . . . . . . | E5 - - D5 C5 - - . | A4 - - - . . . . | G4 - C5 - E5 - D5 - | B4 - - - . . . ."),
+            new Voice(Instruments.Harp with { Volume = 0.3f }, Twice("A3 C4 E4 C4 A3 C4 E4 C4 | F3 A3 C4 A3 F3 A3 C4 A3 | C4 E4 G4 E4 C4 E4 G4 E4 | G3 B3 D4 B3 G3 B3 D4 B3")),
+            new Voice(Instruments.Strings with { Volume = 0.09f }, Twice("A2 - - - - - - - | F2 - - - - - - - | C3 - - - - - - - | G2 - - - - - - -"))));
 
         // Solitaire: an easy lounge feel in F.
         yield return (Music.Cards, new Tune(
             96,
-            new Voice(Lead, ". . . . . . . . | . . . . . . . . | . . . . . . . . | . . . . . . . . | C5 . A4 . C5 D5 . . | F5 - E5 D5 C5 . . . | D5 . Bb4 . D5 E5 . . | G5 - F5 E5 C5 . . ."),
-            new Voice(Pad, Twice("A3 - - - - - - - | F3 - - - - - - - | F3 - - - - - - - | E3 - - - - - - -")),
-            new Voice(Pad, Twice("E4 - - - - - - - | C4 - - - - - - - | D4 - - - - - - - | Bb3 - - - - - - -")),
-            new Voice(Bass, Twice("F2 . C3 . F2 . A2 . | D2 . A2 . D2 . F2 . | G2 . D3 . G2 . Bb2 . | C3 . G2 . C3 . E3 .")),
-            new Voice(Hat, Repeat(". . x . . . x . ", 8))));
+            new Voice(Instruments.Clarinet, ". . . . . . . . | . . . . . . . . | . . . . . . . . | . . . . . . . . | C5 . A4 . C5 D5 . . | F5 - E5 D5 C5 . . . | D5 . Bb4 . D5 E5 . . | G5 - F5 E5 C5 . . ."),
+            new Voice(Instruments.Strings with { Volume = 0.07f }, Twice("A3 - - - - - - - | F3 - - - - - - - | F3 - - - - - - - | E3 - - - - - - -")),
+            new Voice(Instruments.Strings with { Volume = 0.07f }, Twice("E4 - - - - - - - | C4 - - - - - - - | D4 - - - - - - - | Bb3 - - - - - - -")),
+            new Voice(Instruments.UprightBass, Twice("F2 . C3 . F2 . A2 . | D2 . A2 . D2 . F2 . | G2 . D3 . G2 . Bb2 . | C3 . G2 . C3 . E3 .")),
+            new Voice(Instruments.Shaker, Repeat(". . x . . . x . ", 8))));
 
         // Uno and poker: livelier, for playing against people.
         yield return (Music.Table, new Tune(
             112,
-            new Voice(Lead, Twice("G4 - Bb4 C5 - . G4 . | A4 - C5 D5 - . A4 . | G4 - Bb4 C5 D5 C5 Bb4 G4 | B4 - - - . . . .")),
-            new Voice(Bass, Twice("C3 . E3 . G3 . A3 Bb3 | F2 . A2 . C3 . D3 Eb3 | C3 . E3 . G3 . A3 Bb3 | G2 . B2 . D3 . F3 .")),
-            new Voice(Kick, Repeat("C2 . . . C2 . . . ", 8)),
-            new Voice(Hat, Repeat(". x . x . x . x ", 8))));
+            new Voice(Instruments.Violin, Twice("G4 - Bb4 C5 - . G4 . | A4 - C5 D5 - . A4 . | G4 - Bb4 C5 D5 C5 Bb4 G4 | B4 - - - . . . .")),
+            new Voice(Instruments.UprightBass, Twice("C3 . E3 . G3 . A3 Bb3 | F2 . A2 . C3 . D3 Eb3 | C3 . E3 . G3 . A3 Bb3 | G2 . B2 . D3 . F3 .")),
+            new Voice(Instruments.FrameDrum, Repeat("C2 . . . C2 . . . ", 8)),
+            new Voice(Instruments.Shaker, Repeat(". x . x . x . x ", 8))));
 
         // Mossbrook: a folk tune for the village.
         yield return (Music.Village, new Tune(
             120,
-            new Voice(Flute, Twice("G4 A4 B4 D5 - B4 A4 G4 | A4 B4 A4 G4 E4 - D4 - | G4 A4 B4 D5 - E5 D5 B4 | A4 - G4 - G4 - . .")),
-            new Voice(Arp, Twice("B3 - D4 - B3 - D4 - | C4 - E4 - D4 - C4 - | B3 - D4 - C4 - E4 - | C4 - B3 - B3 - . .")),
-            new Voice(Bass, Twice("G2 . D3 . G2 . D3 . | C3 . G2 . D3 . A2 . | G2 . D3 . E3 . B2 . | D3 . D3 . G2 . . ."))));
+            new Voice(Instruments.Recorder, Twice("G4 A4 B4 D5 - B4 A4 G4 | A4 B4 A4 G4 E4 - D4 - | G4 A4 B4 D5 - E5 D5 B4 | A4 - G4 - G4 - . .")),
+            new Voice(Instruments.Lute, Twice("B3 - D4 - B3 - D4 - | C4 - E4 - D4 - C4 - | B3 - D4 - C4 - E4 - | C4 - B3 - B3 - . .")),
+            new Voice(Instruments.UprightBass, Twice("G2 . D3 . G2 . D3 . | C3 . G2 . D3 . A2 . | G2 . D3 . E3 . B2 . | D3 . D3 . G2 . . ."))));
 
         // The old cellar: dark and sparse.
         yield return (Music.Cellar, new Tune(
             70,
-            new Voice(Flute with { Volume = 0.2f }, ". . F4 - E4 . . . | D4 - - - . . . . | . . F4 - G4 . A4 . | E4 - - - . . . . | . . . . . . . . | . . . . . . . . | . . A4 - Bb4 . A4 . | D4 - - - . . . ."),
-            new Voice(Pad with { Volume = 0.22f }, Twice("D2 - - - - - - - | D2 - - - - - - - | Bb1 - - - - - - - | A1 - - - - - - -")),
-            new Voice(Hat with { Volume = 0.04f }, Repeat("x . . . . . . . . . . . . . . . ", 4))));
+            new Voice(Instruments.Oboe with { Volume = 0.2f }, ". . F4 - E4 . . . | D4 - - - . . . . | . . F4 - G4 . A4 . | E4 - - - . . . . | . . . . . . . . | . . . . . . . . | . . A4 - Bb4 . A4 . | D4 - - - . . . ."),
+            new Voice(Instruments.Cello with { Volume = 0.14f, Attack = 0.4f }, Twice("D2 - - - - - - - | D2 - - - - - - - | Bb1 - - - - - - - | A1 - - - - - - -")),
+            new Voice(Instruments.Shaker with { Volume = 0.03f }, Repeat("x . . . . . . . . . . . . . . . ", 4))));
 
-        // Paddock's races: driving rock in E minor, a riff over pumping eighths, then a lift into the chorus.
-        var snare = new Instrument(Wave.Noise, Volume: 0.11f, Decay: 0.09f, Sustain: 0, Release: 0.03f);
+        // Paddock's races: a chase in E minor, brass over pumping cellos and timpani, then a lift into the chorus.
         yield return (Music.Race, new Tune(
             150,
-            new Voice(Lead, "E5 . E5 G5 . E5 D5 . | B4 - - - . . A4 B4 | C5 . C5 E5 . C5 B4 . | D5 - - - F#5 - G5 A5 | "
+            new Voice(Instruments.Brass, "E5 . E5 G5 . E5 D5 . | B4 - - - . . A4 B4 | C5 . C5 E5 . C5 B4 . | D5 - - - F#5 - G5 A5 | "
                 + "B5 - A5 G5 - E5 D5 E5 | G5 - F#5 E5 - D5 B4 - | C5 - E5 G5 - A5 G5 E5 | F#5 - - - D5 - F#5 - | "
                 + "E5 . E5 G5 . E5 D5 . | B4 - - - . . D5 E5 | C5 . C5 E5 . G5 F#5 . | D5 - - - A4 - B4 D5 | "
                 + "E5 - G5 B5 - A5 G5 F#5 | G5 - E5 D5 - B4 A4 B4 | C5 - - E5 - - G5 - | E5 - - - . . . ."),
-            new Voice(Arp, Twice(Twice("E4 G4 B4 G4 E4 G4 B4 G4 | E4 G4 B4 G4 E4 G4 B4 G4 | C4 E4 G4 E4 C4 E4 G4 E4 | D4 F#4 A4 F#4 D4 F#4 A4 F#4"))),
-            new Voice(Bass, Twice(Twice("E2 E2 E3 E2 E2 E2 D3 E2 | E2 E2 E3 E2 G2 G2 A2 B2 | C2 C2 C3 C2 C2 C2 B2 C3 | D2 D2 D3 D2 D2 D2 F#2 A2"))),
-            new Voice(Kick, Repeat("C2 . . C2 C2 . . . ", 16)),
-            new Voice(snare, Repeat(". . x . . . x . ", 16)),
-            new Voice(Hat, Repeat("x x x x x x x x ", 16))));
+            new Voice(Instruments.Harpsichord with { Volume = 0.2f }, Twice(Twice("E4 G4 B4 G4 E4 G4 B4 G4 | E4 G4 B4 G4 E4 G4 B4 G4 | C4 E4 G4 E4 C4 E4 G4 E4 | D4 F#4 A4 F#4 D4 F#4 A4 F#4"))),
+            new Voice(Instruments.Cello with { Attack = 0.02f, Release = 0.08f }, Twice(Twice("E2 E2 E3 E2 E2 E2 D3 E2 | E2 E2 E3 E2 G2 G2 A2 B2 | C2 C2 C3 C2 C2 C2 B2 C3 | D2 D2 D3 D2 D2 D2 F#2 A2"))),
+            new Voice(Instruments.Timpani, Repeat("E2 . . E2 B1 . . . ", 16)),
+            new Voice(Instruments.Snare, Repeat(". . x . . . x . ", 16)),
+            new Voice(Instruments.Shaker, Repeat("x x x x x x x x ", 16))));
 
         // Hot Pan: a busy, bouncy kitchen in G, as if a cooking show were running late.
         yield return (Music.Kitchen, new Tune(
             138,
-            new Voice(Lead, "G5 . D5 G5 . B5 A5 G5 | E5 . C5 E5 . G5 F#5 E5 | D5 . A4 D5 . F#5 E5 D5 | G5 - . . D5 . . . | "
+            new Voice(Instruments.Marimba, "G5 . D5 G5 . B5 A5 G5 | E5 . C5 E5 . G5 F#5 E5 | D5 . A4 D5 . F#5 E5 D5 | G5 - . . D5 . . . | "
                 + "C6 . G5 C6 . E6 D6 C6 | B5 . G5 B5 . D6 C6 B5 | A5 . F#5 A5 . C6 B5 A5 | G5 - - - . . . ."),
-            new Voice(Arp, ". B3 . B3 . B3 . B3 | . E4 . E4 . E4 . E4 | . F#4 . F#4 . F#4 . F#4 | . B3 . B3 . B3 . B3 | "
+            new Voice(Instruments.Pizzicato, ". B3 . B3 . B3 . B3 | . E4 . E4 . E4 . E4 | . F#4 . F#4 . F#4 . F#4 | . B3 . B3 . B3 . B3 | "
                 + ". E4 . E4 . E4 . E4 | . B3 . B3 . B3 . B3 | . F#4 . F#4 . F#4 . F#4 | . B3 . B3 . . . ."),
-            new Voice(Bass, "G2 . D3 . G2 . D3 . | C3 . G2 . C3 . G2 . | D3 . A2 . D3 . A2 . | G2 . D3 . G2 . F#2 . | "
+            new Voice(Instruments.UprightBass, "G2 . D3 . G2 . D3 . | C3 . G2 . C3 . G2 . | D3 . A2 . D3 . A2 . | G2 . D3 . G2 . F#2 . | "
                 + "C3 . G3 . C3 . G3 . | G2 . D3 . G2 . D3 . | D3 . A2 . D3 . F#2 . | G2 . D3 . G2 . . ."),
-            new Voice(Kick, Repeat("C2 . . . C2 . . . ", 8)),
-            new Voice(Hat, Repeat(". x . x . x . x ", 8))));
+            new Voice(Instruments.FrameDrum, Repeat("C2 . . . C2 . . . ", 8)),
+            new Voice(Instruments.Shaker, Repeat(". x . x . x . x ", 8))));
     }
 
     public static IEnumerable<(string Name, Tune Tune)> Effects()
