@@ -121,7 +121,7 @@ internal sealed class UnoScene : Scene
     /// <summary>The table and its connection are this screen's to close.</summary>
     public void Leave() => Navigation.ToMainMenu(Scenes, _context);
 
-    protected override void OnEnter() => _context.Sounds.PlayMusic(Music.Table);
+    protected override void OnEnter() => _context.PlayMood(Music.Table);
 
     public override IEnumerable<string> DebugInfo =>
     [

@@ -138,7 +138,7 @@ internal sealed class WatchScene : Scene
     // The person's turn: the table is waiting for them and the copy agrees it is their move.
     private bool IsPersonsTurn => _person is { IsAsked: true } person && _hand is { IsOver: false } hand && hand.CurrentSeat == person.Seat;
 
-    protected override void OnEnter() => _context.Sounds.PlayMusic(Music.Table);
+    protected override void OnEnter() => _context.PlayMood(Music.Table);
 
     public override void Update(TimeSpan elapsed, InputState input)
     {

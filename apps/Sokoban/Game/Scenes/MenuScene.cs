@@ -87,12 +87,12 @@ internal sealed class MenuScene : Scene
     }
 
     // Progress may have changed while another scene was on top, so the labels are rebuilt.
-    protected override void OnEnter() => _context.Sounds.PlayMusic(Music.Menu);
+    protected override void OnEnter() => _context.PlayMood(Music.Menu);
 
     // Back from a game, the menu's music returns (overlays such as Options keep it going anyway).
     protected override void OnUncovered()
     {
-        _context.Sounds.PlayMusic(Music.Menu);
+        _context.PlayMood(Music.Menu);
         _menu = BuildMenu(_menu.Selected);
     }
 

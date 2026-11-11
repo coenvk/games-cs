@@ -752,5 +752,19 @@
   "Undo the last move": "Laatste zet terugdraaien",
   "{0} moves left": "Nog {0} zetten",
   "{0} of {1} categories complete": "{0} van {1} categorieën compleet",
-  "{0} of {1} categories, {2} moves left": "{0} van {1} categorieën, nog {2} zetten"
+  "{0} of {1} categories, {2} moves left": "{0} van {1} categorieën, nog {2} zetten",
+  "Heard {0}": "Te horen {0}",
+  "Playing: {0}": "Speelt: {0}",
+  "You have unlocked a new music track: {0}": "Je hebt een nieuw muzieknummer vrijgespeeld: {0}",
+  "at the card tables": "aan de kaarttafels",
+  "at the races": "bij de races",
+  "in Bricks": "in Bricks",
+  "in Hot Pan": "in Hot Pan",
+  "in Mossbrook's village": "in het dorp van Mossbrook",
+  "in solitaire": "bij patience",
+  "in the cellar": "in de kelder",
+  "in the puzzles": "in de puzzels",
+  "in the word games": "in de woordspellen",
+  "on the title screens": "op de titelschermen",
+  "{0} of {1} tracks unlocked": "{0} van {1} nummers vrijgespeeld"
 }

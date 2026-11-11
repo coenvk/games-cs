@@ -86,7 +86,7 @@ internal sealed class CodeLockScene : Scene
 
     public void NewLock() => Scenes.Replace(new CodeLockScene(_context, Game.Rules), Navigation.Fade());
 
-    protected override void OnEnter() => _context.Sounds.PlayMusic(Music.Puzzle);
+    protected override void OnEnter() => _context.PlayMood(Music.Puzzle);
 
     public override IEnumerable<string> DebugInfo =>
     [

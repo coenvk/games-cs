@@ -59,7 +59,7 @@ internal sealed class BricksScene : Scene
 
     public void NewGame() => Scenes.Replace(new BricksScene(_context), Navigation.Fade());
 
-    protected override void OnEnter() => _context.Sounds.PlayMusic(Music.Puzzle);
+    protected override void OnEnter() => _context.PlayMood(Music.Arcade);
 
     public override void Update(TimeSpan elapsed, InputState input)
     {

@@ -44,7 +44,7 @@ internal sealed class GenerateScene : Scene
 
     protected override void OnEnter()
     {
-        _context.Sounds.PlayMusic(Music.Puzzle);
+        _context.PlayMood(Music.Puzzle);
         Start();
     }
 

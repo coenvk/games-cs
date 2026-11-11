@@ -67,7 +67,7 @@ internal sealed class WordPlayScene : Scene
 
     public void NextLevel() => Scenes.Replace(new WordPlayScene(_context, Math.Min(Number + 1, _context.Words.Levels.Count - 1)), Navigation.Fade());
 
-    protected override void OnEnter() => _context.Sounds.PlayMusic(Music.Puzzle);
+    protected override void OnEnter() => _context.PlayMood(Music.Words);
 
     public override void Update(TimeSpan elapsed, InputState input)
     {

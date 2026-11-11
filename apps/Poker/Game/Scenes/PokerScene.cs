@@ -86,7 +86,7 @@ internal sealed class PokerScene : Scene
 
     public void ConfirmHandover() => _runner.ConfirmHandover();
 
-    protected override void OnEnter() => _context.Sounds.PlayMusic(Music.Table);
+    protected override void OnEnter() => _context.PlayMood(Music.Table);
 
     public override void Update(TimeSpan elapsed, InputState input)
     {

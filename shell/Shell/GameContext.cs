@@ -1,4 +1,4 @@
-﻿using Jentl.Core.Audio;
+using Jentl.Core.Audio;
 using Jentl.Core.Content;
 using Jentl.Core.Input;
 using Jentl.Core.Scenes;
@@ -8,23 +8,6 @@ using Games.Input;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Games;
-
-internal static class Sound
-{
-    public const string Navigate = "navigate";
-    public const string Completed = "completed";
-    public const string Card = "card";
-    public const string Error = "error";
-    public const string Hit = "hit";
-    public const string Pickup = "pickup";
-    public const string LevelUp = "levelup";
-    public const string Fanfare = "fanfare";
-    public const string Chips = "chips";
-    public const string Click = "click";
-    public const string Lose = "lose";
-    public const string Jump = "jump";
-    public const string Sizzle = "sizzle";
-}
 
 /// <summary>What the platform supports; a browser tab cannot quit or switch to fullscreen by itself.</summary>
 /// <param name="HintTime">

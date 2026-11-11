@@ -365,7 +365,7 @@ internal sealed class AdventureScene : Scene
 
     /// <summary>The village tune above ground and in the houses, the dark one in the cellar.</summary>
     private void PlayAreaMusic() =>
-        _context.Sounds.PlayMusic(World.Area.Id.StartsWith("cellar", StringComparison.Ordinal) ? Music.Cellar : Music.Village);
+        _context.PlayMood(World.Area.Id.StartsWith("cellar", StringComparison.Ordinal) ? Music.Cellar : Music.Village);
 
     private static string Read(string name) => GameFiles.ReadAllText($"{Folder}/{name}");
 

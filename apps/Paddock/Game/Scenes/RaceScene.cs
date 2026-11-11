@@ -148,10 +148,10 @@ internal sealed class RaceScene : Scene
         }
     }
 
-    protected override void OnEnter() => _context.Sounds.PlayMusic(Music.Race);
+    protected override void OnEnter() => _context.PlayMood(Music.Race);
 
     // The screens a race returns to have no music of their own.
-    protected override void OnExit() => _context.Sounds.PlayMusic(Music.Menu);
+    protected override void OnExit() => _context.PlayMood(Music.Menu);
 
     protected override void Dispose(bool disposing)
     {

@@ -54,7 +54,7 @@ internal sealed class AssociateScene : Scene
 
     public void NextLevel() => Scenes.Replace(new AssociateScene(_context, Math.Min(Number + 1, _context.Associate.Levels.Count - 1)), Navigation.Fade());
 
-    protected override void OnEnter() => _context.Sounds.PlayMusic(Music.Cards);
+    protected override void OnEnter() => _context.PlayMood(Music.Words);
 
     public override void Update(TimeSpan elapsed, InputState input)
     {

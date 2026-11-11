@@ -103,7 +103,7 @@ internal sealed class PokerOnlineScene : Scene
         Tick(elapsed);
     }
 
-    protected override void OnEnter() => _context.Sounds.PlayMusic(Music.Table);
+    protected override void OnEnter() => _context.PlayMood(Music.Table);
 
     public override IEnumerable<string> DebugInfo =>
     [

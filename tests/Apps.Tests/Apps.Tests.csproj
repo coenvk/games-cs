@@ -1,11 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Checks over the apps' own files: translations and assets. -->
+  <!-- Checks over the apps' own files: translations and assets; and the shell's soundtrack. -->
 
   <Import Project="..\..\test.props" />
 
   <ItemGroup>
     <PackageReference Include="Jentl.Core" Version="$(JentlVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\shell\Shell\Soundtrack.cs;..\..\shell\Shell\GameAudio.cs" LinkBase="Shell" />
   </ItemGroup>
 
 </Project>

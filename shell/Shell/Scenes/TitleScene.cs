@@ -71,18 +71,18 @@ internal sealed class TitleScene : Scene
         batch.DrawText(fonts.Small, T("Tap, or use the arrow keys and Enter"), new Vector2(centerX, footerTop), Palette.Muted, Align.Center, shadow: false);
     }
 
-    protected override void OnEnter() => _context.Sounds.PlayMusic(Music.Menu);
+    protected override void OnEnter() => _context.PlayMood(Music.Menu);
 
     // Back from a game, the menu's music returns, and its labels are rebuilt.
     protected override void OnUncovered()
     {
-        _context.Sounds.PlayMusic(Music.Menu);
+        _context.PlayMood(Music.Menu);
         _menu = BuildMenu(_menu.Selected);
     }
 
     private Menu BuildMenu(int selected = 0)
     {
-        List<MenuItem> items = [.. _items(this), new(T("Options"), () => Scenes.Push(new OptionsScene(_context)))];
+        List<MenuItem> items = [.. _items(this), new(T("Music"), () => Scenes.Push(new MusicScene(_context))), new(T("Options"), () => Scenes.Push(new OptionsScene(_context)))];
         if (_context.Platform.CanQuit)
         {
             items.Add(new MenuItem(T("Quit"), () => Scenes.Pop(Navigation.Fade())));

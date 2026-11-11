@@ -2,22 +2,27 @@
 
 namespace Games;
 
-/// <summary>Names of the music tracks.</summary>
-internal static class Music
+/// <summary>Names of the sound effects.</summary>
+internal static class Sound
 {
-    public const string Menu = "music-menu";
-    public const string Puzzle = "music-puzzle";
-    public const string Cards = "music-cards";
-    public const string Table = "music-table";
-    public const string Village = "music-village";
-    public const string Cellar = "music-cellar";
-    public const string Race = "music-race";
-    public const string Kitchen = "music-kitchen";
+    public const string Navigate = "navigate";
+    public const string Completed = "completed";
+    public const string Card = "card";
+    public const string Error = "error";
+    public const string Hit = "hit";
+    public const string Pickup = "pickup";
+    public const string LevelUp = "levelup";
+    public const string Fanfare = "fanfare";
+    public const string Chips = "chips";
+    public const string Click = "click";
+    public const string Lose = "lose";
+    public const string Jump = "jump";
+    public const string Sizzle = "sizzle";
 }
 
 /// <summary>
-/// The game's music and the sound effects beyond the two recorded ones, composed for <see cref="Synth"/>: no
-/// audio files to ship or license. Each voice is a line of eighth notes ("-" holds, "." rests, "x" is a drum).
+/// The original songs (<see cref="Soundtrack"/> has them all) and the sound effects beyond the two recorded ones,
+/// composed for <see cref="Synth"/>: no audio files to ship or license. Each voice is a line of eighth notes ("-" holds, "." rests, "x" is a drum).
 /// </summary>
 internal static class GameAudio
 {
@@ -34,9 +39,9 @@ internal static class GameAudio
     public static void Register(SoundPlayer sounds)
     {
         ArgumentNullException.ThrowIfNull(sounds);
-        foreach (var (name, tune) in Tracks())
+        foreach (var track in Soundtrack.Tracks)
         {
-            sounds.AddMusic(name, () => Synth.Render(tune, loop: true));
+            sounds.AddMusic(track.Id, () => Synth.Render(track.Tune(), loop: true));
         }
 
         foreach (var (name, tune) in Effects())

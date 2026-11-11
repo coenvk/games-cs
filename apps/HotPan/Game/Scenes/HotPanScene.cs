@@ -53,7 +53,7 @@ internal sealed class HotPanScene : Scene
 
     public void NewGame() => Scenes.Replace(new HotPanScene(_context), Navigation.Fade());
 
-    protected override void OnEnter() => _context.Sounds.PlayMusic(Music.Kitchen);
+    protected override void OnEnter() => _context.PlayMood(Music.Kitchen);
 
     public override void Update(TimeSpan elapsed, InputState input)
     {

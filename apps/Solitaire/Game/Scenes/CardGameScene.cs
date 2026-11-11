@@ -74,7 +74,7 @@ internal abstract class CardGameScene : Scene
     /// <summary>The line under the table when there is nothing else to say.</summary>
     protected virtual string Help => T("Drag cards, or tap one to send it where it fits");
 
-    protected override void OnEnter() => Context.Sounds.PlayMusic(Music.Cards);
+    protected override void OnEnter() => Context.PlayMood(Music.Cards);
 
     public override IEnumerable<string> DebugInfo =>
     [
