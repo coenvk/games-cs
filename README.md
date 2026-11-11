@@ -15,6 +15,7 @@ the engine now lives in its own repository and comes in here as packages.
 | **Mossbrook** | A small turn-based adventure: a village, a cellar and a lost amulet |
 | **Code Lock** | Mastermind on a combination lock |
 | **Bricks** | A brick breaker with power-ups |
+| **Connect Word** | Put the words that belong together in one row, merging cards as you go |
 | **Hot Pan** | Stand in a frying pan and jump onto chicken that's still cool, before your feet burn |
 | **Paddock** | Collect invented cars, race hands of five on tracks in all weathers, upgrade and fuse them, win rare ones in events |
 
@@ -31,7 +32,7 @@ Each is its own app, on the desktop and in the browser (each in its own folder o
 | `src/Sokoban.Model`, `src/Sokoban.Solver` | Sokoban's rules on the puzzle kit, and its solver and level generator |
 | `src/Klondike` ... `src/Yukon` | The solitaire games' rules on the card kit |
 | `src/Uno`, `src/Poker` | Uno and Texas Hold'em (rules, bots, their online rooms) |
-| `src/Mossbrook`, `src/CodeLock`, `src/Bricks`, `src/HotPan` | The adventure on the RPG kit, the code lock and its solver, the brick breaker on the ECS and physics, and Hot Pan's pan |
+| `src/Mossbrook`, `src/CodeLock`, `src/Bricks`, `src/HotPan`, `src/ConnectWord` | The adventure on the RPG kit, the code lock and its solver, the brick breaker on the ECS and physics, Hot Pan's pan, and Connect Word's grid |
 | `src/Paddock` | Paddock's cars, race simulation, upgrades and fusing, matches, events, campaign and economy |
 | `src/GameServer` | The online game server (rooms over WebSockets, hosting Uno and Hold'em), with a Dockerfile |
 | `tests/*` | xUnit tests for every game library and the server; `tests/Apps.Tests` checks the apps' translations and assets |
@@ -47,7 +48,7 @@ one if there is one, otherwise from GitHub at the version in `dependencies.props
 ```bash
 build/jentl.sh
 dotnet test Games.slnx
-dotnet run --project apps/Sokoban/Desktop        # or Solitaire, CardTable, Poker, Mossbrook, CodeLock, Bricks, Paddock, HotPan
+dotnet run --project apps/Sokoban/Desktop        # or Solitaire, CardTable, Poker, Mossbrook, CodeLock, Bricks, Paddock, HotPan, ConnectWord
 dotnet run --project apps/Sokoban/Web            # in the browser
 ```
 
@@ -76,7 +77,7 @@ dotnet run --project apps/Sokoban/Desktop -- --keys "Down Enter Wait" --screensh
 
 ## Progress
 
-Each game keeps its files in a folder of its own (`Sokoban`, `Solitaire`, `CardTable`, `Poker`, `Mossbrook`, `CodeLock`, `Bricks`, `Paddock`, `HotPan`); for Sokoban, progress (best moves, pushes, time and the fewest-moves solution per level) is saved as JSON after every improvement:
+Each game keeps its files in a folder of its own (`Sokoban`, `Solitaire`, `CardTable`, `Poker`, `Mossbrook`, `CodeLock`, `Bricks`, `Paddock`, `HotPan`, `ConnectWord`); for Sokoban, progress (best moves, pushes, time and the fewest-moves solution per level) is saved as JSON after every improvement:
 
 - macOS: `~/Library/Application Support/Sokoban/progress.json`
 - Windows: `%LOCALAPPDATA%\Sokoban\progress.json`
@@ -279,6 +280,18 @@ and the debug overlay (F3) outlines every physics body.
 online. Every finished game's score goes on both, under a made-up name such as "Swift Otter 27" (Options >
 Leaderboard name picks another; there is no typing, and nobody's own words reach a public board). Online needs the
 game server, as Uno does; the shell's `ScoreBoard` and `LeaderboardScene` work for any game.
+
+## Connect Word
+
+**Connect Word** deals a grid of word cards from a level's categories (more wait in a deck). Drag a card onto one of
+the same category and they merge into one card holding both words; onto a card of another category, or an empty
+cell, and they trade places. When one row holds every word of a category, in separate cards, merged ones or one card
+with them all, the category is matched and leaves the grid as a coloured row on top. Cards fall into the gaps and new
+ones drop in from the deck. Match every category to win the level: three stars at or under par (a move per merge, if
+every merge were needed). Tap a card and then another instead of dragging, or use the arrow keys and Enter; Hint shows
+two cards that belong together. Twenty levels in `apps/ConnectWord/Assets/connectword/levels.json`, from three easy
+categories to six with red herrings (Ruby the programming language, cricket the insect); every word in one category
+only, which the tests check, along with every level being winnable. `--level <n>` opens a level.
 
 ## Hot Pan
 

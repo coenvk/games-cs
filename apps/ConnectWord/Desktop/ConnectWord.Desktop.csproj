@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- ConnectWord on the desktop. -->
+
+  <PropertyGroup>
+    <AppName>ConnectWord.Game</AppName>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\shell\Desktop.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\ConnectWord\ConnectWord.csproj" />
+  </ItemGroup>
+
+</Project>

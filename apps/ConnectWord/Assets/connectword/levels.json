@@ -1,0 +1,174 @@
+{
+  // Connect Word levels: each word in one category only; 3 to 6 categories of 3 to 8 words.
+  "levels": [
+    {
+      "categories": [
+        { "name": "Fruit", "words": ["apple", "banana", "cherry", "grape"] },
+        { "name": "Colours", "words": ["red", "blue", "green", "yellow"] },
+        { "name": "Animals", "words": ["dog", "cat", "horse", "sheep"] }
+      ]
+    },
+    {
+      "categories": [
+        { "name": "Weather", "words": ["rain", "snow", "wind", "fog"] },
+        { "name": "Furniture", "words": ["chair", "table", "sofa", "bed"] },
+        { "name": "Drinks", "words": ["tea", "coffee", "juice", "milk"] },
+        { "name": "Body parts", "words": ["arm", "leg", "hand", "nose"] }
+      ]
+    },
+    {
+      "categories": [
+        { "name": "Planets", "words": ["Mars", "Venus", "Saturn", "Jupiter", "Neptune"] },
+        { "name": "Instruments", "words": ["piano", "guitar", "drum", "violin", "flute"] },
+        { "name": "Vegetables", "words": ["carrot", "potato", "onion", "pea"] },
+        { "name": "Shapes", "words": ["circle", "square", "triangle"] }
+      ]
+    },
+    {
+      "categories": [
+        { "name": "Sea creatures", "words": ["shark", "whale", "dolphin", "octopus", "crab"] },
+        { "name": "Sports", "words": ["tennis", "football", "golf", "hockey", "rugby"] },
+        { "name": "Tools", "words": ["hammer", "saw", "drill", "wrench"] },
+        { "name": "Seasons", "words": ["spring", "summer", "autumn", "winter"] }
+      ]
+    },
+    {
+      "categories": [
+        { "name": "Birds", "words": ["eagle", "robin", "owl", "parrot", "swan"] },
+        { "name": "Clothes", "words": ["shirt", "sock", "scarf", "glove", "coat"] },
+        { "name": "In the kitchen", "words": ["oven", "fridge", "kettle", "toaster"] },
+        { "name": "Countries", "words": ["France", "Spain", "Japan", "Brazil", "Kenya"] }
+      ]
+    },
+    {
+      "categories": [
+        { "name": "Chess pieces", "words": ["king", "queen", "bishop", "knight", "rook", "pawn"] },
+        { "name": "Gemstones", "words": ["ruby", "emerald", "diamond", "sapphire"] },
+        { "name": "Breakfast", "words": ["toast", "cereal", "egg", "bacon", "pancake"] },
+        { "name": "Feelings", "words": ["joy", "anger", "fear", "sadness"] }
+      ]
+    },
+    {
+      "categories": [
+        { "name": "Things with keys", "words": ["keyboard", "lock", "map", "door"] },
+        { "name": "Things that ring", "words": ["bell", "phone", "alarm", "doorbell"] },
+        { "name": "Card games", "words": ["poker", "bridge", "snap", "rummy"] },
+        { "name": "Things you cut", "words": ["hair", "grass", "cake", "ribbon"] }
+      ]
+    },
+    {
+      "categories": [
+        { "name": "In the sky", "words": ["cloud", "kite", "moon", "rainbow", "star"] },
+        { "name": "Coffees", "words": ["latte", "espresso", "mocha", "cappuccino"] },
+        { "name": "Dances", "words": ["waltz", "tango", "salsa", "ballet", "samba"] },
+        { "name": "Metals", "words": ["iron", "copper", "silver", "gold", "tin"] }
+      ]
+    },
+    {
+      "categories": [
+        { "name": "Desserts", "words": ["pie", "cake", "pudding", "sundae", "tart"] },
+        { "name": "Painters", "words": ["Monet", "Picasso", "Rembrandt", "Vermeer", "Dali"] },
+        { "name": "Programming languages", "words": ["Python", "Java", "Ruby", "Rust", "Swift"] },
+        { "name": "Snakes", "words": ["cobra", "viper", "mamba", "boa", "adder"] }
+      ]
+    },
+    {
+      "categories": [
+        { "name": "Things with wings", "words": ["plane", "bat", "angel", "butterfly", "dragon"] },
+        { "name": "___ball", "words": ["foot", "basket", "snow", "eye", "meat"] },
+        { "name": "Card suits", "words": ["hearts", "spades", "clubs", "diamonds"] },
+        { "name": "Units of time", "words": ["second", "minute", "hour", "week", "decade"] }
+      ]
+    },
+    {
+      "categories": [
+        { "name": "Music", "words": ["jazz", "blues", "rock", "punk", "reggae", "soul"] },
+        { "name": "Shades of blue", "words": ["navy", "teal", "azure", "cobalt", "indigo"] },
+        { "name": "Pasta", "words": ["penne", "ravioli", "fusilli", "lasagne", "spaghetti"] },
+        { "name": "Mountains", "words": ["Everest", "Kilimanjaro", "Fuji", "Matterhorn"] },
+        { "name": "Board games", "words": ["Monopoly", "Scrabble", "Cluedo", "Risk", "Ludo"] }
+      ]
+    },
+    {
+      "categories": [
+        { "name": "In the bathroom", "words": ["towel", "mirror", "sink", "bath", "soap"] },
+        { "name": "Fire___", "words": ["works", "place", "fly", "man"] },
+        { "name": "Greek letters", "words": ["alpha", "beta", "gamma", "delta", "omega"] },
+        { "name": "Cheeses", "words": ["brie", "cheddar", "gouda", "feta", "edam"] }
+      ]
+    },
+    {
+      "categories": [
+        { "name": "Shakespeare", "words": ["Hamlet", "Macbeth", "Othello", "Tempest"] },
+        { "name": "Places to live", "words": ["village", "town", "city", "metropolis"] },
+        { "name": "Dogs", "words": ["poodle", "beagle", "boxer", "collie", "pug"] },
+        { "name": "Jobs", "words": ["baker", "nurse", "pilot", "farmer", "plumber"] },
+        { "name": "Insects", "words": ["ant", "wasp", "beetle", "moth", "cricket"] }
+      ]
+    },
+    {
+      "categories": [
+        { "name": "Currencies", "words": ["euro", "dollar", "yen", "pound", "peso"] },
+        { "name": "Weights", "words": ["gram", "ounce", "ton", "kilo"] },
+        { "name": "On a ship", "words": ["anchor", "mast", "sail", "deck", "hull"] },
+        { "name": "Rivers", "words": ["Nile", "Amazon", "Thames", "Rhine", "Danube"] },
+        { "name": "Trees", "words": ["oak", "pine", "birch", "willow", "maple"] }
+      ]
+    },
+    {
+      "categories": [
+        { "name": "Mythical creatures", "words": ["unicorn", "griffin", "phoenix", "mermaid", "troll", "yeti"] },
+        { "name": "Bread", "words": ["bagel", "baguette", "pita", "naan", "brioche"] },
+        { "name": "Red things", "words": ["ladybird", "tomato", "lobster", "poppy"] },
+        { "name": "Computer parts", "words": ["mouse", "monitor", "printer", "speaker"] },
+        { "name": "Fish", "words": ["salmon", "cod", "trout", "tuna", "carp"] }
+      ]
+    },
+    {
+      "categories": [
+        { "name": "___light", "words": ["moon", "sun", "flash", "spot", "head"] },
+        { "name": "Ice cream", "words": ["vanilla", "mint", "pistachio", "chocolate", "strawberry"] },
+        { "name": "Detectives", "words": ["Holmes", "Poirot", "Marple", "Morse", "Columbo"] },
+        { "name": "Things with shells", "words": ["snail", "turtle", "oyster", "egg", "nut"] },
+        { "name": "Olympic sports", "words": ["fencing", "rowing", "diving", "archery", "judo"] }
+      ]
+    },
+    {
+      "categories": [
+        { "name": "Things you break", "words": ["record", "news", "ice", "bread", "heart"] },
+        { "name": "Things with teeth", "words": ["comb", "saw", "zip", "gear", "shark"] },
+        { "name": "Lengths", "words": ["metre", "mile", "inch", "foot", "yard"] },
+        { "name": "In the garden", "words": ["hose", "rake", "shed", "spade", "pond"] },
+        { "name": "Toys", "words": ["yoyo", "kite", "doll", "puzzle", "marble"] }
+      ]
+    },
+    {
+      "categories": [
+        { "name": "Herbs", "words": ["basil", "thyme", "sage", "parsley", "rosemary", "dill"] },
+        { "name": "Composers", "words": ["Bach", "Mozart", "Chopin", "Liszt", "Verdi"] },
+        { "name": "Things with needles", "words": ["pine", "cactus", "compass", "hedgehog", "syringe"] },
+        { "name": "Rhymes with cat", "words": ["hat", "bat", "mat", "rat", "flat"] },
+        { "name": "Space", "words": ["comet", "orbit", "galaxy", "nebula", "meteor"] }
+      ]
+    },
+    {
+      "categories": [
+        { "name": "Famous ships", "words": ["Titanic", "Victory", "Bounty", "Mayflower"] },
+        { "name": "Cocktails", "words": ["mojito", "martini", "daiquiri", "margarita", "negroni"] },
+        { "name": "Things with a cap", "words": ["bottle", "pen", "knee", "mushroom"] },
+        { "name": "Greens", "words": ["lime", "olive", "jade", "emerald", "moss"] },
+        { "name": "Martial arts", "words": ["karate", "judo", "aikido", "taekwondo"] }
+      ]
+    },
+    {
+      "categories": [
+        { "name": "Elements", "words": ["oxygen", "carbon", "neon", "helium"] },
+        { "name": "Bones", "words": ["skull", "rib", "femur", "spine"] },
+        { "name": "At the seaside", "words": ["tide", "wave", "reef", "shell"] },
+        { "name": "Electricity", "words": ["volt", "amp", "watt", "ohm"] },
+        { "name": "3D shapes", "words": ["cube", "sphere", "cone", "pyramid"] },
+        { "name": "Greek gods", "words": ["Zeus", "Hera", "Apollo", "Athena"] }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Connect Word's rules: word cards merged and lined up by category; plain C#, framework-free. -->
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="ConnectWord.Tests" />
+  </ItemGroup>
+
+</Project>

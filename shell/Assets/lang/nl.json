@@ -735,5 +735,15 @@
   "Keep your feet off the pan": "Hou je voeten van de pan",
   "The pan reached {0}°C": "De pan werd {0}°C",
   "You lasted {0}": "Je hield het {0} vol",
-  "Your feet are done": "Je voeten zijn gaar"
+  "Your feet are done": "Je voeten zijn gaar",
+  "Every word in its place": "Elk woord op zijn plek",
+  "Level {0}  {1}  {2} moves": "Level {0}  {1}  {2} zetten",
+  "Level {0} done!": "Level {0} klaar!",
+  "Level {0}": "Level {0}",
+  "Moves {0}": "Zetten {0}",
+  "Play again": "Opnieuw spelen",
+  "Put the words that belong together in one row": "Zet de woorden die bij elkaar horen in één rij",
+  "Your best for this level": "Je beste voor dit level",
+  "{0} moves (par {1})": "{0} zetten (par {1})",
+  "{0} of {1} matched, {2} moves": "{0} van {1} gevonden, {2} zetten"
 }

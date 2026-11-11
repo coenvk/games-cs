@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <!-- ConnectWord in the browser. -->
+
+  <PropertyGroup>
+    <AppName>ConnectWord.Game</AppName>
+    <AppTitle>Connect Word</AppTitle>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\shell\Web.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\ConnectWord\ConnectWord.csproj" />
+  </ItemGroup>
+
+</Project>
