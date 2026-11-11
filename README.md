@@ -15,6 +15,7 @@ the engine now lives in its own repository and comes in here as packages.
 | **Mossbrook** | A small turn-based adventure: a village, a cellar and a lost amulet |
 | **Code Lock** | Mastermind on a combination lock |
 | **Bricks** | A brick breaker with power-ups |
+| **Associate Words** | A solitaire of words: open a category with its card, then gather its words under it |
 | **Connect Word** | Put the words that belong together in one row, merging cards as you go |
 | **Hot Pan** | Stand in a frying pan and jump onto chicken that's still cool, before your feet burn |
 | **Paddock** | Collect invented cars, race hands of five on tracks in all weathers, upgrade and fuse them, win rare ones in events |
@@ -32,7 +33,7 @@ Each is its own app, on the desktop and in the browser (each in its own folder o
 | `src/Sokoban.Model`, `src/Sokoban.Solver` | Sokoban's rules on the puzzle kit, and its solver and level generator |
 | `src/Klondike` ... `src/Yukon` | The solitaire games' rules on the card kit |
 | `src/Uno`, `src/Poker` | Uno and Texas Hold'em (rules, bots, their online rooms) |
-| `src/Mossbrook`, `src/CodeLock`, `src/Bricks`, `src/HotPan`, `src/ConnectWord` | The adventure on the RPG kit, the code lock and its solver, the brick breaker on the ECS and physics, Hot Pan's pan, and Connect Word's grid |
+| `src/Mossbrook`, `src/CodeLock`, `src/Bricks`, `src/HotPan`, `src/ConnectWord`, `src/AssociateWords` | The adventure on the RPG kit, the code lock and its solver, the brick breaker on the ECS and physics, Hot Pan's pan, Connect Word's grid, and Associate Words' solitaire on the card kit |
 | `src/Paddock` | Paddock's cars, race simulation, upgrades and fusing, matches, events, campaign and economy |
 | `src/GameServer` | The online game server (rooms over WebSockets, hosting Uno and Hold'em), with a Dockerfile |
 | `tests/*` | xUnit tests for every game library and the server; `tests/Apps.Tests` checks the apps' translations and assets |
@@ -48,7 +49,7 @@ one if there is one, otherwise from GitHub at the version in `dependencies.props
 ```bash
 build/jentl.sh
 dotnet test Games.slnx
-dotnet run --project apps/Sokoban/Desktop        # or Solitaire, CardTable, Poker, Mossbrook, CodeLock, Bricks, Paddock, HotPan, ConnectWord
+dotnet run --project apps/Sokoban/Desktop        # or Solitaire, CardTable, Poker, Mossbrook, CodeLock, Bricks, Paddock, HotPan, ConnectWord, AssociateWords
 dotnet run --project apps/Sokoban/Web            # in the browser
 ```
 
@@ -77,7 +78,7 @@ dotnet run --project apps/Sokoban/Desktop -- --keys "Down Enter Wait" --screensh
 
 ## Progress
 
-Each game keeps its files in a folder of its own (`Sokoban`, `Solitaire`, `CardTable`, `Poker`, `Mossbrook`, `CodeLock`, `Bricks`, `Paddock`, `HotPan`, `ConnectWord`); for Sokoban, progress (best moves, pushes, time and the fewest-moves solution per level) is saved as JSON after every improvement:
+Each game keeps its files in a folder of its own (`Sokoban`, `Solitaire`, `CardTable`, `Poker`, `Mossbrook`, `CodeLock`, `Bricks`, `Paddock`, `HotPan`, `ConnectWord`, `AssociateWords`); for Sokoban, progress (best moves, pushes, time and the fewest-moves solution per level) is saved as JSON after every improvement:
 
 - macOS: `~/Library/Application Support/Sokoban/progress.json`
 - Windows: `%LOCALAPPDATA%\Sokoban\progress.json`
@@ -280,6 +281,19 @@ and the debug overlay (F3) outlines every physics body.
 online. Every finished game's score goes on both, under a made-up name such as "Swift Otter 27" (Options >
 Leaderboard name picks another; there is no typing, and nobody's own words reach a public board). Online needs the
 game server, as Uno does; the shell's `ScoreBoard` and `LeaderboardScene` work for any game.
+
+## Associate Words
+
+**Associate Words** is a solitaire of words, on Jentl's card kit. Five columns are dealt with only their top card
+face up, the rest wait in a draw pile that turns one card at a time onto a waste (and over again when empty), and a
+few slots wait at the top. A category card (yellow) opens an empty slot; its words then go onto it, and once the slot
+holds the category card and all its words the category is complete, leaves the table and frees the slot for the next
+one. In the columns a word goes on a face-up word of its own category, in any order, the category card too; a run of
+one category moves together, and any card goes into an empty column. Every move, drawing included, counts: complete
+every category before the moves run out, with stars for moves to spare. Drag cards or tap one to send it where it
+fits; Undo, Hint and Restart are at the bottom, and running out of moves offers to undo the last one. Fifteen levels
+in `apps/AssociateWords/Assets/associatewords/levels.json`, each with a fixed deal and a move limit about a quarter
+above what a simple autoplayer needs, which the tests check it can win. `--level <n>` opens a level.
 
 ## Connect Word
 

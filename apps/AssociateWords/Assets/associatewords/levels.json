@@ -1,0 +1,157 @@
+{
+  // Associate Words levels. "columns": cards dealt to each of the five columns (the rest go to the draw pile);
+  // "moves": the limit, about a quarter more than a simple autoplayer needs for this deal; "seed": the deal.
+  "levels": [
+    {
+      "slots": 2, "columns": [1, 1, 2, 2, 2], "moves": 23, "seed": 3,
+      "groups": [
+        { "name": "Fruit", "words": ["apple", "banana", "cherry"] },
+        { "name": "Pets", "words": ["dog", "cat", "hamster"] },
+        { "name": "Colours", "words": ["red", "blue", "green"] }
+      ]
+    },
+    {
+      "slots": 2, "columns": [1, 2, 2, 2, 3], "moves": 28, "seed": 3,
+      "groups": [
+        { "name": "Weather", "words": ["rain", "snow", "hail", "fog"] },
+        { "name": "Furniture", "words": ["chair", "table", "sofa", "wardrobe"] },
+        { "name": "Drinks", "words": ["tea", "coffee", "juice", "lemonade"] }
+      ]
+    },
+    {
+      "slots": 2, "columns": [2, 2, 2, 3, 3], "moves": 28, "seed": 4,
+      "groups": [
+        { "name": "Planets", "words": ["Mars", "Venus", "Saturn"] },
+        { "name": "Instruments", "words": ["piano", "guitar", "violin"] },
+        { "name": "Vegetables", "words": ["carrot", "potato", "onion"] },
+        { "name": "Sports", "words": ["tennis", "football", "golf"] }
+      ]
+    },
+    {
+      "slots": 3, "columns": [2, 2, 3, 3, 4], "moves": 37, "seed": 3,
+      "groups": [
+        { "name": "Tools", "words": ["hammer", "saw", "drill", "wrench"] },
+        { "name": "Seasons", "words": ["spring", "summer", "autumn", "winter"] },
+        { "name": "Birds", "words": ["eagle", "robin", "owl", "swan"] },
+        { "name": "Clothes", "words": ["shirt", "sock", "scarf", "glove"] }
+      ]
+    },
+    {
+      "slots": 2, "columns": [2, 3, 3, 3, 3], "moves": 37, "seed": 1,
+      "groups": [
+        { "name": "Kitchen", "words": ["oven", "fridge", "kettle", "toaster"] },
+        { "name": "Countries", "words": ["France", "Spain", "Japan", "Brazil"] },
+        { "name": "Chess", "words": ["king", "queen", "bishop", "knight"] },
+        { "name": "Gems", "words": ["ruby", "emerald", "diamond", "sapphire"] }
+      ]
+    },
+    {
+      "slots": 3, "columns": [2, 2, 3, 3, 4], "moves": 36, "seed": 5,
+      "groups": [
+        { "name": "Breakfast", "words": ["toast", "cereal", "egg"] },
+        { "name": "Feelings", "words": ["joy", "anger", "fear"] },
+        { "name": "Dances", "words": ["waltz", "tango", "salsa"] },
+        { "name": "Metals", "words": ["iron", "copper", "silver"] },
+        { "name": "Desserts", "words": ["pie", "pudding", "sundae"] }
+      ]
+    },
+    {
+      "slots": 3, "columns": [2, 3, 3, 4, 4], "moves": 47, "seed": 3,
+      "groups": [
+        { "name": "Painters", "words": ["Monet", "Picasso", "Rembrandt", "Vermeer"] },
+        { "name": "Snakes", "words": ["cobra", "viper", "mamba", "boa"] },
+        { "name": "Card suits", "words": ["hearts", "spades", "clubs", "diamonds"] },
+        { "name": "Time", "words": ["second", "minute", "hour", "week"] },
+        { "name": "Pasta", "words": ["penne", "ravioli", "fusilli", "lasagne"] }
+      ]
+    },
+    {
+      "slots": 2, "columns": [3, 3, 3, 4, 4], "moves": 47, "seed": 1,
+      "groups": [
+        { "name": "Mountains", "words": ["Everest", "Kilimanjaro", "Fuji", "Matterhorn"] },
+        { "name": "Cheese", "words": ["brie", "cheddar", "gouda", "feta"] },
+        { "name": "Dogs", "words": ["poodle", "beagle", "boxer", "collie"] },
+        { "name": "Jobs", "words": ["baker", "nurse", "pilot", "farmer"] },
+        { "name": "Insects", "words": ["ant", "wasp", "beetle", "moth"] }
+      ]
+    },
+    {
+      "slots": 3, "columns": [3, 3, 4, 4, 5], "moves": 56, "seed": 5,
+      "groups": [
+        { "name": "Currencies", "words": ["euro", "dollar", "yen", "pound", "peso"] },
+        { "name": "Ship", "words": ["anchor", "mast", "sail", "deck", "hull"] },
+        { "name": "Rivers", "words": ["Nile", "Amazon", "Thames", "Rhine", "Danube"] },
+        { "name": "Trees", "words": ["oak", "pine", "birch", "willow", "maple"] },
+        { "name": "Bread", "words": ["bagel", "baguette", "pita", "naan", "brioche"] }
+      ]
+    },
+    {
+      "slots": 3, "columns": [3, 3, 4, 4, 5], "moves": 57, "seed": 1,
+      "groups": [
+        { "name": "Fish", "words": ["salmon", "cod", "trout", "tuna"] },
+        { "name": "Space", "words": ["comet", "orbit", "galaxy", "nebula"] },
+        { "name": "Herbs", "words": ["basil", "thyme", "sage", "parsley"] },
+        { "name": "Composers", "words": ["Bach", "Mozart", "Chopin", "Liszt"] },
+        { "name": "Toys", "words": ["yoyo", "kite", "doll", "puzzle"] },
+        { "name": "Garden", "words": ["hose", "rake", "shed", "spade"] }
+      ]
+    },
+    {
+      "slots": 2, "columns": [3, 3, 4, 4, 5], "moves": 57, "seed": 5,
+      "groups": [
+        { "name": "Greek letters", "words": ["alpha", "beta", "gamma", "delta"] },
+        { "name": "Fruit", "words": ["apple", "banana", "cherry", "grape"] },
+        { "name": "Pets", "words": ["dog", "cat", "hamster", "rabbit"] },
+        { "name": "Colours", "words": ["red", "blue", "green", "purple"] },
+        { "name": "Weather", "words": ["rain", "snow", "hail", "fog"] },
+        { "name": "Furniture", "words": ["chair", "table", "sofa", "wardrobe"] }
+      ]
+    },
+    {
+      "slots": 3, "columns": [3, 4, 4, 5, 5], "moves": 68, "seed": 5,
+      "groups": [
+        { "name": "Drinks", "words": ["tea", "coffee", "juice", "lemonade", "cocoa"] },
+        { "name": "Planets", "words": ["Mars", "Venus", "Saturn", "Jupiter", "Mercury"] },
+        { "name": "Instruments", "words": ["piano", "guitar", "violin", "trumpet", "harp"] },
+        { "name": "Vegetables", "words": ["carrot", "potato", "onion", "leek", "celery"] },
+        { "name": "Sports", "words": ["tennis", "football", "golf", "hockey", "rugby"] },
+        { "name": "Tools", "words": ["hammer", "saw", "drill", "wrench", "chisel"] }
+      ]
+    },
+    {
+      "slots": 4, "columns": [3, 4, 4, 5, 5], "moves": 68, "seed": 2,
+      "groups": [
+        { "name": "Birds", "words": ["eagle", "robin", "owl", "swan", "heron"] },
+        { "name": "Clothes", "words": ["shirt", "sock", "scarf", "glove", "coat"] },
+        { "name": "Kitchen", "words": ["oven", "fridge", "kettle", "toaster", "blender"] },
+        { "name": "Countries", "words": ["France", "Spain", "Japan", "Brazil", "Kenya"] },
+        { "name": "Chess", "words": ["king", "queen", "bishop", "knight", "rook"] },
+        { "name": "Gems", "words": ["ruby", "emerald", "diamond", "sapphire", "topaz"] }
+      ]
+    },
+    {
+      "slots": 3, "columns": [3, 4, 4, 5, 5], "moves": 68, "seed": 4,
+      "groups": [
+        { "name": "Breakfast", "words": ["toast", "cereal", "egg", "bacon"] },
+        { "name": "Feelings", "words": ["joy", "anger", "fear", "sadness"] },
+        { "name": "Dances", "words": ["waltz", "tango", "salsa", "ballet"] },
+        { "name": "Metals", "words": ["iron", "copper", "silver", "gold"] },
+        { "name": "Desserts", "words": ["pie", "pudding", "sundae", "tart"] },
+        { "name": "Painters", "words": ["Monet", "Picasso", "Rembrandt", "Vermeer"] },
+        { "name": "Snakes", "words": ["cobra", "viper", "mamba", "boa"] }
+      ]
+    },
+    {
+      "slots": 3, "columns": [4, 4, 5, 5, 6], "moves": 81, "seed": 3,
+      "groups": [
+        { "name": "Time", "words": ["second", "minute", "hour", "week", "decade"] },
+        { "name": "Pasta", "words": ["penne", "ravioli", "fusilli", "lasagne", "spaghetti"] },
+        { "name": "Mountains", "words": ["Everest", "Kilimanjaro", "Fuji", "Matterhorn", "Etna"] },
+        { "name": "Cheese", "words": ["brie", "cheddar", "gouda", "feta", "edam"] },
+        { "name": "Dogs", "words": ["poodle", "beagle", "boxer", "collie", "pug"] },
+        { "name": "Jobs", "words": ["baker", "nurse", "pilot", "farmer", "plumber"] },
+        { "name": "Insects", "words": ["ant", "wasp", "beetle", "moth", "cricket"] }
+      ]
+    }
+  ]
+}

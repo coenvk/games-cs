@@ -66,6 +66,7 @@ jobs:
           publish Bricks bricks
           publish HotPan hot-pan
           publish ConnectWord connect-word
+          publish AssociateWords associate-words
           publish Paddock paddock
 
       # Without this, Pages runs Jekyll, which drops the _framework and _content folders.

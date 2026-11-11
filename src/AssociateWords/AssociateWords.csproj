@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Associate Words' rules: a word solitaire of categories on the Jentl card kit; framework-free. -->
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="AssociateWords.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Jentl.Cards" Version="$(JentlVersion)" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <!-- AssociateWords in the browser. -->
+
+  <PropertyGroup>
+    <AppName>AssociateWords.Game</AppName>
+    <AppTitle>Associate Words</AppTitle>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\shell\Web.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\AssociateWords\AssociateWords.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- AssociateWords on the desktop. -->
+
+  <PropertyGroup>
+    <AppName>AssociateWords.Game</AppName>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\shell\Desktop.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\AssociateWords\AssociateWords.csproj" />
+  </ItemGroup>
+
+</Project>

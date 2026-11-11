@@ -745,5 +745,12 @@
   "Put the words that belong together in one row": "Zet de woorden die bij elkaar horen in één rij",
   "Your best for this level": "Je beste voor dit level",
   "{0} moves (par {1})": "{0} zetten (par {1})",
-  "{0} of {1} matched, {2} moves": "{0} van {1} gevonden, {2} zetten"
+  "{0} of {1} matched, {2} moves": "{0} van {1} gevonden, {2} zetten",
+  "Every word under its category": "Elk woord bij zijn categorie",
+  "Gather the words under their categories": "Verzamel de woorden bij hun categorie",
+  "Out of moves": "Geen zetten meer",
+  "Undo the last move": "Laatste zet terugdraaien",
+  "{0} moves left": "Nog {0} zetten",
+  "{0} of {1} categories complete": "{0} van {1} categorieën compleet",
+  "{0} of {1} categories, {2} moves left": "{0} van {1} categorieën, nog {2} zetten"
 }

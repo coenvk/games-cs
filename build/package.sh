@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Packages one of the games for distribution.
 #
-# Usage: build/package.sh <app> [rid|web]   (app: Sokoban, Solitaire, CardTable, Poker, Mossbrook, CodeLock, Bricks, Paddock, HotPan or ConnectWord;
+# Usage: build/package.sh <app> [rid|web]   (app: Sokoban, Solitaire, CardTable, Poker, Mossbrook, CodeLock, Bricks, Paddock, HotPan, ConnectWord or AssociateWords;
 #                                            default: this machine's runtime, e.g. osx-arm64)
 #
 # For this machine's own runtime the game is compiled ahead of time (NativeAOT): one native
@@ -17,7 +17,7 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
-app="${1:?Which app? Sokoban, Solitaire, CardTable, Poker, Mossbrook, CodeLock, Bricks, Paddock, HotPan or ConnectWord}"
+app="${1:?Which app? Sokoban, Solitaire, CardTable, Poker, Mossbrook, CodeLock, Bricks, Paddock, HotPan, ConnectWord or AssociateWords}"
 host_rid="$(dotnet --info | awk '/RID:/ { print $2; exit }')"
 rid="${2:-$host_rid}"
 project="$root/apps/$app"

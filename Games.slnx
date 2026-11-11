@@ -18,6 +18,8 @@
     <Project Path="apps/CodeLock/Web/CodeLock.Web.csproj" />
     <Project Path="apps/Bricks/Desktop/Bricks.Desktop.csproj" />
     <Project Path="apps/Bricks/Web/Bricks.Web.csproj" />
+    <Project Path="apps/AssociateWords/Desktop/AssociateWords.Desktop.csproj" />
+    <Project Path="apps/AssociateWords/Web/AssociateWords.Web.csproj" />
     <Project Path="apps/ConnectWord/Desktop/ConnectWord.Desktop.csproj" />
     <Project Path="apps/ConnectWord/Web/ConnectWord.Web.csproj" />
     <Project Path="apps/HotPan/Desktop/HotPan.Desktop.csproj" />
@@ -25,6 +27,7 @@
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Bricks/Bricks.csproj" />
+    <Project Path="src/AssociateWords/AssociateWords.csproj" />
     <Project Path="src/ConnectWord/ConnectWord.csproj" />
     <Project Path="src/HotPan/HotPan.csproj" />
     <Project Path="src/CodeLock/CodeLock.csproj" />
@@ -49,6 +52,7 @@
   <Folder Name="/tests/">
     <Project Path="tests/Apps.Tests/Apps.Tests.csproj" />
     <Project Path="tests/Bricks.Tests/Bricks.Tests.csproj" />
+    <Project Path="tests/AssociateWords.Tests/AssociateWords.Tests.csproj" />
     <Project Path="tests/ConnectWord.Tests/ConnectWord.Tests.csproj" />
     <Project Path="tests/HotPan.Tests/HotPan.Tests.csproj" />
     <Project Path="tests/CodeLock.Tests/CodeLock.Tests.csproj" />
