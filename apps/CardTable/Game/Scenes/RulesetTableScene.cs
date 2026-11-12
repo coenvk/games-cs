@@ -164,7 +164,7 @@ internal sealed class RulesetTableScene : Scene
         _context.Sounds.Play(turn.Has("win") ? Sound.Fanfare : Sound.Card);
     }
 
-    private static string Name(Card card) => card.IsStandard ? card.Symbol : card.Face.Code;
+    private static string Name(Card card) => card.IsStandard ? card.Symbol : card.Face.Name;
 
     /// <summary>The buttons for the moment: a suit each while naming one, Keep after drawing, Pass when stuck; New game when over.</summary>
     private void SetButtons()
