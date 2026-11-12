@@ -66,6 +66,7 @@ jobs:
           publish Bricks bricks
           publish HotPan hot-pan
           publish Composer composer
+          publish Roadworks roadworks
           publish ConnectWord connect-word
           publish AssociateWords associate-words
           publish Paddock paddock

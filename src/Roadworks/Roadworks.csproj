@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Roadworks' rules: a town's grid, the roads the player lays on it, and the traffic run over them; plain C# on Jentl.Traffic. -->
+
+  <ItemGroup>
+    <PackageReference Include="Jentl.Traffic" Version="$(JentlVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Roadworks.Tests" />
+  </ItemGroup>
+
+</Project>

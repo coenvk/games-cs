@@ -18,6 +18,8 @@ the engine now lives in its own repository and comes in here as packages.
 | **Associate Words** | A solitaire of words: open a category with its card, then gather its words under it |
 | **Connect Word** | Put the words that belong together in one row, merging cards as you go |
 | **Hot Pan** | Stand in a frying pan and jump onto chicken that's still cool, before your feet burn |
+| **Roadworks** | Lay a town's roads and junctions within a budget, then watch the traffic try them |
+| **Composer** | Write songs on a piano roll for harp, strings, flutes, brass, choir and drums |
 | **Paddock** | Collect invented cars, race hands of five on tracks in all weathers, upgrade and fuse them, win rare ones in events |
 
 Each is its own app, on the desktop and in the browser (each in its own folder of the site above).
@@ -33,7 +35,7 @@ Each is its own app, on the desktop and in the browser (each in its own folder o
 | `src/Sokoban.Model`, `src/Sokoban.Solver` | Sokoban's rules on the puzzle kit, and its solver and level generator |
 | `src/Klondike` ... `src/Yukon` | The solitaire games' rules on the card kit |
 | `src/Uno`, `src/Poker` | Uno and Texas Hold'em (rules, bots, their online rooms) |
-| `src/Mossbrook`, `src/CodeLock`, `src/Bricks`, `src/HotPan`, `src/ConnectWord`, `src/AssociateWords` | The adventure on the RPG kit, the code lock and its solver, the brick breaker on the ECS and physics, Hot Pan's pan, Connect Word's grid, and Associate Words' solitaire on the card kit |
+| `src/Mossbrook`, `src/CodeLock`, `src/Bricks`, `src/HotPan`, `src/ConnectWord`, `src/AssociateWords`, `src/Roadworks` | The adventure on the RPG kit, the code lock and its solver, the brick breaker on the ECS and physics, Hot Pan's pan, Connect Word's grid, and Associate Words' solitaire on the card kit |
 | `src/Paddock` | Paddock's cars, race simulation, upgrades and fusing, matches, events, campaign and economy |
 | `src/GameServer` | The online game server (rooms over WebSockets, hosting Uno and Hold'em), with a Dockerfile |
 | `tests/*` | xUnit tests for every game library and the server; `tests/Apps.Tests` checks the apps' translations and assets |
@@ -49,7 +51,7 @@ one if there is one, otherwise from GitHub at the version in `dependencies.props
 ```bash
 build/jentl.sh
 dotnet test Games.slnx
-dotnet run --project apps/Sokoban/Desktop        # or Solitaire, CardTable, Poker, Mossbrook, CodeLock, Bricks, Paddock, HotPan, ConnectWord, AssociateWords, Composer
+dotnet run --project apps/Sokoban/Desktop        # or Solitaire, CardTable, Poker, Mossbrook, CodeLock, Bricks, Paddock, HotPan, ConnectWord, AssociateWords, Composer, Roadworks
 dotnet run --project apps/Sokoban/Web            # in the browser
 ```
 
@@ -78,7 +80,7 @@ dotnet run --project apps/Sokoban/Desktop -- --keys "Down Enter Wait" --screensh
 
 ## Progress
 
-Each game keeps its files in a folder of its own (`Sokoban`, `Solitaire`, `CardTable`, `Poker`, `Mossbrook`, `CodeLock`, `Bricks`, `Paddock`, `HotPan`, `ConnectWord`, `AssociateWords`, `Composer`); for Sokoban, progress (best moves, pushes, time and the fewest-moves solution per level) is saved as JSON after every improvement:
+Each game keeps its files in a folder of its own (`Sokoban`, `Solitaire`, `CardTable`, `Poker`, `Mossbrook`, `CodeLock`, `Bricks`, `Paddock`, `HotPan`, `ConnectWord`, `AssociateWords`, `Composer`, `Roadworks`); for Sokoban, progress (best moves, pushes, time and the fewest-moves solution per level) is saved as JSON after every improvement:
 
 - macOS: `~/Library/Application Support/Sokoban/progress.json`
 - Windows: `%LOCALAPPDATA%\Sokoban\progress.json`
@@ -326,6 +328,24 @@ Power-ups drop in now and then: a cold drink (health back), oven gloves (no burn
 stops heating for eight) and ice (all the chicken cooler). Oil bubbles and then spits, hurting a cook standing near;
 the spatula turns the hottest piece over, cooler side up, throwing anyone standing on it. The daily pan drops the
 same for everyone on a day and keeps the day's best.
+
+## Roadworks
+
+**Roadworks** is the traffic simulation as a game. Each level is a town's grid with gates at its edges (traffic comes
+in at each and leaves by the others), houses where nothing can be built, a budget and a target delay. Drag along the
+grid to lay road (a hundred a stretch), bulldoze what isn't wanted, and tap a junction to make it give way to the
+right, traffic lights that follow the traffic (three hundred) or a roundabout (five hundred). Run lets the traffic in
+for ten minutes, fast, drawn as it drives, with drivers going round jams; then the verdict: stars for the average
+delay against the target, if every gate reaches every other, the plan is within budget and four in five of the trips
+were made. Five levels in `apps/Roadworks/Assets/roadworks/levels.json`, each proven passable by a simple plan in the
+tests; plans and stars are saved.
+
+## Composer
+
+**Composer** writes songs for Jentl's synthesizer, in the manner of Bosca Ceoil: a piano roll for the pattern being
+written, the arrangement of patterns per channel and bar below it, instruments from the presets, tempo, bars, three
+or four beats, echo, undo, playing with a playhead, saving and opening, copying as a game's code, and WAV files on the
+desktop.
 
 ## Uno
 

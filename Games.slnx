@@ -26,12 +26,15 @@
     <Project Path="apps/HotPan/Web/HotPan.Web.csproj" />
     <Project Path="apps/Composer/Desktop/Composer.Desktop.csproj" />
     <Project Path="apps/Composer/Web/Composer.Web.csproj" />
+    <Project Path="apps/Roadworks/Desktop/Roadworks.Desktop.csproj" />
+    <Project Path="apps/Roadworks/Web/Roadworks.Web.csproj" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Bricks/Bricks.csproj" />
     <Project Path="src/AssociateWords/AssociateWords.csproj" />
     <Project Path="src/ConnectWord/ConnectWord.csproj" />
     <Project Path="src/HotPan/HotPan.csproj" />
+    <Project Path="src/Roadworks/Roadworks.csproj" />
     <Project Path="src/CodeLock/CodeLock.csproj" />
     <Project Path="src/Easthaven/Easthaven.csproj" />
     <Project Path="src/FortyThieves/FortyThieves.csproj" />
@@ -58,6 +61,7 @@
     <Project Path="tests/ConnectWord.Tests/ConnectWord.Tests.csproj" />
     <Project Path="tests/HotPan.Tests/HotPan.Tests.csproj" />
     <Project Path="tests/Composer.Tests/Composer.Tests.csproj" />
+    <Project Path="tests/Roadworks.Tests/Roadworks.Tests.csproj" />
     <Project Path="tests/CodeLock.Tests/CodeLock.Tests.csproj" />
     <Project Path="tests/Easthaven.Tests/Easthaven.Tests.csproj" />
     <Project Path="tests/FortyThieves.Tests/FortyThieves.Tests.csproj" />

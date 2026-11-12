@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Roadworks on the desktop. -->
+
+  <PropertyGroup>
+    <AppName>Roadworks.Game</AppName>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\shell\Desktop.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Roadworks\Roadworks.csproj" />
+  </ItemGroup>
+
+</Project>
