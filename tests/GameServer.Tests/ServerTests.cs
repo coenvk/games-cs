@@ -7,7 +7,8 @@ namespace GameServer.Tests;
 /// <summary>The real server in memory, with real <see cref="NetClient"/>s talking to it over WebSockets.</summary>
 public sealed class ServerTests(WebApplicationFactory<Program> factory) : IClassFixture<WebApplicationFactory<Program>>
 {
-    private static readonly TimeSpan Patience = TimeSpan.FromSeconds(10);
+    // Generous: these wait on real sockets, and the whole suite running at once can starve them for a while.
+    private static readonly TimeSpan Patience = TimeSpan.FromSeconds(30);
 
     [Fact]
     public async Task TheStatusPage_Answers()

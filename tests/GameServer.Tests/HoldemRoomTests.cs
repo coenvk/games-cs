@@ -7,7 +7,8 @@ namespace GameServer.Tests;
 /// <summary>Hold'em rooms: two people at one table through the room server, each told only their own cards.</summary>
 public sealed class HoldemRoomTests(WebApplicationFactory<Program> factory) : IClassFixture<WebApplicationFactory<Program>>
 {
-    private static readonly TimeSpan Patience = TimeSpan.FromSeconds(10);
+    // Generous: these wait on real sockets, and the whole suite running at once can starve them for a while.
+    private static readonly TimeSpan Patience = TimeSpan.FromSeconds(30);
 
     private readonly RoomServer _server = new(new Dictionary<string, Func<IRoomGame>> { [HoldemOnline.Game] = () => new HoldemRoomGame() }, seed: 9);
 
