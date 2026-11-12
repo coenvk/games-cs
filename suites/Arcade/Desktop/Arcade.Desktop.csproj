@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The arcade games in one app: Bricks and Hot Pan. -->
+
+  <PropertyGroup>
+    <AppName>Arcade</AppName>
+    <SuiteGames>Bricks;HotPan</SuiteGames>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\shell\Desktop.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Bricks\Bricks.csproj" />
+    <ProjectReference Include="..\..\..\src\HotPan\HotPan.csproj" />
+  </ItemGroup>
+
+</Project>

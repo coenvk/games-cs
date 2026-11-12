@@ -4,12 +4,6 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Games;
 
-/// <summary>This executable is Jentl Lab.</summary>
-internal static class Entry
-{
-    public static IGameApp Create() => new LabApp();
-}
-
 /// <summary>Jentl Lab: small demos of engine features, for trying and timing them. A tool, not one of the games.</summary>
 internal sealed class LabApp : IGameApp
 {

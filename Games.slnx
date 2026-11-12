@@ -29,6 +29,11 @@
     <Project Path="apps/Roadworks/Desktop/Roadworks.Desktop.csproj" />
     <Project Path="apps/Roadworks/Web/Roadworks.Web.csproj" />
   </Folder>
+  <Folder Name="/suites/">
+    <Project Path="suites/Arcade/Desktop/Arcade.Desktop.csproj" />
+    <Project Path="suites/Puzzles/Desktop/Puzzles.Desktop.csproj" />
+    <Project Path="suites/Words/Desktop/Words.Desktop.csproj" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/Bricks/Bricks.csproj" />
     <Project Path="src/AssociateWords/AssociateWords.csproj" />

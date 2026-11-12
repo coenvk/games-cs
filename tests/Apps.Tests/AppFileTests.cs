@@ -16,13 +16,20 @@ public class AppFileTests
     {
         var used = new HashSet<string>(TranslationCheck.SourceTexts(Path.Combine(Root, "shell")), StringComparer.Ordinal);
         used.UnionWith(TranslationCheck.SourceTexts(Path.Combine(Root, "apps")));
+        used.UnionWith(TranslationCheck.SourceTexts(Path.Combine(Root, "suites")));
         used.Should().Contain(["Options", "Select level", "{0} move"], "the scan finds texts in the shell and the apps");
         used.UnionWith(PaddockTexts());
 
-        // Looked up from data rather than written in the code: Sokoban's level packs and their title prefix.
-        TranslationCheck.Problems(used, Path.Combine(Root, "shell", "Assets", "lang"), indirect: ["Classic", "Ice", "Level"])
+        // Looked up from data rather than written in the code: Sokoban's level packs and their title prefix, and the
+        // suites' names (translated when shown).
+        TranslationCheck.Problems(used, Path.Combine(Root, "shell", "Assets", "lang"), indirect: ["Classic", "Ice", "Level", .. SuiteTitles])
             .Should().BeEmpty();
     }
+
+    /// <summary>The names the suites give themselves: <c>new SuiteApp("Word games", ...)</c> in each one's Entry.</summary>
+    private static IEnumerable<string> SuiteTitles =>
+        Directory.EnumerateFiles(Path.Combine(Root, "suites"), "Entry.cs", SearchOption.AllDirectories)
+            .Select(f => System.Text.RegularExpressions.Regex.Match(File.ReadAllText(f), "new SuiteApp\\(\"([^\"]+)\"").Groups[1].Value);
 
     [Theory]
     [MemberData(nameof(Apps))]

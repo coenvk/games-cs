@@ -10,12 +10,6 @@ using static Games.UI.Tr;
 
 namespace Games;
 
-/// <summary>This executable is Sokoban.</summary>
-internal static class Entry
-{
-    public static IGameApp Create() => new SokobanApp();
-}
-
 /// <param name="Name">Shown on the level select tab.</param>
 /// <param name="Prefix">Used for untitled levels, e.g. "Ice" gives "Ice 3".</param>
 internal sealed record LevelPack(string Name, string Prefix, IReadOnlyList<Level> Levels);

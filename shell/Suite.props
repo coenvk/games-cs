@@ -1,0 +1,19 @@
+<Project>
+
+  <!--
+    A suite: an app holding several games of a kind (the word games, the puzzles). Its project sets SuiteGames to the
+    app folders it holds (ConnectWord;AssociateWords) and references their src projects; each game's code comes in
+    without its Entry, and its assets beside the shell's, while the suite's own Game/Entry.cs makes the app. Imported
+    by the heads' props after AppDir is set; it adds nothing to a single game.
+  -->
+
+  <PropertyGroup Condition="'$(SuiteGames)' != ''">
+    <SuiteAppsDir>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../apps/'))</SuiteAppsDir>
+    <_SuiteJoin>/;$(SuiteAppsDir)</_SuiteJoin>
+    <_SuiteDirs>$(SuiteAppsDir)$(SuiteGames.Replace(';', '$(_SuiteJoin)'))/</_SuiteDirs>
+    <SuiteCode>$([MSBuild]::Unescape($(_SuiteDirs.Replace(';', 'Game/**/*.cs;'))Game/**/*.cs))</SuiteCode>
+    <SuiteEntries>$([MSBuild]::Unescape($(_SuiteDirs.Replace(';', 'Game/Entry.cs;'))Game/Entry.cs))</SuiteEntries>
+    <SuiteAssets>$([MSBuild]::Unescape($(_SuiteDirs.Replace(';', 'Assets/**/*.*;'))Assets/**/*.*))</SuiteAssets>
+  </PropertyGroup>
+
+</Project>

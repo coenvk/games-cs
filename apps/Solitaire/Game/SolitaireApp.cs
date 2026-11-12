@@ -6,12 +6,6 @@ using static Games.UI.Tr;
 
 namespace Games;
 
-/// <summary>This executable is Solitaire.</summary>
-internal static class Entry
-{
-    public static IGameApp Create() => new SolitaireApp();
-}
-
 /// <summary>Nine solitaire games on the Jentl card kit, from Klondike to Easthaven.</summary>
 internal sealed class SolitaireApp : IGameApp
 {

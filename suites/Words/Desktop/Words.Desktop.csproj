@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The word games in one app: Connect Word and Associate Words. -->
+
+  <PropertyGroup>
+    <AppName>Words</AppName>
+    <SuiteGames>ConnectWord;AssociateWords</SuiteGames>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\shell\Desktop.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\ConnectWord\ConnectWord.csproj" />
+    <ProjectReference Include="..\..\..\src\AssociateWords\AssociateWords.csproj" />
+  </ItemGroup>
+
+</Project>

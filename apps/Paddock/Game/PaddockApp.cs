@@ -9,12 +9,6 @@ using static Games.UI.Tr;
 
 namespace Games;
 
-/// <summary>This executable is Paddock.</summary>
-internal static class Entry
-{
-    public static IGameApp Create() => new PaddockApp();
-}
-
 /// <summary>Paddock: collect invented cars, race hands of five on tracks in all weathers, and win rare ones in events.</summary>
 internal sealed class PaddockApp : IGameApp
 {

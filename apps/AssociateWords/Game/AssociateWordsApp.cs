@@ -11,12 +11,6 @@ using static Games.UI.Tr;
 
 namespace Games;
 
-/// <summary>This executable is Associate Words.</summary>
-internal static class Entry
-{
-    public static IGameApp Create() => new AssociateWordsApp();
-}
-
 /// <summary>Associate Words: a solitaire of categories, words gathered under their category cards.</summary>
 internal sealed class AssociateWordsApp : IGameApp
 {

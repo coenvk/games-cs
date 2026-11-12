@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The puzzles in one app: Sokoban and Code Lock. -->
+
+  <PropertyGroup>
+    <AppName>Puzzles</AppName>
+    <SuiteGames>Sokoban;CodeLock</SuiteGames>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\shell\Desktop.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Sokoban.Model\Sokoban.Model.csproj" />
+    <ProjectReference Include="..\..\..\src\Sokoban.Solver\Sokoban.Solver.csproj" />
+    <ProjectReference Include="..\..\..\src\CodeLock\CodeLock.csproj" />
+  </ItemGroup>
+
+  <!-- Sokoban's levels, as its own project ships them. -->
+  <ItemGroup>
+    <None Include="..\..\..\levels\*.xsb" Link="Levels/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+  </ItemGroup>
+
+</Project>

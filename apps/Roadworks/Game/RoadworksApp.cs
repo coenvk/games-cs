@@ -10,12 +10,6 @@ using static Games.UI.Tr;
 
 namespace Games;
 
-/// <summary>This executable is Roadworks.</summary>
-internal static class Entry
-{
-    public static IGameApp Create() => new RoadworksApp();
-}
-
 /// <summary>Roadworks: lay a town's roads and junctions within a budget, then watch the traffic try them.</summary>
 internal sealed class RoadworksApp : IGameApp
 {

@@ -9,12 +9,6 @@ using static Games.UI.Tr;
 
 namespace Games;
 
-/// <summary>This executable is Hot Pan.</summary>
-internal static class Entry
-{
-    public static IGameApp Create() => new HotPanApp();
-}
-
 /// <summary>Hot Pan: keep your feet off the hot pan by jumping on chicken that's still cool, for as long as you can.</summary>
 internal sealed class HotPanApp : IGameApp
 {

@@ -24,6 +24,10 @@ the engine now lives in its own repository and comes in here as packages.
 
 Each is its own app, on the desktop and in the browser (each in its own folder of the site above).
 
+Games of a kind also come together in one app, a suite, for the phone: Words (Connect Word and Associate Words),
+Puzzles (Sokoban and Code Lock) and Arcade (Bricks and Hot Pan). A suite's title screen chooses a game, whose own
+title screen then has "All games" in place of Quit; each game keeps its saves apart in the suite's folder.
+
 ## Layout
 
 | Path | What |
@@ -31,6 +35,7 @@ Each is its own app, on the desktop and in the browser (each in its own folder o
 | `apps/<Game>/Game` | The game's screens and its part of the app (`<Game>App.cs`: title screen, what it loads) |
 | `apps/<Game>/Assets` | The game's own assets (Sokoban's sprite atlas, Mossbrook's maps and content); Sokoban's sprite sources are in `apps/Sokoban/Art` |
 | `apps/<Game>/Desktop`, `apps/<Game>/Web` | The game as a desktop app (MonoGame) and as a browser app (KNI in Blazor WebAssembly): a few lines each |
+| `suites/<Suite>` | A suite: its `Game/Entry.cs` names its games, and its `Desktop` project sets `SuiteGames` (see `shell/Suite.props`) |
 | `shell` | What every app shares: the host (`ShellGame`), the context, options, title screen, panels, audio, controls and translations (`shell/Shell`); the desktop and browser entry points; shared assets (font, sounds, `lang/nl.json`); and `Desktop.props` and `Web.props`, which turn an app folder into an app |
 | `src/Sokoban.Model`, `src/Sokoban.Solver` | Sokoban's rules on the puzzle kit, and its solver and level generator |
 | `src/Klondike` ... `src/Yukon` | The solitaire games' rules on the card kit |

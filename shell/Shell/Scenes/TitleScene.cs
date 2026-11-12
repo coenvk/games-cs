@@ -20,6 +20,7 @@ internal sealed class TitleScene : Scene
     private readonly Func<TitleScene, IReadOnlyList<MenuItem>> _items;
     private readonly Func<string> _subtitle;
     private Menu _menu;
+    private bool _canLeave;
 
     /// <param name="items">The game's choices (they can <see cref="Open"/> a game); Options and Quit follow by themselves.</param>
     /// <param name="subtitle">The line under the title (it may change, e.g. with the records).</param>
@@ -34,12 +35,15 @@ internal sealed class TitleScene : Scene
     /// <summary>Opens <paramref name="scene"/> over the title screen: a game (with a fade) or a panel.</summary>
     public void Open(Scene scene, bool fade = true) => Scenes.Push(scene, fade ? Navigation.Fade() : null);
 
+    /// <summary>The scene manager this screen is on, for choices that replace it (a suite starting a game).</summary>
+    public SceneManager Manager => Scenes;
+
     public override void Update(TimeSpan elapsed, InputState input)
     {
-        // Esc moves to Quit rather than quitting outright, so a stray press is harmless.
+        // Esc moves to the way out (Quit, or All games) rather than taking it, so a stray press is harmless.
         if (_context.Actions.WasPressed(input, GameAction.Back))
         {
-            if (_context.Platform.CanQuit)
+            if (_canLeave)
             {
                 _menu.Selected = _menu.Items.Count - 1;
             }
@@ -83,9 +87,11 @@ internal sealed class TitleScene : Scene
     private Menu BuildMenu(int selected = 0)
     {
         List<MenuItem> items = [.. _items(this), new(T("Music"), () => Scenes.Push(new MusicScene(_context))), new(T("Options"), () => Scenes.Push(new OptionsScene(_context)))];
-        if (_context.Platform.CanQuit)
+        var leave = Navigation.Leave(_context, () => Scenes);
+        _canLeave = leave is not null;
+        if (leave is not null)
         {
-            items.Add(new MenuItem(T("Quit"), () => Scenes.Pop(Navigation.Fade())));
+            items.Add(leave);
         }
 
         return new Menu(_context.Sounds, [.. items]) { Selected = Math.Min(selected, items.Count - 1) };

@@ -8,12 +8,6 @@ using static Games.UI.Tr;
 
 namespace Games;
 
-/// <summary>This executable is Poker.</summary>
-internal static class Entry
-{
-    public static IGameApp Create() => new PokerApp();
-}
-
 /// <summary>
 /// No-Limit Texas Hold'em: against bots or passing the device round, and on the desktop the bot workshop, where bots
 /// people wrote play each other.

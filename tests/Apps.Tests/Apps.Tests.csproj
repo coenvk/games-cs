@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Checks over the apps' own files: translations and assets; and the shell's soundtrack. -->
+  <!-- Checks over the apps' own files: translations and assets; and the shell's soundtrack and suites' saves. -->
 
   <Import Project="..\..\test.props" />
 
@@ -9,7 +9,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\..\shell\Shell\Soundtrack.cs;..\..\shell\Shell\GameAudio.cs" LinkBase="Shell" />
+    <Compile Include="..\..\shell\Shell\Soundtrack.cs;..\..\shell\Shell\GameAudio.cs;..\..\shell\Shell\PrefixedStore.cs" LinkBase="Shell" />
   </ItemGroup>
 
 </Project>

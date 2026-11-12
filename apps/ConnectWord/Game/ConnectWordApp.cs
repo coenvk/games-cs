@@ -11,12 +11,6 @@ using static Games.UI.Tr;
 
 namespace Games;
 
-/// <summary>This executable is Connect Word.</summary>
-internal static class Entry
-{
-    public static IGameApp Create() => new ConnectWordApp();
-}
-
 /// <summary>Connect Word: put words of a category together, by merging cards or lining them up in a row.</summary>
 internal sealed class ConnectWordApp : IGameApp
 {

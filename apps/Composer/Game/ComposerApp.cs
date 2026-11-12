@@ -6,12 +6,6 @@ using static Games.UI.Tr;
 
 namespace Games;
 
-/// <summary>This executable is the Composer.</summary>
-internal static class Entry
-{
-    public static IGameApp Create() => new ComposerApp();
-}
-
 /// <summary>The Composer: songs written on a piano roll and an arrangement, for the instruments of Jentl's synthesizer.</summary>
 internal sealed class ComposerApp : IGameApp
 {

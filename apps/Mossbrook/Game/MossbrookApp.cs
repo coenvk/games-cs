@@ -6,12 +6,6 @@ using static Games.UI.Tr;
 
 namespace Games;
 
-/// <summary>This executable is Mossbrook.</summary>
-internal static class Entry
-{
-    public static IGameApp Create() => new MossbrookApp();
-}
-
 /// <summary>Mossbrook, a small turn-based adventure on the Jentl RPG kit: a village, a cellar and a lost amulet.</summary>
 internal sealed class MossbrookApp : IGameApp
 {

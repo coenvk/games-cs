@@ -25,10 +25,10 @@ internal sealed class MenuScene : Scene
 
     public override void Update(TimeSpan elapsed, InputState input)
     {
-        // Esc moves to Quit rather than quitting outright, so a stray press is harmless.
+        // Esc moves to the way out (Quit, or All games) rather than taking it, so a stray press is harmless.
         if (_context.Actions.WasPressed(input, GameAction.Back))
         {
-            if (_context.Platform.CanQuit)
+            if (Navigation.Leave(_context, () => Scenes) is not null)
             {
                 _menu.Selected = _menu.Items.Count - 1;
             }
@@ -107,9 +107,9 @@ internal sealed class MenuScene : Scene
             new(T("Random level"), () => Scenes.Push(new GenerateScene(context), Navigation.Fade())),
             new(T("Options"), () => Scenes.Push(new OptionsScene(context))),
         ];
-        if (context.Platform.CanQuit)
+        if (Navigation.Leave(context, () => Scenes) is { } leave)
         {
-            items.Add(new MenuItem(T("Quit"), () => Scenes.Pop(Navigation.Fade())));
+            items.Add(leave);
         }
 
         return new Menu(context.Sounds, [.. items])

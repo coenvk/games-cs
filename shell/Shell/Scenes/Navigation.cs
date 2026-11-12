@@ -1,6 +1,7 @@
 ﻿using Jentl.Core.Scenes;
 using Games.UI;
 using Jentl.Core.UI;
+using static Games.UI.Tr;
 
 namespace Games.Scenes;
 
@@ -14,6 +15,23 @@ internal static partial class Navigation
 
     public static Transition Wipe() => new WipeTransition(WipeDuration, Palette.Background);
 
-    public static void ToMainMenu(SceneManager scenes, GameContext context) =>
+    public static void ToMainMenu(SceneManager scenes, GameContext context)
+    {
+        ArgumentNullException.ThrowIfNull(scenes);
+        ArgumentNullException.ThrowIfNull(context);
         scenes.Reset(context.App.MainMenu(context), Fade());
+    }
+
+    /// <summary>
+    /// A title screen's way out, its last item: inside a suite, back to the suite's games; on its own, Quit where the
+    /// platform can quit; otherwise none.
+    /// </summary>
+    public static MenuItem? Leave(GameContext context, Func<SceneManager> scenes)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(scenes);
+        return context.App is SuiteApp { Current: not null } suite ? new MenuItem(T("All games"), () => suite.Leave(scenes(), context))
+            : context.Platform.CanQuit ? new MenuItem(T("Quit"), () => scenes().Pop(Fade()))
+            : null;
+    }
 }

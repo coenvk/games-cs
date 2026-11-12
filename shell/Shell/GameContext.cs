@@ -96,8 +96,11 @@ internal sealed class GameContext(
 
     public AssetStore Assets { get; } = assets;
 
-    /// <summary>Where the game keeps its files; null keeps them in memory only (scripted runs).</summary>
-    public ISaveStore? Store { get; } = store;
+    /// <summary>
+    /// Where the game keeps its files; null keeps them in memory only (scripted runs). A suite points it at each game's
+    /// own corner while that game loads.
+    /// </summary>
+    public ISaveStore? Store { get; set; } = store;
 
     /// <summary>A fixed deal or seed for reproducible runs (<c>--deal</c>).</summary>
     public int? Deal => Options.Deal;

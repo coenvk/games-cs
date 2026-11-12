@@ -6,12 +6,6 @@ using static Games.UI.Tr;
 
 namespace Games;
 
-/// <summary>This executable is Card Table.</summary>
-internal static class Entry
-{
-    public static IGameApp Create() => new CardTableApp();
-}
-
 /// <summary>Uno at one table: against bots, passing the device round, or online.</summary>
 internal sealed class CardTableApp : IGameApp
 {

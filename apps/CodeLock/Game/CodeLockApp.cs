@@ -6,12 +6,6 @@ using static Games.UI.Tr;
 
 namespace Games;
 
-/// <summary>This executable is Code Lock.</summary>
-internal static class Entry
-{
-    public static IGameApp Create() => new CodeLockApp();
-}
-
 /// <summary>Mastermind on a combination lock: find the code from the lamps each try lights.</summary>
 internal sealed class CodeLockApp : IGameApp
 {

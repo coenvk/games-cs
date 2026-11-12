@@ -16,9 +16,12 @@
     <AppDir>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)/../'))</AppDir>
   </PropertyGroup>
 
+  <Import Project="$(MSBuildThisFileDirectory)Suite.props" />
+
   <ItemGroup>
     <Compile Include="$(ShellDir)Shell/**/*.cs;$(ShellDir)Desktop/**/*.cs" LinkBase="Shell" />
     <Compile Include="$(AppDir)Game/**/*.cs" LinkBase="Game" />
+    <Compile Include="$(SuiteCode)" Exclude="$(SuiteEntries)" LinkBase="Games" Condition="'$(SuiteGames)' != ''" />
   </ItemGroup>
 
   <ItemGroup>
@@ -31,6 +34,7 @@
   <ItemGroup>
     <None Include="$(ShellDir)Assets/**/*.*" Link="Assets/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
     <None Include="$(AppDir)Assets/**/*.*" Link="Assets/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    <None Include="$(SuiteAssets)" Link="Assets/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" Condition="'$(SuiteGames)' != ''" />
   </ItemGroup>
 
 </Project>
