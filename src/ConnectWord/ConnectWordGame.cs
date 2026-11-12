@@ -70,6 +70,7 @@ public sealed class ConnectWordGame
     private readonly Queue<WordCard> _deck;
     private readonly List<int> _solved = [];
     private readonly List<WordEvent> _events = [];
+    private readonly List<(Cell From, Cell To)> _history = [];
 
     public ConnectWordGame(WordLevel level, int seed, int columns = 4, int rows = 4)
     {
@@ -77,6 +78,7 @@ public sealed class ConnectWordGame
         ArgumentOutOfRangeException.ThrowIfLessThan(columns, 2);
         ArgumentOutOfRangeException.ThrowIfLessThan(rows, 2);
         Level = level;
+        Seed = seed;
         Columns = columns;
         Rows = rows;
         _grid = new WordCard?[columns, rows];
@@ -89,6 +91,11 @@ public sealed class ConnectWordGame
     }
 
     public WordLevel Level { get; }
+
+    public int Seed { get; }
+
+    /// <summary>The moves made, in order.</summary>
+    public IReadOnlyList<(Cell From, Cell To)> History => _history;
 
     public int Columns { get; }
 
@@ -166,6 +173,7 @@ public sealed class ConnectWordGame
         }
 
         Moves++;
+        _history.Add((from, to));
         Settle();
         if (IsWon)
         {
@@ -183,6 +191,27 @@ public sealed class ConnectWordGame
         .OrderByDescending(g => g[0].Card.Words.Count + g[1].Card.Words.Count)
         .Select(g => ((Cell, Cell)?)(g[1].Cell, g[0].Cell))
         .FirstOrDefault();
+
+    /// <summary>
+    /// The game as it was before the last move: dealt again from the seed and played up to there, so the deck comes
+    /// out the same. The same game when nothing has been moved.
+    /// </summary>
+    public ConnectWordGame Undone()
+    {
+        if (_history.Count == 0)
+        {
+            return this;
+        }
+
+        var game = new ConnectWordGame(Level, Seed, Columns, Rows);
+        foreach (var (from, to) in _history.Take(_history.Count - 1))
+        {
+            game.Drop(from, to);
+        }
+
+        game.DrainEvents();
+        return game;
+    }
 
     private bool Inside(Cell cell) => cell.Column >= 0 && cell.Column < Columns && cell.Row >= 0 && cell.Row < Rows;
 

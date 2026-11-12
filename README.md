@@ -305,7 +305,10 @@ ones drop in from the deck. Match every category to win the level: three stars a
 every merge were needed). Tap a card and then another instead of dragging, or use the arrow keys and Enter; Hint shows
 two cards that belong together. Twenty levels in `apps/ConnectWord/Assets/connectword/levels.json`, from three easy
 categories to six with red herrings (Ruby the programming language, cricket the insect); every word in one category
-only, which the tests check, along with every level being winnable. `--level <n>` opens a level.
+only, which the tests check, along with every level being winnable. `--level <n>` opens a level. Dutch has twenty
+levels of its own (`levels.nl.json`), played and saved separately when the game is in Dutch. Undo takes moves back.
+The daily puzzle and random puzzles mix categories from all of the language's levels (only ones with no word in
+common, used or not), timed; the daily one is the same for everyone that day, and the days done in a row are counted.
 
 ## Hot Pan
 

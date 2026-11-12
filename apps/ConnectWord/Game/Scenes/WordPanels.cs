@@ -50,7 +50,7 @@ internal sealed class WordPauseScene : PanelScene
             new MenuItem(T("Main menu"), () => Navigation.ToMainMenu(Scenes, context)));
     }
 
-    protected override string Title => T("Level {0}", _game.Number + 1);
+    protected override string Title => _game.Puzzle.Title;
 
     protected override IReadOnlyList<PanelLine> Lines =>
         [new(T("{0} of {1} matched, {2} moves", _game.Game.Solved.Count, _game.Game.Level.Categories.Count, _game.Game.Moves), Palette.Muted)];
@@ -65,11 +65,16 @@ internal sealed class WordWonScene : PanelScene
         : base(context)
     {
         (_game, _best) = (game, best);
-        var last = game.Number == context.Words.Levels.Count - 1;
+        var next = game.Puzzle.Kind switch
+        {
+            PuzzleKind.Level when game.Number < context.Words.Levels.Count - 1 => T("Next level"),
+            PuzzleKind.Random => T("Another puzzle"),
+            _ => null,
+        };
         Menu = new Menu(
             context.Sounds,
             [
-                .. last ? Array.Empty<MenuItem>() : [new MenuItem(T("Next level"), () =>
+                .. next is null ? Array.Empty<MenuItem>() : [new MenuItem(next, () =>
                 {
                     Scenes.Pop();
                     _game.NextLevel();
@@ -83,14 +88,28 @@ internal sealed class WordWonScene : PanelScene
             ]);
     }
 
-    protected override string Title => T("Level {0} done!", _game.Number + 1);
+    protected override string Title => _game.Puzzle.Kind == PuzzleKind.Level ? T("Level {0} done!", _game.Number + 1) : T("Solved!");
 
-    protected override IReadOnlyList<PanelLine> Lines =>
-    [
-        new(new string('★', _game.Game.Stars) + new string('☆', 3 - _game.Game.Stars), Palette.Accent),
-        new(T("{0} moves (par {1})", _game.Game.Moves, _game.Game.Par), Palette.Text),
-        new(_best ? T("Your best for this level") : T("Every word in its place"), Palette.Muted),
-    ];
+    protected override IReadOnlyList<PanelLine> Lines => _game.Puzzle.Kind switch
+    {
+        PuzzleKind.Level =>
+        [
+            new(new string('★', _game.Game.Stars) + new string('☆', 3 - _game.Game.Stars), Palette.Accent),
+            new(T("{0} moves (par {1})", _game.Game.Moves, _game.Game.Par), Palette.Text),
+            new(_best ? T("Your best for this level") : T("Every word in its place"), Palette.Muted),
+        ],
+        PuzzleKind.Daily =>
+        [
+            new(T("{0} in {1} moves", WordPlayScene.Clock(_game.Time), _game.Game.Moves), Palette.Accent),
+            new(N(Context.Words.Streak(DateOnly.FromDateTime(DateTime.Now)), "{0} day in a row", "{0} days in a row"), Palette.Text),
+            new(T("A new puzzle comes tomorrow"), Palette.Muted),
+        ],
+        _ =>
+        [
+            new(T("{0} in {1} moves", WordPlayScene.Clock(_game.Time), _game.Game.Moves), Palette.Accent),
+            new(T("Every word in its place"), Palette.Muted),
+        ],
+    };
 
     protected override void OnBack() => Navigation.ToMainMenu(Scenes, Context);
 }

@@ -811,5 +811,14 @@
   "{0} bpm": "{0} bpm",
   "{0} bars, {1} channels": "{0} maten, {1} kanalen",
   "Higher": "Hoger",
-  "Lower": "Lager"
+  "Lower": "Lager",
+  "A new puzzle comes tomorrow": "Morgen is er een nieuwe puzzel",
+  "Another puzzle": "Nog een puzzel",
+  "Daily puzzle": "Dagpuzzel",
+  "Puzzle {0}": "Puzzel {0}",
+  "Random puzzle": "Willekeurige puzzel",
+  "Solved!": "Opgelost!",
+  "{0} day in a row": "{0} dag op rij",
+  "{0} days in a row": "{0} dagen op rij",
+  "{0} in {1} moves": "{0} in {1} zetten"
 }

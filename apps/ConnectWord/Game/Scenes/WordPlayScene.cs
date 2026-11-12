@@ -42,30 +42,60 @@ internal sealed class WordPlayScene : Scene
     private bool _wasDown;
     private Cell? _pressCell;
     private float _seconds = 1 / 60f;
+    private readonly Dictionary<int, SquashStretch> _pops = [];
 
     public WordPlayScene(GameContext context, int level)
+        : this(context, WordPuzzle.FromList(context, level))
+    {
+    }
+
+    public WordPlayScene(GameContext context, WordPuzzle puzzle)
     {
         _context = context;
-        Number = Math.Clamp(level, 0, context.Words.Levels.Count - 1);
-        Game = new ConnectWordGame(context.Words.Levels[Number], seed: (context.Deal ?? 0) + Number + 1);
+        Puzzle = puzzle;
+        Game = new ConnectWordGame(puzzle.Level, puzzle.Seed);
         Game.DrainEvents();
         _buttons = new ButtonBar(
             new Button(T("Hint"), ShowHint),
+            new Button(T("Undo"), Undo),
             new Button(T("Restart"), Restart),
             new Button(T("Menu"), () => Scenes.Push(new WordPauseScene(context, this))));
     }
 
-    /// <summary>The level, from 0.</summary>
-    public int Number { get; }
+    public WordPuzzle Puzzle { get; }
 
-    public ConnectWordGame Game { get; }
+    /// <summary>The level, from 0 (or the date, or the seed).</summary>
+    public int Number => Puzzle.Number;
+
+    public ConnectWordGame Game { get; private set; }
+
+    /// <summary>How long the puzzle has been played (paused while a menu is open).</summary>
+    public TimeSpan Time { get; private set; }
 
     public override IEnumerable<string> DebugInfo =>
-        [$"Level {Number + 1}  moves {Game.Moves}  par {Game.Par}  deck {Game.DeckCount}  solved {Game.Solved.Count}/{Game.Level.Categories.Count}"];
+        [$"{Puzzle.Kind} {Number}  moves {Game.Moves}  par {Game.Par}  deck {Game.DeckCount}  solved {Game.Solved.Count}/{Game.Level.Categories.Count}"];
 
-    public void Restart() => Scenes.Replace(new WordPlayScene(_context, Number), Navigation.Fade());
+    public void Restart() => Scenes.Replace(new WordPlayScene(_context, Puzzle), Navigation.Fade());
 
-    public void NextLevel() => Scenes.Replace(new WordPlayScene(_context, Math.Min(Number + 1, _context.Words.Levels.Count - 1)), Navigation.Fade());
+    /// <summary>The next level of the list, or another random puzzle.</summary>
+    public void NextLevel() => Scenes.Replace(
+        new WordPlayScene(_context, Puzzle.Kind == PuzzleKind.Random ? WordPuzzle.Random(_context) : WordPuzzle.FromList(_context, Number + 1)),
+        Navigation.Fade());
+
+    /// <summary>Takes the last move back.</summary>
+    public void Undo()
+    {
+        if (Game.IsWon || Game.History.Count == 0)
+        {
+            _context.Sounds.Play(Sound.Error);
+            return;
+        }
+
+        Game = Game.Undone();
+        _picked = null;
+        _hint = null;
+        _context.Sounds.Play(Sound.Card);
+    }
 
     protected override void OnEnter() => _context.PlayMood(Music.Words);
 
@@ -84,6 +114,17 @@ internal sealed class WordPlayScene : Scene
         if (_buttons.Update(input) || Game.IsWon)
         {
             return;
+        }
+
+        Time += elapsed;
+        foreach (var pop in _pops.Values)
+        {
+            pop.Update(elapsed);
+        }
+
+        if (actions.WasPressed(input, GameAction.Undo))
+        {
+            Undo();
         }
 
         if (actions.WasPressed(input, GameAction.Hint))
@@ -109,7 +150,12 @@ internal sealed class WordPlayScene : Scene
         batch.FillRectangle(hud, Palette.Panel);
         var text = hud;
         text.Inflate(-margin, 0);
-        batch.DrawText(fonts.Body, T("Level {0}", Number + 1), text, Palette.Text, Align.Left);
+        batch.DrawText(fonts.Body, Puzzle.Title, text, Palette.Text, Align.Left);
+        if (Puzzle.Kind != PuzzleKind.Level)
+        {
+            batch.DrawText(fonts.Body, Clock(Time), text, Palette.Muted, Align.Center);
+        }
+
         batch.DrawText(fonts.Body, T("Moves {0}", Game.Moves), text, Palette.Accent, Align.Right);
 
         var buttonsHeight = ButtonBar.Height(fonts.Small) + fonts.Px(16);
@@ -142,6 +188,13 @@ internal sealed class WordPlayScene : Scene
             at = Vector2.Lerp(at, target, 1 - MathF.Exp(-18 * elapsed));
             _drawnAt[card.Id] = at;
             var bounds = new Rectangle((int)at.X, (int)at.Y, _cell, _cell);
+            if (_pops.TryGetValue(card.Id, out var pop) && pop.Scale != Vector2.One)
+            {
+                // A card just merged swells and wobbles back.
+                var size = new Vector2(_cell) * pop.Scale;
+                bounds = new Rectangle((int)(bounds.Center.X - (size.X / 2)), (int)(bounds.Center.Y - (size.Y / 2)), (int)size.X, (int)size.Y);
+            }
+
             if (_picked == cell && _dragging)
             {
                 bounds.Location = (_cursor - new Vector2(_cell / 2f)).ToPoint();
@@ -156,6 +209,8 @@ internal sealed class WordPlayScene : Scene
         }
 
     }
+
+    public static string Clock(TimeSpan time) => $"{(int)time.TotalMinutes}:{time.Seconds:00}";
 
     private Rectangle CellBounds(Cell cell) => new(_grid.X + (cell.Column * _cell), _grid.Y + (cell.Row * _cell), _cell, _cell);
 
@@ -260,6 +315,12 @@ internal sealed class WordPlayScene : Scene
             {
                 case CardsMerged merged:
                     Scenes.Effects.Emit(CellBounds(merged.At).Center.ToVector2(), ParticleEffects.Sparkles, _cell / 90f);
+                    if (!_pops.TryGetValue(merged.Card.Id, out var pop))
+                    {
+                        _pops[merged.Card.Id] = pop = new SquashStretch();
+                    }
+
+                    pop.Trigger(0.18f, TimeSpan.FromMilliseconds(450));
                     break;
                 case CategoryMatched:
                     _context.Sounds.Play(Sound.LevelUp);
@@ -267,7 +328,12 @@ internal sealed class WordPlayScene : Scene
                 case LevelWon won:
                     _context.Sounds.Play(Sound.Fanfare);
                     Celebration.Confetti(Scenes);
-                    var best = _context.Words.Record(Number, won.Moves, won.Stars);
+                    var best = Puzzle.Kind switch
+                    {
+                        PuzzleKind.Level => _context.Words.Record(Number, won.Moves, won.Stars),
+                        PuzzleKind.Daily => _context.Words.RecordDaily(Number, (int)Time.TotalSeconds, won.Moves),
+                        _ => false,
+                    };
                     Timers.After(TimeSpan.FromSeconds(0.9), () => Scenes.Push(new WordWonScene(_context, this, best)));
                     break;
             }
