@@ -322,6 +322,10 @@ with an orange line along the top) burns, and black pieces are flicked out of th
 breasts slowest. Ten points a second survived, on the same leaderboards as Bricks. Walk with the arrow keys, A and D
 or the gamepad and jump with Space, Up or A; on a touch screen hold to walk towards your finger and tap or swipe up to
 jump. A short tap jumps lower than a held one. `--deal` picks the seed: the same seed drops the same chicken.
+Power-ups drop in now and then: a cold drink (health back), oven gloves (no burns for six seconds), a lid (the pan
+stops heating for eight) and ice (all the chicken cooler). Oil bubbles and then spits, hurting a cook standing near;
+the spatula turns the hottest piece over, cooler side up, throwing anyone standing on it. The daily pan drops the
+same for everyone on a day and keeps the day's best.
 
 ## Uno
 

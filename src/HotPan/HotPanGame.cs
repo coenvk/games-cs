@@ -75,6 +75,36 @@ public sealed class Chicken
 /// <param name="JumpHeld">Jump is held: let go early for a shorter jump.</param>
 public readonly record struct PanInput(float Move, bool Jump, bool JumpHeld);
 
+/// <summary>What a power-up does: a cold drink heals, oven gloves stop burns for a while, a lid stops the pan heating, ice cools the chicken.</summary>
+public enum Treat
+{
+    Drink,
+    Gloves,
+    Lid,
+    Ice,
+}
+
+/// <summary>A power-up dropped into the pan: it lands on the floor or on chicken, and is taken by walking or jumping into it.</summary>
+public sealed class PowerUp(int id, Treat treat, float x, float y)
+{
+    public const float Size = 26;
+
+    public int Id { get; } = id;
+
+    public Treat Treat { get; } = treat;
+
+    public float X { get; internal set; } = x;
+
+    public float Y { get; internal set; } = y;
+
+    public float FallSpeed { get; internal set; }
+
+    public bool Landed { get; internal set; }
+
+    /// <summary>Seconds since it landed: it is gone after <see cref="HotPanGame.PowerUpLife"/>.</summary>
+    public float Age { get; internal set; }
+}
+
 /// <summary>Something that happened, for the screen to show and sound.</summary>
 public abstract record PanEvent;
 
@@ -94,6 +124,22 @@ public sealed record ChickenCharred(Chicken Chicken) : PanEvent;
 public sealed record StartedBurning(float X, float Y) : PanEvent;
 
 public sealed record GameOver(int Score, TimeSpan Survived) : PanEvent;
+
+public sealed record PowerUpDropped(PowerUp PowerUp) : PanEvent;
+
+public sealed record PowerUpTaken(PowerUp PowerUp) : PanEvent;
+
+/// <summary>A power-up left too long, gone.</summary>
+public sealed record PowerUpLost(PowerUp PowerUp) : PanEvent;
+
+/// <summary>The spatula turned a piece over, its cooler side up; the cook, if standing on it, is thrown up.</summary>
+public sealed record ChickenFlipped(Chicken Chicken, bool CookThrown) : PanEvent;
+
+/// <summary>Oil starts to bubble where it will spit, a moment before it does.</summary>
+public sealed record OilBubbling(float X) : PanEvent;
+
+/// <summary>Hot oil spits up; <paramref name="Hit"/> when it caught the cook.</summary>
+public sealed record OilSpat(float X, bool Hit) : PanEvent;
 
 /// <summary>
 /// Hot Pan: you stand in a frying pan. Pieces of chicken drop in and warm up from the pan, and the pan itself gets
@@ -127,6 +173,18 @@ public sealed class HotPanGame
     internal const float CharredLinger = 0.8f;
     internal const int MaxPieces = 8;
 
+    public const float PowerUpLife = 9;
+    public const float GlovesTime = 6;
+    public const float LidTime = 8;
+    public const float DrinkHealth = 30;
+    public const float IceCooling = 45;
+    public const float SpitWarning = 0.8f;
+    public const float SpitReach = 36;
+    public const float SpitDamage = 12;
+    internal const float FirstPowerUp = 12;
+    internal const float FirstFlip = 25;
+    internal const float FirstSpit = 20;
+
     private readonly Random _random;
     private readonly List<Chicken> _chicken = [];
     private readonly List<PanEvent> _events = [];
@@ -136,10 +194,19 @@ public sealed class HotPanGame
     private float _jumpWanted = float.MaxValue;
     private bool _burning;
 
+    // The extras (power-ups, the spatula, oil) draw from their own numbers, so the chicken comes as it always did.
+    private readonly Random _extras;
+    private readonly List<PowerUp> _powerUps = [];
+    private readonly List<(float X, float Left)> _bubbles = [];
+    private float _untilPowerUp = FirstPowerUp;
+    private float _untilFlip = FirstFlip;
+    private float _untilSpit = FirstSpit;
+
     public HotPanGame(int seed)
     {
         Seed = seed;
         _random = new Random(seed);
+        _extras = new Random(unchecked((seed * 7919) + 17));
         CookX = Width / 2;
         CookY = FloorY;
 
@@ -193,6 +260,19 @@ public sealed class HotPanGame
 
     public IReadOnlyList<Chicken> Chicken => _chicken;
 
+    public IReadOnlyList<PowerUp> PowerUps => _powerUps;
+
+    /// <summary>Where oil is bubbling, about to spit, and how long until it does.</summary>
+    public IReadOnlyList<(float X, float Left)> Bubbles => _bubbles;
+
+    /// <summary>Seconds of oven gloves left: no burns while they last.</summary>
+    public float GlovesLeft { get; private set; }
+
+    /// <summary>Seconds of the lid left: the pan doesn't heat while it lasts.</summary>
+    public float LidLeft { get; private set; }
+
+    public bool IsProtected => GlovesLeft > 0;
+
     /// <summary>The seconds between pieces dropping in: three at first, down to one and a bit.</summary>
     public float DropInterval => MathF.Max(1.3f, 3f - ((float)Time.TotalSeconds * 0.015f));
 
@@ -226,12 +306,19 @@ public sealed class HotPanGame
     {
         Time += TimeSpan.FromSeconds(dt);
 
-        // The pan creeps hotter, a degree and a bit a second, and faster the longer it goes.
-        PanTemperature += (1.2f + ((float)Time.TotalSeconds * 0.01f)) * dt;
+        // The pan creeps hotter, a degree and a bit a second, and faster the longer it goes; not under the lid.
+        GlovesLeft = MathF.Max(0, GlovesLeft - dt);
+        LidLeft = MathF.Max(0, LidLeft - dt);
+        if (LidLeft <= 0)
+        {
+            PanTemperature += (1.2f + ((float)Time.TotalSeconds * 0.01f)) * dt;
+        }
+
         Heat(dt);
         Drop(dt);
         Fall(dt);
         MoveCook(dt, input);
+        Extras(dt);
         Burn(dt);
     }
 
@@ -418,10 +505,154 @@ public sealed class HotPanGame
         CookY = y;
     }
 
+    /// <summary>Power-ups dropping, landing, taken and lost; the spatula; oil bubbling and spitting.</summary>
+    private void Extras(float dt)
+    {
+        _untilPowerUp -= dt;
+        if (_untilPowerUp <= 0)
+        {
+            _untilPowerUp = 12 + ((float)_extras.NextDouble() * 8);
+            var treat = (Treat)_extras.Next(4);
+            DropPowerUp(treat, PanLeft + PowerUp.Size + ((float)_extras.NextDouble() * (PanRight - PanLeft - (2 * PowerUp.Size))));
+        }
+
+        foreach (var item in _powerUps.ToList())
+        {
+            if (!item.Landed)
+            {
+                // It falls onto the first chicken top or the floor below it.
+                item.FallSpeed += Gravity * dt;
+                var y = item.Y + (item.FallSpeed * dt);
+                var floor = _chicken.Where(c => c.Landed && item.X >= c.Left && item.X <= c.Right && item.Y <= c.Y).Select(c => c.Y).DefaultIfEmpty(FloorY).Min();
+                (item.Y, item.Landed) = y >= floor ? (floor, true) : (y, false);
+            }
+            else
+            {
+                item.Age += dt;
+                if (!_chicken.Any(c => c.Landed && item.X >= c.Left && item.X <= c.Right && MathF.Abs(c.Y - item.Y) < 1) && item.Y < FloorY)
+                {
+                    // What it sat on went (charred and flicked out): it drops again.
+                    item.Landed = false;
+                }
+            }
+
+            if (MathF.Abs(item.X - CookX) < (PowerUp.Size + CookWidth) / 2 && item.Y > CookY - CookHeight - PowerUp.Size && item.Y - PowerUp.Size < CookY)
+            {
+                Take(item);
+            }
+            else if (item.Age > PowerUpLife)
+            {
+                _powerUps.Remove(item);
+                _events.Add(new PowerUpLost(item));
+            }
+        }
+
+        // The spatula: now and then it turns over the hottest piece that isn't charred yet, cooler side up.
+        _untilFlip -= dt;
+        if (_untilFlip <= 0)
+        {
+            _untilFlip = 14 + ((float)_extras.NextDouble() * 10);
+            Flip(dt);
+        }
+
+        // Oil: it bubbles somewhere first, then spits; the cook near it gets splashed, unless gloved.
+        _untilSpit -= dt;
+        if (_untilSpit <= 0)
+        {
+            _untilSpit = MathF.Max(3, 9 - ((float)Time.TotalSeconds * 0.02f)) + ((float)_extras.NextDouble() * 4);
+            Bubble(PanLeft + 30 + ((float)_extras.NextDouble() * (PanRight - PanLeft - 60)));
+        }
+
+        for (var i = _bubbles.Count - 1; i >= 0; i--)
+        {
+            var (x, left) = _bubbles[i];
+            left -= dt;
+            if (left > 0)
+            {
+                _bubbles[i] = (x, left);
+                continue;
+            }
+
+            _bubbles.RemoveAt(i);
+            var hit = MathF.Abs(CookX - x) < SpitReach && CookY > FloorY - 140 && !IsProtected;
+            if (hit)
+            {
+                Health = MathF.Max(0, Health - SpitDamage);
+                if (Health <= 0)
+                {
+                    _events.Add(new GameOver(Score, Time));
+                }
+            }
+
+            _events.Add(new OilSpat(x, hit));
+        }
+    }
+
+    internal PowerUp DropPowerUp(Treat treat, float x)
+    {
+        var item = new PowerUp(_nextId++, treat, x, -PowerUp.Size);
+        _powerUps.Add(item);
+        _events.Add(new PowerUpDropped(item));
+        return item;
+    }
+
+    internal void Bubble(float x)
+    {
+        _bubbles.Add((x, SpitWarning));
+        _events.Add(new OilBubbling(x));
+    }
+
+    /// <summary>The spatula turns the hottest piece not yet charred; false when none is too hot.</summary>
+    internal bool Flip(float dt = 0)
+    {
+        if (_chicken.Where(c => c.Landed && c.IsTooHot && !c.IsCharred).MaxBy(c => c.Temperature) is not { } piece)
+        {
+            return false;
+        }
+
+        piece.Temperature = MathF.Max(FridgeTemperature, piece.Temperature * 0.55f);
+        var thrown = StandingOn == piece && OnGround;
+        if (thrown)
+        {
+            StandingOn = null;
+            VelocityY = -JumpSpeed * 0.7f;
+            _sinceGround = CoyoteTime + dt;
+        }
+
+        _events.Add(new ChickenFlipped(piece, thrown));
+        return true;
+    }
+
+    private void Take(PowerUp item)
+    {
+        _powerUps.Remove(item);
+        switch (item.Treat)
+        {
+            case Treat.Drink:
+                Health = MathF.Min(MaxHealth, Health + DrinkHealth);
+                break;
+            case Treat.Gloves:
+                GlovesLeft = GlovesTime;
+                break;
+            case Treat.Lid:
+                LidLeft = LidTime;
+                break;
+            default:
+                foreach (var piece in _chicken.Where(c => !c.IsCharred))
+                {
+                    piece.Temperature = MathF.Max(FridgeTemperature, piece.Temperature - IceCooling);
+                }
+
+                break;
+        }
+
+        _events.Add(new PowerUpTaken(item));
+    }
+
     private void Burn(float dt)
     {
-        // Only feet on something too hot burn: the pan always is; chicken once it passes the safe temperature.
-        float? surface = !OnGround ? null : StandingOn is { } piece ? piece.Temperature : PanTemperature;
+        // Only feet on something too hot burn: the pan always is; chicken once it passes the safe temperature. Not in gloves.
+        float? surface = !OnGround || IsProtected ? null : StandingOn is { } piece ? piece.Temperature : PanTemperature;
         var burning = surface > SafeTemperature;
         if (burning && !_burning)
         {

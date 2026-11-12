@@ -18,6 +18,8 @@ internal static class Sound
     public const string Lose = "lose";
     public const string Jump = "jump";
     public const string Sizzle = "sizzle";
+    public const string Relief = "relief";
+    public const string Splash = "splash";
 }
 
 /// <summary>
@@ -156,6 +158,12 @@ internal static class GameAudio
 
         // Burning feet: a hiss of noise.
         yield return (Sound.Sizzle, new Tune(240, new Voice(new Instrument(Wave.Noise, Volume: 0.16f, Attack: 0.01f, Decay: 0.3f, Sustain: 0, Release: 0.1f), "x - -")));
+
+        // A sigh of relief: a soft flute falling a third, cool at last.
+        yield return (Sound.Relief, new Tune(300, new Voice(Instruments.Flute with { Volume = 0.22f }, "G5 - E5 - - -")) { Reverb = 0.2f });
+
+        // Hot oil spitting: a short bright crackle.
+        yield return (Sound.Splash, new Tune(600, new Voice(new Instrument(Wave.Noise, Volume: 0.2f, Attack: 0.002f, Decay: 0.08f, Sustain: 0, Release: 0.04f) { Cutoff = 6000, Ring = true }, "x x . x")));
 
         // Something bad: losing a game, falling in the cellar: an oboe sinking over the cellos and a soft drum.
         yield return (Sound.Lose, new Tune(
