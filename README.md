@@ -64,7 +64,7 @@ Command-line options (handy for checking screens without playing), for every app
 - `--keys "<k1> <k2> ..."` plays these keys instead of reading the keyboard (MonoGame `Keys` names; `Wait` idles half a second), plus
   `Tap:x,y` and `Drag:x1,y1,x2,y2` for pointer input, and `Pad:A` (MonoGame `Buttons` names) and
   `RightStick:x,y,frames[,trigger]` for a gamepad
-- `--screenshot <path>` saves a PNG once the keys have played out, then exits
+- `--screenshot <path>` saves a PNG once the keys have played out, then exits (the window stays hidden: out of the Dock, off screen)
 - `--save-dir <path>` keeps progress in this directory (scripted runs otherwise keep progress in memory only)
 - `--settle <frames>` idle frames after the keys before the screenshot (default 60; use 1 to catch an animation mid-step)
 - `--deal <n>` deals card game n (or seeds the other games); `--size <w>x<h>` sets the window size (e.g. `390x844` for a phone layout)

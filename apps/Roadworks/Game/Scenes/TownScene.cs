@@ -115,8 +115,8 @@ internal sealed class TownScene : Scene
         var buttons = new Rectangle(viewport.X + margin, viewport.Bottom - buttonsHeight, viewport.Width - (2 * margin), buttonsHeight);
         _area = new Rectangle(viewport.X + margin, hud.Bottom + margin, viewport.Width - (2 * margin), buttons.Top - hud.Bottom - (2 * margin));
 
-        // The grid with a cell of room round it for the roads out of town.
-        _cell = MathF.Min(_area.Width / (Level.Width + 2f), _area.Height / (Level.Height + 2f));
+        // The grid with a cell of room round it for the roads out of town, and their gates' discs past that.
+        _cell = MathF.Min(_area.Width / (Level.Width + 2.6f), _area.Height / (Level.Height + 2.6f));
         _origin = new Vector2(_area.Center.X - (Level.Width * _cell / 2), _area.Center.Y - (Level.Height * _cell / 2));
         batch.FillRectangle(viewport, new Color(64, 104, 62));
         var town = new Rectangle((int)(_origin.X - (_cell / 2)), (int)(_origin.Y - (_cell / 2)), (int)((Level.Width + 1) * _cell), (int)((Level.Height + 1) * _cell));

@@ -7,7 +7,7 @@ using Games;
 // Options:
 //   --level <n>          start at level n (1-based)
 //   --keys "<k1> <k2>"   play these keys (MonoGame key names, or Wait) instead of the keyboard
-//   --screenshot <path>  after the keys have played, render one frame to a PNG and exit
+//   --screenshot <path>  after the keys have played, render one frame to a PNG and exit (the window stays hidden)
 //   --save-dir <path>    keep progress in this directory instead of the user data folder
 //   --settle <frames>    idle frames after the keys before the screenshot (default 60)
 //   --deal <n>           deal solitaire game n instead of a random one
@@ -92,6 +92,13 @@ ISaveStore? store = options switch
 // Game files sit next to the executable (also inside a macOS .app bundle).
 GameFiles.Root = AppContext.BaseDirectory;
 
-using var game = new ShellGame(app, options, store, PlatformFeatures.Desktop);
+// A screenshot run keeps its window out of sight: out of the Dock, off screen and hidden.
+var hidden = options.ScreenshotPath is not null;
+if (hidden)
+{
+    Jentl.Core.Platform.HiddenWindow.Prepare();
+}
+
+using var game = new ShellGame(app, options, store, PlatformFeatures.Desktop) { Hidden = hidden };
 game.Run();
 return 0;

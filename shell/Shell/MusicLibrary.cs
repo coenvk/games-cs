@@ -187,7 +187,10 @@ internal sealed class MusicLibrary
         }
     }
 
-    /// <summary>The notice of a newly unlocked song, sliding in at the top and fading after a few seconds.</summary>
+    /// <summary>
+    /// The notice of a newly unlocked song, sliding in near the top and fading after a few seconds: below the bar most
+    /// games keep their title, score and meters in, so it covers none of them.
+    /// </summary>
     public void DrawNotice(SpriteBatch batch, Rectangle viewport)
     {
         if (_notice is null || _noticeClock.Elapsed > NoticeTime)
@@ -200,7 +203,7 @@ internal sealed class MusicLibrary
         var font = _fonts.Small;
         var size = font.MeasureString(_notice);
         var pad = _fonts.Px(12);
-        var box = new Rectangle(viewport.Center.X - ((int)size.X / 2) - pad, viewport.Y + _fonts.Px(8) - (int)((1 - fade) * _fonts.Px(30)), (int)size.X + (2 * pad), (int)size.Y + pad);
+        var box = new Rectangle(viewport.Center.X - ((int)size.X / 2) - pad, viewport.Y + _fonts.Px(76) - (int)((1 - fade) * _fonts.Px(30)), (int)size.X + (2 * pad), (int)size.Y + pad);
         batch.FillRoundedRectangle(box, _fonts.Px(8), Palette.Panel * (0.95f * fade));
         batch.DrawText(font, _notice, box, Palette.Accent * fade, Align.Center, shadow: false);
     }

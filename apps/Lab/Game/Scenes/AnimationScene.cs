@@ -69,7 +69,7 @@ internal sealed class AnimationScene : Scene
         Hurt,
     }
 
-    public override IEnumerable<string> DebugInfo => [$"Pose {_states.State}, frame {_states.Frame}, {_steps} steps"];
+    public override IEnumerable<string> DebugInfo => [$"Pose {_states.State}, frame {_states.Frame}, {_steps} {(_steps == 1 ? "step" : "steps")}"];
 
     public override void Update(TimeSpan elapsed, InputState input)
     {
@@ -192,7 +192,7 @@ internal sealed class AnimationScene : Scene
         batch.FillRoundedRectangle(new Rectangle(body.X, body.Y, body.Width, body.Height - 18), 16, colour);
         var eye = new Vector2(feet.X + (_direction * size.X * 0.2f), body.Y + (size.Y * 0.25f));
         batch.FillCircle(eye, frame == 1 ? 2 : 5, Palette.Ink);
-        batch.DrawText(_context.Fonts.Small, $"{_states.State} · {_steps} steps", new Vector2(area.Center.X, floor + 30), Palette.Text, Align.Center);
+        batch.DrawText(_context.Fonts.Small, $"{_states.State} · {_steps} {(_steps == 1 ? "step" : "steps")}", new Vector2(area.Center.X, floor + 30), Palette.Text, Align.Center);
     }
 
     private void DrawCards(SpriteBatch batch, Rectangle area)
