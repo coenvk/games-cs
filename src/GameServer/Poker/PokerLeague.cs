@@ -15,7 +15,8 @@ namespace GameServer.Poker;
 /// <paramref name="TimeLimit"/> (1 s when null) plus <paramref name="Allowance"/> for the network (0.5 s when null). At
 /// most <paramref name="ConcurrentMatches"/> matches run at once.
 /// </summary>
-public sealed record LeagueSettings(int Hands = 1000, TimeSpan? TimeLimit = null, TimeSpan? Allowance = null, int ConcurrentMatches = 8)
+/// <param name="StartLimit">How long a bot gets to say hello at the start of a match; the arena's own limit when not set.</param>
+public sealed record LeagueSettings(int Hands = 1000, TimeSpan? TimeLimit = null, TimeSpan? Allowance = null, int ConcurrentMatches = 8, TimeSpan? StartLimit = null)
 {
     /// <summary>What the table gives a bot for each decision: the time limit plus the network allowance.</summary>
     public TimeSpan DecisionLimit => (TimeLimit ?? TimeSpan.FromSeconds(1)) + (Allowance ?? TimeSpan.FromMilliseconds(500));
@@ -222,7 +223,7 @@ public sealed partial class PokerLeague : IDisposable
         var ended = false;
         try
         {
-            ended = Task.WaitAll(running, ArenaTable.StartLimit + _settings.DecisionLimit + TimeSpan.FromSeconds(1));
+            ended = Task.WaitAll(running, (_settings.StartLimit ?? ArenaTable.StartLimit) + _settings.DecisionLimit + TimeSpan.FromSeconds(1));
         }
         catch (AggregateException)
         {
@@ -302,7 +303,7 @@ public sealed partial class PokerLeague : IDisposable
             }
 
             var settings = new ArenaSettings(
-                TableFormat.FixedStacks, _settings.Hands, DealSeed.New(), _settings.DecisionLimit, SmallBlind: 1, StackBigBlinds: StackBigBlinds);
+                TableFormat.FixedStacks, _settings.Hands, DealSeed.New(), _settings.DecisionLimit, SmallBlind: 1, StackBigBlinds: StackBigBlinds, StartLimit: _settings.StartLimit);
 
             // Every match is played by a fresh process on the owner's computer.
             agentA.Restart();

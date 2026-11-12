@@ -23,6 +23,7 @@ public enum TableFormat
 /// <param name="StartingStack">The chips everyone starts a sit-and-go with.</param>
 /// <param name="SmallBlind">The small blind (at the start, for a sit-and-go).</param>
 /// <param name="StackBigBlinds">For fixed stacks: the big blinds every seat holds at the start of every hand.</param>
+/// <param name="StartLimit">How long a bot gets to say hello; <see cref="ArenaTable.StartLimit"/> when not set.</param>
 public sealed record ArenaSettings(
     TableFormat Format,
     int Hands,
@@ -30,7 +31,8 @@ public sealed record ArenaSettings(
     TimeSpan TimeLimit,
     int StartingStack = 1000,
     int SmallBlind = 10,
-    int StackBigBlinds = 100);
+    int StackBigBlinds = 100,
+    TimeSpan? StartLimit = null);
 
 /// <summary>How one seat did in a match.</summary>
 /// <param name="Net">The chips it won (or, when negative, lost).</param>
@@ -168,7 +170,7 @@ public sealed class ArenaTable : IDisposable
                 _settings.SmallBlind * 2,
                 (int)_settings.TimeLimit.TotalMilliseconds,
                 SeatSeed(_settings.Seed, _run, i)),
-            StartLimit)));
+            _settings.StartLimit ?? StartLimit)));
     }
 
     /// <summary>

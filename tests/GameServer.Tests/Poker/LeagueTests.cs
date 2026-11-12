@@ -66,6 +66,10 @@ public sealed class LeagueTests : IDisposable
     private static AgentCommand SlowEchoBot(int upTo) =>
         EchoBot("skip:" + string.Join(',', Enumerable.Range(1, upTo / 2).Select(n => 2 * n)));
 
+    // A bot's hello is timed in real seconds, while starting a process can take a few when every test runs at once: the
+    // tests about saying hello give it twenty, and wait as long as the reasons they test need, scaled to match.
+    private static readonly TimeSpan HelloLimit = TimeSpan.FromSeconds(20);
+
     private PokerLeague StartLeague(int hands, int cooldown = 3)
     {
         var matchmaker = new Matchmaker(
@@ -78,7 +82,7 @@ public sealed class LeagueTests : IDisposable
             _ratings,
             matchmaker,
             _store,
-            new LeagueSettings(hands, TimeSpan.FromMilliseconds(200), TimeSpan.FromMilliseconds(100)),
+            new LeagueSettings(hands, TimeSpan.FromMilliseconds(200), TimeSpan.FromMilliseconds(100), StartLimit: HelloLimit),
             TimeProvider.System);
         return _league;
     }
@@ -188,15 +192,15 @@ public sealed class LeagueTests : IDisposable
     [Fact]
     public async Task ARunnerThatDropsBeforeItsBotSaidHello_KeepsThatBot_AndTheSeatIsNotGone()
     {
-        // A bot slow to start (6 s): its runner drops at 4 s, before the hello, and is back a second later. The server
+        // A bot slow to start (12 s): its runner drops at 9 s, before the hello, and is back a second later. The server
         // sends the start again, as it heard nothing since; the runner keeps the bot that is starting, which says hello
-        // within the 10 s. Starting it over would take it to about 11 s: too late, and the seat gone for the match.
+        // within the 20 s. Starting it over would take it past 22 s: too late, and the seat gone for the match.
         StartLeague(hands: 10);
-        var a = Online("Ann", "BotA", EchoBot("wait:6000"));
+        var a = Online("Ann", "BotA", EchoBot("wait:12000"));
         Online("Bob", "BotB");
 
         await RunUntil(() => League.Playing.Contains("BotA"));
-        await Task.Delay(4000);
+        await Task.Delay(9000);
         a.Drop();
         await RunUntil(() => _store.Of("BotA", 10).Count == 1);
 
