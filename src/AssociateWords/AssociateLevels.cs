@@ -47,6 +47,24 @@ public static class AssociateLevels
         }
     }
 
+    /// <summary>Reads a bank of categories: <c>{ "groups": [ { "name": "...", "words": [...] } ] }</c>.</summary>
+    /// <exception cref="InvalidDataException">The file isn't a bank of categories.</exception>
+    public static IReadOnlyList<WordGroup> GroupsFromJson(string json)
+    {
+        ArgumentNullException.ThrowIfNull(json);
+        try
+        {
+            using var document = JsonDocument.Parse(json, new JsonDocumentOptions { CommentHandling = JsonCommentHandling.Skip, AllowTrailingCommas = true });
+            return [.. document.RootElement.GetProperty("groups").EnumerateArray().Select(group => new WordGroup(
+                group.GetProperty("name").GetString() ?? "",
+                [.. group.GetProperty("words").EnumerateArray().Select(word => word.GetString() ?? "")]))];
+        }
+        catch (Exception exception) when (exception is JsonException or KeyNotFoundException or InvalidOperationException)
+        {
+            throw new InvalidDataException($"The categories can't be read: {exception.Message}", exception);
+        }
+    }
+
     public static void Check(AssociateLevel level, int number)
     {
         ArgumentNullException.ThrowIfNull(level);

@@ -820,5 +820,13 @@
   "Solved!": "Opgelost!",
   "{0} day in a row": "{0} dag op rij",
   "{0} days in a row": "{0} dagen op rij",
-  "{0} in {1} moves": "{0} in {1} zetten"
+  "{0} in {1} moves": "{0} in {1} zetten",
+  "Daily deal": "Dagspel",
+  "Custom game": "Eigen spel",
+  "Deal {0}": "Spel {0}",
+  "Another deal": "Nog een spel",
+  "Small: three categories": "Klein: drie categorieën",
+  "Medium: five categories": "Middel: vijf categorieën",
+  "Large: seven categories": "Groot: zeven categorieën",
+  "A fresh deal from every category": "Een nieuw spel uit alle categorieën"
 }

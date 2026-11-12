@@ -29,10 +29,15 @@ internal sealed class AssociateScene : Scene
     private bool _ended;
 
     public AssociateScene(GameContext context, int level)
+        : this(context, AssociatePuzzle.FromList(context, level))
+    {
+    }
+
+    public AssociateScene(GameContext context, AssociatePuzzle puzzle)
     {
         _context = context;
-        Number = Math.Clamp(level, 0, context.Associate.Levels.Count - 1);
-        Game = new AssociateGame(context.Associate.Levels[Number]);
+        Puzzle = puzzle;
+        Game = new AssociateGame(puzzle.Level);
         _view.CanDrag = Game.CanTake;
         _view.EmptyLabel = pile => Game.IsSlot(pile) ? "?" : null;
         _buttons = new ButtonBar(
@@ -42,17 +47,22 @@ internal sealed class AssociateScene : Scene
             new Button(T("Menu"), () => Scenes.Push(new AssociatePauseScene(context, this))));
     }
 
-    /// <summary>The level, from 0.</summary>
-    public int Number { get; }
+    public AssociatePuzzle Puzzle { get; }
+
+    /// <summary>The level, from 0 (or the date, or the seed).</summary>
+    public int Number => Puzzle.Number;
 
     public AssociateGame Game { get; }
 
     public override IEnumerable<string> DebugInfo =>
-        [$"Level {Number + 1}  moves {Game.MovesUsed}/{Game.Level.Moves}  done {Game.Completed}/{Game.Level.Groups.Count}  seed {Game.Level.Seed}"];
+        [$"{Puzzle.Kind} {Number}  moves {Game.MovesUsed}/{Game.Level.Moves}  done {Game.Completed}/{Game.Level.Groups.Count}  seed {Game.Level.Seed}"];
 
-    public void Restart() => Scenes.Replace(new AssociateScene(_context, Number), Navigation.Fade());
+    public void Restart() => Scenes.Replace(new AssociateScene(_context, Puzzle), Navigation.Fade());
 
-    public void NextLevel() => Scenes.Replace(new AssociateScene(_context, Math.Min(Number + 1, _context.Associate.Levels.Count - 1)), Navigation.Fade());
+    /// <summary>The next level of the list, or another deal of the same size.</summary>
+    public void NextLevel() => Scenes.Replace(
+        new AssociateScene(_context, Puzzle.Kind == AssociateKind.Custom ? AssociatePuzzle.Custom(_context, Puzzle.Size) : AssociatePuzzle.FromList(_context, Number + 1)),
+        Navigation.Fade());
 
     protected override void OnEnter() => _context.PlayMood(Music.Words);
 
@@ -104,7 +114,7 @@ internal sealed class AssociateScene : Scene
         batch.FillRectangle(hud, Palette.Panel);
         var text = hud;
         text.Inflate(-margin, 0);
-        batch.DrawText(fonts.Body, T("Level {0}", Number + 1), text, Palette.Text, Align.Left);
+        batch.DrawText(fonts.Body, Puzzle.Title, text, Palette.Text, Align.Left);
         batch.DrawText(fonts.Body, T("{0} moves left", Game.MovesLeft), text, Game.MovesLeft <= 5 ? new Color(232, 72, 85) : Palette.Accent, Align.Right);
 
         var buttonsHeight = ButtonBar.Height(fonts.Small) + fonts.Px(16);
@@ -184,7 +194,12 @@ internal sealed class AssociateScene : Scene
             _ended = true;
             _context.Sounds.Play(Sound.Fanfare);
             Celebration.Confetti(Scenes);
-            var best = _context.Associate.Record(Number, Game.MovesUsed, Game.Stars);
+            var best = Puzzle.Kind switch
+            {
+                AssociateKind.Level => _context.Associate.Record(Number, Game.MovesUsed, Game.Stars),
+                AssociateKind.Daily => _context.Associate.RecordDaily(Number, Game.MovesUsed, Game.Stars),
+                _ => false,
+            };
             Timers.After(TimeSpan.FromSeconds(0.9), () => Scenes.Push(new AssociateEndScene(_context, this, won: true, best)));
         }
         else if (Game.IsLost)
@@ -268,7 +283,7 @@ internal sealed class AssociatePauseScene : PanelScene
             new MenuItem(T("Main menu"), () => Navigation.ToMainMenu(Scenes, context)));
     }
 
-    protected override string Title => T("Level {0}", _game.Number + 1);
+    protected override string Title => _game.Puzzle.Title;
 
     protected override IReadOnlyList<PanelLine> Lines =>
         [new(T("{0} of {1} categories, {2} moves left", _game.Game.Completed, _game.Game.Level.Groups.Count, _game.Game.MovesLeft), Palette.Muted)];
@@ -285,11 +300,16 @@ internal sealed class AssociateEndScene : PanelScene
         : base(context)
     {
         (_game, _won, _best) = (game, won, best);
-        var last = game.Number == context.Associate.Levels.Count - 1;
-        List<MenuItem> items = [];
-        if (won && !last)
+        var next = game.Puzzle.Kind switch
         {
-            items.Add(new MenuItem(T("Next level"), () =>
+            AssociateKind.Level when game.Number < context.Associate.Levels.Count - 1 => T("Next level"),
+            AssociateKind.Custom => T("Another deal"),
+            _ => null,
+        };
+        List<MenuItem> items = [];
+        if (won && next is not null)
+        {
+            items.Add(new MenuItem(next, () =>
             {
                 Scenes.Pop();
                 _game.NextLevel();
@@ -314,16 +334,39 @@ internal sealed class AssociateEndScene : PanelScene
         Menu = new Menu(context.Sounds, [.. items]);
     }
 
-    protected override string Title => _won ? T("Level {0} done!", _game.Number + 1) : T("Out of moves");
+    protected override string Title => !_won ? T("Out of moves")
+        : _game.Puzzle.Kind == AssociateKind.Level ? T("Level {0} done!", _game.Number + 1)
+        : T("Solved!");
 
     protected override IReadOnlyList<PanelLine> Lines => _won
         ?
         [
             new(new string('★', _game.Game.Stars) + new string('☆', 3 - _game.Game.Stars), Palette.Accent),
             new(T("{0} moves left", _game.Game.MovesLeft), Palette.Text),
-            new(_best ? T("Your best for this level") : T("Every word under its category"), Palette.Muted),
+            new(
+                _game.Puzzle.Kind == AssociateKind.Daily ? N(Context.Associate.Streak(DateOnly.FromDateTime(DateTime.Now)), "{0} day in a row", "{0} days in a row")
+                : _best ? T("Your best for this level") : T("Every word under its category"),
+                Palette.Muted),
         ]
         : [new(T("{0} of {1} categories complete", _game.Game.Completed, _game.Game.Level.Groups.Count), Palette.Muted)];
 
     protected override void OnBack() => Navigation.ToMainMenu(Scenes, Context);
+}
+
+/// <summary>A custom game: a fresh deal of the size chosen.</summary>
+internal sealed class AssociateCustomScene : PanelScene
+{
+    public AssociateCustomScene(GameContext context)
+        : base(context) => Menu = new Menu(
+            context.Sounds,
+            new MenuItem(T("Small: three categories"), () => Play(DealSize.Small)),
+            new MenuItem(T("Medium: five categories"), () => Play(DealSize.Medium)),
+            new MenuItem(T("Large: seven categories"), () => Play(DealSize.Large)),
+            new MenuItem(T("Back"), () => Scenes.Pop()));
+
+    protected override string Title => T("Custom game");
+
+    protected override IReadOnlyList<PanelLine> Lines => [new(T("A fresh deal from every category"), Palette.Muted)];
+
+    private void Play(DealSize size) => Scenes.Replace(new AssociateScene(Context, AssociatePuzzle.Custom(Context, size)), Navigation.Fade());
 }

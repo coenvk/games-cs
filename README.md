@@ -293,7 +293,10 @@ one category moves together, and any card goes into an empty column. Every move,
 every category before the moves run out, with stars for moves to spare. Drag cards or tap one to send it where it
 fits; Undo, Hint and Restart are at the bottom, and running out of moves offers to undo the last one. Fifteen levels
 in `apps/AssociateWords/Assets/associatewords/levels.json`, each with a fixed deal and a move limit about a quarter
-above what a simple autoplayer needs, which the tests check it can win. `--level <n>` opens a level.
+above what a simple autoplayer needs, which the tests check it can win. `--level <n>` opens a level. In Dutch the
+same fifteen shapes are filled from the categories in `groups.nl.json`, each deal found winnable and limited the same
+way. The daily deal (the same for everyone that day, with a streak) and custom games of three sizes are made like
+that from all of the language's categories, only ones sharing no word.
 
 ## Connect Word
 
