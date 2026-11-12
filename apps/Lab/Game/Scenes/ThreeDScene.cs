@@ -45,6 +45,8 @@ internal sealed class ThreeDScene : Scene
     private readonly Node _car;
     private readonly List<Node> _wheels = [];
     private readonly AnimationPlayer _windmill;
+    private readonly Node _stalk;
+    private readonly Node[] _bones = new Node[4];
     private readonly OrbitCamera _orbit = new() { Target = new Numerics.Vector3(0, 0.5f, 0), Yaw = 0.6f, Pitch = 0.35f, Distance = 9, MinDistance = 3, MaxDistance = 30, MinPitch = 0.05f };
     private readonly Camera _camera = new() { FieldOfView = MathF.PI / 3.5f, Near = 0.1f, Far = 100 };
     private readonly RenderList _list = new();
@@ -101,6 +103,44 @@ internal sealed class ThreeDScene : Scene
         var quarter = Enumerable.Range(0, 5).Select(i => (i * 0.75f, Numerics.Quaternion.CreateFromAxisAngle(Numerics.Vector3.UnitZ, -i * MathF.PI / 2))).ToArray();
         _windmill = new AnimationPlayer([hub]);
         _windmill.Play(new AnimationClip("turn", [AnimationChannel.Turn(0, quarter)]));
+        _stalk = Stalk();
+    }
+
+    /// <summary>
+    /// A skinned stalk: four cylinders stacked into one mesh on a chain of four bones, each vertex pulled by the bones
+    /// either side of its height, so the stalk bends smoothly as the bones sway.
+    /// </summary>
+    private Node Stalk()
+    {
+        const float Step = 0.5f;
+        var mesh = MeshBuilder.Combine([.. Enumerable.Range(0, 4).Select(i => (MeshBuilder.Cylinder(0.14f - (i * 0.025f), Step, 10), Numerics.Matrix4x4.CreateTranslation(0, i * Step, 0)))]);
+        var joints = new int[mesh.Positions.Count * 4];
+        var weights = new float[mesh.Positions.Count * 4];
+        for (var v = 0; v < mesh.Positions.Count; v++)
+        {
+            var along = Math.Clamp(mesh.Positions[v].Y / Step, 0, 3);
+            var lower = Math.Min((int)along, 3);
+            var upper = Math.Min(lower + 1, 3);
+            var t = along - lower;
+            (joints[v * 4], joints[(v * 4) + 1]) = (lower, upper);
+            (weights[v * 4], weights[(v * 4) + 1]) = (1 - t, upper == lower ? 0 : t);
+            if (upper == lower)
+            {
+                weights[v * 4] = 1;
+            }
+        }
+
+        var stalk = _world.Add(new Node("stalk") { Position = new Numerics.Vector3(-2.2f, 0, 1.4f) });
+        stalk.Parts.Add(new MeshPart(mesh, new Material(new Numerics.Vector4(0.45f, 0.75f, 0.3f, 1))) { Weights = new SkinWeights(joints, weights) });
+        var parent = stalk;
+        for (var i = 0; i < _bones.Length; i++)
+        {
+            _bones[i] = parent.Add(new Node($"bone{i}") { Position = new Numerics.Vector3(0, i == 0 ? 0 : Step, 0) });
+            parent = _bones[i];
+        }
+
+        stalk.Skin = new Skin(_bones, [.. Enumerable.Range(0, 4).Select(i => Numerics.Matrix4x4.CreateTranslation(0, -i * Step, 0))]);
+        return stalk;
     }
 
     public override void Update(TimeSpan elapsed, InputState input)
@@ -134,6 +174,14 @@ internal sealed class ThreeDScene : Scene
         }
 
         _windmill.Update(elapsed);
+
+        // The stalk sways, each bone a little later than the one below.
+        for (var i = 0; i < _bones.Length; i++)
+        {
+            _bones[i].Rotation = Numerics.Quaternion.CreateFromAxisAngle(Numerics.Vector3.UnitZ, MathF.Sin((float)(_angle * 2.5) - (i * 0.7f)) * 0.3f);
+        }
+
+        _stalk.Skin!.Deform(_stalk);
         _frameMs = (_frameMs * 0.9) + (elapsed.TotalMilliseconds * 0.1);
     }
 
