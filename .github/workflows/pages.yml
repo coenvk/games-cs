@@ -67,6 +67,7 @@ jobs:
           publish HotPan hot-pan
           publish Composer composer
           publish Roadworks roadworks
+          publish CheeseFarm cheese-farm
           publish ConnectWord connect-word
           publish AssociateWords associate-words
           publish Paddock paddock

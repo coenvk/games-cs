@@ -19,6 +19,7 @@ the engine now lives in its own repository and comes in here as packages.
 | **Connect Word** | Put the words that belong together in one row, merging cards as you go |
 | **Hot Pan** | Stand in a frying pan and jump onto chicken that's still cool, before your feet burn |
 | **Roadworks** | Lay a town's roads and junctions within a budget, then watch the traffic try them |
+| **Cheese Farm** | Make cheese on a farm, let it ripen in the cellar, and sell it in the farm shop |
 | **Composer** | Write songs on a piano roll for harp, strings, flutes, brass, choir and drums |
 | **Paddock** | Collect invented cars, race hands of five on tracks in all weathers, upgrade and fuse them, win rare ones in events |
 
@@ -40,7 +41,7 @@ title screen then has "All games" in place of Quit; each game keeps its saves ap
 | `src/Sokoban.Model`, `src/Sokoban.Solver` | Sokoban's rules on the puzzle kit, and its solver and level generator |
 | `src/Klondike` ... `src/Yukon` | The solitaire games' rules on the card kit |
 | `src/Uno`, `src/Poker` | Uno and Texas Hold'em (rules, bots, their online rooms) |
-| `src/Mossbrook`, `src/CodeLock`, `src/Bricks`, `src/HotPan`, `src/ConnectWord`, `src/AssociateWords`, `src/Roadworks` | The adventure on the RPG kit, the code lock and its solver, the brick breaker on the ECS and physics, Hot Pan's pan, Connect Word's grid, and Associate Words' solitaire on the card kit |
+| `src/Mossbrook`, `src/CodeLock`, `src/Bricks`, `src/HotPan`, `src/ConnectWord`, `src/AssociateWords`, `src/Roadworks`, `src/CheeseFarm` | The adventure on the RPG kit, the code lock and its solver, the brick breaker on the ECS and physics, Hot Pan's pan, Connect Word's grid, and Associate Words' solitaire on the card kit |
 | `src/Paddock` | Paddock's cars, race simulation, upgrades and fusing, matches, events, campaign and economy |
 | `src/GameServer` | The online game server (rooms over WebSockets, hosting Uno and Hold'em), with a Dockerfile |
 | `tests/*` | xUnit tests for every game library and the server; `tests/Apps.Tests` checks the apps' translations and assets |
@@ -56,7 +57,7 @@ one if there is one, otherwise from GitHub at the version in `dependencies.props
 ```bash
 build/jentl.sh
 dotnet test Games.slnx
-dotnet run --project apps/Sokoban/Desktop        # or Solitaire, CardTable, Poker, Mossbrook, CodeLock, Bricks, Paddock, HotPan, ConnectWord, AssociateWords, Composer, Roadworks
+dotnet run --project apps/Sokoban/Desktop        # or Solitaire, CardTable, Poker, Mossbrook, CodeLock, Bricks, Paddock, HotPan, ConnectWord, AssociateWords, Composer, Roadworks, CheeseFarm
 dotnet run --project apps/Sokoban/Web            # in the browser
 ```
 
@@ -85,7 +86,7 @@ dotnet run --project apps/Sokoban/Desktop -- --keys "Down Enter Wait" --screensh
 
 ## Progress
 
-Each game keeps its files in a folder of its own (`Sokoban`, `Solitaire`, `CardTable`, `Poker`, `Mossbrook`, `CodeLock`, `Bricks`, `Paddock`, `HotPan`, `ConnectWord`, `AssociateWords`, `Composer`, `Roadworks`); for Sokoban, progress (best moves, pushes, time and the fewest-moves solution per level) is saved as JSON after every improvement:
+Each game keeps its files in a folder of its own (`Sokoban`, `Solitaire`, `CardTable`, `Poker`, `Mossbrook`, `CodeLock`, `Bricks`, `Paddock`, `HotPan`, `ConnectWord`, `AssociateWords`, `Composer`, `Roadworks`, `CheeseFarm`); for Sokoban, progress (best moves, pushes, time and the fewest-moves solution per level) is saved as JSON after every improvement:
 
 - macOS: `~/Library/Application Support/Sokoban/progress.json`
 - Windows: `%LOCALAPPDATA%\Sokoban\progress.json`
@@ -344,6 +345,19 @@ for ten minutes, fast, drawn as it drives, with drivers going round jams; then t
 delay against the target, if every gate reaches every other, the plan is within budget and four in five of the trips
 were made. Five levels in `apps/Roadworks/Assets/roadworks/levels.json`, each proven passable by a simple plan in the
 tests; plans and stars are saved.
+
+## Cheese Farm
+
+**Cheese Farm** is a made-up farm in the east of the Netherlands, making cheese the way farms there do. The herd
+gives milk every morning (twenty-five litres a cow); a wheel takes a hundred litres and is made in four steps in the
+kitchen: hold on the kettle to warm the milk into the band where the rennet works, test the curd when it should give a
+clean break, cut it with the harp as the knife crosses each mark, and choose the days in the brine. How well each step
+went makes the wheel's stars. In the cellar wheels ripen from young through young matured, matured, extra matured and
+old to very old, a day standing for a few weeks, and want turning every other day: a red mark shows which, and every
+day one lies unturned costs it. The farm shop's customers each want a ripeness and a flavour and take a wheel one
+ripeness either side, paying most for exactly what they asked; the money buys cows, cellar racks, cumin, nettle and
+herbs, a steadier kettle, and signs by the road for more customers. Milk the tank can't hold goes to the dairy for
+little. Sleep to the next morning; the farm is saved as it goes.
 
 ## Composer
 

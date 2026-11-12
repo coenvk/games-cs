@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Cheese Farm on the desktop. -->
+
+  <PropertyGroup>
+    <AppName>CheeseFarm.Game</AppName>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\shell\Desktop.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\CheeseFarm\CheeseFarm.csproj" />
+  </ItemGroup>
+
+</Project>

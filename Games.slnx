@@ -28,6 +28,8 @@
     <Project Path="apps/Composer/Web/Composer.Web.csproj" />
     <Project Path="apps/Roadworks/Desktop/Roadworks.Desktop.csproj" />
     <Project Path="apps/Roadworks/Web/Roadworks.Web.csproj" />
+    <Project Path="apps/CheeseFarm/Desktop/CheeseFarm.Desktop.csproj" />
+    <Project Path="apps/CheeseFarm/Web/CheeseFarm.Web.csproj" />
   </Folder>
   <Folder Name="/suites/">
     <Project Path="suites/Arcade/Desktop/Arcade.Desktop.csproj" />
@@ -40,6 +42,7 @@
     <Project Path="src/ConnectWord/ConnectWord.csproj" />
     <Project Path="src/HotPan/HotPan.csproj" />
     <Project Path="src/Roadworks/Roadworks.csproj" />
+    <Project Path="src/CheeseFarm/CheeseFarm.csproj" />
     <Project Path="src/CodeLock/CodeLock.csproj" />
     <Project Path="src/Easthaven/Easthaven.csproj" />
     <Project Path="src/FortyThieves/FortyThieves.csproj" />
@@ -67,6 +70,7 @@
     <Project Path="tests/HotPan.Tests/HotPan.Tests.csproj" />
     <Project Path="tests/Composer.Tests/Composer.Tests.csproj" />
     <Project Path="tests/Roadworks.Tests/Roadworks.Tests.csproj" />
+    <Project Path="tests/CheeseFarm.Tests/CheeseFarm.Tests.csproj" />
     <Project Path="tests/CodeLock.Tests/CodeLock.Tests.csproj" />
     <Project Path="tests/Easthaven.Tests/Easthaven.Tests.csproj" />
     <Project Path="tests/FortyThieves.Tests/FortyThieves.Tests.csproj" />

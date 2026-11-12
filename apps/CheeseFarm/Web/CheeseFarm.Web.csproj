@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <!-- Cheese Farm in the browser. -->
+
+  <PropertyGroup>
+    <AppName>CheeseFarm.Game</AppName>
+    <AppTitle>Cheese Farm</AppTitle>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\shell\Web.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\CheeseFarm\CheeseFarm.csproj" />
+  </ItemGroup>
+
+</Project>

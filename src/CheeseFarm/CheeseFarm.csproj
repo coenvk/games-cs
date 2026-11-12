@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Cheese Farm's rules: the herd and its milk, making a cheese, the ripening cellar, the farm shop; plain C#. -->
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CheeseFarm.Tests" />
+  </ItemGroup>
+
+</Project>
