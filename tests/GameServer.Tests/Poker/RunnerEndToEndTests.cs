@@ -37,6 +37,7 @@ public sealed class RunnerEndToEndTests : IDisposable
         var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(b => b
             .UseSetting("poker-data", _folder)
             .UseSetting("poker-hands", hands.ToString(System.Globalization.CultureInfo.InvariantCulture))
+            .UseSetting("poker-allowance-ms", "5000") // Room for a busy machine: these bots answer at once, and late answers fail the tests.
             .UseSetting("scores", Path.Combine(_folder, "scores.json")));
         return (factory, factory.CreateClient());
     }
