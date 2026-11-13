@@ -49,6 +49,8 @@ internal sealed class ComposerScene : Scene
     private int _firstBar;
     private bool _playing;
     private int _playFrom;
+    private int _loopFrom;
+    private int _loopLength;
     private string? _heard;
     private bool _wasDown;
     private (int Step, int Pitch)? _drawing;
@@ -184,12 +186,39 @@ internal sealed class ComposerScene : Scene
         DrawArrangement(batch, small, new Rectangle(body.X, rollArea.Bottom + pad, body.Width, arrangementHeight), side);
     }
 
+    /// <summary>The bars looped over while working on them (none: the whole song), kept inside the song.</summary>
+    private (int From, int To) Looped => _loopLength > 0
+        ? (Math.Min(_loopFrom, Song.Bars - 1), Math.Min(Song.Bars, Math.Min(_loopFrom, Song.Bars - 1) + _loopLength))
+        : (0, Song.Bars);
+
+    /// <summary>Loops one bar, then two, then four from the bar chosen, then the whole song again.</summary>
+    private void CycleLoop()
+    {
+        _loopLength = _loopLength switch
+        {
+            0 => 1,
+            1 => 2,
+            2 => 4,
+            _ => 0,
+        };
+        if (_loopLength == 1)
+        {
+            _loopFrom = _firstBar;
+        }
+
+        if (_playing)
+        {
+            Play(_loopFrom);
+        }
+    }
+
     /// <summary>The song as it is now, heard from the bar playing; called after every change while playing.</summary>
     public void Play(int fromBar)
     {
-        _playFrom = Math.Clamp(fromBar, 0, Song.Bars - 1);
-        var tune = Song.ToTune();
-        var offset = (int)Math.Round(_playFrom * Song.StepsPerBar * tune.StepSeconds * Synth.SampleRate);
+        var (from, to) = Looped;
+        _playFrom = fromBar >= from && fromBar < to ? fromBar : from;
+        var tune = Song.ToTune(from, to);
+        var offset = (int)Math.Round((_playFrom - from) * Song.StepsPerBar * tune.StepSeconds * Synth.SampleRate);
         _context.Sounds.ReplaceMusic(Track, () => Rotate(Synth.Render(tune, loop: true), offset));
         _context.Sounds.PlayMusic(Track, TimeSpan.Zero);
         _heard = Song.ToJson();
@@ -266,6 +295,10 @@ internal sealed class ComposerScene : Scene
                 Play(_firstBar);
             }
         }
+        else if (!command && input.WasPressed(Keys.L))
+        {
+            CycleLoop();
+        }
         else if (command && input.WasPressed(Keys.Z))
         {
             Edit(input.IsDown(Keys.LeftShift) ? Session.Redo : Session.Undo);
@@ -330,9 +363,11 @@ internal sealed class ComposerScene : Scene
             return _playFrom * Song.StepsPerBar;
         }
 
+        // Round the bars looped over, or the whole song.
+        var (from, to) = Looped;
         var stepSeconds = 60.0 / Song.Tempo / Song.StepsPerBeat;
-        var total = Song.Bars * Song.StepsPerBar;
-        return ((_playFrom * Song.StepsPerBar) + (int)(_clock.Elapsed.TotalSeconds / stepSeconds)) % total;
+        var total = Math.Max(1, (to - from) * Song.StepsPerBar);
+        return (from * Song.StepsPerBar) + ((((_playFrom - from) * Song.StepsPerBar) + (int)(_clock.Elapsed.TotalSeconds / stepSeconds)) % total);
     }
 
     private Rectangle Chip(SpriteBatch batch, SpriteFontBase font, ref int x, Rectangle row, string text, Action? press, bool lit = false)
@@ -369,6 +404,10 @@ internal sealed class ComposerScene : Scene
         Chip(batch, font, ref x, row, "−", () => Session.ChangeReverb(-0.05f));
         Chip(batch, font, ref x, row, T("Echo {0}", ((int)Math.Round(Song.Reverb * 100)).ToString(CultureInfo.InvariantCulture)), null);
         Chip(batch, font, ref x, row, "+", () => Session.ChangeReverb(0.05f));
+        x += pad;
+        Chip(batch, font, ref x, row, "−", () => Session.ChangeSwing(-0.05f));
+        Chip(batch, font, ref x, row, T("Swing {0}", ((int)Math.Round(Song.Swing * 100)).ToString(CultureInfo.InvariantCulture)), null);
+        Chip(batch, font, ref x, row, "+", () => Session.ChangeSwing(0.05f));
         x += pad;
         Chip(batch, font, ref x, row, KeyNames[Session.Key], () => Session.Key = (Session.Key + 1) % 12);
         Chip(batch, font, ref x, row, ScaleName(Session.Scale), () => Session.Scale = (ScaleKind)(((int)Session.Scale + 1) % 5));
@@ -488,16 +527,30 @@ internal sealed class ComposerScene : Scene
         var x = header.X;
         Chip(batch, font, ref x, header, "<", () => _firstBar = Math.Max(0, _firstBar - columns));
         Chip(batch, font, ref x, header, ">", () => _firstBar = Math.Min(Math.Max(0, Song.Bars - columns), _firstBar + columns));
+        Chip(batch, font, ref x, header, _loopLength == 0 ? T("Loop") : _loopLength == 1 ? T("Loop 1 bar") : T("Loop {0} bars", _loopLength), CycleLoop, lit: _loopLength > 0);
         var playing = _playing && _clock.IsRunning ? PlayStep() / Song.StepsPerBar : -1;
+        var (loopFrom, loopTo) = Looped;
         for (var i = 0; i < columns; i++)
         {
             var bar = _firstBar + i;
             var cell = new Rectangle(_arrangement.X + (int)(i * cellWidth), area.Y, (int)cellWidth - 2, _rowHeight - 2);
+            if (_loopLength > 0 && bar >= loopFrom && bar < loopTo)
+            {
+                // The bars looped over: a band under their numbers.
+                batch.FillRectangle(new Rectangle(cell.X, cell.Y, (int)cellWidth, cell.Height), Palette.Accent * 0.45f);
+            }
+
             batch.DrawText(font, (bar + 1).ToString(CultureInfo.InvariantCulture), cell, bar == playing ? Palette.Accent : Palette.Muted, Align.Center, shadow: false);
             var start = bar;
             _hits.Add((cell, () =>
             {
+                // A bar chosen: heard from there, and a loop moved to start there.
                 _firstBar = start;
+                if (_loopLength > 0)
+                {
+                    _loopFrom = start;
+                }
+
                 if (_playing)
                 {
                     Play(start);

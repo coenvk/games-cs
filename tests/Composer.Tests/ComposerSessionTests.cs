@@ -39,6 +39,21 @@ public class ComposerSessionTests
     }
 
     [Fact]
+    public void ChangeSwing_StepsInTwentieths_FromStraightToHalfAStep_AndUndoes()
+    {
+        var session = new ComposerSession(ComposerSession.Blank());
+        session.ChangeSwing(0.05f);
+        session.Song.Swing.Should().BeApproximately(0.05f, 0.0001f);
+        session.ChangeSwing(1);
+        session.Song.Swing.Should().Be(0.5f);
+        session.ChangeSwing(-2);
+        session.Song.Swing.Should().Be(0);
+
+        session.Undo();
+        session.Song.Swing.Should().Be(0.5f);
+    }
+
+    [Fact]
     public void Place_PutsThePatternInABar_AndTakesItOutAgain()
     {
         var session = new ComposerSession(ComposerSession.Blank());

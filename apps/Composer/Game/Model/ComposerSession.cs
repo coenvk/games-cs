@@ -294,6 +294,13 @@ public sealed class ComposerSession
         Song.Reverb = Math.Clamp(MathF.Round((Song.Reverb + by) * 20) / 20, 0, 0.8f);
     }
 
+    /// <summary>Swings the song more or less, in twentieths of a step, from straight to half a step.</summary>
+    public void ChangeSwing(float by)
+    {
+        Change();
+        Song.Swing = Math.Clamp(MathF.Round((Song.Swing + by) * 20) / 20, 0, 0.5f);
+    }
+
     public void ChangeBars(int by)
     {
         Change();

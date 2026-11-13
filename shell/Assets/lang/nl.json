@@ -983,5 +983,9 @@
   "Grass: feeds 3 cows": "Gras: voedt 3 koeien",
   "No money for feed: {0} cows went hungry": "Geen geld voor voer: {0} koeien hadden honger",
   "Feed bought for €{0}": "Voer gekocht voor €{0}",
-  "{0} meadow bird chicks fledged!": "{0} weidevogelkuikens uitgevlogen!"
+  "{0} meadow bird chicks fledged!": "{0} weidevogelkuikens uitgevlogen!",
+  "Swing {0}": "Swing {0}",
+  "Loop": "Herhaal",
+  "Loop 1 bar": "Herhaal 1 maat",
+  "Loop {0} bars": "Herhaal {0} maten"
 }
