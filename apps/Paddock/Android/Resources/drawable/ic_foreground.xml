@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The app icon's picture: 108 units, the middle 66 always shown. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+  <path android:fillColor="#FFD0453A" android:pathData="M30,52 h48 v13 h-48 Z"/>
+  <path android:fillColor="#FFD0453A" android:pathData="M40,52 L45,42 H63 L69,52 Z"/>
+  <path android:fillColor="#FF9FD0F0" android:pathData="M46,51 L49,45 H59 L62,51 Z"/>
+  <path android:fillColor="#FF1C2130" android:pathData="M35,66 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0 Z"/>
+  <path android:fillColor="#FF1C2130" android:pathData="M61,66 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0 Z"/>
+  <path android:fillColor="#FF9AA0B0" android:pathData="M38.5,66 a2.5,2.5 0 1,0 5,0 a2.5,2.5 0 1,0 -5,0 Z"/>
+  <path android:fillColor="#FF9AA0B0" android:pathData="M64.5,66 a2.5,2.5 0 1,0 5,0 a2.5,2.5 0 1,0 -5,0 Z"/>
+</vector>

@@ -13,6 +13,7 @@ namespace Games;
 /// </summary>
 [Activity(
     Label = "@string/app_name",
+    Icon = "@mipmap/ic_launcher",
     MainLauncher = true,
     AlwaysRetainTaskState = true,
     LaunchMode = LaunchMode.SingleInstance,
