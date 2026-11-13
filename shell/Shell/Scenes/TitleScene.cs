@@ -47,6 +47,10 @@ internal sealed class TitleScene : Scene
             {
                 _menu.Selected = _menu.Items.Count - 1;
             }
+            else
+            {
+                _context.ToBackground?.Invoke();
+            }
 
             return;
         }
@@ -72,7 +76,7 @@ internal sealed class TitleScene : Scene
         batch.DrawText(fonts.Title, _context.App.Title, new Vector2(centerX, top), Palette.Accent, Align.Center);
         batch.DrawText(fonts.Small, _subtitle(), new Vector2(centerX, top + titleHeight), Palette.Muted, Align.Center, shadow: false);
         _menu.Draw(batch, fonts.Body, centerX, top + titleHeight + subtitleHeight + 2 * gap, room);
-        batch.DrawText(fonts.Small, T("Tap, or use the arrow keys and Enter"), new Vector2(centerX, footerTop), Palette.Muted, Align.Center, shadow: false);
+        batch.DrawText(fonts.Small, _context.Platform.ChooseHint, new Vector2(centerX, footerTop), Palette.Muted, Align.Center, shadow: false);
     }
 
     protected override void OnEnter() => _context.PlayMood(Music.Menu);

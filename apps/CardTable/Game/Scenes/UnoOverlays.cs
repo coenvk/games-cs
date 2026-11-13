@@ -18,10 +18,10 @@ internal sealed class UnoSetupScene : PanelScene
         : base(context)
     {
         UnoSetup[] setups = [UnoSetup.VersusBots(3), UnoSetup.VersusBots(2), UnoSetup.VersusBots(1), UnoSetup.PassAndPlay(2), UnoSetup.PassAndPlay(3), UnoSetup.PassAndPlay(4)];
-        Menu = new Menu(context.Sounds, [.. setups.Select(s => new MenuItem(s.Name, () => Scenes.Replace(new UnoScene(context, s), Navigation.Fade()))), new MenuItem(T("Play online"), () => Scenes.Replace(new RoomLobbyScene(context, T("Uno online"), UnoOnline.Game, [2, 3, 4], (client, room) => new UnoScene(context, new OnlineUnoTable(client, room.Code, room.Seat))))), new MenuItem(T("Back"), () => Scenes.Pop())]);
+        Menu = new Menu(context.Sounds, [.. setups.Select(s => new MenuItem(s.Name, () => Scenes.Replace(new UnoScene(context, s), Navigation.Fade()))), new MenuItem(T("Play online"), () => Scenes.Replace(new RoomLobbyScene(context, T("Colour Cards online"), UnoOnline.Game, [2, 3, 4], (client, room) => new UnoScene(context, new OnlineUnoTable(client, room.Code, room.Seat))))), new MenuItem(T("Back"), () => Scenes.Pop())]);
     }
 
-    protected override string Title => T("Uno");
+    protected override string Title => T("Colour Cards");
 
     protected override IReadOnlyList<PanelLine> Lines => [new(T("Match colour or number; first to 500 points wins."), Palette.Muted)];
 }

@@ -115,18 +115,34 @@ internal sealed class ShellGame : JentlGame
 
         var controls = SavedFile<ActionMap<GameAction>>.Load(store, "controls.json", Controls.Parse, c => c.Save(), Controls.Default.Copy);
         Controls.Follow(controls.Value);
-        var context = _context = new GameContext(_app, _options, _fonts, controls, _sounds, settings, SetFullscreen, _platform, Assets, store);
+        var context = _context = new GameContext(_app, _options, _fonts, controls, _sounds, settings, SetFullscreen, _platform, Assets, store)
+        {
+            ToBackground = ToBackground,
+        };
         _music = context.Add(new MusicLibrary(store, _sounds, _fonts));
         Scenes.Overlay = _music.DrawNotice;
         _app.Load(context, GraphicsDevice);
         Scenes.Reset(_app.Start(context));
     }
 
+    private volatile bool _back;
+
+    /// <summary>Puts the app in the background (set by the phone's activity); see <see cref="GameContext.ToBackground"/>.</summary>
+    public Action? ToBackground { get; init; }
+
+    /// <summary>The phone's back button or gesture, handed over by the activity: read as Escape on the next frame.</summary>
+    public void PressBack() => _back = true;
+
     protected override KeyboardState ReadKeyboard()
     {
         if (_script is null)
         {
-            return base.ReadKeyboard();
+            // A phone's back button (handed over by the activity, or arriving as the first pad's Back on older
+            // systems) is Escape here, and so Back everywhere.
+            var keyboard = base.ReadKeyboard();
+            var back = _back || (_platform == PlatformFeatures.Android && GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed);
+            _back = false;
+            return back ? new KeyboardState([.. keyboard.GetPressedKeys(), Keys.Escape]) : keyboard;
         }
 
         if (_script.TryDequeue(out var frame))
@@ -145,7 +161,22 @@ internal sealed class ShellGame : JentlGame
     // Called right after ReadKeyboard each frame, so it returns the same script frame's pointer.
     protected override PointerState ReadPointer(TimeSpan now) => _script is null ? base.ReadPointer(now) : _scriptPointer;
 
-    protected override GamePadState ReadGamePad() => _script is null ? base.ReadGamePad() : _scriptPad;
+    protected override GamePadState ReadGamePad()
+    {
+        if (_script is not null)
+        {
+            return _scriptPad;
+        }
+
+        // On a phone the pad's Back is the back button, read as Escape above; it isn't the pad's Restart as well.
+        var pad = base.ReadGamePad();
+        return _platform == PlatformFeatures.Android && pad.Buttons.Back == ButtonState.Pressed
+            ? new GamePadState(pad.ThumbSticks, pad.Triggers, new GamePadButtons(PressedButtons(pad) & ~Buttons.Back), pad.DPad)
+            : pad;
+    }
+
+    private static Buttons PressedButtons(GamePadState pad) =>
+        Enum.GetValues<Buttons>().Where(pad.IsButtonDown).Aggregate((Buttons)0, (all, button) => all | button);
 
     protected override void Update(GameTime gameTime)
     {

@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Mossbrook on a phone (nl.jentl.mossbrook). -->
+
+  <PropertyGroup>
+    <AppName>Mossbrook.Game</AppName>
+    <AppId>mossbrook</AppId>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\shell\Android.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Mossbrook\Mossbrook.csproj" />
+  </ItemGroup>
+
+</Project>

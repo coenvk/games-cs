@@ -10,7 +10,7 @@ the engine now lives in its own repository and comes in here as packages.
 |---|---|
 | **Sokoban** | Push every crate onto a goal: 100 classic levels, 20 ice levels, generated levels, hints from a solver |
 | **Solitaire** | Klondike, Easthaven, Forty Thieves, FreeCell, Golf, Pyramid, Spider, TriPeaks and Yukon |
-| **Card Table** | Uno against bots, passing the device round, or online |
+| **Card Table** | Colour Cards against bots, passing the device round, or online (Uno's rules; players see it as Colour Cards, Kleurenkaart in Dutch, as Uno is a trademark, while the code keeps the name) |
 | **Poker** | No-limit Texas Hold'em against bots, passing the device round, or online, and a workshop for your own poker bots |
 | **Mossbrook** | A small turn-based adventure: a village, a cellar and a lost amulet |
 | **Code Lock** | Mastermind on a combination lock |

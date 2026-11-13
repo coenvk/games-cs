@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The arcade games in one phone app: Bricks and Hot Pan (nl.jentl.arcade) -->
+
+  <PropertyGroup>
+    <AppName>Arcade</AppName>
+    <AppId>arcade</AppId>
+    <SuiteGames>Bricks;HotPan</SuiteGames>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\shell\Android.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Bricks\Bricks.csproj" />
+    <ProjectReference Include="..\..\..\src\HotPan\HotPan.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -61,7 +61,7 @@ internal sealed class WorkshopContext
         ? Game.Get<OnlineSession>()
         : Game.Add(new OnlineSession(Game.GameServer, OnlineAccountsFile, _running));
 
-    /// <summary>Where the owner and bot tokens are kept (see <see cref="OnlineAccounts"/>).</summary>
+    /// <summary>Where the owner and bot tokens are kept (see Poker's <c>OnlineAccounts</c>).</summary>
     public string OnlineAccountsFile => Path.Combine(SaveFolder, "workshop", "online.json");
 
     /// <summary>The matches downloaded from the server, one file each, named after the match's id there.</summary>

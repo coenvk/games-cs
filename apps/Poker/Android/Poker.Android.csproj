@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Poker on a phone (nl.jentl.poker). The bot workshop's host and runner stay on the desktop: a phone can't start them. -->
+
+  <PropertyGroup>
+    <!-- Not "Poker": that is the rules library's assembly. -->
+    <AppName>PokerGame</AppName>
+    <AppId>poker</AppId>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\shell\Android.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Poker\Poker.csproj" />
+  </ItemGroup>
+
+</Project>

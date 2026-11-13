@@ -32,6 +32,10 @@ internal sealed class MenuScene : Scene
             {
                 _menu.Selected = _menu.Items.Count - 1;
             }
+            else
+            {
+                _context.ToBackground?.Invoke();
+            }
 
             return;
         }
@@ -79,7 +83,7 @@ internal sealed class MenuScene : Scene
 
         batch.DrawText(
             fonts.Small,
-            T("Tap, or use the arrow keys and Enter"),
+            _context.Platform.ChooseHint,
             new Vector2(centerX, footerTop),
             Palette.Muted,
             Align.Center,

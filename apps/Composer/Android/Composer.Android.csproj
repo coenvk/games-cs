@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Composer on a phone (nl.jentl.composer). -->
+
+  <PropertyGroup>
+    <AppName>Composer.Game</AppName>
+    <AppId>composer</AppId>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\shell\Android.props" />
+
+</Project>

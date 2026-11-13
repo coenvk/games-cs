@@ -19,10 +19,10 @@ internal sealed class CardTableApp : IGameApp
         context,
         title =>
         [
-            new("Uno", () => title.Open(new UnoSetupScene(context), fade: false)),
+            new(T("Colour Cards"), () => title.Open(new UnoSetupScene(context), fade: false)),
             new(T("From a ruleset"), () => title.Open(new RulesetsScene(context, solitaire: false, ruleset => new RulesetTableScene(context, ruleset)), fade: false)),
         ],
-        () => T("Uno against bots or friends, here or online"));
+        () => T("Colour Cards against bots or friends, here or online"));
 
     // A ruleset from the command line opens over the menu.
     public IReadOnlyList<Scene> Start(GameContext context) =>

@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Card Table on a phone (nl.jentl.cardtable). -->
+
+  <PropertyGroup>
+    <AppName>CardTable</AppName>
+    <AppId>cardtable</AppId>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\shell\Android.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Uno\Uno.csproj" />
+  </ItemGroup>
+
+</Project>

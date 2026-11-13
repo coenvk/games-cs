@@ -26,11 +26,26 @@ public sealed class MainActivity : AndroidGameActivity
     {
         base.OnCreate(savedInstanceState);
         var app = Entry.Create();
-        _game = new ShellGame(app, new GameOptions(), SaveStore.ForApp(app.SaveName), PlatformFeatures.Android);
+        _game = new ShellGame(app, new GameOptions(), SaveStore.ForApp(app.SaveName), PlatformFeatures.Android)
+        {
+            ToBackground = () => MoveTaskToBack(true),
+        };
         var view = _game.Services.GetService<View>();
         view.SetOnApplyWindowInsetsListener(new InsetsListener(_game));
         SetContentView(view);
+
+        // From Android 13 the system takes the back gesture itself unless the app asks for it: the game's Back.
+        if (OperatingSystem.IsAndroidVersionAtLeast(33))
+        {
+            OnBackInvokedDispatcher.RegisterOnBackInvokedCallback(0, new BackCallback(_game));
+        }
+
         _game.Run();
+    }
+
+    private sealed class BackCallback(ShellGame game) : Java.Lang.Object, Android.Window.IOnBackInvokedCallback
+    {
+        public void OnBackInvoked() => game.PressBack();
     }
 
     /// <summary>

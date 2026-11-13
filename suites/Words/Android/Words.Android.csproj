@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The word games in one phone app: Connect Word and Associate Words (nl.jentl.words) -->
+
+  <PropertyGroup>
+    <AppName>Words</AppName>
+    <AppId>words</AppId>
+    <SuiteGames>ConnectWord;AssociateWords</SuiteGames>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\shell\Android.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\ConnectWord\ConnectWord.csproj" />
+    <ProjectReference Include="..\..\..\src\AssociateWords\AssociateWords.csproj" />
+  </ItemGroup>
+
+</Project>

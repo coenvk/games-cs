@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The puzzles in one phone app: Sokoban and Code Lock (nl.jentl.puzzles) -->
+
+  <PropertyGroup>
+    <AppName>Puzzles</AppName>
+    <AppId>puzzles</AppId>
+    <SuiteGames>Sokoban;CodeLock</SuiteGames>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\shell\Android.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Sokoban.Model\Sokoban.Model.csproj" />
+    <ProjectReference Include="..\..\..\src\Sokoban.Solver\Sokoban.Solver.csproj" />
+    <ProjectReference Include="..\..\..\src\CodeLock\CodeLock.csproj" />
+  </ItemGroup>
+
+  <!-- Sokoban's levels, as its own project ships them. -->
+  <ItemGroup>
+    <AndroidAsset Include="..\..\..\levels\*.xsb" Link="Assets/Levels/%(Filename)%(Extension)" />
+  </ItemGroup>
+
+</Project>

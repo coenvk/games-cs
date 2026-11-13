@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Paddock on a phone (nl.jentl.paddock). -->
+
+  <PropertyGroup>
+    <AppName>Paddock.Game</AppName>
+    <AppId>paddock</AppId>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\shell\Android.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Paddock\Paddock.csproj" />
+  </ItemGroup>
+
+</Project>

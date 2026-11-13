@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Cheese Farm on a phone (nl.jentl.cheesefarm). -->
+
+  <PropertyGroup>
+    <AppName>CheeseFarm.Game</AppName>
+    <AppId>cheesefarm</AppId>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\shell\Android.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\CheeseFarm\CheeseFarm.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -72,7 +72,7 @@ internal sealed class UnoScene : Scene
         Table = table;
         _buttons = new ButtonBar(
             new Button(T("Draw"), DrawOrKeep),
-            new Button(T("Uno!"), () => _callUno = !_callUno),
+            new Button(T("Last card!"), () => _callUno = !_callUno),
             new Button(T("Menu"), () => Scenes.Push(new UnoPauseScene(context, this))));
         Say(Table.TakeEvents());
     }
@@ -255,7 +255,7 @@ internal sealed class UnoScene : Scene
             return;
         }
 
-        var title = Table.IsOnline ? T("{0}, round {1}", Table.Name, game.RoundNumber) : T("Uno: round {0}", game.RoundNumber);
+        var title = Table.IsOnline ? T("{0}, round {1}", Table.Name, game.RoundNumber) : T("Colour Cards: round {0}", game.RoundNumber);
         batch.DrawText(fonts.Body, title, text, Palette.Text, Align.Left);
         batch.DrawText(fonts.Small, T("first to {0}", game.Target), text, Palette.Muted, Align.Right, shadow: false);
 
@@ -277,7 +277,7 @@ internal sealed class UnoScene : Scene
         // Footer: messages above the buttons.
         _buttons.Set(
             new Button(game.Drawn is null ? T("Draw") : T("Keep"), DrawOrKeep),
-            new Button(_callUno ? T("Uno! (on)") : T("Uno!"), () => _callUno = !_callUno, Highlight: _callUno),
+            new Button(_callUno ? T("Last card! (on)") : T("Last card!"), () => _callUno = !_callUno, Highlight: _callUno),
             new Button(T("Menu"), () => Scenes.Push(new UnoPauseScene(_context, this))));
         var buttonFont = _buttons.Width(fonts.Body) <= viewport.Width - 2 * margin ? fonts.Body : fonts.Small;
         var buttonsHeight = ButtonBar.Height(buttonFont) + fonts.Px(20);
@@ -536,7 +536,7 @@ internal sealed class UnoScene : Scene
                     : N(d.Count, "{1} draws a card", "{1} draws {0} cards", Name(d.Seat)),
                 PlayerSkipped s => IsYou(s.Seat) ? T("You are skipped") : T("{0} is skipped", Name(s.Seat)),
                 DirectionReversed => T("Play turns around"),
-                UnoCalled u => T("{0}: Uno!", Name(u.Seat)),
+                UnoCalled u => T("{0}: last card!", Name(u.Seat)),
                 UnoForgotten u => IsYou(u.Seat) ? T("You forgot to call Uno: two cards") : T("{0} forgot to call Uno: two cards", Name(u.Seat)),
                 DrawPileReshuffled => T("The discards are shuffled into a new draw pile"),
                 RoundWon w => IsYou(w.Seat) ? T("You win the round!") : T("{0} wins the round!", Name(w.Seat)),

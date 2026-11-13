@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Roadworks on a phone (nl.jentl.roadworks). -->
+
+  <PropertyGroup>
+    <AppName>Roadworks.Game</AppName>
+    <AppId>roadworks</AppId>
+  </PropertyGroup>
+
+  <Import Project="..\..\..\shell\Android.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Roadworks\Roadworks.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -24,7 +24,13 @@ internal sealed record PlatformFeatures(bool CanQuit, bool CanFullscreen, TimeSp
     public static PlatformFeatures Browser { get; } = new(CanQuit: false, CanFullscreen: false, TimeSpan.FromSeconds(1), CanRunBots: false);
 
     /// <summary>A phone: the system closes apps, the screen is always full, and no programs can be started.</summary>
-    public static PlatformFeatures Android { get; } = new(CanQuit: false, CanFullscreen: false, TimeSpan.FromSeconds(2), CanRunBots: false);
+    public static PlatformFeatures Android { get; } = new(CanQuit: false, CanFullscreen: false, TimeSpan.FromSeconds(2), CanRunBots: false) { TouchOnly = true };
+
+    /// <summary>Played by touch alone (a phone): hints speak of tapping, not of keys.</summary>
+    public bool TouchOnly { get; init; }
+
+    /// <summary>The title screens' footer: how to choose.</summary>
+    public string ChooseHint => TouchOnly ? UI.Tr.T("Tap to choose") : UI.Tr.T("Tap, or use the arrow keys and Enter");
 }
 
 /// <summary>
@@ -96,6 +102,12 @@ internal sealed class GameContext(
     public Action<bool> SetFullscreen { get; } = setFullscreen;
 
     public PlatformFeatures Platform { get; } = platform;
+
+    /// <summary>
+    /// Puts the app in the background, where the platform has that (a phone): Back on a title screen with nothing to
+    /// go back to. Null elsewhere.
+    /// </summary>
+    public Action? ToBackground { get; set; }
 
     public AssetStore Assets { get; } = assets;
 
