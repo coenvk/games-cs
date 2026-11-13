@@ -20,7 +20,9 @@ namespace Games.Scenes;
 /// bots: the others' hands face down along the top, the stock and discard in the middle, the hand of the person at the
 /// device along the bottom. With several people the device goes round, the table hidden between them. Rounds make a
 /// match: each round's winner scores, and the first to <see cref="MatchPoints"/> wins it. Tap a card to play it and
-/// the stock to draw; buttons keep a drawn card or name a suit. The card kit checks every move and plays the bots.
+/// the stock to draw; buttons keep a drawn card or name a suit. By keys: left and right choose a card in the hand,
+/// Enter plays it, down draws (or keeps the card drawn), and the number keys name a suit. The card kit checks every
+/// move and plays the bots.
 /// </summary>
 internal sealed class RulesetTableScene : Scene
 {
@@ -43,6 +45,7 @@ internal sealed class RulesetTableScene : Scene
     private int _viewer;
     private int _round;
     private bool _handingOver;
+    private int _keyCard = -1;
 
     /// <summary>You against bots: as many players as the ruleset likes best.</summary>
     public RulesetTableScene(GameContext context, CardRuleset ruleset)
@@ -84,7 +87,7 @@ internal sealed class RulesetTableScene : Scene
         _viewer = _people.First(p => p.Kind == PlayerKind.Human).Seat;
         _view.DealIn(_game.Stock);
         _buttonState = "";
-        _message = T("Tap a card to play it, or the stock to draw");
+        _message = _context.Platform.TouchOnly ? T("Tap a card to play it, or the stock to draw") : T("Tap a card to play it, or the stock to draw; or left, right and Enter, and down to draw");
     }
 
     /// <summary>The person whose turn it is has the device now (after a handover).</summary>
@@ -125,7 +128,65 @@ internal sealed class RulesetTableScene : Scene
 
         if (_view.Update(input, elapsed) is { } move && _match.IsHumansTurn && _match.Current.Seat == _viewer && !_game.IsChoosingSuit)
         {
+            _keyCard = -1;
             Try(move);
+        }
+
+        Keyboard(input);
+    }
+
+    /// <summary>Playing by keys: a card chosen with left and right, Enter to play it, down to draw, numbers for a suit.</summary>
+    private void Keyboard(InputState input)
+    {
+        if (!_match.IsHumansTurn || _match.Current.Seat != _viewer || _game.IsOver)
+        {
+            return;
+        }
+
+        var actions = _context.Actions;
+        if (_game.IsChoosingSuit)
+        {
+            for (var i = 0; i < Math.Min(9, _game.Suits.Count); i++)
+            {
+                if (input.WasPressed(Microsoft.Xna.Framework.Input.Keys.D1 + i))
+                {
+                    _match.Play(new ChooseSuit(_game.Suits[i]));
+                    return;
+                }
+            }
+
+            return;
+        }
+
+        var hand = _game.Hand(_viewer);
+        if (actions.WasPressed(input, GameAction.Left))
+        {
+            _keyCard = Math.Max(0, (_keyCard < 0 ? hand.Count : _keyCard) - 1);
+        }
+        else if (actions.WasPressed(input, GameAction.Right))
+        {
+            _keyCard = Math.Min(hand.Count - 1, _keyCard + 1);
+        }
+        else if (actions.WasPressed(input, GameAction.Confirm) && _keyCard >= 0 && _keyCard < hand.Count)
+        {
+            Try(new ClickPile(hand, _keyCard));
+            _keyCard = Math.Min(_keyCard, hand.Count - 1);
+        }
+        else if (actions.WasPressed(input, GameAction.Down))
+        {
+            if (_game.LegalMoves(_viewer).Contains(PassTurn.Instance))
+            {
+                _match.Play(PassTurn.Instance);
+            }
+            else
+            {
+                Try(new ClickPile(_game.Stock, _game.Stock.Count - 1));
+            }
+        }
+
+        if (_keyCard >= 0 && _keyCard < hand.Count)
+        {
+            _view.Highlight(hand, _keyCard, TimeSpan.FromSeconds(0.2));
         }
     }
 
@@ -168,7 +229,7 @@ internal sealed class RulesetTableScene : Scene
         if (_game.ChosenSuit is { } suit)
         {
             var discard = _view.PileBounds(_game.Discard);
-            batch.DrawText(fonts.Small, T("Suit: {0}", suit), new Rectangle(discard.X, discard.Bottom, discard.Width * 2, lineHeight), Palette.Accent, Align.Left);
+            batch.DrawText(fonts.Small, T("Suit: {0}", SuitLabel(suit)), new Rectangle(discard.X, discard.Bottom, discard.Width * 2, lineHeight), Palette.Accent, Align.Left);
         }
     }
 
@@ -234,6 +295,10 @@ internal sealed class RulesetTableScene : Scene
         _context.Sounds.Play(turn.Has("win") ? Sound.Fanfare : Sound.Card);
     }
 
+    /// <summary>A suit by its symbol and name ('♥ hearts'), or its name alone when the deck gives it no symbol.</summary>
+    private string SuitLabel(string suit) =>
+        _ruleset.Deck.Faces.FirstOrDefault(f => f.Suit == suit)?.SuitSymbol is { Length: > 0 } symbol ? $"{symbol} {suit}" : suit;
+
     private static string Name(Card card) => card.IsStandard ? card.Symbol : card.Face.Name;
 
     /// <summary>The buttons for the moment: a suit each while naming one, Keep after drawing, Pass when stuck; the next round or match when over.</summary>
@@ -259,7 +324,7 @@ internal sealed class RulesetTableScene : Scene
         }
         else if (mine && _game.IsChoosingSuit)
         {
-            buttons.AddRange(_game.Suits.Select(suit => new Button(suit, () => _match.Play(new ChooseSuit(suit)))));
+            buttons.AddRange(_game.Suits.Select((suit, i) => new Button((i < 9 ? $"{i + 1}  " : "") + SuitLabel(suit), () => _match.Play(new ChooseSuit(suit)))));
         }
         else if (mine && moves.Contains(PassTurn.Instance))
         {

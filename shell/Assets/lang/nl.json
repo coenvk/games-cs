@@ -1080,5 +1080,6 @@
   "{0}, {1}  ·  €{2}": "{0}, {1}  ·  €{2}",
   "The stall: €{0}": "De kraam: €{0}",
   "on the cheese farm": "op de kaasboerderij",
-  "Downloaded as {0}": "Gedownload als {0}"
+  "Downloaded as {0}": "Gedownload als {0}",
+  "Tap a card to play it, or the stock to draw; or left, right and Enter, and down to draw": "Tik op een kaart om hem te spelen, of op de stapel om te pakken; of links, rechts en Enter, en omlaag om te pakken"
 }
