@@ -7,11 +7,11 @@ public sealed record WordGroup(string Name, IReadOnlyList<string> Words);
 
 /// <summary>
 /// A level: the categories, how many slots there are to open them in, how many cards each column is dealt (the rest
-/// go to the draw pile), how many moves there are, and the seed of its fixed deal.
+/// go to the draw pile), how many moves there are, the seed of its fixed deal, and how many jokers are shuffled in.
 /// </summary>
-public sealed record AssociateLevel(IReadOnlyList<WordGroup> Groups, int Slots, IReadOnlyList<int> Columns, int Moves, int Seed)
+public sealed record AssociateLevel(IReadOnlyList<WordGroup> Groups, int Slots, IReadOnlyList<int> Columns, int Moves, int Seed, int Jokers = 0)
 {
-    public int CardCount => Groups.Sum(g => g.Words.Count + 1);
+    public int CardCount => Groups.Sum(g => g.Words.Count + 1) + Jokers;
 }
 
 /// <summary>Reads the levels file: <c>{ "levels": [ { "slots": 3, "columns": [..5..], "moves": 60, "seed": 1, "groups": [ { "name": "...", "words": [...] } ] } ] }</c>.</summary>
@@ -33,7 +33,8 @@ public static class AssociateLevels
                 level.GetProperty("slots").GetInt32(),
                 [.. level.GetProperty("columns").EnumerateArray().Select(c => c.GetInt32())],
                 level.GetProperty("moves").GetInt32(),
-                level.GetProperty("seed").GetInt32())).ToList();
+                level.GetProperty("seed").GetInt32(),
+                level.TryGetProperty("jokers", out var jokers) ? jokers.GetInt32() : 0)).ToList();
             for (var i = 0; i < levels.Count; i++)
             {
                 Check(levels[i], i + 1);
@@ -78,9 +79,9 @@ public static class AssociateLevels
             throw new InvalidDataException($"Level {number} needs {ColumnCount} columns of at least one card each, and no more cards dealt than it has.");
         }
 
-        if (level.Groups.Any(g => string.IsNullOrWhiteSpace(g.Name) || g.Words.Count < 2) || level.Moves < 1)
+        if (level.Groups.Any(g => string.IsNullOrWhiteSpace(g.Name) || g.Words.Count < 2) || level.Moves < 1 || level.Jokers is < 0 or > 3)
         {
-            throw new InvalidDataException($"Level {number}: every category needs a name and two or more words, and the level some moves.");
+            throw new InvalidDataException($"Level {number}: every category needs a name and two or more words, the level some moves, and no more than three jokers.");
         }
 
         var names = level.Groups.Select(g => g.Name).Concat(level.Groups.SelectMany(g => g.Words)).Select(w => w.Trim());

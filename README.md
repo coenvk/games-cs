@@ -314,7 +314,10 @@ in `apps/AssociateWords/Assets/associatewords/levels.json`, each with a fixed de
 above what a simple autoplayer needs, which the tests check it can win. `--level <n>` opens a level. In Dutch the
 same fifteen shapes are filled from the categories in `groups.nl.json`, each deal found winnable and limited the same
 way. The daily deal (the same for everyone that day, with a streak) and custom games of three sizes are made like
-that from all of the language's categories, only ones sharing no word.
+that from all of the language's categories, only ones sharing no word, and have a joker (two in a large game): a
+lilac ★ card that goes into any open slot as one of its words. It can't open a slot, and in the columns lies only in an
+empty one; the word it stood in for may then go straight to the finished pile with a tap. Levels can have jokers too
+(`"jokers"`).
 
 ## Connect Word
 

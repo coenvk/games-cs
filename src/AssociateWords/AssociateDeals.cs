@@ -22,16 +22,16 @@ public static class AssociateDeals
         return [.. levels.SelectMany(l => l.Groups).GroupBy(g => g.Name, StringComparer.OrdinalIgnoreCase).Select(g => g.MaxBy(x => x.Words.Count)!)];
     }
 
-    /// <summary>A deal of a size: how many categories, words each, slots and the columns.</summary>
+    /// <summary>A deal of a size: how many categories, words each, slots, the columns, and a joker (two in a large one).</summary>
     public static AssociateLevel Make(IReadOnlyList<WordGroup> bank, int seed, DealSize size) => size switch
     {
-        DealSize.Small => Make(bank, seed, groups: 3, words: 3, slots: 2, columns: [1, 1, 2, 2, 2]),
-        DealSize.Medium => Make(bank, seed, groups: 5, words: 4, slots: 3, columns: [2, 3, 3, 4, 4]),
-        _ => Make(bank, seed, groups: 7, words: 5, slots: 3, columns: [4, 4, 5, 5, 6]),
+        DealSize.Small => Make(bank, seed, groups: 3, words: 3, slots: 2, columns: [1, 1, 2, 2, 2], jokers: 1),
+        DealSize.Medium => Make(bank, seed, groups: 5, words: 4, slots: 3, columns: [2, 3, 3, 4, 4], jokers: 1),
+        _ => Make(bank, seed, groups: 7, words: 5, slots: 3, columns: [4, 4, 5, 5, 6], jokers: 2),
     };
 
     /// <exception cref="InvalidOperationException">The bank hasn't enough categories that fit, or no deal could be won.</exception>
-    public static AssociateLevel Make(IReadOnlyList<WordGroup> bank, int seed, int groups, int words, int slots, IReadOnlyList<int> columns)
+    public static AssociateLevel Make(IReadOnlyList<WordGroup> bank, int seed, int groups, int words, int slots, IReadOnlyList<int> columns, int jokers = 0)
     {
         ArgumentNullException.ThrowIfNull(bank);
         var random = new Random(seed);
@@ -60,7 +60,7 @@ public static class AssociateDeals
 
         for (var deal = seed; deal < seed + 100; deal++)
         {
-            var trial = new AssociateLevel(chosen, slots, columns, Moves: 10_000, Seed: deal);
+            var trial = new AssociateLevel(chosen, slots, columns, Moves: 10_000, Seed: deal, jokers);
             if (AssociateAutoplay.Play(new AssociateGame(trial)) is { } needed)
             {
                 var level = trial with { Moves = (int)Math.Ceiling(needed * 1.25) };
