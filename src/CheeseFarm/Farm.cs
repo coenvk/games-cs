@@ -129,6 +129,41 @@ public sealed class Farm
         return litres;
     }
 
+    /// <summary>The day the farm last went to the market (0: never).</summary>
+    public int MarketVisited { get; private set; }
+
+    /// <summary>Whether the farm can go to market today: it is on, the farm hasn't been, and there is cheese to take.</summary>
+    public bool CanGoToMarket => Market.IsOn(Day) && MarketVisited != Day && _wheels.Count > 0;
+
+    /// <summary>How busy today's market is.</summary>
+    public float Crowd => Market.Crowd(Seed, Day);
+
+    /// <summary>
+    /// Takes up to a cart of wheels to the market and sells them by the piece: the takings, less the stall's fee, are
+    /// the farm's. Null when it can't go, or no wheel of the farm's was given.
+    /// </summary>
+    public MarketResult? GoToMarket(IEnumerable<Wheel> wheels)
+    {
+        ArgumentNullException.ThrowIfNull(wheels);
+        var cart = wheels.Where(_wheels.Contains).Distinct().Take(Market.Cart).ToList();
+        if (!CanGoToMarket || cart.Count == 0)
+        {
+            return null;
+        }
+
+        var result = new MarketResult([.. cart.Select(w => new MarketSale(w, Market.Price(w, Day, Crowd)))], Market.Fee);
+        foreach (var wheel in cart)
+        {
+            _wheels.Remove(wheel);
+        }
+
+        MarketVisited = Day;
+        Money += result.Total;
+        Earned += result.Total;
+        WheelsSold += cart.Count;
+        return result;
+    }
+
     /// <summary>The day a wheel was last entered at the fair (0: never).</summary>
     public int FairEntered { get; private set; }
 
@@ -249,7 +284,7 @@ public sealed class Farm
 
     /// <summary>Starts a cheese of a flavour the farm has; null when there is no milk or room for it.</summary>
     public Making? StartMaking(Flavour flavour, CheeseSize size = CheeseSize.Wheel) =>
-        CanMakeSize(size) && _flavours.Contains(flavour) ? new Making(flavour, GoodKettle, HashCode.Combine(Seed, Day, WheelsMade)) { Size = size } : null;
+        CanMakeSize(size) && _flavours.Contains(flavour) ? new Making(flavour, GoodKettle, Stable.Seed(Seed, Day, WheelsMade)) { Size = size } : null;
 
     /// <summary>Puts the finished cheese on a rack, using its milk.</summary>
     public Wheel Finish(Making making)
@@ -363,7 +398,7 @@ public sealed class Farm
         // Calves: one grows up after her weeks; a cow may have one in the night, while there is room in the herd.
         var grown = _herd.FirstOrDefault(c => Day - c.Born == CheeseFarm.Herd.CalfDays)?.Name;
         string? calf = null;
-        var random = new Random(HashCode.Combine(Seed, Day, 4049));
+        var random = new Random(Stable.Seed(Seed, Day, 4049));
         foreach (var _ in _herd.Where(IsGrown).ToList())
         {
             if (random.NextDouble() < CheeseFarm.Herd.CalvingChance && _herd.Count < MaxCows && calf is null)
@@ -464,6 +499,7 @@ public sealed class Farm
         ["earned"] = Earned,
         ["fair"] = FairEntered,
         ["handMilked"] = HandMilked,
+        ["market"] = MarketVisited,
         ["rosettes"] = new JsonArray([.. _rosettes.Select(n => (JsonNode?)n)]),
         ["fields"] = new JsonArray([.. _fields.Select(f => (JsonNode?)f.ToString())]),
         ["fieldSince"] = new JsonArray([.. _fieldSince.Select(d => (JsonNode?)d)]),
@@ -503,6 +539,7 @@ public sealed class Farm
                 Earned = (int?)root["earned"] ?? 0,
                 FairEntered = (int?)root["fair"] ?? 0,
                 HandMilked = (int?)root["handMilked"] ?? 0,
+                MarketVisited = (int?)root["market"] ?? 0,
                 Fledged = (int?)root["fledged"] ?? 0,
                 Hay = (int?)root["hay"] ?? 0,
             };

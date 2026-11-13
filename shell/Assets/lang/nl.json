@@ -1062,5 +1062,18 @@
   "farm wheel": "boerenkaas",
   "Size: {0}, {1} litres": "Formaat: {0}, {1} liter",
   "A baby cheese ripens twice as fast; a big wheel takes twice as long, and fetches the most": "Een baby kaas rijpt twee keer zo snel; een grote kaas doet er twee keer zo lang over, en brengt het meest op",
-  "{0}, {1}, {2}  ·  {3}  ·  {4} days old": "{0}, {1}, {2}  ·  {3}  ·  {4} dagen oud"
+  "{0}, {1}, {2}  ·  {3}  ·  {4} days old": "{0}, {1}, {2}  ·  {3}  ·  {4} dagen oud",
+  "Market": "Markt",
+  "Market day in town": "Marktdag in het dorp",
+  "Market day in town!": "Marktdag in het dorp!",
+  "A busy market today": "Een drukke markt vandaag",
+  "A quiet market today": "Een rustige markt vandaag",
+  "An ordinary market today": "Een gewone markt vandaag",
+  "Choose up to {0} wheels: sold by the piece, they fetch more than whole": "Kies tot {0} kazen: per stuk verkocht brengen ze meer op dan heel",
+  "{0}, {1}, {2}  ·  {3}  ·  €{4}": "{0}, {1}, {2}  ·  {3}  ·  €{4}",
+  "To market: €{0}, after €{1} for the stall": "Naar de markt: €{0}, na €{1} voor de kraam",
+  "Sold out: €{0}": "Uitverkocht: €{0}",
+  "in the cart": "in de kar",
+  "{0}, {1}  ·  €{2}": "{0}, {1}  ·  €{2}",
+  "The stall: €{0}": "De kraam: €{0}"
 }

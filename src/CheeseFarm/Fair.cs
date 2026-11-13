@@ -32,7 +32,7 @@ public static class Fair
     /// <summary>The other farms' entries on a fair day: stronger each fair, never perfect.</summary>
     public static IReadOnlyList<FairEntry> Others(int seed, int day)
     {
-        var random = new Random(HashCode.Combine(seed, day, 4243));
+        var random = new Random(Stable.Seed(seed, day, 4243));
         var week = day / Every;
         var names = Rivals.OrderBy(_ => random.Next()).Take(3).ToList();
         return [.. names.Select(name => new FairEntry(name, Math.Clamp(40 + (week * 4) + random.Next(-12, 16), 20, 96)))];

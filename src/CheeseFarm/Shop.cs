@@ -47,7 +47,7 @@ public static class Customers
     public static IReadOnlyList<Customer> For(int seed, int day, int count, IReadOnlyCollection<Flavour> flavours)
     {
         ArgumentNullException.ThrowIfNull(flavours);
-        var random = new Random(HashCode.Combine(seed, day, 7919));
+        var random = new Random(Stable.Seed(seed, day, 7919));
         var known = flavours.Where(f => f != Flavour.Plain).ToList();
 
         // Early on there is only young cheese: wishes grow older with the farm.
