@@ -70,6 +70,7 @@ internal sealed class FarmScene : Scene
         new Button(Farm.Due > 0 ? T("Cellar ({0})", Farm.Due) : T("Cellar"), () => Scenes.Push(new CellarScene(_context), Navigation.Fade())),
         new Button(T("Shop"), () => Scenes.Push(new ShopScene(_context))),
         new Button(T("Buy"), () => Scenes.Push(new FarmShopScene(_context))),
+        new Button(T("Meadow"), () => Scenes.Push(new MeadowScene(_context))),
         new Button(T("Sleep"), Sleep),
         new Button(T("Menu"), () => Scenes.Push(new FarmPauseScene(_context))),
     ]);
@@ -102,6 +103,20 @@ internal sealed class FarmScene : Scene
         if (report.ToDairy > 0)
         {
             note += "  ·  " + T("{0} litres to the dairy for €{1}", report.ToDairy, report.DairyPay);
+        }
+
+        if (report.Hungry > 0)
+        {
+            note += "  ·  " + T("No money for feed: {0} cows went hungry", report.Hungry);
+        }
+        else if (report.FeedBought > 0)
+        {
+            note += "  ·  " + T("Feed bought for €{0}", report.FeedBought);
+        }
+
+        if (report.Fledged > 0)
+        {
+            note += "  ·  " + T("{0} meadow bird chicks fledged!", report.Fledged);
         }
 
         if (Fair.IsOn(report.Day))
@@ -201,14 +216,110 @@ internal sealed class FarmScene : Scene
             batch.FillRectangle(new Rectangle((int)(post.X - (unit * 0.45f)), (int)(post.Y - (unit * 1.3f)), (int)(unit * 0.9f), (int)(unit * 0.5f)), new Color(250, 236, 200));
         }
 
-        // The herd, each cow in its own spot and grazing at its own pace.
-        var meadow = new Rectangle(land.X, horizon + (int)unit, land.Width, land.Bottom - horizon - (int)unit);
-        for (var cow = 0; cow < Farm.Cows; cow++)
+        // The meadow's fields, two rows of three with ditches between; the herd grazing in front.
+        var meadow = new Rectangle(land.X, horizon + (int)(unit * 0.6f), land.Width, land.Bottom - horizon - (int)(unit * 0.6f));
+        var fields = DrawFields(batch, meadow, unit);
+        DrawHerd(batch, fields, meadow, unit);
+    }
+
+    /// <summary>The fields: grass, herbs in flower, or long grass with meadow birds. Their bounds, front row last.</summary>
+    private Rectangle[] DrawFields(SpriteBatch batch, Rectangle meadow, float unit)
+    {
+        var bounds = new Rectangle[Farm.Fields.Count];
+        var ditch = Math.Max(2, (int)(unit * 0.12f));
+        var rows = (Farm.Fields.Count + 2) / 3;
+        for (var i = 0; i < bounds.Length; i++)
         {
-            // Spread across the meadow, each nudged from its place a little; a new cow joins somewhere new.
-            var random = new Random(HashCode.Combine(cow, 7919));
-            var across = ((cow * 0.618034f) + 0.1f) % 1;
-            var at = new Vector2(meadow.X + (meadow.Width * (0.06f + (0.88f * across))), meadow.Y + (meadow.Height * (0.1f + (0.7f * (float)random.NextDouble()))));
+            var (column, row) = (i % 3, i / 3);
+            var top = meadow.Y + (meadow.Height * row / rows);
+            var bottom = meadow.Y + (meadow.Height * (row + 1) / rows);
+            var field = new Rectangle(meadow.X + (meadow.Width * column / 3), top, meadow.Width / 3, bottom - top);
+            field.Inflate(-ditch / 2, -ditch / 2);
+            bounds[i] = field;
+
+            var kind = Farm.Fields[i];
+            batch.FillRectangle(field, kind switch
+            {
+                Field.Herbs => new Color(112, 168, 80),
+                Field.Birds => new Color(132, 150, 70),
+                _ => new Color(104, 162, 76),
+            });
+
+            // The same flowers and tufts in the same places every frame.
+            var random = new Random(HashCode.Combine(i, 31));
+            if (kind == Field.Herbs)
+            {
+                Color[] flowers = [new(250, 220, 70), new(200, 120, 210), new(250, 250, 245), new(230, 90, 70)];
+                var count = field.Width * field.Height / (int)Math.Max(1, unit * unit * 0.25f);
+                for (var n = 0; n < count; n++)
+                {
+                    var at = new Vector2(field.X + (float)(random.NextDouble() * field.Width), field.Y + (float)(random.NextDouble() * field.Height));
+                    batch.FillCircle(at, Math.Max(1.5f, unit * 0.06f), flowers[n % flowers.Length]);
+                }
+            }
+            else if (kind == Field.Birds)
+            {
+                var count = field.Width * field.Height / (int)Math.Max(1, unit * unit * 0.3f);
+                for (var n = 0; n < count; n++)
+                {
+                    var at = new Vector2(field.X + (float)(random.NextDouble() * field.Width), field.Y + (float)(random.NextDouble() * field.Height));
+                    var tuft = unit * 0.22f;
+                    batch.DrawLine(at, at + new Vector2(-tuft * 0.3f, -tuft), new Color(96, 118, 50), Math.Max(1, unit * 0.04f));
+                    batch.DrawLine(at, at + new Vector2(tuft * 0.3f, -tuft), new Color(96, 118, 50), Math.Max(1, unit * 0.04f));
+                }
+
+                // A godwit or two, bobbing, and one overhead calling.
+                for (var bird = 0; bird < 2; bird++)
+                {
+                    var at = new Vector2(field.X + (field.Width * (0.3f + (0.4f * bird))), field.Y + (field.Height * (0.45f + (0.2f * bird))));
+                    DrawGodwit(batch, at, unit * 0.5f, bird == 0, MathF.Sin((_time * 2.3f) + (i * 1.7f) + bird));
+                }
+
+                var flying = new Vector2(field.Center.X + (MathF.Sin((_time * 0.4f) + i) * field.Width * 0.35f), field.Y - (unit * 0.4f) + (MathF.Sin(_time * 1.3f) * unit * 0.1f));
+                var wing = MathF.Sin((_time * 8) + i) * unit * 0.12f;
+                batch.DrawLine(flying, flying + new Vector2(-unit * 0.25f, -wing), new Color(60, 50, 40), Math.Max(1, unit * 0.05f));
+                batch.DrawLine(flying, flying + new Vector2(unit * 0.25f, -wing), new Color(60, 50, 40), Math.Max(1, unit * 0.05f));
+            }
+        }
+
+        return bounds;
+    }
+
+    /// <summary>A black-tailed godwit: a rusty body on long legs, and a long beak dipping into the grass.</summary>
+    private static void DrawGodwit(SpriteBatch batch, Vector2 at, float size, bool facingRight, float bob)
+    {
+        var face = facingRight ? 1 : -1;
+        var legs = new Color(50, 46, 40);
+        batch.DrawLine(at + new Vector2(-size * 0.1f, 0), at + new Vector2(-size * 0.15f, size * 0.7f), legs, Math.Max(1, size * 0.06f));
+        batch.DrawLine(at + new Vector2(size * 0.1f, 0), at + new Vector2(size * 0.15f, size * 0.7f), legs, Math.Max(1, size * 0.06f));
+        batch.FillEllipse(at, new Vector2(size * 0.5f, size * 0.28f), new Color(190, 110, 60));
+        var head = at + new Vector2(size * 0.5f * face, (-0.25f + (0.15f * bob)) * size);
+        batch.FillCircle(head, size * 0.15f, new Color(200, 120, 70));
+        batch.DrawLine(head, head + new Vector2(size * 0.7f * face, size * (0.15f + (0.25f * bob))), new Color(80, 60, 50), Math.Max(1, size * 0.06f));
+    }
+
+    /// <summary>The herd, each cow in its own spot in a field it grazes, at its own pace; cows the meadow can't feed by the barn.</summary>
+    private void DrawHerd(SpriteBatch batch, Rectangle[] fields, Rectangle meadow, float unit)
+    {
+        // A place for every cow a field feeds, grass and herbs alike; the rest stand along the top of the meadow.
+        var places = new List<Rectangle>();
+        for (var i = 0; i < fields.Length; i++)
+        {
+            places.AddRange(Enumerable.Repeat(fields[i], Meadow.Feeds(Farm.Fields[i])));
+        }
+
+        var spare = new Rectangle(meadow.X, meadow.Y, meadow.Width / 3, (int)unit);
+        var cows = Enumerable.Range(0, Farm.Cows)
+            .Select(cow =>
+            {
+                var random = new Random(HashCode.Combine(cow, 7919));
+                var field = cow < places.Count ? places[cow] : spare;
+                var at = new Vector2(field.X + (field.Width * (0.15f + (0.7f * (float)random.NextDouble()))), field.Y + (field.Height * (0.2f + (0.6f * (float)random.NextDouble()))));
+                return (cow, at);
+            })
+            .OrderBy(c => c.at.Y);
+        foreach (var (cow, at) in cows)
+        {
             var size = unit * (0.75f + (0.35f * (at.Y - meadow.Y) / Math.Max(1, meadow.Height)));
             DrawCow(batch, at, size, (cow % 3) != 1, _time + cow);
         }

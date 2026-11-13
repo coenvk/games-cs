@@ -24,8 +24,12 @@ public enum Upgrade
     Sign,
 }
 
-/// <summary>What happened overnight: the milk the herd gave, what went to the dairy, and the wheels left unturned.</summary>
-public sealed record DayReport(int Day, int Milked, int ToDairy, int DairyPay, int Neglected);
+/// <summary>
+/// What happened overnight: the milk the herd gave, what went to the dairy, the wheels left unturned, the feed bought
+/// for cows the meadow couldn't feed (or the cows that went hungry when there was no money for it), and the meadow
+/// birds' chicks that fledged.
+/// </summary>
+public sealed record DayReport(int Day, int Milked, int ToDairy, int DairyPay, int Neglected, int FeedBought = 0, int Hungry = 0, int Fledged = 0);
 
 /// <summary>
 /// A cheese farm, day by day. The herd gives milk every morning; a wheel takes <see cref="MilkPerWheel"/> litres
@@ -48,6 +52,8 @@ public sealed class Farm
     private readonly List<Wheel> _wheels = [];
     private readonly HashSet<Flavour> _flavours = [Flavour.Plain];
     private readonly HashSet<int> _served = [];
+    private readonly Field[] _fields = new Field[Meadow.Fields];
+    private readonly int[] _fieldSince = Enumerable.Repeat(1, Meadow.Fields).ToArray();
 
     public Farm(int seed) => Seed = seed;
 
@@ -117,7 +123,41 @@ public sealed class Farm
 
     public bool CanMake => Milk >= MilkPerWheel && _wheels.Count < Room;
 
-    public IReadOnlyList<Customer> Customers => CheeseFarm.Customers.For(Seed, Day, 3 + Signs, _flavours);
+    public IReadOnlyList<Customer> Customers => CheeseFarm.Customers.For(Seed, Day, 3 + Signs + Meadow.Walkers(FieldsOf(Field.Birds)), _flavours);
+
+    /// <summary>The meadow's fields, each grass, herbs or left for the birds.</summary>
+    public IReadOnlyList<Field> Fields => _fields;
+
+    /// <summary>The day a field became what it is.</summary>
+    public int FieldSince(int field) => _fieldSince[field];
+
+    public int FieldsOf(Field kind) => _fields.Count(f => f == kind);
+
+    /// <summary>How many cows the meadow feeds; the rest eat bought feed.</summary>
+    public int Grazing => _fields.Sum(Meadow.Feeds);
+
+    /// <summary>How rich the milk is, 0 to 1: the share of the herd grazing herbs (the herb fields are grazed first).</summary>
+    public float Richness => Cows == 0 ? 0 : Math.Min(1, FieldsOf(Field.Herbs) * Meadow.Feeds(Field.Herbs) / (float)Cows);
+
+    /// <summary>Meadow birds' chicks fledged on the farm's bird fields, all told.</summary>
+    public int Fledged { get; private set; }
+
+    /// <summary>What turning a field into <paramref name="kind"/> costs: sowing herbs costs, the rest is free.</summary>
+    public static int FieldCost(Field kind) => kind == Field.Herbs ? Meadow.SowCost : 0;
+
+    /// <summary>Makes a field grass, herbs or a bird field; false when it already is, or there is no money to sow it.</summary>
+    public bool SetField(int field, Field kind)
+    {
+        if (field < 0 || field >= _fields.Length || _fields[field] == kind || Money < FieldCost(kind))
+        {
+            return false;
+        }
+
+        Money -= FieldCost(kind);
+        _fields[field] = kind;
+        _fieldSince[field] = Day;
+        return true;
+    }
 
     /// <summary>Whether today's customer at <paramref name="index"/> has been served.</summary>
     public bool Served(int index) => _served.Contains(index);
@@ -139,7 +179,7 @@ public sealed class Farm
 
         Milk -= MilkPerWheel;
         WheelsMade++;
-        var wheel = new Wheel(NextId(), Day, making.Flavour, making.Made);
+        var wheel = new Wheel(NextId(), Day, making.Flavour, making.Made + (Meadow.RichMilk * Richness));
         _wheels.Add(wheel);
         return wheel;
     }
@@ -191,7 +231,21 @@ public sealed class Farm
     {
         Day++;
         _served.Clear();
-        var milked = Cows * MilkPerCow;
+
+        // Cows the meadow can't feed eat bought feed; without the money for it they go hungry and give half.
+        var unfed = Math.Max(0, Cows - Grazing);
+        var feed = unfed * Meadow.FeedPrice;
+        var hungry = 0;
+        if (Money >= feed)
+        {
+            Money -= feed;
+        }
+        else
+        {
+            (feed, hungry) = (0, unfed);
+        }
+
+        var milked = (Cows * MilkPerCow) - (hungry * MilkPerCow / 2);
         var kept = Math.Min(milked, Tank - Milk);
         Milk += kept;
         var toDairy = milked - kept;
@@ -206,7 +260,19 @@ public sealed class Farm
             neglected++;
         }
 
-        return new DayReport(Day, milked, toDairy, pay, neglected);
+        // A bird field left long enough raises a brood, and another every nesting time after.
+        var fledged = 0;
+        for (var field = 0; field < _fields.Length; field++)
+        {
+            var left = Day - _fieldSince[field];
+            if (_fields[field] == Field.Birds && left > 0 && left % Meadow.NestingDays == 0)
+            {
+                fledged += Meadow.Brood;
+            }
+        }
+
+        Fledged += fledged;
+        return new DayReport(Day, milked, toDairy, pay, neglected, feed, hungry, fledged);
     }
 
     public int Cost(Upgrade upgrade) => upgrade switch
@@ -290,6 +356,9 @@ public sealed class Farm
         ["earned"] = Earned,
         ["fair"] = FairEntered,
         ["rosettes"] = new JsonArray([.. _rosettes.Select(n => (JsonNode?)n)]),
+        ["fields"] = new JsonArray([.. _fields.Select(f => (JsonNode?)f.ToString())]),
+        ["fieldSince"] = new JsonArray([.. _fieldSince.Select(d => (JsonNode?)d)]),
+        ["fledged"] = Fledged,
         ["flavours"] = new JsonArray([.. _flavours.Order().Select(f => (JsonNode?)f.ToString())]),
         ["served"] = new JsonArray([.. _served.Order().Select(s => (JsonNode?)s)]),
         ["wheels"] = new JsonArray([.. _wheels.Select(w => (JsonNode?)new JsonObject
@@ -322,7 +391,16 @@ public sealed class Farm
                 WheelsSold = (int?)root["sold"] ?? 0,
                 Earned = (int?)root["earned"] ?? 0,
                 FairEntered = (int?)root["fair"] ?? 0,
+                Fledged = (int?)root["fledged"] ?? 0,
             };
+            var fields = root["fields"]?.AsArray() ?? [];
+            var since = root["fieldSince"]?.AsArray() ?? [];
+            for (var i = 0; i < Math.Min(fields.Count, farm._fields.Length); i++)
+            {
+                farm._fields[i] = Enum.Parse<Field>((string)fields[i]!);
+                farm._fieldSince[i] = i < since.Count ? (int)since[i]! : farm.Day;
+            }
+
             var rosettes = root["rosettes"]?.AsArray() ?? [];
             for (var i = 0; i < Math.Min(rosettes.Count, farm._rosettes.Length); i++)
             {
