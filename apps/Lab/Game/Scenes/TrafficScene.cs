@@ -148,8 +148,14 @@ internal sealed class TrafficScene : Scene
     private TrafficSimulation Start()
     {
         // Drivers change lanes on the two-lane roads: overtaking, and moving out of a lane held up by a turn.
-        var simulation = new TrafficSimulation(Town(), seed: _context.Deal ?? 1) { LaneChanges = true };
+        var network = Town();
+        var simulation = new TrafficSimulation(network, seed: _context.Deal ?? 1) { LaneChanges = true };
         simulation.SetDemand(_demand);
+
+        // A bus line across town, east to west, stopping before the lights and on the way out; one every minute and a half.
+        Node At(float x, float y) => network.Nodes.First(n => n.Position == new Numerics.Vector2(x, y));
+        Lane Toward(Node from, Node to) => from.Roads.First(r => r.Other(from) == to).LeavingFrom(from)[^1];
+        simulation.AddLine(new BusLine("1", At(480, 0), At(-480, 0), [BusStop.On(Toward(At(260, 0), At(0, 0))), BusStop.On(Toward(At(-260, 0), At(-480, 0)), 0.4f)], Headway: 90));
         return simulation;
     }
 
