@@ -22,6 +22,11 @@ public sealed class ComposerSession
     public const int MaxChannels = 8;
     public const int MaxUndo = 200;
 
+    /// <summary>The lowest and highest notes the roll goes to.</summary>
+    public const int LowestPitch = 12;
+
+    public const int HighestPitch = 107;
+
     private readonly Stack<string> _undo = new();
     private readonly Stack<string> _redo = new();
 
@@ -149,6 +154,60 @@ public sealed class ComposerSession
 
         CurrentPattern.Notes.Add(new ComposedNote(step, pitch, 1));
         return true;
+    }
+
+    /// <summary>Remembers the song before an edit made over several moves (a drag), so one undo takes all of it back.</summary>
+    public void BeginEdit() => Change();
+
+    /// <summary>
+    /// Moves notes of the pattern on the roll by steps and semitones, as far as all of them stay in the bar and in
+    /// hearing; the notes where they are now. Part of an edit begun with <see cref="BeginEdit"/>.
+    /// </summary>
+    public IReadOnlyList<ComposedNote> Move(IReadOnlyList<ComposedNote> notes, int steps, int semitones)
+    {
+        ArgumentNullException.ThrowIfNull(notes);
+        var kept = notes.Where(CurrentPattern.Notes.Contains).ToList();
+        if (kept.Count == 0)
+        {
+            return kept;
+        }
+
+        steps = Math.Clamp(steps, -kept.Min(n => n.Step), Song.StepsPerBar - 1 - kept.Max(n => n.Step));
+        semitones = Math.Clamp(semitones, LowestPitch - kept.Min(n => n.Pitch), HighestPitch - kept.Max(n => n.Pitch));
+        var moved = new List<ComposedNote>();
+        foreach (var note in kept)
+        {
+            var to = note with { Step = note.Step + steps, Pitch = note.Pitch + semitones };
+            CurrentPattern.Notes[CurrentPattern.Notes.IndexOf(note)] = to;
+            moved.Add(to);
+        }
+
+        return moved;
+    }
+
+    /// <summary>Gives a note of the pattern on the roll a new length; the note as it is now. Part of an edit begun with <see cref="BeginEdit"/>.</summary>
+    public ComposedNote Resize(ComposedNote note, int length)
+    {
+        ArgumentNullException.ThrowIfNull(note);
+        var index = CurrentPattern.Notes.IndexOf(note);
+        if (index < 0)
+        {
+            return note;
+        }
+
+        var to = note with { Length = Math.Clamp(length, 1, Song.StepsPerBar * 4) };
+        CurrentPattern.Notes[index] = to;
+        return to;
+    }
+
+    /// <summary>Takes notes out of the pattern on the roll. Part of an edit begun with <see cref="BeginEdit"/>.</summary>
+    public void Remove(IEnumerable<ComposedNote> notes)
+    {
+        ArgumentNullException.ThrowIfNull(notes);
+        foreach (var note in notes.ToList())
+        {
+            CurrentPattern.Notes.Remove(note);
+        }
     }
 
     /// <summary>Makes the note starting at <paramref name="step"/> last up to and including <paramref name="last"/> (drawn out on the roll).</summary>

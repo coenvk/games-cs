@@ -987,5 +987,7 @@
   "Swing {0}": "Swing {0}",
   "Loop": "Herhaal",
   "Loop 1 bar": "Herhaal 1 maat",
-  "Loop {0} bars": "Herhaal {0} maten"
+  "Loop {0} bars": "Herhaal {0} maten",
+  "Select": "Selecteren",
+  "Delete {0}": "{0} wissen"
 }

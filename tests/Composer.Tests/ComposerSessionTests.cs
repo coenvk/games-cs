@@ -54,6 +54,44 @@ public class ComposerSessionTests
     }
 
     [Fact]
+    public void Move_TakesTheNotesTogether_AsFarAsTheBarAndRollGo_InOneUndo()
+    {
+        var session = new ComposerSession(ComposerSession.Blank());
+        session.Toggle(0, 60);
+        session.Toggle(4, 64);
+        session.Toggle(8, 67);
+        var notes = session.CurrentPattern.Notes.Take(2).ToList();
+
+        session.BeginEdit();
+        var moved = session.Move(notes, 2, 1);
+        moved.Should().Equal(new ComposedNote(2, 61), new ComposedNote(6, 65));
+        moved = session.Move(moved, -10, 0);
+        moved.Should().Equal([new ComposedNote(0, 61), new ComposedNote(4, 65)], "the first note stops at the start of the bar");
+        session.Move(moved, 0, 100).Max(n => n.Pitch).Should().Be(ComposerSession.HighestPitch);
+        session.CurrentPattern.Notes.Should().Contain(new ComposedNote(8, 67), "notes not moved stay");
+
+        session.Undo();
+        session.CurrentPattern.Notes.Should().Equal(new ComposedNote(0, 60), new ComposedNote(4, 64), new ComposedNote(8, 67));
+    }
+
+    [Fact]
+    public void Resize_AndRemove_ChangeTheNotesOnTheRoll()
+    {
+        var session = new ComposerSession(ComposerSession.Blank());
+        session.Toggle(2, 60);
+        session.Toggle(5, 62);
+
+        session.BeginEdit();
+        var longer = session.Resize(session.CurrentPattern.Notes[0], 4);
+        longer.Should().Be(new ComposedNote(2, 60, 4));
+        session.NoteAt(5, 60).Should().Be(longer, "the note now sounds over its new length");
+        session.Resize(longer, 0).Length.Should().Be(1);
+
+        session.Remove(session.CurrentPattern.Notes.ToList());
+        session.CurrentPattern.Notes.Should().BeEmpty();
+    }
+
+    [Fact]
     public void Place_PutsThePatternInABar_AndTakesItOutAgain()
     {
         var session = new ComposerSession(ComposerSession.Blank());

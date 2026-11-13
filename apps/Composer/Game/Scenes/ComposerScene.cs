@@ -53,7 +53,30 @@ internal sealed class ComposerScene : Scene
     private int _loopLength;
     private string? _heard;
     private bool _wasDown;
-    private (int Step, int Pitch)? _drawing;
+    private Drag _drag;
+    private (int Step, int Pitch)? _dragFrom;
+    private (int Step, int Pitch)? _dragTo;
+    private List<ComposedNote> _dragged = [];
+    private (int Steps, int Semitones) _dragMoved;
+    private bool _dragChanged;
+    private List<ComposedNote> _selected = [];
+    private bool _selecting;
+
+    /// <summary>What a press on the roll does as the pointer moves.</summary>
+    private enum Drag
+    {
+        /// <summary>A new note drawn out to its length.</summary>
+        Draw,
+
+        /// <summary>A note's end pulled to a new length.</summary>
+        Resize,
+
+        /// <summary>A note, or the notes selected, moved in time and pitch.</summary>
+        Move,
+
+        /// <summary>A box drawn round the notes to select.</summary>
+        Select,
+    }
     private (int Channel, int Pattern)? _shown;
 
     public ComposerScene(GameContext context, ComposerSession session)
@@ -87,6 +110,7 @@ internal sealed class ComposerScene : Scene
         }
 
         _shown = (Session.Channel, Session.Pattern);
+        _selected.Clear();
         var pitches = Session.CurrentPattern.Notes.Select(n => n.Pitch).ToList();
         var middle = pitches.Count == 0 ? 60 : (pitches.Min() + pitches.Max()) / 2;
         _lowest = Math.Clamp(middle - (RollRows / 2), 12, 108 - RollRows);
@@ -99,6 +123,14 @@ internal sealed class ComposerScene : Scene
         var actions = _context.Actions;
         if (actions.WasPressed(input, GameAction.Back))
         {
+            if (_selected.Count > 0 || _selecting)
+            {
+                // Back lets go of the notes selected before it opens the menu.
+                _selected.Clear();
+                _selecting = false;
+                return;
+            }
+
             Scenes.Push(new SongMenuScene(_context, this));
             return;
         }
@@ -114,24 +146,15 @@ internal sealed class ComposerScene : Scene
         _wasDown = pointer.IsDown;
         if (pressed && _roll.Contains(pointer.Position) && Cell(pointer.Position) is { } cell)
         {
-            var before = Song.ToJson();
-            if (Session.Toggle(cell.Step, cell.Pitch))
-            {
-                _drawing = cell;
-                Audition(cell.Pitch);
-            }
-
-            Changed(before);
+            Press(cell, pointer.Position, _selecting || input.IsDown(Keys.LeftShift) || input.IsDown(Keys.RightShift));
         }
-        else if (pointer.IsDown && _drawing is { } drawing && Cell(pointer.Position) is { } to)
+        else if (pointer.IsDown && _dragFrom is not null && Cell(pointer.Position) is { } to)
         {
-            var before = Song.ToJson();
-            Session.Stretch(drawing.Step, drawing.Pitch, Math.Max(drawing.Step, to.Step));
-            Changed(before);
+            DragTo(to);
         }
-        else if (!pointer.IsDown)
+        else if (!pointer.IsDown && _dragFrom is not null)
         {
-            _drawing = null;
+            Release();
         }
 
         if (input.Tap is { } tap && !_roll.Contains(tap))
@@ -312,6 +335,23 @@ internal sealed class ComposerScene : Scene
             _context.Get<SongShelf>().Save(Song);
             Session.Saved();
         }
+        else if (command && input.WasPressed(Keys.A))
+        {
+            _selected = [.. Session.CurrentPattern.Notes];
+        }
+        else if (input.WasPressed(Keys.Delete) || input.WasPressed(Keys.Back))
+        {
+            DeleteSelected();
+        }
+        else if (_selected.Count > 0 && (input.WasPressed(Keys.Up) || input.WasPressed(Keys.Down)))
+        {
+            var octave = input.IsDown(Keys.LeftShift) || input.IsDown(Keys.RightShift) ? 12 : 1;
+            Nudge(0, input.WasPressed(Keys.Up) ? octave : -octave);
+        }
+        else if (_selected.Count > 0 && (input.WasPressed(Keys.Left) || input.WasPressed(Keys.Right)))
+        {
+            Nudge(input.WasPressed(Keys.Right) ? 1 : -1, 0);
+        }
         else if (input.WasPressed(Keys.Up))
         {
             _lowest = Math.Min(_lowest + 12, 108 - RollRows);
@@ -328,6 +368,147 @@ internal sealed class ComposerScene : Scene
         {
             Session.SelectPattern(Session.Pattern + 1);
         }
+    }
+
+    /// <summary>
+    /// A press on the roll: on empty grid a new note (drawn out by dragging), on a note's end its length, on a note
+    /// the note or the notes selected with it to move; with Shift held or Select on, a box to select notes with.
+    /// </summary>
+    private void Press((int Step, int Pitch) cell, Vector2 at, bool selecting)
+    {
+        (_dragFrom, _dragTo, _dragMoved, _dragChanged) = (cell, cell, (0, 0), false);
+        if (selecting)
+        {
+            _drag = Drag.Select;
+            SelectBetween(cell, cell);
+            return;
+        }
+
+        if (Session.NoteAt(cell.Step, cell.Pitch) is { } note)
+        {
+            // One undo for the whole drag, or for the tap that takes the note away.
+            Session.BeginEdit();
+            var cellWidth = _roll.Width / (float)Song.StepsPerBar;
+            var end = _roll.X + (Math.Min(note.Step + note.Length, Song.StepsPerBar) * cellWidth);
+            var resize = at.X >= end - (cellWidth * 0.35f);
+            _drag = resize ? Drag.Resize : Drag.Move;
+            _dragged = !resize && _selected.Contains(note) ? [.. _selected] : [note];
+            return;
+        }
+
+        _selected.Clear();
+        var before = Song.ToJson();
+        if (Session.Toggle(cell.Step, cell.Pitch) && Session.NoteAt(cell.Step, cell.Pitch) is { } added)
+        {
+            (_drag, _dragged) = (Drag.Draw, [added]);
+            Audition(cell.Pitch);
+        }
+        else
+        {
+            _dragFrom = null;
+        }
+
+        Changed(before);
+    }
+
+    private void DragTo((int Step, int Pitch) to)
+    {
+        if (_dragFrom is not { } from || to == _dragTo)
+        {
+            return;
+        }
+
+        _dragTo = to;
+        var before = Song.ToJson();
+        switch (_drag)
+        {
+            case Drag.Draw or Drag.Resize:
+                var note = _dragged[0];
+                var length = Math.Max(note.Step, to.Step) - note.Step + 1;
+                if (length != note.Length)
+                {
+                    _dragged = [Session.Resize(note, length)];
+                    _dragChanged = true;
+                }
+
+                break;
+            case Drag.Move:
+                var wasSelected = _dragged.All(_selected.Contains) && _selected.Count > 0;
+                var moved = Session.Move(_dragged, to.Step - from.Step - _dragMoved.Steps, to.Pitch - from.Pitch - _dragMoved.Semitones);
+                if (moved.Count > 0)
+                {
+                    // Where they really went: the bar's ends and the roll's stop them.
+                    var (steps, semitones) = (moved[0].Step - _dragged[0].Step, moved[0].Pitch - _dragged[0].Pitch);
+                    _dragMoved = (_dragMoved.Steps + steps, _dragMoved.Semitones + semitones);
+                    _dragChanged |= steps != 0 || semitones != 0;
+                    if (semitones != 0)
+                    {
+                        Audition(moved[0].Pitch);
+                    }
+
+                    _dragged = [.. moved];
+                    if (wasSelected)
+                    {
+                        _selected = [.. moved];
+                    }
+                }
+
+                break;
+            case Drag.Select:
+                SelectBetween(from, to);
+                break;
+        }
+
+        Changed(before);
+    }
+
+    /// <summary>The pointer let go: a note tapped without moving it goes, as tapping a note always did.</summary>
+    private void Release()
+    {
+        if (_drag is Drag.Move or Drag.Resize && !_dragChanged && _dragFrom is { } from && Session.NoteAt(from.Step, from.Pitch) is { } tapped)
+        {
+            var before = Song.ToJson();
+            Session.Remove([tapped]);
+            _selected.Remove(tapped);
+            Changed(before);
+        }
+
+        (_dragFrom, _dragTo, _dragged) = (null, null, []);
+    }
+
+    /// <summary>Selects the notes sounding in the box between two cells.</summary>
+    private void SelectBetween((int Step, int Pitch) a, (int Step, int Pitch) b)
+    {
+        var (first, last) = (Math.Min(a.Step, b.Step), Math.Max(a.Step, b.Step));
+        var (low, high) = (Math.Min(a.Pitch, b.Pitch), Math.Max(a.Pitch, b.Pitch));
+        _selected = [.. Session.CurrentPattern.Notes.Where(n => n.Pitch >= low && n.Pitch <= high && n.Step <= last && n.Step + n.Length - 1 >= first)];
+    }
+
+    /// <summary>Moves the notes selected with the arrow keys, a step or a semitone (an octave with Shift).</summary>
+    private void Nudge(int steps, int semitones)
+    {
+        var before = Song.ToJson();
+        Session.BeginEdit();
+        _selected = [.. Session.Move(_selected, steps, semitones)];
+        Changed(before);
+        if (semitones != 0 && _selected.Count > 0)
+        {
+            Audition(_selected[0].Pitch);
+        }
+    }
+
+    private void DeleteSelected()
+    {
+        if (_selected.Count == 0)
+        {
+            return;
+        }
+
+        var before = Song.ToJson();
+        Session.BeginEdit();
+        Session.Remove(_selected);
+        _selected.Clear();
+        Changed(before);
     }
 
     /// <summary>The roll's step and pitch under a point, if it is on the grid.</summary>
@@ -455,6 +636,15 @@ internal sealed class ComposerScene : Scene
         Chip(batch, font, ref x, Row(), T("View"), null);
         Chip(batch, font, ref x, Row(), T("Higher"), () => _lowest = Math.Min(_lowest + 12, 108 - RollRows));
         Chip(batch, font, ref x, Row(), T("Lower"), () => _lowest = Math.Max(_lowest - 12, 12));
+        y += height + (pad / 2);
+
+        // Selecting by touch: a box drawn on the roll, then the notes dragged together or taken away.
+        x = area.X;
+        Chip(batch, font, ref x, Row(), T("Select"), () => _selecting = !_selecting, lit: _selecting);
+        if (_selected.Count > 0)
+        {
+            Chip(batch, font, ref x, Row(), T("Delete {0}", _selected.Count), DeleteSelected);
+        }
     }
 
     private void DrawRoll(SpriteBatch batch, SpriteFontBase font, Rectangle area)
@@ -512,6 +702,25 @@ internal sealed class ComposerScene : Scene
                 Math.Max(2, (int)(Math.Min(note.Length, columns - note.Step) * cellWidth) - 2),
                 Math.Max(2, (int)cellHeight - 2));
             batch.FillRoundedRectangle(cell, Math.Min(4, cell.Height / 3), colour);
+
+            // The end to pull, and the notes selected outlined.
+            var grip = Math.Max(2, (int)(cellWidth * 0.12f));
+            batch.FillRectangle(new Rectangle(cell.Right - grip - 1, cell.Y + (cell.Height / 4), grip, cell.Height / 2), Palette.Ink * 0.35f);
+            if (_selected.Contains(note))
+            {
+                batch.StrokeRectangle(cell, Palette.Text, 2);
+            }
+        }
+
+        if (_drag == Drag.Select && _dragFrom is { } from && _dragTo is { } to)
+        {
+            var left = _roll.X + (int)(Math.Min(from.Step, to.Step) * cellWidth);
+            var right = _roll.X + (int)((Math.Max(from.Step, to.Step) + 1) * cellWidth);
+            var top = _roll.Y + (int)((_lowest + RollRows - 1 - Math.Max(from.Pitch, to.Pitch)) * cellHeight);
+            var bottom = _roll.Y + (int)((_lowest + RollRows - Math.Min(from.Pitch, to.Pitch)) * cellHeight);
+            var box = new Rectangle(left, top, right - left, bottom - top);
+            batch.FillRectangle(box, Palette.Accent * 0.15f);
+            batch.StrokeRectangle(box, Palette.Accent, 2);
         }
     }
 
