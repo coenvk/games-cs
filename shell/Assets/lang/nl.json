@@ -887,7 +887,6 @@
   "Cumin": "Komijn",
   "Cumin, for cumin cheese": "Komijn, voor komijnekaas",
   "Cut": "Snijden",
-  "Day {0}": "Dag {0}",
   "Day {0} on the farm": "Dag {0} op de boerderij",
   "Day {0}: the cows gave {1} litres": "Dag {0}: de koeien gaven {1} liter",
   "Even cuts: the whey drains well. How long in the brine?": "Gelijke sneden: de wei loopt goed weg. Hoe lang in de pekel?",
@@ -1045,5 +1044,18 @@
   "{0} kicked the pail over: 1 litre saved": "{0} schopte de emmer om: 1 liter gered",
   "1 litre of milk from {0}, into the tank": "1 liter melk van {0}, in de tank",
   "+1 move": "+1 zet",
-  "+{0} moves": "+{0} zetten"
+  "+{0} moves": "+{0} zetten",
+  "Day {0}  ·  {1}": "Dag {0}  ·  {1}",
+  "{0} bales of hay": "{0} balen hooi",
+  "spring": "lente",
+  "summer": "zomer",
+  "autumn": "herfst",
+  "winter": "winter",
+  "Summer: mow the fields for hay": "Zomer: maai de velden voor hooi",
+  "Autumn: is there hay enough for the winter?": "Herfst: is er genoeg hooi voor de winter?",
+  "Winter: the herd is in the barn, eating hay": "Winter: de kudde staat op stal en eet hooi",
+  "Spring: the herd is out in the meadow again": "Lente: de kudde staat weer in het weiland",
+  "{0} bales of hay eaten": "{0} balen hooi gegeten",
+  "Winter: the herd is in the barn, {0} bales of hay left": "Winter: de kudde staat op stal, nog {0} balen hooi",
+  "Mow it for hay: {0} bales": "Maaien voor hooi: {0} balen"
 }

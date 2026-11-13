@@ -23,7 +23,9 @@ internal sealed class MeadowScene : PanelScene
         new(Farm.Grazing >= Farm.Cows
             ? T("The meadow feeds {0} cows; the herd is {1}", Farm.Grazing, Farm.Cows)
             : T("The meadow feeds {0} of {1} cows: feed for the rest costs €{2} a day", Farm.Grazing, Farm.Cows, (Farm.Cows - Farm.Grazing) * Meadow.FeedPrice), Palette.Text),
-        new(T("Herbs make the milk richer: {0}% of the herd grazes them", (int)MathF.Round(Farm.Richness * 100)), Palette.Accent),
+        new(Farm.Season == Season.Winter
+            ? T("Winter: the herd is in the barn, {0} bales of hay left", Farm.Hay)
+            : T("Herbs make the milk richer: {0}% of the herd grazes them", (int)MathF.Round(Farm.Richness * 100)), Palette.Accent),
         new(Farm.Fledged > 0
             ? T("Meadow birds' chicks fledged here: {0}", Farm.Fledged)
             : T("Fields left for the birds raise chicks, and walkers stop at the shop"), Palette.Muted),
@@ -82,6 +84,7 @@ internal sealed class FieldScene : PanelScene
         Menu = new Menu(
             context.Sounds,
             [
+                .. farm.CanMow(field) ? [new MenuItem(T("Mow it for hay: {0} bales", Math.Min(Seasons.Bales(farm.Fields[field]), Seasons.Barn - farm.Hay)), Mow)] : Array.Empty<MenuItem>(),
                 .. Enum.GetValues<Field>().Where(f => f != farm.Fields[field]).Select(kind => new MenuItem(Choice(kind), () => Set(kind)) { Dimmed = farm.Money < Farm.FieldCost(kind) }),
                 new MenuItem(T("Back"), () => Scenes.Pop()),
             ]);
@@ -97,6 +100,16 @@ internal sealed class FieldScene : PanelScene
         Field.Birds => T("Leave it for the meadow birds: feeds no cows"),
         _ => T("Grass: feeds 3 cows"),
     };
+
+    private void Mow()
+    {
+        if (Context.Farm.Farm.Mow(_field) > 0)
+        {
+            Context.Farm.Save();
+            Context.Sounds.Play(Sound.Pickup);
+            Scenes.Pop();
+        }
+    }
 
     private void Set(Field kind)
     {

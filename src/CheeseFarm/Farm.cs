@@ -31,6 +31,12 @@ public enum Upgrade
 /// </summary>
 public sealed record DayReport(int Day, int Milked, int ToDairy, int DairyPay, int Neglected, int FeedBought = 0, int Hungry = 0, int Fledged = 0)
 {
+    /// <summary>Bales of hay the herd ate in the barn (in winter).</summary>
+    public int HayEaten { get; init; }
+
+    /// <summary>The season that began this morning, if one did.</summary>
+    public Season? NewSeason { get; init; }
+
     /// <summary>The name of a calf born in the night, if one was.</summary>
     public string? Calf { get; init; }
 
@@ -62,6 +68,7 @@ public sealed class Farm
     private readonly List<Cow> _herd = [];
     private readonly Field[] _fields = new Field[Meadow.Fields];
     private readonly int[] _fieldSince = Enumerable.Repeat(1, Meadow.Fields).ToArray();
+    private readonly int[] _mown = new int[Meadow.Fields];
 
     public Farm(int seed)
     {
@@ -176,11 +183,40 @@ public sealed class Farm
 
     public int FieldsOf(Field kind) => _fields.Count(f => f == kind);
 
-    /// <summary>How many cows the meadow feeds; the rest eat bought feed.</summary>
-    public int Grazing => _fields.Sum(Meadow.Feeds);
+    /// <summary>How many cows the meadow feeds (none in winter, the herd in the barn); the rest eat hay or bought feed.</summary>
+    public int Grazing => Seasons.Grazing(Season) ? _fields.Sum(Meadow.Feeds) : 0;
+
+    public Season Season => Seasons.Of(Day);
+
+    public int Year => Seasons.YearOf(Day);
+
+    /// <summary>Bales of hay in the barn, for the winter.</summary>
+    public int Hay { get; private set; }
+
+    /// <summary>Whether a field can be mown for hay now: in summer, once a year, while the barn has room.</summary>
+    public bool CanMow(int field) => field >= 0 && field < _fields.Length && Season == Season.Summer && _mown[field] != Year && Hay < Seasons.Barn;
+
+    /// <summary>Mows a field for hay: the bales it gave (a bird field's nests start over); 0 when it can't be mown.</summary>
+    public int Mow(int field)
+    {
+        if (!CanMow(field))
+        {
+            return 0;
+        }
+
+        var bales = Math.Min(Seasons.Bales(_fields[field]), Seasons.Barn - Hay);
+        Hay += bales;
+        _mown[field] = Year;
+        if (_fields[field] == Field.Birds)
+        {
+            _fieldSince[field] = Day;
+        }
+
+        return bales;
+    }
 
     /// <summary>How rich the milk is, 0 to 1: the share of the herd grazing herbs (the herb fields are grazed first).</summary>
-    public float Richness => _herd.Count == 0 ? 0 : Math.Min(1, FieldsOf(Field.Herbs) * Meadow.Feeds(Field.Herbs) / (float)_herd.Count);
+    public float Richness => _herd.Count == 0 || !Seasons.Grazing(Season) ? 0 : Math.Min(1, FieldsOf(Field.Herbs) * Meadow.Feeds(Field.Herbs) / (float)_herd.Count);
 
     /// <summary>Meadow birds' chicks fledged on the farm's bird fields, all told.</summary>
     public int Fledged { get; private set; }
@@ -276,7 +312,11 @@ public sealed class Farm
         _served.Clear();
 
         // Cows (and calves) the meadow can't feed eat bought feed; without the money for it they go hungry, the cows giving half.
+        // In the barn they eat hay first.
         var unfed = Math.Max(0, _herd.Count - Grazing);
+        var hay = Math.Min(Hay, unfed);
+        Hay -= hay;
+        unfed -= hay;
         var feed = unfed * Meadow.FeedPrice;
         var hungry = 0;
         if (Money >= feed)
@@ -308,7 +348,7 @@ public sealed class Farm
         for (var field = 0; field < _fields.Length; field++)
         {
             var left = Day - _fieldSince[field];
-            if (_fields[field] == Field.Birds && left > 0 && left % Meadow.NestingDays == 0)
+            if (_fields[field] == Field.Birds && Seasons.Nesting(Season) && left > 0 && left % Meadow.NestingDays == 0)
             {
                 fledged += Meadow.Brood;
             }
@@ -329,7 +369,13 @@ public sealed class Farm
             }
         }
 
-        return new DayReport(Day, milked, toDairy, pay, neglected, feed, hungry, fledged) { Calf = calf, Grown = grown };
+        return new DayReport(Day, milked, toDairy, pay, neglected, feed, hungry, fledged)
+        {
+            Calf = calf,
+            Grown = grown,
+            HayEaten = hay,
+            NewSeason = Seasons.Starts(Day) ? Season : null,
+        };
     }
 
     public int Cost(Upgrade upgrade) => upgrade switch
@@ -418,6 +464,8 @@ public sealed class Farm
         ["fields"] = new JsonArray([.. _fields.Select(f => (JsonNode?)f.ToString())]),
         ["fieldSince"] = new JsonArray([.. _fieldSince.Select(d => (JsonNode?)d)]),
         ["fledged"] = Fledged,
+        ["hay"] = Hay,
+        ["mown"] = new JsonArray([.. _mown.Select(y => (JsonNode?)y)]),
         ["flavours"] = new JsonArray([.. _flavours.Order().Select(f => (JsonNode?)f.ToString())]),
         ["served"] = new JsonArray([.. _served.Order().Select(s => (JsonNode?)s)]),
         ["wheels"] = new JsonArray([.. _wheels.Select(w => (JsonNode?)new JsonObject
@@ -451,7 +499,14 @@ public sealed class Farm
                 FairEntered = (int?)root["fair"] ?? 0,
                 HandMilked = (int?)root["handMilked"] ?? 0,
                 Fledged = (int?)root["fledged"] ?? 0,
+                Hay = (int?)root["hay"] ?? 0,
             };
+            var mown = root["mown"]?.AsArray() ?? [];
+            for (var i = 0; i < Math.Min(mown.Count, farm._mown.Length); i++)
+            {
+                farm._mown[i] = (int)mown[i]!;
+            }
+
             var fields = root["fields"]?.AsArray() ?? [];
             var since = root["fieldSince"]?.AsArray() ?? [];
             for (var i = 0; i < Math.Min(fields.Count, farm._fields.Length); i++)

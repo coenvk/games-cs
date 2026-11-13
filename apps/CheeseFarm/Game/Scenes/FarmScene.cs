@@ -106,6 +106,22 @@ internal sealed class FarmScene : Scene
             note += "  ·  " + T("{0} litres to the dairy for €{1}", report.ToDairy, report.DairyPay);
         }
 
+        if (report.NewSeason is { } season)
+        {
+            note += "  ·  " + season switch
+            {
+                Season.Summer => T("Summer: mow the fields for hay"),
+                Season.Autumn => T("Autumn: is there hay enough for the winter?"),
+                Season.Winter => T("Winter: the herd is in the barn, eating hay"),
+                _ => T("Spring: the herd is out in the meadow again"),
+            };
+        }
+
+        if (report.HayEaten > 0)
+        {
+            note += "  ·  " + T("{0} bales of hay eaten", report.HayEaten);
+        }
+
         if (report.Hungry > 0)
         {
             note += "  ·  " + T("No money for feed: {0} cows went hungry", report.Hungry);
@@ -173,11 +189,15 @@ internal sealed class FarmScene : Scene
         batch.FillRectangle(hud, Palette.Panel);
         var text = hud;
         text.Inflate(-margin, 0);
-        batch.DrawText(fonts.Body, T("Day {0}", Farm.Day), text, Palette.Text, Align.Left);
+        batch.DrawText(fonts.Body, T("Day {0}  ·  {1}", Farm.Day, SeasonName(Farm.Season)), text, Palette.Text, Align.Left);
         batch.DrawText(fonts.Body, string.Create(CultureInfo.InvariantCulture, $"€ {Farm.Money}"), text, Palette.Accent, Align.Right);
         var calves = Farm.Herd.Count - Farm.Cows;
         var herd = calves == 0 ? T("{0} cows", Farm.Cows) : calves == 1 ? T("{0} cows and a calf", Farm.Cows) : T("{0} cows and {1} calves", Farm.Cows, calves);
         var status = T("{0} litres of milk  ·  {1} of {2} wheels in the cellar  ·  {3}", Farm.Milk, Farm.Wheels.Count, Farm.Room, herd);
+        if (Farm.Hay > 0 || Farm.Season == Season.Winter)
+        {
+            status += "  ·  " + T("{0} bales of hay", Farm.Hay);
+        }
         batch.DrawText(fonts.Small, status, text, Palette.Muted, Align.Center, shadow: false);
     }
 
@@ -185,15 +205,21 @@ internal sealed class FarmScene : Scene
     private void DrawLand(SpriteBatch batch, Rectangle land)
     {
         var horizon = land.Y + (int)(land.Height * 0.38f);
-        batch.FillRectangle(new Rectangle(land.X, land.Y, land.Width, horizon - land.Y), new Color(150, 196, 230));
-        batch.FillRectangle(new Rectangle(land.X, horizon, land.Width, land.Bottom - horizon), new Color(104, 162, 76));
+        var season = Farm.Season;
+        batch.FillRectangle(new Rectangle(land.X, land.Y, land.Width, horizon - land.Y), season == Season.Winter ? new Color(176, 190, 204) : new Color(150, 196, 230));
+        batch.FillRectangle(new Rectangle(land.X, horizon, land.Width, land.Bottom - horizon), Grass(season, new Color(104, 162, 76)));
 
         // A row of trees along the horizon, as round as the Achterhoek's oaks.
         var tree = Math.Max(10, land.Height / 14);
         for (var x = land.X - tree; x < land.Right + tree; x += (int)(tree * 1.6f))
         {
             var wobble = ((x * 37) % 11) - 5;
-            batch.FillCircle(new Vector2(x, horizon - (tree * 0.6f) + wobble), tree, new Color(66, 112, 58));
+            batch.FillCircle(new Vector2(x, horizon - (tree * 0.6f) + wobble), tree, season switch
+            {
+                Season.Autumn => ((x / tree) % 3) switch { 0 => new Color(196, 120, 50), 1 => new Color(170, 140, 60), _ => new Color(120, 110, 60) },
+                Season.Winter => new Color(110, 100, 92),
+                _ => new Color(66, 112, 58),
+            });
         }
 
         // The barn, with its cheese kitchen and cellar, and the shop by the road.
@@ -203,6 +229,29 @@ internal sealed class FarmScene : Scene
         batch.FillTriangle(new Rectangle(barn.X - (int)(unit * 0.3f), barn.Y - (int)(unit * 1.6f), barn.Width + (int)(unit * 0.6f), (int)(unit * 1.6f)), pointsUp: true, new Color(70, 62, 60));
         batch.FillRectangle(new Rectangle(barn.Center.X - (int)(unit * 0.5f), barn.Bottom - (int)(unit * 1.4f), (int)unit, (int)(unit * 1.4f)), new Color(110, 40, 34));
         batch.DrawText(_context.Fonts.Small, T("Cheese"), new Vector2(barn.Center.X, barn.Y + (unit * 0.3f)), new Color(250, 236, 200), Align.Center, shadow: false);
+
+        // The hay stacked by the barn, a bale for every twenty; in winter the herd looks out of the barn door.
+        var bale = new Vector2(unit * 0.7f, unit * 0.45f);
+        for (var b = 0; b < Math.Min(10, (Farm.Hay + 19) / 20); b++)
+        {
+            var (column, row) = (b % 4, b / 4);
+            var at = new Rectangle((int)(barn.Right + (unit * 0.15f) + (column * bale.X) + (row * bale.X / 2)), (int)(horizon - ((row + 1) * bale.Y)), (int)bale.X - 2, (int)bale.Y - 2);
+            batch.FillRoundedRectangle(at, (int)(unit * 0.08f), new Color(222, 186, 92));
+            batch.FillRectangle(new Rectangle(at.X, at.Center.Y, at.Width, Math.Max(1, (int)(unit * 0.04f))), new Color(170, 130, 60));
+        }
+
+        if (season == Season.Winter && Farm.Herd.Count > 0)
+        {
+            var door = new Rectangle(barn.Center.X - (int)(unit * 0.5f), barn.Bottom - (int)(unit * 1.4f), (int)unit, (int)(unit * 1.4f));
+            for (var c = 0; c < Math.Min(2, Farm.Herd.Count); c++)
+            {
+                var head = new Vector2(door.X + (door.Width * (0.3f + (0.4f * c))), door.Y + (door.Height * 0.45f) + (MathF.Sin((_time * 0.8f) + c) * unit * 0.04f));
+                batch.FillEllipse(head, new Vector2(unit * 0.22f, unit * 0.26f), new Color(246, 244, 238));
+                batch.FillEllipse(head + new Vector2(0, unit * 0.16f), new Vector2(unit * 0.14f, unit * 0.1f), new Color(232, 170, 170));
+                batch.FillCircle(head + new Vector2(-unit * 0.08f, -unit * 0.06f), Math.Max(1.5f, unit * 0.035f), new Color(30, 30, 30));
+                batch.FillCircle(head + new Vector2(unit * 0.08f, -unit * 0.06f), Math.Max(1.5f, unit * 0.035f), new Color(30, 30, 30));
+            }
+        }
 
         // The fair's rosettes on the barn wall: gold, silver, bronze.
         Color[] rosette = [new(240, 196, 60), new(200, 204, 212), new(200, 130, 70)];
@@ -232,7 +281,10 @@ internal sealed class FarmScene : Scene
         // The meadow's fields, two rows of three with ditches between; the herd grazing in front.
         var meadow = new Rectangle(land.X, horizon + (int)(unit * 0.6f), land.Width, land.Bottom - horizon - (int)(unit * 0.6f));
         var fields = DrawFields(batch, meadow, unit);
-        DrawHerd(batch, fields, meadow, unit);
+        if (Seasons.Grazing(season))
+        {
+            DrawHerd(batch, fields, meadow, unit);
+        }
     }
 
     /// <summary>The fields: grass, herbs in flower, or long grass with meadow birds. Their bounds, front row last.</summary>
@@ -251,16 +303,17 @@ internal sealed class FarmScene : Scene
             bounds[i] = field;
 
             var kind = Farm.Fields[i];
-            batch.FillRectangle(field, kind switch
+            var season = Farm.Season;
+            batch.FillRectangle(field, Grass(season, kind switch
             {
                 Field.Herbs => new Color(112, 168, 80),
                 Field.Birds => new Color(132, 150, 70),
                 _ => new Color(104, 162, 76),
-            });
+            }));
 
             // The same flowers and tufts in the same places every frame.
             var random = new Random(HashCode.Combine(i, 31));
-            if (kind == Field.Herbs)
+            if (kind == Field.Herbs && season is Season.Spring or Season.Summer)
             {
                 Color[] flowers = [new(250, 220, 70), new(200, 120, 210), new(250, 250, 245), new(230, 90, 70)];
                 var count = field.Width * field.Height / (int)Math.Max(1, unit * unit * 0.25f);
@@ -270,7 +323,7 @@ internal sealed class FarmScene : Scene
                     batch.FillCircle(at, Math.Max(1.5f, unit * 0.06f), flowers[n % flowers.Length]);
                 }
             }
-            else if (kind == Field.Birds)
+            else if (kind == Field.Birds && season != Season.Winter)
             {
                 var count = field.Width * field.Height / (int)Math.Max(1, unit * unit * 0.3f);
                 for (var n = 0; n < count; n++)
@@ -281,11 +334,16 @@ internal sealed class FarmScene : Scene
                     batch.DrawLine(at, at + new Vector2(tuft * 0.3f, -tuft), new Color(96, 118, 50), Math.Max(1, unit * 0.04f));
                 }
 
-                // A godwit or two, bobbing, and one overhead calling.
-                for (var bird = 0; bird < 2; bird++)
+                // A godwit or two, bobbing, and one overhead calling: while they nest, spring and summer.
+                for (var bird = 0; bird < (Seasons.Nesting(season) ? 2 : 0); bird++)
                 {
                     var at = new Vector2(field.X + (field.Width * (0.3f + (0.4f * bird))), field.Y + (field.Height * (0.45f + (0.2f * bird))));
                     DrawGodwit(batch, at, unit * 0.5f, bird == 0, MathF.Sin((_time * 2.3f) + (i * 1.7f) + bird));
+                }
+
+                if (!Seasons.Nesting(season))
+                {
+                    continue;
                 }
 
                 var flying = new Vector2(field.Center.X + (MathF.Sin((_time * 0.4f) + i) * field.Width * 0.35f), field.Y - (unit * 0.4f) + (MathF.Sin(_time * 1.3f) * unit * 0.1f));
@@ -297,6 +355,23 @@ internal sealed class FarmScene : Scene
 
         return bounds;
     }
+
+    /// <summary>A field's green as the year turns: fresh in spring, yellowing in autumn, frosted in winter.</summary>
+    private static Color Grass(Season season, Color green) => season switch
+    {
+        Season.Summer => Color.Lerp(green, new Color(150, 170, 60), 0.2f),
+        Season.Autumn => Color.Lerp(green, new Color(160, 140, 70), 0.45f),
+        Season.Winter => Color.Lerp(green, new Color(220, 228, 232), 0.7f),
+        _ => green,
+    };
+
+    public static string SeasonName(Season season) => season switch
+    {
+        Season.Spring => T("spring"),
+        Season.Summer => T("summer"),
+        Season.Autumn => T("autumn"),
+        _ => T("winter"),
+    };
 
     /// <summary>A black-tailed godwit: a rusty body on long legs, and a long beak dipping into the grass.</summary>
     private static void DrawGodwit(SpriteBatch batch, Vector2 at, float size, bool facingRight, float bob)
