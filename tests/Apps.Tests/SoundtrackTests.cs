@@ -6,7 +6,7 @@ namespace Apps.Tests;
 public class SoundtrackTests
 {
     private static readonly string[] Moods =
-        [Music.Menu, Music.Puzzle, Music.Cards, Music.Table, Music.Village, Music.Cellar, Music.Race, Music.Kitchen, Music.Words, Music.Arcade];
+        [Music.Menu, Music.Puzzle, Music.Cards, Music.Table, Music.Village, Music.Cellar, Music.Race, Music.Kitchen, Music.Words, Music.Arcade, Music.Farm];
 
     public static TheoryData<string> TrackIds => [.. Soundtrack.Tracks.Select(t => t.Id)];
 

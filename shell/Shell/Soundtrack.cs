@@ -15,6 +15,7 @@ internal static class Music
     public const string Kitchen = "music-kitchen";
     public const string Words = "music-words";
     public const string Arcade = "music-arcade";
+    public const string Farm = "music-farm";
 }
 
 /// <summary>A song of the soundtrack: its id (as the sound player knows it), its title, and the mood it plays in.</summary>
@@ -173,6 +174,16 @@ internal static class Soundtrack
         yield return New(Music.Village, Write("The Old Well", 120, Style.Waltz, "a b a b",
             ("Em | C | G | D | Em | C | Am B | Em", "B4 - - - E5 - | G5 - - - E5 - | D5 - - - B4 - | A4 - - - F#4 - | G4 - - - B4 - | E5 - - - G5 - | E5 - - D#5 - F#5 | E5 - - - - ."),
             ("C | D | Bm | Em | C | D | B7 | Em", "C5 - E5 - G5 - | F#5 - - - A5 - | F#5 - D5 - B4 - | E5 - - - G5 - | G5 - E5 - C5 - | D5 - F#5 - A5 - | B5 - A5 - F#5 - | E5 - - - - .")));
+
+        yield return New(Music.Farm, Write("Morning Milking", 104, Style.Folk, "a a b a",
+            ("G | C | D | G", "D5 - G5 - B5 - G5 - | C6 - B5 - A5 - G5 - | F#5 - A5 - D5 - E5 F#5 | G5 - - - D5 - - ."),
+            ("Em | C | Am | D", "E5 - G5 - B5 - - . | C6 - - - G5 - E5 - | A5 - C6 - B5 - A5 - | F#5 - - - D5 - - .")));
+        yield return New(Music.Farm, Write("Cheese Fair Waltz", 132, Style.Waltz, "a b a b",
+            ("F | C | Bb | C", "A5 - - - C6 - | G5 - - - E5 - | F5 - D5 - Bb4 - | C5 - - - - ."),
+            ("Dm | Bb | F | C", "D5 - F5 - A5 - | Bb5 - - - D5 - | C5 - F5 - A5 - | G5 - - - E5 -")));
+        yield return New(Music.Farm, Write("Clogs on the Dyke", 140, Style.Jig, "a a b a",
+            ("D | G | A | D", "F#5 . A5 F#5 . D5 E5 F#5 | G5 . B5 G5 . D5 E5 G5 | A5 . C#6 A5 . E5 F#5 G5 | F#5 - D5 - . . . ."),
+            ("G | D | Em | A", "B5 - G5 - D5 - G5 - | A5 - F#5 - D5 - F#5 - | G5 - E5 - B4 - E5 - | E5 - - - C#5 - - .")));
 
         yield return Original(Music.Cellar, "The Old Cellar", 0.5f);
         yield return New(Music.Cellar, Write("Dripping Stone", 64, Style.Spooky, "a b a b",

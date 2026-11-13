@@ -36,11 +36,11 @@ internal sealed class FarmScene : Scene
 
     public override IEnumerable<string> DebugInfo => [Farm.ToString()];
 
-    protected override void OnEnter() => _context.PlayMood(Music.Village);
+    protected override void OnEnter() => _context.PlayMood(Music.Farm);
 
     protected override void OnUncovered()
     {
-        _context.PlayMood(Music.Village);
+        _context.PlayMood(Music.Farm);
         SetButtons();
     }
 

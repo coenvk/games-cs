@@ -35,6 +35,7 @@ internal sealed class MusicScene : PanelScene
         Music.Race => T("at the races"),
         Music.Kitchen => T("in Hot Pan"),
         Music.Words => T("in the word games"),
+        Music.Farm => T("on the cheese farm"),
         _ => T("in Bricks"),
     };
 

@@ -23,7 +23,7 @@ internal sealed class CheeseFarmApp : IGameApp
 
     public string SaveName => "CheeseFarm";
 
-    public IReadOnlyCollection<string>? Moods => [Music.Village, Music.Kitchen, Music.Cellar];
+    public IReadOnlyCollection<string>? Moods => [Music.Farm, Music.Kitchen, Music.Cellar];
 
     public void Load(GameContext context, GraphicsDevice device) => context.Add(new FarmStore(context.Store, context.Deal));
 
