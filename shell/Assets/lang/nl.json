@@ -935,7 +935,6 @@
   "{0}  ·  €{1}": "{0}  ·  €{1}",
   "{0} days in the brine": "{0} dagen in de pekel",
   "{0} in {1} days": "{0} over {1} dagen",
-  "{0} litres of milk  ·  {1} of {2} wheels in the cellar  ·  {3} cows": "{0} liter melk  ·  {1} van {2} kazen in de kelder  ·  {3} koeien",
   "{0} litres to the dairy for €{1}": "{0} liter naar de zuivelfabriek voor €{1}",
   "{0} to turn today": "{0} vandaag te keren",
   "{0} wheels went unturned": "{0} kazen zijn niet gekeerd",
@@ -1027,5 +1026,15 @@
   "{0} (edited)": "{0} (aangepast)",
   "Sound": "Geluid",
   "{0}: “{1}”": "{0}: “{1}”",
-  "forgot to call, and drew {0}": "vergat het te zeggen, en pakte er {0}"
+  "forgot to call, and drew {0}": "vergat het te zeggen, en pakte er {0}",
+  "{0} cows": "{0} koeien",
+  "{0} cows and a calf": "{0} koeien en een kalf",
+  "{0} cows and {1} calves": "{0} koeien en {1} kalveren",
+  "{0} litres of milk  ·  {1} of {2} wheels in the cellar  ·  {3}": "{0} liter melk  ·  {1} van {2} kazen in de kelder  ·  {3}",
+  "{0} the calf was born!": "Kalf {0} is geboren!",
+  "{0} has grown up and gives milk": "{0} is volgroeid en geeft melk",
+  "The herd": "De kudde",
+  "{0} cows, each giving {1} litres a day": "{0} koeien, die elk {1} liter per dag geven",
+  "{0}, a calf  ·  gives milk in {1} days": "{0}, een kalf  ·  geeft melk over {1} dagen",
+  "Now and then a cow has a calf, while the herd has room": "Af en toe krijgt een koe een kalf, zolang de kudde ruimte heeft"
 }

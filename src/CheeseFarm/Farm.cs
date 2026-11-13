@@ -27,9 +27,16 @@ public enum Upgrade
 /// <summary>
 /// What happened overnight: the milk the herd gave, what went to the dairy, the wheels left unturned, the feed bought
 /// for cows the meadow couldn't feed (or the cows that went hungry when there was no money for it), and the meadow
-/// birds' chicks that fledged.
+/// birds' chicks that fledged; and the calf born in the night, or the one grown into a cow that gives milk.
 /// </summary>
-public sealed record DayReport(int Day, int Milked, int ToDairy, int DairyPay, int Neglected, int FeedBought = 0, int Hungry = 0, int Fledged = 0);
+public sealed record DayReport(int Day, int Milked, int ToDairy, int DairyPay, int Neglected, int FeedBought = 0, int Hungry = 0, int Fledged = 0)
+{
+    /// <summary>The name of a calf born in the night, if one was.</summary>
+    public string? Calf { get; init; }
+
+    /// <summary>The name of a calf grown up this morning, now giving milk, if one did.</summary>
+    public string? Grown { get; init; }
+}
 
 /// <summary>
 /// A cheese farm, day by day. The herd gives milk every morning; a wheel takes <see cref="MilkPerWheel"/> litres
@@ -52,10 +59,18 @@ public sealed class Farm
     private readonly List<Wheel> _wheels = [];
     private readonly HashSet<Flavour> _flavours = [Flavour.Plain];
     private readonly HashSet<int> _served = [];
+    private readonly List<Cow> _herd = [];
     private readonly Field[] _fields = new Field[Meadow.Fields];
     private readonly int[] _fieldSince = Enumerable.Repeat(1, Meadow.Fields).ToArray();
 
-    public Farm(int seed) => Seed = seed;
+    public Farm(int seed)
+    {
+        Seed = seed;
+        for (var i = 0; i < 4; i++)
+        {
+            _herd.Add(new Cow(CheeseFarm.Herd.NameFor(_herd), 1 - CheeseFarm.Herd.CalfDays));
+        }
+    }
 
     public int Seed { get; }
 
@@ -63,7 +78,14 @@ public sealed class Farm
 
     public int Money { get; private set; } = 80;
 
-    public int Cows { get; private set; } = 4;
+    /// <summary>The herd: cows that give milk, and calves growing up.</summary>
+    public IReadOnlyList<Cow> Herd => _herd;
+
+    /// <summary>The cows giving milk.</summary>
+    public int Cows => _herd.Count(IsGrown);
+
+    /// <summary>Whether a cow is grown and gives milk, rather than a calf.</summary>
+    public bool IsGrown(Cow cow) => Day - (cow ?? throw new ArgumentNullException(nameof(cow))).Born >= CheeseFarm.Herd.CalfDays;
 
     public int Milk { get; private set; } = MilkPerWheel;
 
@@ -137,7 +159,7 @@ public sealed class Farm
     public int Grazing => _fields.Sum(Meadow.Feeds);
 
     /// <summary>How rich the milk is, 0 to 1: the share of the herd grazing herbs (the herb fields are grazed first).</summary>
-    public float Richness => Cows == 0 ? 0 : Math.Min(1, FieldsOf(Field.Herbs) * Meadow.Feeds(Field.Herbs) / (float)Cows);
+    public float Richness => _herd.Count == 0 ? 0 : Math.Min(1, FieldsOf(Field.Herbs) * Meadow.Feeds(Field.Herbs) / (float)_herd.Count);
 
     /// <summary>Meadow birds' chicks fledged on the farm's bird fields, all told.</summary>
     public int Fledged { get; private set; }
@@ -232,8 +254,8 @@ public sealed class Farm
         Day++;
         _served.Clear();
 
-        // Cows the meadow can't feed eat bought feed; without the money for it they go hungry and give half.
-        var unfed = Math.Max(0, Cows - Grazing);
+        // Cows (and calves) the meadow can't feed eat bought feed; without the money for it they go hungry, the cows giving half.
+        var unfed = Math.Max(0, _herd.Count - Grazing);
         var feed = unfed * Meadow.FeedPrice;
         var hungry = 0;
         if (Money >= feed)
@@ -245,7 +267,7 @@ public sealed class Farm
             (feed, hungry) = (0, unfed);
         }
 
-        var milked = (Cows * MilkPerCow) - (hungry * MilkPerCow / 2);
+        var milked = (Cows * MilkPerCow) - (Math.Min(hungry, Cows) * MilkPerCow / 2);
         var kept = Math.Min(milked, Tank - Milk);
         Milk += kept;
         var toDairy = milked - kept;
@@ -272,12 +294,26 @@ public sealed class Farm
         }
 
         Fledged += fledged;
-        return new DayReport(Day, milked, toDairy, pay, neglected, feed, hungry, fledged);
+
+        // Calves: one grows up after her weeks; a cow may have one in the night, while there is room in the herd.
+        var grown = _herd.FirstOrDefault(c => Day - c.Born == CheeseFarm.Herd.CalfDays)?.Name;
+        string? calf = null;
+        var random = new Random(HashCode.Combine(Seed, Day, 4049));
+        foreach (var _ in _herd.Where(IsGrown).ToList())
+        {
+            if (random.NextDouble() < CheeseFarm.Herd.CalvingChance && _herd.Count < MaxCows && calf is null)
+            {
+                calf = CheeseFarm.Herd.NameFor(_herd);
+                _herd.Add(new Cow(calf, Day));
+            }
+        }
+
+        return new DayReport(Day, milked, toDairy, pay, neglected, feed, hungry, fledged) { Calf = calf, Grown = grown };
     }
 
     public int Cost(Upgrade upgrade) => upgrade switch
     {
-        Upgrade.Cow => 120 + (20 * (Cows - 4)),
+        Upgrade.Cow => 120 + (20 * Math.Max(0, _herd.Count - 4)),
         Upgrade.Rack => 100 + (50 * (Racks - 2)),
         Upgrade.Cumin => 60,
         Upgrade.Nettle => 90,
@@ -290,7 +326,7 @@ public sealed class Farm
     /// <summary>Whether the farm can still have it (more cows, racks or signs; a flavour or the kettle once).</summary>
     public bool Available(Upgrade upgrade) => upgrade switch
     {
-        Upgrade.Cow => Cows < MaxCows,
+        Upgrade.Cow => _herd.Count < MaxCows,
         Upgrade.Rack => Racks < MaxRacks,
         Upgrade.Cumin => !_flavours.Contains(Flavour.Cumin),
         Upgrade.Nettle => !_flavours.Contains(Flavour.Nettle),
@@ -313,7 +349,7 @@ public sealed class Farm
         switch (upgrade)
         {
             case Upgrade.Cow:
-                Cows++;
+                _herd.Add(new Cow(CheeseFarm.Herd.NameFor(_herd), Day - CheeseFarm.Herd.CalfDays));
                 break;
             case Upgrade.Rack:
                 Racks++;
@@ -347,6 +383,7 @@ public sealed class Farm
         ["day"] = Day,
         ["money"] = Money,
         ["cows"] = Cows,
+        ["herd"] = new JsonArray([.. _herd.Select(c => (JsonNode?)new JsonArray(c.Name, c.Born))]),
         ["milk"] = Milk,
         ["racks"] = Racks,
         ["kettle"] = GoodKettle,
@@ -382,7 +419,6 @@ public sealed class Farm
             {
                 Day = (int)root["day"]!,
                 Money = (int)root["money"]!,
-                Cows = (int)root["cows"]!,
                 Milk = (int)root["milk"]!,
                 Racks = (int)root["racks"]!,
                 GoodKettle = (bool?)root["kettle"] ?? false,
@@ -399,6 +435,20 @@ public sealed class Farm
             {
                 farm._fields[i] = Enum.Parse<Field>((string)fields[i]!);
                 farm._fieldSince[i] = i < since.Count ? (int)since[i]! : farm.Day;
+            }
+
+            // The herd by name; a farm saved before names, its number of cows.
+            farm._herd.Clear();
+            if (root["herd"] is JsonArray herd)
+            {
+                farm._herd.AddRange(herd.Select(c => new Cow((string)c![0]!, (int)c[1]!)));
+            }
+            else
+            {
+                for (var i = 0; i < (int)root["cows"]!; i++)
+                {
+                    farm._herd.Add(new Cow(CheeseFarm.Herd.NameFor(farm._herd), farm.Day - CheeseFarm.Herd.CalfDays));
+                }
             }
 
             var rosettes = root["rosettes"]?.AsArray() ?? [];
@@ -435,5 +485,5 @@ public sealed class Farm
     }
 
     public override string ToString() =>
-        string.Create(CultureInfo.InvariantCulture, $"Day {Day}: €{Money}, {Cows} cows, {Milk} L, {_wheels.Count}/{Room} wheels");
+        string.Create(CultureInfo.InvariantCulture, $"Day {Day}: €{Money}, {Cows} cows, {_herd.Count - Cows} calves, {Milk} L, {_wheels.Count}/{Room} wheels");
 }

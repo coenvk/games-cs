@@ -41,12 +41,32 @@ internal sealed class MeadowScene : PanelScene
         List<MenuItem> items =
         [
             .. Farm.Fields.Select((field, i) => new MenuItem(T("Field {0}: {1}", i + 1, Name(field)), () => Scenes.Push(new FieldScene(Context, i)))),
+            new MenuItem(T("The herd"), () => Scenes.Push(new HerdScene(Context))),
             new MenuItem(T("Back"), () => Scenes.Pop()),
         ];
         Menu = new Menu(Context.Sounds, [.. items]) { Selected = Math.Min(selected, items.Count - 1) };
     }
 
     protected override void OnUncovered() => Build(Menu.Selected);
+}
+
+/// <summary>The herd by name: each cow and what she gives, each calf and how long until she does.</summary>
+internal sealed class HerdScene : PanelScene
+{
+    public HerdScene(GameContext context)
+        : base(context) => Menu = new Menu(context.Sounds, new MenuItem(T("Back"), () => Scenes.Pop()));
+
+    private Farm Farm => Context.Farm.Farm;
+
+    protected override string Title => T("The herd");
+
+    protected override IReadOnlyList<PanelLine> Lines =>
+    [
+        new(T("{0} cows, each giving {1} litres a day", Farm.Cows, Farm.MilkPerCow), Palette.Text),
+        .. Farm.Herd.Where(Farm.IsGrown).Select(c => c.Name).Chunk(4).Select(names => new PanelLine(string.Join(", ", names), Palette.Text)),
+        .. Farm.Herd.Where(c => !Farm.IsGrown(c)).Select(cow => new PanelLine(T("{0}, a calf  ·  gives milk in {1} days", cow.Name, Herd.CalfDays - (Farm.Day - cow.Born)), Palette.Accent)),
+        new(T("Now and then a cow has a calf, while the herd has room"), Palette.Muted),
+    ];
 }
 
 /// <summary>What one field can become, with what it feeds and costs.</summary>

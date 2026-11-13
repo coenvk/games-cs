@@ -114,6 +114,16 @@ internal sealed class FarmScene : Scene
             note += "  ·  " + T("Feed bought for €{0}", report.FeedBought);
         }
 
+        if (report.Calf is { } calf)
+        {
+            note += "  ·  " + T("{0} the calf was born!", calf);
+        }
+
+        if (report.Grown is { } grown)
+        {
+            note += "  ·  " + T("{0} has grown up and gives milk", grown);
+        }
+
         if (report.Fledged > 0)
         {
             note += "  ·  " + T("{0} meadow bird chicks fledged!", report.Fledged);
@@ -164,7 +174,9 @@ internal sealed class FarmScene : Scene
         text.Inflate(-margin, 0);
         batch.DrawText(fonts.Body, T("Day {0}", Farm.Day), text, Palette.Text, Align.Left);
         batch.DrawText(fonts.Body, string.Create(CultureInfo.InvariantCulture, $"€ {Farm.Money}"), text, Palette.Accent, Align.Right);
-        var status = T("{0} litres of milk  ·  {1} of {2} wheels in the cellar  ·  {3} cows", Farm.Milk, Farm.Wheels.Count, Farm.Room, Farm.Cows);
+        var calves = Farm.Herd.Count - Farm.Cows;
+        var herd = calves == 0 ? T("{0} cows", Farm.Cows) : calves == 1 ? T("{0} cows and a calf", Farm.Cows) : T("{0} cows and {1} calves", Farm.Cows, calves);
+        var status = T("{0} litres of milk  ·  {1} of {2} wheels in the cellar  ·  {3}", Farm.Milk, Farm.Wheels.Count, Farm.Room, herd);
         batch.DrawText(fonts.Small, status, text, Palette.Muted, Align.Center, shadow: false);
     }
 
@@ -309,7 +321,7 @@ internal sealed class FarmScene : Scene
         }
 
         var spare = new Rectangle(meadow.X, meadow.Y, meadow.Width / 3, (int)unit);
-        var cows = Enumerable.Range(0, Farm.Cows)
+        var cows = Enumerable.Range(0, Farm.Herd.Count)
             .Select(cow =>
             {
                 var random = new Random(HashCode.Combine(cow, 7919));
@@ -321,6 +333,14 @@ internal sealed class FarmScene : Scene
         foreach (var (cow, at) in cows)
         {
             var size = unit * (0.75f + (0.35f * (at.Y - meadow.Y) / Math.Max(1, meadow.Height)));
+
+            // A calf is smaller, growing towards a cow's size over her weeks.
+            var age = Farm.Day - Farm.Herd[cow].Born;
+            if (age < Herd.CalfDays)
+            {
+                size *= 0.5f + (0.3f * age / Herd.CalfDays);
+            }
+
             DrawCow(batch, at, size, (cow % 3) != 1, _time + cow);
         }
     }
