@@ -79,6 +79,22 @@ internal sealed class ShellGame : JentlGame
 
     protected override Color ClearColor => Palette.Background;
 
+    /// <summary>Starts recording, or a replay, as the options ask: from the first frame, so a replay starts where its recording did.</summary>
+    private void StartRecordingOrReplay()
+    {
+        if (_options.ReplayPath is { } replay)
+        {
+            Replay(InputRecording.Load(File.ReadAllText(replay)));
+            ReplayFinished += () => _replayed = true;
+        }
+        else if (_options.RecordPath is not null)
+        {
+            StartRecording();
+        }
+    }
+
+    private bool _replayed;
+
     protected override void LoadContent()
     {
         base.LoadContent();
@@ -124,6 +140,7 @@ internal sealed class ShellGame : JentlGame
         Scenes.Overlay = _music.DrawNotice;
         _app.Load(context, GraphicsDevice);
         Scenes.Reset(_app.Start(context));
+        StartRecordingOrReplay();
     }
 
     private volatile bool _back;
@@ -203,7 +220,7 @@ internal sealed class ShellGame : JentlGame
     protected override void Draw(GameTime gameTime)
     {
         base.Draw(gameTime);
-        if (_options.ScreenshotPath is { } path && (_script is null || _settledFrames >= _options.SettleFrames))
+        if (_options.ScreenshotPath is { } path && (_script is null || _settledFrames >= _options.SettleFrames) && (_options.ReplayPath is null || (_replayed && ++_settledFrames >= _options.SettleFrames)))
         {
             SaveScreenshot(path);
             Exit();
@@ -214,6 +231,12 @@ internal sealed class ShellGame : JentlGame
     {
         if (disposing)
         {
+            // The recording goes to its file as the game closes.
+            if (_options.RecordPath is { } record && StopRecording() is { } recording)
+            {
+                File.WriteAllText(record, recording.Save());
+            }
+
             _fonts?.Dispose();
             _sounds?.Dispose();
             _context?.Dispose();

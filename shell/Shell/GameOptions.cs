@@ -27,4 +27,6 @@ internal sealed record GameOptions(
     bool Debug = false,
     Uri? Server = null,
     string? Watch = null,
-    string? Ruleset = null);
+    string? Ruleset = null,
+    string? RecordPath = null,
+    string? ReplayPath = null);

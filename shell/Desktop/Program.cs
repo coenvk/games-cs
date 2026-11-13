@@ -16,6 +16,8 @@ using Games;
 //   --debug true         start with the debug overlay (F3) showing
 //   --server <url>       the game server for online play (default ws://localhost:5080/play, or JENTL_SERVER)
 //   --watch <folder>     reload assets from this folder as they change: apps/<App> for the game's, shell for shared ones
+//   --record <file>      record every frame's input (and its time) from the start, written to the file on leaving
+//   --replay <file>      play such a recording back from the start instead of the devices (a screenshot waits for its end)
 //   --ruleset <file>     play the card game this ruleset (JSON) describes: solitaires in Solitaire, games for players in Card Table
 var options = new GameOptions();
 for (var i = 0; i + 1 < args.Length; i += 2)
@@ -46,6 +48,12 @@ for (var i = 0; i + 1 < args.Length; i += 2)
             break;
         case "--watch":
             options = options with { Watch = args[i + 1] };
+            break;
+        case "--record":
+            options = options with { RecordPath = args[i + 1] };
+            break;
+        case "--replay":
+            options = options with { ReplayPath = args[i + 1] };
             break;
         case "--ruleset":
             options = options with { Ruleset = File.ReadAllText(args[i + 1]) };
