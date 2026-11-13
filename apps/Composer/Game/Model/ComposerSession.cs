@@ -333,6 +333,33 @@ public sealed class ComposerSession
         Change();
         var index = Math.Max(0, InstrumentNames.ToList().IndexOf(Current.Instrument));
         Current.Instrument = InstrumentNames[(((index + by) % InstrumentNames.Count) + InstrumentNames.Count) % InstrumentNames.Count];
+        Current.Custom = null;
+    }
+
+    /// <summary>Edits the channel's instrument (starting from its preset the first time).</summary>
+    public void EditSound(Func<Instrument, Instrument> change)
+    {
+        ArgumentNullException.ThrowIfNull(change);
+        var edited = change(Current.Custom ?? Current.Preset);
+        if (edited == (Current.Custom ?? Current.Preset))
+        {
+            return;
+        }
+
+        Change();
+        Current.Custom = edited;
+    }
+
+    /// <summary>Has the channel play its preset as it comes again.</summary>
+    public void ResetSound()
+    {
+        if (Current.Custom is null)
+        {
+            return;
+        }
+
+        Change();
+        Current.Custom = null;
     }
 
     public void ChangeVolume(float by)

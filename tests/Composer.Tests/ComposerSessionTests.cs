@@ -92,6 +92,23 @@ public class ComposerSessionTests
     }
 
     [Fact]
+    public void EditSound_StartsFromThePreset_AndAnotherPresetOrResetDropsIt()
+    {
+        var session = new ComposerSession(ComposerSession.Blank());
+        session.EditSound(s => s with { Attack = 0.5f });
+        session.Current.Custom.Should().Be(session.Current.Preset with { Attack = 0.5f });
+        session.Current.Sound().Attack.Should().Be(0.5f);
+
+        session.ResetSound();
+        session.Current.Custom.Should().BeNull();
+        session.Undo();
+        session.Current.Custom!.Attack.Should().Be(0.5f);
+
+        session.CycleInstrument(1);
+        session.Current.Custom.Should().BeNull("another preset starts as it comes");
+    }
+
+    [Fact]
     public void Place_PutsThePatternInABar_AndTakesItOutAgain()
     {
         var session = new ComposerSession(ComposerSession.Blank());

@@ -318,6 +318,10 @@ internal sealed class ComposerScene : Scene
                 Play(_firstBar);
             }
         }
+        else if (!command && input.WasPressed(Keys.I))
+        {
+            OpenSound();
+        }
         else if (!command && input.WasPressed(Keys.L))
         {
             CycleLoop();
@@ -484,6 +488,13 @@ internal sealed class ComposerScene : Scene
         _selected = [.. Session.CurrentPattern.Notes.Where(n => n.Pitch >= low && n.Pitch <= high && n.Step <= last && n.Step + n.Length - 1 >= first)];
     }
 
+    /// <summary>The channel's instrument, to edit.</summary>
+    private void OpenSound()
+    {
+        Stop();
+        Scenes.Push(new SoundScene(_context, Session));
+    }
+
     /// <summary>Moves the notes selected with the arrow keys, a step or a semitone (an octave with Shift).</summary>
     private void Nudge(int steps, int semitones)
     {
@@ -528,7 +539,9 @@ internal sealed class ComposerScene : Scene
     /// <summary>Plays the note just placed, on the channel's instrument (each rendered once).</summary>
     private void Audition(int pitch)
     {
-        var name = $"composer-{Session.Current.Instrument}-{Session.Current.Volume:0.0}-{pitch}";
+        // An edited instrument is told apart by its settings.
+        var custom = Session.Current.Custom is { } edited ? InstrumentText.ToJson(edited).ToJsonString().GetHashCode(StringComparison.Ordinal) : 0;
+        var name = $"composer-{Session.Current.Instrument}-{custom}-{Session.Current.Volume:0.0}-{pitch}";
         if (_auditioned.Add(name))
         {
             _context.Sounds.Add(name, Synth.Render(new Tune(120, new Voice(Session.Current.Sound(), $"{Composition.NoteName(pitch)} -"))));
@@ -610,7 +623,8 @@ internal sealed class ComposerScene : Scene
         var y = area.Y;
         Rectangle Row() => new(area.X, y, area.Width, height);
         batch.FillRoundedRectangle(Row(), _context.Fonts.Px(6), colour * 0.25f);
-        batch.DrawText(font, Session.Current.Instrument, Row(), colour, Align.Center, shadow: false);
+        batch.DrawText(font, Session.Current.Custom is null ? Session.Current.Instrument : T("{0} (edited)", Session.Current.Instrument), Row(), colour, Align.Center, shadow: false);
+        _hits.Add((Row(), OpenSound));
         y += height + (pad / 2);
 
         var x = area.X;
@@ -640,6 +654,7 @@ internal sealed class ComposerScene : Scene
 
         // Selecting by touch: a box drawn on the roll, then the notes dragged together or taken away.
         x = area.X;
+        Chip(batch, font, ref x, Row(), T("Sound"), OpenSound);
         Chip(batch, font, ref x, Row(), T("Select"), () => _selecting = !_selecting, lit: _selecting);
         if (_selected.Count > 0)
         {
