@@ -41,7 +41,15 @@ public sealed class GamePage : ComponentBase, IDisposable
         {
             var app = Entry.Create();
             var store = new LocalStorageStore((IJSInProcessRuntime)JsRuntime, app.SaveName.ToLowerInvariant() + "/");
-            _game = new ShellGame(app, new GameOptions(Server: ServerFromAddress(Navigation.Uri)), store, PlatformFeatures.Browser);
+            var js = (IJSInProcessRuntime)JsRuntime;
+            var platform = PlatformFeatures.Browser with
+            {
+                // The page's script: the clipboard through the browser, while the tap that asked is still fresh; a
+                // file as a download.
+                CopyText = text => js.Invoke<bool>("jentlCopy", text),
+                Download = (name, bytes, type) => js.InvokeVoid("jentlDownload", name, Convert.ToBase64String(bytes), type),
+            };
+            _game = new ShellGame(app, new GameOptions(Server: ServerFromAddress(Navigation.Uri)), store, platform);
             _game.Run();
         }
 

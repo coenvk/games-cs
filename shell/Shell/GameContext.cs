@@ -29,6 +29,15 @@ internal sealed record PlatformFeatures(bool CanQuit, bool CanFullscreen, TimeSp
     /// <summary>Played by touch alone (a phone): hints speak of tapping, not of keys.</summary>
     public bool TouchOnly { get; init; }
 
+    /// <summary>Puts text on the clipboard: true when it went (the desktop's SDL clipboard unless the platform says otherwise).</summary>
+    public Func<string, bool> CopyText { get; init; } = Jentl.Core.Input.Clipboard.TrySetText;
+
+    /// <summary>
+    /// Hands the player a file to keep (the browser's download): its name, its bytes and its media type. Null where
+    /// files are written to a folder instead (the desktop).
+    /// </summary>
+    public Action<string, byte[], string>? Download { get; init; }
+
     /// <summary>The title screens' footer: how to choose.</summary>
     public string ChooseHint => TouchOnly ? UI.Tr.T("Tap to choose") : UI.Tr.T("Tap, or use the arrow keys and Enter");
 }

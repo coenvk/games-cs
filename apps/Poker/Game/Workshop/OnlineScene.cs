@@ -766,7 +766,7 @@ internal sealed partial class OnlineScene : Scene
         }
 
         _shownToken = token;
-        _copied = Clipboard.TrySetText(token);
+        _copied = _context.Platform.CopyText(token);
         _mode = Mode.Token;
         _menu = new Menu(_context.Sounds, new MenuItem(T("Done"), Leave));
     }

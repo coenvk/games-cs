@@ -55,6 +55,29 @@
             window.requestAnimationFrame(tickJS);
         };
 
+        // Text to the clipboard, for the game: true when the browser has one to write to (it may still refuse).
+        window.jentlCopy = (text) => {
+            if (!navigator.clipboard) {
+                return false;
+            }
+
+            navigator.clipboard.writeText(text).catch(() => {});
+            return true;
+        };
+
+        // A file the game made, handed to the player as a download.
+        window.jentlDownload = (name, base64, type) => {
+            const bytes = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
+            const url = URL.createObjectURL(new Blob([bytes], { type }));
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = name;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 10000);
+        };
+
         // Keep the game's keys from scrolling the page or moving focus:
         // Backspace (undo), Tab (switch pack), Space, arrows.
         window.addEventListener('keydown', event => {

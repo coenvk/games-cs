@@ -34,7 +34,7 @@ internal sealed class SongMenuScene : Scene
             new ButtonRow(T("Save"), Save),
             new ButtonRow(T("Copy as code for a game"), CopyCode),
         ];
-        if (context.Platform.CanQuit)
+        if (context.Platform.CanQuit || context.Platform.Download is not null)
         {
             rows.Add(new ButtonRow(T("Save as a WAV file"), SaveWav));
         }
@@ -80,13 +80,22 @@ internal sealed class SongMenuScene : Scene
     private void CopyCode()
     {
         var code = _editor.Session.Song.ToCode();
-        _note = Clipboard.TrySetText(code) ? T("The code is on the clipboard") : T("There is no clipboard here");
+        _note = _context.Platform.CopyText(code) ? T("The code is on the clipboard") : T("There is no clipboard here");
     }
 
     /// <summary>Renders the song once through and writes it to the Music folder's Composer folder.</summary>
     private void SaveWav()
     {
         var song = _editor.Session.Song;
+        if (_context.Platform.Download is { } download)
+        {
+            // In the browser: a download.
+            var name = SongShelf.FileOf(song.Title).Replace(".json", ".wav", StringComparison.Ordinal).Replace("song-", "", StringComparison.Ordinal);
+            download(name, Synth.ToWav(Synth.Render(song.ToTune())), "audio/wav");
+            _note = T("Downloaded as {0}", name);
+            return;
+        }
+
         var music = Environment.GetFolderPath(Environment.SpecialFolder.MyMusic);
         var folder = Path.Combine(music.Length > 0 ? music : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Music"), "Composer");
         var file = Path.Combine(folder, SongShelf.FileOf(song.Title).Replace(".json", ".wav", StringComparison.Ordinal));
