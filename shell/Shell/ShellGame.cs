@@ -7,6 +7,7 @@ using Jentl.Core.Input;
 using Jentl.Core.Scenes;
 using Jentl.Core.Storage;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Games.Input;
 using Games.Rendering;
@@ -54,6 +55,26 @@ internal sealed class ShellGame : JentlGame
 
         // Borderless fullscreen at desktop resolution, instead of switching display modes.
         Graphics.HardwareModeSwitch = false;
+
+        // A phone: the whole screen, in whichever way it is held.
+        if (platform == PlatformFeatures.Android)
+        {
+            Graphics.IsFullScreen = true;
+            Graphics.SupportedOrientations = DisplayOrientation.Portrait | DisplayOrientation.LandscapeLeft | DisplayOrientation.LandscapeRight;
+        }
+    }
+
+    protected override void Initialize()
+    {
+        if (_platform == PlatformFeatures.Android)
+        {
+            var display = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode;
+            Graphics.PreferredBackBufferWidth = display.Width;
+            Graphics.PreferredBackBufferHeight = display.Height;
+            Graphics.ApplyChanges();
+        }
+
+        base.Initialize();
     }
 
     protected override Color ClearColor => Palette.Background;

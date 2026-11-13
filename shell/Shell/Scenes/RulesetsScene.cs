@@ -7,11 +7,12 @@ using static Games.UI.Tr;
 namespace Games.Scenes;
 
 /// <summary>
-/// Card games made from rulesets: Jentl's examples of one kind (solitaires, or games for players), each opened by
-/// <paramref name="open"/>. A ruleset file of your own opens with <c>--ruleset</c>.
+/// Card games made from rulesets: Jentl's examples of one kind (solitaires, or games for players). A ruleset file of your
+/// own opens with <c>--ruleset</c>.
 /// </summary>
 internal sealed class RulesetsScene : PanelScene
 {
+    /// <param name="open">Makes the scene that plays a chosen ruleset.</param>
     public RulesetsScene(GameContext context, bool solitaire, Func<CardRuleset, Scene> open)
         : base(context)
     {

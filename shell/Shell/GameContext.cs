@@ -22,6 +22,9 @@ internal sealed record PlatformFeatures(bool CanQuit, bool CanFullscreen, TimeSp
     public static PlatformFeatures Desktop { get; } = new(CanQuit: true, CanFullscreen: true, TimeSpan.FromSeconds(3), CanRunBots: true);
 
     public static PlatformFeatures Browser { get; } = new(CanQuit: false, CanFullscreen: false, TimeSpan.FromSeconds(1), CanRunBots: false);
+
+    /// <summary>A phone: the system closes apps, the screen is always full, and no programs can be started.</summary>
+    public static PlatformFeatures Android { get; } = new(CanQuit: false, CanFullscreen: false, TimeSpan.FromSeconds(2), CanRunBots: false);
 }
 
 /// <summary>

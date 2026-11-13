@@ -1,0 +1,66 @@
+<Project>
+
+  <!--
+    Turns an app folder (or a suite) into a phone app (MonoGame on Android). The app's Android project sets AppName
+    (the assembly), AppId (the package is nl.jentl.<AppId>) and, for a suite, SuiteGames, and keeps the app's name in
+    Resources/values/strings.xml (and values-nl for Dutch). The shell's code and assets and the app's Game/ and Assets/
+    folders come in by themselves; the assets go into the package, read through MonoGame's title container.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-android</TargetFramework>
+    <SupportedOSPlatformVersion>24</SupportedOSPlatformVersion>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>$(AppName)</AssemblyName>
+    <RootNamespace>Games</RootNamespace>
+    <ApplicationId>nl.jentl.$(AppId)</ApplicationId>
+    <ApplicationTitle>@string/app_name</ApplicationTitle>
+    <ApplicationVersion>1</ApplicationVersion>
+    <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+    <!-- Every package carries its assemblies, so it installs and runs on its own (no fast deployment). -->
+    <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
+    <AndroidPackageFormat Condition="'$(Configuration)' == 'Release'">aab</AndroidPackageFormat>
+    <ShellDir>$(MSBuildThisFileDirectory)</ShellDir>
+    <AppDir>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)/../'))</AppDir>
+    <!-- Where brew puts the Android command-line tools; elsewhere set ANDROID_HOME. -->
+    <AndroidSdkDirectory Condition="'$(AndroidSdkDirectory)' == '' and '$(ANDROID_HOME)' == '' and Exists('/opt/homebrew/share/android-commandlinetools')">/opt/homebrew/share/android-commandlinetools</AndroidSdkDirectory>
+  </PropertyGroup>
+
+  <Import Project="$(MSBuildThisFileDirectory)Suite.props" />
+
+  <!-- The shared code is written for every platform: none of Android's namespaces come in by themselves. -->
+  <ItemGroup>
+    <Using Remove="Android.App" />
+    <Using Remove="Android.Widget" />
+    <Using Remove="Android.OS" />
+    <Using Remove="Android.Views" />
+    <Using Remove="Android.Content" />
+    <Using Remove="Android.Runtime" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="$(ShellDir)Shell/**/*.cs;$(ShellDir)Android/**/*.cs" LinkBase="Shell" />
+    <Compile Include="$(AppDir)Game/**/*.cs" LinkBase="Game" />
+    <Compile Include="$(SuiteCode)" Exclude="$(SuiteEntries)" LinkBase="Games" Condition="'$(SuiteGames)' != ''" />
+  </ItemGroup>
+
+  <!--
+    The package keeps what is under the project's Assets folder (MonoAndroidAssetsPrefix) at its root; the game reads
+    its files as Assets/..., so they go one Assets deeper.
+  -->
+  <ItemGroup>
+    <AndroidAsset Include="$(ShellDir)Assets/**/*.*" Link="Assets/Assets/%(RecursiveDir)%(Filename)%(Extension)" />
+    <AndroidAsset Include="$(AppDir)Assets/**/*.*" Link="Assets/Assets/%(RecursiveDir)%(Filename)%(Extension)" />
+    <AndroidAsset Include="$(SuiteAssets)" Link="Assets/Assets/%(RecursiveDir)%(Filename)%(Extension)" Condition="'$(SuiteGames)' != ''" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Jentl.Core" Version="$(JentlVersion)" />
+    <PackageReference Include="Jentl.Net" Version="$(JentlVersion)" />
+    <PackageReference Include="MonoGame.Framework.Android" Version="$(MonoGameVersion)" />
+    <PackageReference Include="FontStashSharp.MonoGame" Version="$(FontStashSharpVersion)" />
+    <!-- Jentl.Core is built against MonoGame's desktop package; the phone has its own build of the same API. -->
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="$(MonoGameVersion)" ExcludeAssets="all" />
+  </ItemGroup>
+
+</Project>

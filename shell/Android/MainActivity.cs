@@ -1,0 +1,58 @@
+using Android.App;
+using Android.Content.PM;
+using Android.OS;
+using Android.Views;
+using Jentl.Core.Storage;
+using Microsoft.Xna.Framework;
+
+namespace Games;
+
+/// <summary>
+/// The app on a phone: one activity, filling the screen in either orientation, running the shell with the app's games.
+/// Saves go to the app's own storage; files shipped with the game are read from the package (the title container).
+/// </summary>
+[Activity(
+    Label = "@string/app_name",
+    MainLauncher = true,
+    AlwaysRetainTaskState = true,
+    LaunchMode = LaunchMode.SingleInstance,
+    ScreenOrientation = ScreenOrientation.FullUser,
+    ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.Keyboard | ConfigChanges.KeyboardHidden | ConfigChanges.ScreenSize | ConfigChanges.ScreenLayout | ConfigChanges.UiMode)]
+public sealed class MainActivity : AndroidGameActivity
+{
+    private ShellGame? _game;
+
+    protected override void OnCreate(Bundle? savedInstanceState)
+    {
+        base.OnCreate(savedInstanceState);
+        var app = Entry.Create();
+        _game = new ShellGame(app, new GameOptions(), SaveStore.ForApp(app.SaveName), PlatformFeatures.Android);
+        var view = _game.Services.GetService<View>();
+        view.SetOnApplyWindowInsetsListener(new InsetsListener(_game));
+        SetContentView(view);
+        _game.Run();
+    }
+
+    /// <summary>
+    /// Keeps the game clear of the camera's cut-out and of the navigation bar: the game fills the screen and the status
+    /// bar is hidden, but the gesture handle stays, drawn over the bottom edge.
+    /// </summary>
+    private sealed class InsetsListener(ShellGame game) : Java.Lang.Object, View.IOnApplyWindowInsetsListener
+    {
+        public WindowInsets OnApplyWindowInsets(View view, WindowInsets insets)
+        {
+            if (OperatingSystem.IsAndroidVersionAtLeast(30))
+            {
+                var cutout = insets.GetInsets(WindowInsets.Type.DisplayCutout());
+                var navigation = insets.GetInsetsIgnoringVisibility(WindowInsets.Type.NavigationBars());
+                game.Insets = new Jentl.Core.Insets(
+                    Math.Max(cutout.Left, navigation.Left),
+                    cutout.Top,
+                    Math.Max(cutout.Right, navigation.Right),
+                    Math.Max(cutout.Bottom, navigation.Bottom));
+            }
+
+            return view.OnApplyWindowInsets(insets) ?? insets;
+        }
+    }
+}

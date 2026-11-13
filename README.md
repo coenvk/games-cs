@@ -25,6 +25,16 @@ the engine now lives in its own repository and comes in here as packages.
 
 Each is its own app, on the desktop and in the browser (each in its own folder of the site above).
 
+On Android each app is a project of its own beside Desktop and Web (`apps/<Game>/Android`, importing
+`shell/Android.props`; Solitaire first), package `nl.jentl.<app>`, its name in the phone's language from
+`Resources/values*/strings.xml`. They need the .NET android workload (`sudo dotnet workload install android`) and the
+Android SDK (brew's `android-commandlinetools` is found by itself), so they stay out of `Games.slnx` and CI for now:
+
+```sh
+dotnet build apps/Solitaire/Android     # bin/Debug/net10.0-android/nl.jentl.solitaire-Signed.apk
+adb install -r apps/Solitaire/Android/bin/Debug/net10.0-android/nl.jentl.solitaire-Signed.apk
+```
+
 Games of a kind also come together in one app, a suite, for the phone: Words (Connect Word and Associate Words),
 Puzzles (Sokoban and Code Lock) and Arcade (Bricks and Hot Pan). A suite's title screen chooses a game, whose own
 title screen then has "All games" in place of Quit; each game keeps its saves apart in the suite's folder.
