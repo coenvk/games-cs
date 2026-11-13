@@ -43,6 +43,17 @@ internal sealed class WordPlayScene : Scene
     private Cell? _pressCell;
     private float _seconds = 1 / 60f;
     private readonly Dictionary<int, SquashStretch> _pops = [];
+    private readonly List<Ghost> _ghosts = [];
+    private readonly List<Rectangle> _banners = [];
+
+    /// <summary>
+    /// A card on its way out: one dropped onto its kind sliding into it (<see cref="Cell"/>), or one of a matched row
+    /// flying up into its banner (<see cref="Banner"/>). Drawn over the grid, shrinking as it goes.
+    /// </summary>
+    private sealed record Ghost(WordCard Card, Vector2 From, Cell? Cell, int Banner, float Length)
+    {
+        public float Age { get; set; }
+    }
 
     public WordPlayScene(GameContext context, int level)
         : this(context, WordPuzzle.FromList(context, level))
@@ -104,6 +115,12 @@ internal sealed class WordPlayScene : Scene
         var actions = _context.Actions;
         _cursor = input.Cursor.Position;
         _seconds = (float)elapsed.TotalSeconds;
+        foreach (var ghost in _ghosts)
+        {
+            ghost.Age += _seconds;
+        }
+
+        _ghosts.RemoveAll(g => g.Age >= g.Length);
         _hintFor -= elapsed;
         if (actions.WasPressed(input, GameAction.Back))
         {
@@ -167,9 +184,19 @@ internal sealed class WordPlayScene : Scene
         var left = viewport.Center.X - (width / 2);
         var banner = fonts.Px(46);
         var top = hud.Bottom + margin;
+        _banners.Clear();
         for (var i = 0; i < Game.Solved.Count; i++)
         {
-            DrawBanner(batch, new Rectangle(left, top, width, banner - fonts.Px(6)), Game.Solved[i], BannerColors[i % BannerColors.Length]);
+            var bounds = new Rectangle(left, top, width, banner - fonts.Px(6));
+            _banners.Add(bounds);
+
+            // A banner whose cards are still flying up fills in as they arrive.
+            var arriving = _ghosts.Where(g => g.Banner == i).Select(g => g.Age / g.Length).DefaultIfEmpty(1).Min();
+            if (arriving >= 0.6f)
+            {
+                DrawBanner(batch, bounds, Game.Solved[i], BannerColors[i % BannerColors.Length] * Math.Clamp((arriving - 0.6f) / 0.4f, 0, 1));
+            }
+
             top += banner;
         }
 
@@ -207,6 +234,8 @@ internal sealed class WordPlayScene : Scene
         {
             batch.StrokeRectangle(CellBounds(_keyCursor), Palette.Accent, Math.Max(2, fonts.Px(3)));
         }
+
+        DrawGhosts(batch);
 
     }
 
@@ -301,6 +330,9 @@ internal sealed class WordPlayScene : Scene
             return;
         }
 
+        // Where the dropped card was let go, and where every card is drawn: what the ghosts set out from.
+        var dropped = Game.Cards.FirstOrDefault(c => c.Cell == from).Card;
+        var letGo = _dragging || _picked == from ? _cursor - new Vector2(_cell / 2f) : _drawnAt.GetValueOrDefault(dropped?.Id ?? -1, CellBounds(from).Location.ToVector2());
         var kind = Game.Drop(from, to);
         _hint = null;
         _context.Sounds.Play(kind switch
@@ -314,6 +346,11 @@ internal sealed class WordPlayScene : Scene
             switch (e)
             {
                 case CardsMerged merged:
+                    if (dropped is not null)
+                    {
+                        _ghosts.Add(new Ghost(dropped, letGo, merged.At, -1, 0.22f));
+                    }
+
                     Scenes.Effects.Emit(CellBounds(merged.At).Center.ToVector2(), ParticleEffects.Sparkles, _cell / 90f);
                     if (!_pops.TryGetValue(merged.Card.Id, out var pop))
                     {
@@ -322,8 +359,15 @@ internal sealed class WordPlayScene : Scene
 
                     pop.Trigger(0.18f, TimeSpan.FromMilliseconds(450));
                     break;
-                case CategoryMatched:
+                case CategoryMatched matched:
                     _context.Sounds.Play(Sound.LevelUp);
+                    var index = Game.Solved.Count - 1;
+                    foreach (var (card, i) in matched.Cards.Select((c, i) => (c, i)))
+                    {
+                        var start = _drawnAt.GetValueOrDefault(card.Id, CellBounds(new Cell(i, matched.Row)).Location.ToVector2());
+                        _ghosts.Add(new Ghost(card, start, null, index, 0.45f + (i * 0.06f)));
+                    }
+
                     break;
                 case LevelWon won:
                     _context.Sounds.Play(Sound.Fanfare);
@@ -385,6 +429,35 @@ internal sealed class WordPlayScene : Scene
         if (picked || hinted)
         {
             batch.StrokeRectangle(face, picked ? Palette.Accent : new Color(110, 160, 232), Math.Max(2, fonts.Px(3)));
+        }
+    }
+
+    /// <summary>The ghosts: sliding into a card, or flying up into a banner, shrinking on the way.</summary>
+    private void DrawGhosts(SpriteBatch batch)
+    {
+        foreach (var ghost in _ghosts)
+        {
+            var t = Easing.CubicOut(Math.Clamp(ghost.Age / ghost.Length, 0, 1));
+            Rectangle target;
+            if (ghost.Cell is { } cell)
+            {
+                target = CellBounds(cell);
+                target.Inflate(-_cell / 4, -_cell / 4);
+            }
+            else if (ghost.Banner >= 0 && ghost.Banner < _banners.Count)
+            {
+                // Squeezed to the banner's height, at its middle.
+                var banner = _banners[ghost.Banner];
+                target = new Rectangle(banner.Center.X - (banner.Height / 2), banner.Y, banner.Height, banner.Height);
+            }
+            else
+            {
+                continue;
+            }
+
+            var size = MathHelper.Lerp(_cell, target.Width, t);
+            var at = Vector2.Lerp(ghost.From, target.Location.ToVector2() + new Vector2((target.Width - size) / 2), t);
+            DrawCard(batch, ghost.Card, new Rectangle((int)at.X, (int)at.Y, (int)size, (int)size), new Cell(-1, -1));
         }
     }
 
