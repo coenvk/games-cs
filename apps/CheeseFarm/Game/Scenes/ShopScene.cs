@@ -60,6 +60,69 @@ internal sealed class ShopScene : PanelScene
     }
 }
 
+/// <summary>The cheese fair: choose the wheel to enter, with the judges' score each would get.</summary>
+internal sealed class FairScene : PanelScene
+{
+    public FairScene(GameContext context)
+        : base(context)
+    {
+        var farm = context.Farm.Farm;
+        Menu = new Menu(
+            context.Sounds,
+            [
+                .. farm.Wheels.OrderByDescending(w => Fair.Score(w, farm.Day)).Take(8).Select(wheel => new MenuItem(
+                    T("{0}, {1}  ·  {2}  ·  {3} points", Cheese.Name(wheel.Ripeness(farm.Day)), Cheese.Name(wheel.Flavour), Cheese.Stars(wheel.Stars), Fair.Score(wheel, farm.Day)),
+                    () => Enter(wheel))),
+                new MenuItem(T("Back"), () => Scenes.Pop()),
+            ]);
+    }
+
+    protected override string Title => T("The cheese fair");
+
+    protected override IReadOnlyList<PanelLine> Lines =>
+    [
+        new(T("Enter one wheel: the judges score its stars, and its age"), Palette.Muted),
+        new(T("Prizes: €150, €80 and €40, and a rosette"), Palette.Accent),
+    ];
+
+    private void Enter(Wheel wheel)
+    {
+        if (Context.Farm.Farm.EnterFair(wheel, T("Your farm")) is { } result)
+        {
+            Context.Farm.Save();
+            Context.Sounds.Play(result.Place == 1 ? Sound.Fanfare : result.Prize > 0 ? Sound.LevelUp : Sound.Lose);
+            Scenes.Replace(new FairResultScene(Context, result));
+        }
+    }
+}
+
+/// <summary>How the fair went: the entries best first, the farm's place and prize.</summary>
+internal sealed class FairResultScene : PanelScene
+{
+    private readonly FairResult _result;
+
+    public FairResultScene(GameContext context, FairResult result)
+        : base(context)
+    {
+        _result = result;
+        Menu = new Menu(context.Sounds, new MenuItem(T("Back to the farm"), () => Scenes.Pop()));
+    }
+
+    protected override string Title => _result.Place switch
+    {
+        1 => T("First prize!"),
+        2 => T("Second prize"),
+        3 => T("Third prize"),
+        _ => T("No prize this time"),
+    };
+
+    protected override IReadOnlyList<PanelLine> Lines =>
+    [
+        .. _result.Entries.Select((e, i) => new PanelLine(T("{0}. {1}  ·  {2} points", i + 1, e.Farm, e.Score), i + 1 == _result.Place ? Palette.Accent : Palette.Text)),
+        new(_result.Prize > 0 ? T("€{0} and a rosette for the barn", _result.Prize) : T("Riper wheels and more stars do better"), Palette.Muted),
+    ];
+}
+
 /// <summary>What the farm can buy: cows, racks, flavours, a better kettle, signs by the road.</summary>
 internal sealed class FarmShopScene : PanelScene
 {

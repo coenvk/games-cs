@@ -73,6 +73,42 @@ public sealed class Farm
 
     public int Earned { get; private set; }
 
+    /// <summary>The day a wheel was last entered at the fair (0: never).</summary>
+    public int FairEntered { get; private set; }
+
+    /// <summary>Rosettes won at the fair: first, second and third places.</summary>
+    public IReadOnlyList<int> Rosettes => _rosettes;
+
+    private readonly int[] _rosettes = new int[3];
+
+    /// <summary>Whether a wheel can go to the fair today: it is on, and none has been entered yet.</summary>
+    public bool CanEnterFair => Fair.IsOn(Day) && FairEntered != Day && _wheels.Count > 0;
+
+    /// <summary>
+    /// Takes a wheel from the cellar to the fair and has it judged: the prize is paid and a rosette kept for a place
+    /// in the first three. Null when it can't go today.
+    /// </summary>
+    public FairResult? EnterFair(Wheel wheel, string name)
+    {
+        ArgumentNullException.ThrowIfNull(wheel);
+        if (!CanEnterFair || !_wheels.Contains(wheel))
+        {
+            return null;
+        }
+
+        var result = Fair.Judge(name, wheel, Seed, Day);
+        _wheels.Remove(wheel);
+        FairEntered = Day;
+        Money += result.Prize;
+        Earned += result.Prize;
+        if (result.Place <= _rosettes.Length)
+        {
+            _rosettes[result.Place - 1]++;
+        }
+
+        return result;
+    }
+
     public IReadOnlyList<Wheel> Wheels => _wheels;
 
     public IReadOnlyCollection<Flavour> Flavours => _flavours;
@@ -252,6 +288,8 @@ public sealed class Farm
         ["made"] = WheelsMade,
         ["sold"] = WheelsSold,
         ["earned"] = Earned,
+        ["fair"] = FairEntered,
+        ["rosettes"] = new JsonArray([.. _rosettes.Select(n => (JsonNode?)n)]),
         ["flavours"] = new JsonArray([.. _flavours.Order().Select(f => (JsonNode?)f.ToString())]),
         ["served"] = new JsonArray([.. _served.Order().Select(s => (JsonNode?)s)]),
         ["wheels"] = new JsonArray([.. _wheels.Select(w => (JsonNode?)new JsonObject
@@ -283,7 +321,14 @@ public sealed class Farm
                 WheelsMade = (int?)root["made"] ?? 0,
                 WheelsSold = (int?)root["sold"] ?? 0,
                 Earned = (int?)root["earned"] ?? 0,
+                FairEntered = (int?)root["fair"] ?? 0,
             };
+            var rosettes = root["rosettes"]?.AsArray() ?? [];
+            for (var i = 0; i < Math.Min(rosettes.Count, farm._rosettes.Length); i++)
+            {
+                farm._rosettes[i] = (int)rosettes[i]!;
+            }
+
             foreach (var flavour in root["flavours"]?.AsArray() ?? [])
             {
                 farm._flavours.Add(Enum.Parse<Flavour>((string)flavour!));

@@ -64,12 +64,15 @@ internal sealed class FarmScene : Scene
     }
 
     private void SetButtons() => _buttons.Set(
+    [
+        .. Farm.CanEnterFair ? [new Button(T("Fair"), () => Scenes.Push(new FairScene(_context)), Highlight: true)] : Array.Empty<Button>(),
         new Button(T("Make cheese"), MakeCheese, Highlight: Farm.CanMake),
         new Button(Farm.Due > 0 ? T("Cellar ({0})", Farm.Due) : T("Cellar"), () => Scenes.Push(new CellarScene(_context), Navigation.Fade())),
         new Button(T("Shop"), () => Scenes.Push(new ShopScene(_context))),
         new Button(T("Buy"), () => Scenes.Push(new FarmShopScene(_context))),
         new Button(T("Sleep"), Sleep),
-        new Button(T("Menu"), () => Scenes.Push(new FarmPauseScene(_context))));
+        new Button(T("Menu"), () => Scenes.Push(new FarmPauseScene(_context))),
+    ]);
 
     private void MakeCheese()
     {
@@ -99,6 +102,11 @@ internal sealed class FarmScene : Scene
         if (report.ToDairy > 0)
         {
             note += "  ·  " + T("{0} litres to the dairy for €{1}", report.ToDairy, report.DairyPay);
+        }
+
+        if (Fair.IsOn(report.Day))
+        {
+            note += "  ·  " + T("The cheese fair is today!");
         }
 
         if (report.Neglected > 0)
@@ -167,6 +175,20 @@ internal sealed class FarmScene : Scene
         batch.FillTriangle(new Rectangle(barn.X - (int)(unit * 0.3f), barn.Y - (int)(unit * 1.6f), barn.Width + (int)(unit * 0.6f), (int)(unit * 1.6f)), pointsUp: true, new Color(70, 62, 60));
         batch.FillRectangle(new Rectangle(barn.Center.X - (int)(unit * 0.5f), barn.Bottom - (int)(unit * 1.4f), (int)unit, (int)(unit * 1.4f)), new Color(110, 40, 34));
         batch.DrawText(_context.Fonts.Small, T("Cheese"), new Vector2(barn.Center.X, barn.Y + (unit * 0.3f)), new Color(250, 236, 200), Align.Center, shadow: false);
+
+        // The fair's rosettes on the barn wall: gold, silver, bronze.
+        Color[] rosette = [new(240, 196, 60), new(200, 204, 212), new(200, 130, 70)];
+        var pinned = 0;
+        for (var place = 0; place < 3; place++)
+        {
+            for (var n = 0; n < Math.Min(Farm.Rosettes[place], 4); n++, pinned++)
+            {
+                var at = new Vector2(barn.X + (unit * (0.45f + (pinned % 6 * 0.55f))), barn.Y + (unit * (1.0f + (pinned / 6 * 0.6f))));
+                batch.FillTriangle(new Rectangle((int)(at.X - (unit * 0.12f)), (int)at.Y, (int)(unit * 0.24f), (int)(unit * 0.35f)), pointsUp: false, new Color(60, 90, 160));
+                batch.FillCircle(at, unit * 0.2f, rosette[place]);
+                batch.FillCircle(at, unit * 0.09f, Color.Lerp(rosette[place], Color.White, 0.4f));
+            }
+        }
 
         var shop = new Rectangle(land.X + (int)(land.Width * 0.62f), horizon - (int)(unit * 1.5f), (int)(unit * 2.4f), (int)(unit * 1.5f));
         batch.FillRectangle(shop, new Color(230, 220, 196));

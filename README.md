@@ -370,6 +370,8 @@ old to very old, a day standing for a few weeks, and want turning every other da
 day one lies unturned costs it. The farm shop's customers each want a ripeness and a flavour and take a wheel one
 ripeness either side, paying most for exactly what they asked; the money buys cows, cellar racks, cumin, nettle and
 herbs, a steadier kettle, and signs by the road for more customers. Milk the tank can't hold goes to the dairy for
+little. Every seventh day the cheese fair is on: enter one wheel, judged on its stars and its age against three
+other farms that grow stronger week by week; the best three win €150, €80 or €40 and a rosette for the barn wall.
 little. Sleep to the next morning; the farm is saved as it goes.
 
 ## Composer

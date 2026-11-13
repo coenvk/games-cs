@@ -317,3 +317,66 @@ public class FarmTests
         farm.WheelsSold.Should().BeGreaterThan(15);
     }
 }
+
+public class FairTests
+{
+    [Fact]
+    public void TheFair_IsOnEverySeventhDay()
+    {
+        Fair.IsOn(7).Should().BeTrue();
+        Fair.IsOn(14).Should().BeTrue();
+        Fair.IsOn(8).Should().BeFalse();
+        Fair.IsOn(0).Should().BeFalse();
+    }
+
+    [Fact]
+    public void TheJudges_LikeStarsMost_AndAge_Too()
+    {
+        var young = new Wheel(1, madeOn: 20, Flavour.Plain, 1);
+        var old = new Wheel(2, madeOn: 0, Flavour.Plain, 1);
+        var poor = new Wheel(3, madeOn: 0, Flavour.Plain, 0.3f);
+
+        Fair.Score(young, 21).Should().Be(80);
+        Fair.Score(old, 21).Should().Be(96, "five stars and old");
+        Fair.Score(poor, 21).Should().BeLessThan(Fair.Score(young, 21));
+    }
+
+    [Fact]
+    public void TheRivals_AreTheSameForTheSameDay_AndThreeOfThem()
+    {
+        Fair.Others(5, 14).Should().Equal(Fair.Others(5, 14));
+        Fair.Others(5, 14).Should().HaveCount(3).And.OnlyContain(e => e.Score >= 20 && e.Score <= 96);
+    }
+
+    [Fact]
+    public void APerfectOldWheel_Places_AndIsPaid()
+    {
+        var farm = new Farm(9);
+        var making = farm.StartMaking(Flavour.Plain)!;
+        making.Warm(31);
+        making.Set(making.SetsAfter);
+        making.Cut([0, 0, 0, 0]);
+        making.Brine(3);
+        var wheel = farm.Finish(making);
+        while (!Fair.IsOn(farm.Day))
+        {
+            farm.Turn(wheel);
+            farm.NextDay();
+        }
+
+        farm.CanEnterFair.Should().BeTrue();
+        var money = farm.Money;
+        var result = farm.EnterFair(wheel, "Us")!;
+
+        result.Entries.Should().HaveCount(4);
+        result.Place.Should().BeInRange(1, 2, "five stars against the first week's rivals");
+        farm.Money.Should().Be(money + result.Prize);
+        farm.Rosettes[result.Place - 1].Should().Be(1);
+        farm.Wheels.Should().BeEmpty("the wheel went to the fair");
+        farm.CanEnterFair.Should().BeFalse("one wheel a fair");
+
+        var read = Farm.FromJson(farm.ToJson());
+        read.Rosettes.Should().Equal(farm.Rosettes);
+        read.CanEnterFair.Should().BeFalse();
+    }
+}
