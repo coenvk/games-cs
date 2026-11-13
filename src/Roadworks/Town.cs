@@ -83,18 +83,41 @@ public sealed class Plan(TownLevel level)
     public const float Cell = 60;
 
     public const int StretchCost = 100;
+
+    /// <summary>What a second lane each way adds to a stretch.</summary>
+    public const int WideCost = 100;
     public const int LightsCost = 300;
     public const int RoundaboutCost = 500;
 
     private readonly HashSet<Stretch> _roads = [];
     private readonly Dictionary<Spot, Junction> _junctions = [];
+    private readonly HashSet<Stretch> _wide = [];
 
     public TownLevel Level { get; } = level ?? throw new ArgumentNullException(nameof(level));
 
     public IReadOnlyCollection<Stretch> Roads => _roads;
 
+    /// <summary>The stretches with two lanes each way.</summary>
+    public IReadOnlyCollection<Stretch> Wide => _wide;
+
+    /// <summary>Gives a stretch a second lane each way, or takes it away again; false where there is no road.</summary>
+    public bool Widen(Stretch stretch)
+    {
+        if (!_roads.Contains(stretch))
+        {
+            return false;
+        }
+
+        if (!_wide.Remove(stretch))
+        {
+            _wide.Add(stretch);
+        }
+
+        return true;
+    }
+
     /// <summary>What it all costs: every stretch, and lights and roundabouts where three or more roads meet.</summary>
-    public int Cost => (_roads.Count * StretchCost) + Junctions.Sum(j => JunctionAt(j) switch
+    public int Cost => (_roads.Count * StretchCost) + (_wide.Count * WideCost) + Junctions.Sum(j => JunctionAt(j) switch
     {
         Junction.Lights => LightsCost,
         Junction.Roundabout => RoundaboutCost,
@@ -125,6 +148,7 @@ public sealed class Plan(TownLevel level)
     public bool Remove(Stretch stretch)
     {
         var removed = _roads.Remove(stretch);
+        _wide.Remove(stretch);
         foreach (var spot in new[] { stretch.A, stretch.B }.Where(s => Degree(s) < 3))
         {
             _junctions.Remove(spot);
@@ -157,6 +181,7 @@ public sealed class Plan(TownLevel level)
     {
         _roads.Clear();
         _junctions.Clear();
+        _wide.Clear();
     }
 
     /// <summary>Where a spot is in the network, in metres: across to the east, down to the south.</summary>
@@ -202,25 +227,30 @@ public sealed class Plan(TownLevel level)
                 var path = new List<Spot>();
                 var (at, link) = (start, first);
                 used.Add(link);
+                var stretches = new List<Stretch> { link };
                 var next = link.Other(at);
                 while (!ends.Contains(next))
                 {
                     path.Add(next);
                     (at, link) = (next, links.First(l => l.Touches(next) && l != link));
                     used.Add(link);
+                    stretches.Add(link);
                     next = link.Other(at);
                 }
 
+                // Two lanes each way where every stretch laid on it was widened (a road out of town goes along).
+                var laid = stretches.Where(_roads.Contains).ToList();
+                var lanes = laid.Count > 0 && laid.All(_wide.Contains) ? 2 : 1;
                 if (next != start)
                 {
-                    builder.Road(NodeAt(start), NodeAt(next), 1, 50, [.. path.Select(World)]);
+                    builder.Road(NodeAt(start), NodeAt(next), lanes, 50, [.. path.Select(World)]);
                 }
                 else if (path.Count >= 3)
                 {
                     // Round and back to the same junction: two roads, meeting halfway.
                     var middle = path.Count / 2;
-                    builder.Road(NodeAt(start), NodeAt(path[middle]), 1, 50, [.. path.Take(middle).Select(World)]);
-                    builder.Road(NodeAt(path[middle]), NodeAt(start), 1, 50, [.. path.Skip(middle + 1).Select(World)]);
+                    builder.Road(NodeAt(start), NodeAt(path[middle]), lanes, 50, [.. path.Take(middle).Select(World)]);
+                    builder.Road(NodeAt(path[middle]), NodeAt(start), lanes, 50, [.. path.Skip(middle + 1).Select(World)]);
                 }
             }
         }
@@ -250,6 +280,7 @@ public sealed class Plan(TownLevel level)
     {
         ["roads"] = new JsonArray([.. _roads.Select(r => (JsonNode?)new JsonArray(r.A.X, r.A.Y, r.B.X, r.B.Y))]),
         ["junctions"] = new JsonArray([.. _junctions.Where(j => j.Value != Junction.Plain).Select(j => (JsonNode?)new JsonArray(j.Key.X, j.Key.Y, j.Value.ToString()))]),
+        ["wide"] = new JsonArray([.. _wide.Select(r => (JsonNode?)new JsonArray(r.A.X, r.A.Y, r.B.X, r.B.Y))]),
     }.ToJsonString();
 
     public static Plan FromJson(TownLevel level, string json)
@@ -259,6 +290,11 @@ public sealed class Plan(TownLevel level)
         foreach (var road in root?["roads"]?.AsArray() ?? [])
         {
             plan.Lay(new Spot((int)road![0]!, (int)road[1]!), new Spot((int)road[2]!, (int)road[3]!));
+        }
+
+        foreach (var wide in root?["wide"]?.AsArray() ?? [])
+        {
+            plan.Widen(new Stretch(new Spot((int)wide![0]!, (int)wide[1]!), new Spot((int)wide[2]!, (int)wide[3]!)));
         }
 
         foreach (var junction in root?["junctions"]?.AsArray() ?? [])

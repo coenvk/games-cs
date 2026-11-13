@@ -69,6 +69,32 @@ public class RoadworksTests
     }
 
     [Fact]
+    public void AWidenedRoad_HasTwoLanesEachWay_AndCostsMore()
+    {
+        var plan = Cross(Levels()[0], Junction.Lights);
+        var westArm = Enumerable.Range(0, 3).Select(x => new Stretch(new Spot(x, 2), new Spot(x + 1, 2))).ToList();
+        foreach (var stretch in westArm)
+        {
+            plan.Widen(stretch).Should().BeTrue();
+        }
+
+        plan.Cost.Should().Be((10 * Plan.StretchCost) + (3 * Plan.WideCost) + Plan.LightsCost);
+        var (network, _) = plan.Build();
+        network.Roads.Count(r => r.Forward.Count == 2 && r.Backward.Count == 2).Should().Be(1, "the west arm, every stretch widened");
+
+        // Half a road widened stays one lane, and a stretch that isn't road can't be widened.
+        plan.Widen(westArm[0]);
+        plan.Build().Network.Roads.Should().OnlyContain(r => r.Forward.Count == 1);
+        plan.Widen(new Stretch(new Spot(5, 0), new Spot(6, 0))).Should().BeFalse();
+
+        // Kept with the plan, and gone with its road.
+        plan.Widen(westArm[0]);
+        Plan.FromJson(plan.Level, plan.ToJson()).Wide.Should().BeEquivalentTo(plan.Wide);
+        plan.Remove(westArm[1]);
+        plan.Wide.Should().HaveCount(2);
+    }
+
+    [Fact]
     public void ALoopBackToItsJunction_IsTwoRoads()
     {
         // From gate A to a junction, on to gate C, and a little block round from the junction back to it.

@@ -353,7 +353,8 @@ same for everyone on a day and keeps the day's best.
 **Roadworks** is the traffic simulation as a game. Each level is a town's grid with gates at its edges (traffic comes
 in at each and leaves by the others), houses where nothing can be built, a budget and a target delay. Drag along the
 grid to lay road (a hundred a stretch), bulldoze what isn't wanted, and tap a junction to make it give way to the
-right, traffic lights that follow the traffic (three hundred) or a roundabout (five hundred). Run lets the traffic in
+right, traffic lights that follow the traffic (three hundred) or a roundabout (five hundred). Widen gives a stretch two lanes each
+way (a hundred more); a road whose stretches are all widened lets drivers overtake and pass those waiting to turn. Run lets the traffic in
 for ten minutes, fast, drawn as it drives, with drivers going round jams; then the verdict: stars for the average
 delay against the target, if every gate reaches every other, the plan is within budget and four in five of the trips
 were made. Five levels in `apps/Roadworks/Assets/roadworks/levels.json`, each proven passable by a simple plan in the

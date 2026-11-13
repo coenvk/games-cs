@@ -20,7 +20,7 @@ public sealed class Trial
         ArgumentNullException.ThrowIfNull(plan);
         Plan = plan;
         (Network, Gates) = plan.Build();
-        Simulation = new TrafficSimulation(Network, seed) { AvoidJams = true, Destinations = [.. Gates.Values] };
+        Simulation = new TrafficSimulation(Network, seed) { AvoidJams = true, LaneChanges = true, Destinations = [.. Gates.Values] };
         foreach (var (gate, node) in Gates)
         {
             Simulation.SetDemand(node, gate.PerHour);

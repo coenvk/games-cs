@@ -962,5 +962,7 @@
   "Your farm": "Jouw boerderij",
   "{0}, {1}  ·  {2}  ·  {3} points": "{0}, {1}  ·  {2}  ·  {3} punten",
   "{0}. {1}  ·  {2} points": "{0}. {1}  ·  {2} punten",
-  "€{0} and a rosette for the barn": "€{0} en een rozet voor de schuur"
+  "€{0} and a rosette for the barn": "€{0} en een rozet voor de schuur",
+  "Tap a stretch: two lanes each way, for overtaking and turning traffic": "Tik op een stuk weg: twee rijstroken elke kant op, om in te halen en voor afslaand verkeer",
+  "Widen": "Verbreden"
 }

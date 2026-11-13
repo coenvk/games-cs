@@ -19,6 +19,7 @@ internal enum Tool
     Road,
     Bulldoze,
     Junction,
+    Widen,
 }
 
 /// <summary>
@@ -151,6 +152,7 @@ internal sealed class TownScene : Scene
             new Button(T("Road"), () => Pick(Tool.Road), Highlight: _tool == Tool.Road),
             new Button(T("Bulldoze"), () => Pick(Tool.Bulldoze), Highlight: _tool == Tool.Bulldoze),
             new Button(T("Junction"), () => Pick(Tool.Junction), Highlight: _tool == Tool.Junction),
+            new Button(T("Widen"), () => Pick(Tool.Widen), Highlight: _tool == Tool.Widen),
             new Button(T("Run"), Run),
             new Button(T("Menu"), () => Scenes.Push(new TownPauseScene(_context, this))));
     }
@@ -211,6 +213,20 @@ internal sealed class TownScene : Scene
             {
                 var changed = Plan.Cycle(spot);
                 _context.Sounds.Play(changed ? Sound.Click : Sound.Error);
+                Kept();
+            }
+
+            return;
+        }
+
+        if (_tool == Tool.Widen)
+        {
+            // A tap on the middle of a stretch: two lanes each way, or one again.
+            if (input.Tap is { } tap && Plan.Roads.FirstOrDefault(s => Vector2.Distance((Screen(s.A) + Screen(s.B)) / 2, tap) < _cell * 0.35f) is var stretch
+                && Plan.Roads.Contains(stretch))
+            {
+                Plan.Widen(stretch);
+                _context.Sounds.Play(Sound.Click);
                 Kept();
             }
 
@@ -286,7 +302,13 @@ internal sealed class TownScene : Scene
 
         foreach (var stretch in Plan.Roads)
         {
-            batch.DrawLine(Screen(stretch.A), Screen(stretch.B), new Color(70, 72, 78), width);
+            var wide = Plan.Wide.Contains(stretch);
+            batch.DrawLine(Screen(stretch.A), Screen(stretch.B), new Color(70, 72, 78), wide ? width * 1.8f : width);
+            if (wide)
+            {
+                // The line between the directions.
+                batch.DrawLine(Screen(stretch.A), Screen(stretch.B), new Color(230, 230, 220, 160), MathF.Max(1, width * 0.08f));
+            }
         }
 
         // Spots: dots where road can go; road ends rounded off; junctions marked by how they are run.
@@ -385,6 +407,7 @@ internal sealed class TownScene : Scene
         {
             Tool.Bulldoze => T("Drag over road to take it away"),
             Tool.Junction => T("Tap a junction: give way, lights, roundabout"),
+            Tool.Widen => T("Tap a stretch: two lanes each way, for overtaking and turning traffic"),
             _ => T("Drag along the grid to lay road from gate to gate"),
         });
         batch.DrawText(fonts.Small, hint, text, _note is null ? Palette.Muted : new Color(240, 100, 90), Align.Center);
