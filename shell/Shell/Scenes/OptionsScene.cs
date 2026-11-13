@@ -73,6 +73,12 @@ internal sealed class OptionsScene : Scene
                 Save();
                 Scenes.Replace(new OptionsScene(context));
             }));
+        rows.Add(new SliderRow(T("Text size"), () => settings.TextSize, size =>
+        {
+            settings.TextSize = size;
+            context.Fonts.TextScale = size;
+            Save();
+        }, min: 1, max: 1.5f, step: 0.1f, format: Percent));
         rows.Add(new ToggleRow(T("Retro screen"), () => settings.Retro, on =>
         {
             settings.Retro = on;

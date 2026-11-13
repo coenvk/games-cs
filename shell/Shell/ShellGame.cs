@@ -107,6 +107,7 @@ internal sealed class ShellGame : JentlGame
         _sounds.MusicEnabled = settings.Value.Music;
         _sounds.MusicVolume = settings.Value.MusicVolume;
         GameAudio.Register(_sounds);
+        _fonts.TextScale = Math.Clamp(settings.Value.TextSize, 1, 1.5f);
         RetroScreen.Apply(Scenes.Post, settings.Value.Retro);
         if (_platform.CanFullscreen)
         {

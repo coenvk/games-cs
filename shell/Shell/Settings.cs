@@ -21,6 +21,9 @@ internal sealed class Settings
     /// <summary>A language code ("en", "nl"), or "auto" to follow the system.</summary>
     public string Language { get; set; } = "auto";
 
+    /// <summary>How large the text is: 1 as designed, up to 1.5 for those who read it better bigger.</summary>
+    public float TextSize { get; set; } = 1;
+
     /// <summary>Glow, scanlines and a vignette over everything.</summary>
     public bool Retro { get; set; }
 

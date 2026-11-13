@@ -194,7 +194,7 @@ internal sealed class MusicLibrary
     }
 
     /// <summary>
-    /// The notice of a newly unlocked song, sliding up in the bottom-left corner above the buttons and fading after a
+    /// The notice of a newly unlocked song, sliding up in the bottom-left corner above the buttons (however tall larger text makes them) and fading after a
     /// few seconds: the corner the title screens and the games leave free, where titles, scores and meters aren't.
     /// </summary>
     public void DrawNotice(SpriteBatch batch, Rectangle viewport)
@@ -210,7 +210,9 @@ internal sealed class MusicLibrary
         var size = font.MeasureString(_notice);
         var pad = _fonts.Px(12);
         var (width, height) = ((int)size.X + (2 * pad), (int)size.Y + pad);
-        var box = new Rectangle(viewport.X + pad, viewport.Bottom - _fonts.Px(56) - height + (int)((1 - fade) * _fonts.Px(30)), width, height);
+        // Above the button bar, however tall its text makes it.
+        var above = ButtonBar.Height(font) + _fonts.Px(16) + _fonts.Px(6);
+        var box = new Rectangle(viewport.X + pad, viewport.Bottom - above - height + (int)((1 - Math.Clamp(age * 4, 0, 1)) * _fonts.Px(30)), width, height);
         batch.FillRoundedRectangle(box, _fonts.Px(8), Palette.Panel * (0.95f * fade));
         batch.DrawText(font, _notice, box, Palette.Accent * fade, Align.Center, shadow: false);
     }
