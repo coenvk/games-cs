@@ -40,6 +40,7 @@ internal sealed class AssociateScene : Scene
         Game = new AssociateGame(puzzle.Level);
         _view.CanDrag = Game.CanTake;
         _view.EmptyLabel = pile => Game.IsSlot(pile) ? "?" : null;
+        _view.DealIn(Game.Table[AssociateGame.Stock]);
         _buttons = new ButtonBar(
             new Button(T("Undo"), Undo),
             new Button(T("Hint"), ShowHint),

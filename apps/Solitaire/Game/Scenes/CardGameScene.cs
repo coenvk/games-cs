@@ -55,6 +55,7 @@ internal abstract class CardGameScene : Scene
             new Button(T("Undo"), Undo),
             new Button(T("Hint"), ShowHint),
             new Button(T("Menu"), () => Scenes.Push(new CardPauseScene(Context, this))));
+        DealIn();
     }
 
     public string Name { get; }
@@ -158,9 +159,13 @@ internal abstract class CardGameScene : Scene
 
     public void NewDeal() => Scenes.Replace(CreateNewDeal(), Navigation.Fade());
 
+    /// <summary>The cards fly out from the stock (or the first pile, where there is none) to where they are dealt.</summary>
+    private void DealIn() => View.DealIn(Game.Table.Piles.FirstOrDefault(p => p.Name == "stock") ?? Game.Table.Piles[0]);
+
     public void RestartDeal()
     {
         Game.Restart();
+        DealIn();
         Time = TimeSpan.Zero;
         _winShown = false;
         _wonFor = TimeSpan.Zero;

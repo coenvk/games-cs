@@ -82,6 +82,7 @@ internal sealed class RulesetTableScene : Scene
         _match = new Match<RulesetGame, CardInput>(_game, _people, _ => new RulesetBot(), seed);
         _match.Moved += (seat, _) => Describe(seat);
         _viewer = _people.First(p => p.Kind == PlayerKind.Human).Seat;
+        _view.DealIn(_game.Stock);
         _buttonState = "";
         _message = T("Tap a card to play it, or the stock to draw");
     }
