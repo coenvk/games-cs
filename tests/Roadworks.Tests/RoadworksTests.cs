@@ -38,7 +38,7 @@ public class RoadworksTests
     {
         var levels = Levels();
 
-        levels.Should().HaveCount(5);
+        levels.Should().HaveCount(8);
         levels.Should().OnlyContain(l => l.Gates.All(g => l.Inside(g.At) && !l.IsBlocked(g.At) && (g.At.X == 0 || g.At.Y == 0 || g.At.X == l.Width || g.At.Y == l.Height)));
     }
 
@@ -178,6 +178,36 @@ public class RoadworksTests
                 L(2, 1, 2, 4);
                 L(8, 1, 8, 4);
                 break;
+            case 5:
+                // The through road widened for the traffic passing by.
+                L(0, 2, 10, 2);
+                foreach (var stretch in plan.Roads.ToList())
+                {
+                    plan.Widen(stretch);
+                }
+
+                L(3, 0, 3, 2);
+                L(7, 2, 7, 4);
+                break;
+            case 6:
+                L(3, 2, 7, 2);
+                L(7, 2, 7, 6);
+                L(7, 6, 3, 6);
+                L(3, 6, 3, 2);
+                L(0, 4, 3, 4);
+                L(7, 4, 10, 4);
+                L(5, 0, 5, 2);
+                L(5, 6, 5, 8);
+                L(0, 1, 3, 1);
+                L(3, 1, 3, 2);
+                L(10, 7, 7, 7);
+                L(7, 7, 7, 6);
+                break;
+            case 7:
+                L(0, 3, 8, 3);
+                L(2, 0, 2, 6);
+                L(6, 0, 6, 6);
+                break;
             default:
                 L(0, 2, 1, 2);
                 L(1, 1, 1, 5);
@@ -200,12 +230,29 @@ public class RoadworksTests
         return plan;
     }
 
+    [Fact]
+    public void TheBypass_WantsItsRoadWidened()
+    {
+        var level = Levels()[5];
+        var plan = Answer(level, 5);
+        foreach (var stretch in plan.Wide.ToList())
+        {
+            plan.Widen(stretch);
+        }
+
+        var verdict = new Trial(plan).RunToEnd();
+        verdict.Passed.Should().BeFalse($"one lane each way: delay {verdict.AverageDelay:0.0} s of {level.TargetDelay}");
+    }
+
     [Theory]
     [InlineData(0)]
     [InlineData(1)]
     [InlineData(2)]
     [InlineData(3)]
     [InlineData(4)]
+    [InlineData(5)]
+    [InlineData(6)]
+    [InlineData(7)]
     public void EveryLevel_CanBePassed(int index)
     {
         var level = Levels()[index];
