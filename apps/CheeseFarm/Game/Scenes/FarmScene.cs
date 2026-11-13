@@ -66,6 +66,7 @@ internal sealed class FarmScene : Scene
     private void SetButtons() => _buttons.Set(
     [
         .. Farm.CanEnterFair ? [new Button(T("Fair"), () => Scenes.Push(new FairScene(_context)), Highlight: true)] : Array.Empty<Button>(),
+        .. Farm.CanMilkByHand ? [new Button(T("Milk"), () => Scenes.Push(new MilkingScene(_context), Navigation.Fade()))] : Array.Empty<Button>(),
         new Button(T("Make cheese"), MakeCheese, Highlight: Farm.CanMake),
         new Button(Farm.Due > 0 ? T("Cellar ({0})", Farm.Due) : T("Cellar"), () => Scenes.Push(new CellarScene(_context), Navigation.Fade())),
         new Button(T("Shop"), () => Scenes.Push(new ShopScene(_context))),

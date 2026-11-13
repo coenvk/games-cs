@@ -1036,5 +1036,12 @@
   "The herd": "De kudde",
   "{0} cows, each giving {1} litres a day": "{0} koeien, die elk {1} liter per dag geven",
   "{0}, a calf  ·  gives milk in {1} days": "{0}, een kalf  ·  geeft melk over {1} dagen",
-  "Now and then a cow has a calf, while the herd has room": "Af en toe krijgt een koe een kalf, zolang de kudde ruimte heeft"
+  "Now and then a cow has a calf, while the herd has room": "Af en toe krijgt een koe een kalf, zolang de kudde ruimte heeft",
+  "Milk": "Melken",
+  "{0} kicked the pail over: {1} litres saved": "{0} schopte de emmer om: {1} liter gered",
+  "{0} litres of milk from {1}, into the tank": "{0} liter melk van {1}, in de tank",
+  "Milking {0}: left, right, left, right, steady": "{0} melken: links, rechts, links, rechts, rustig",
+  "{0:0.0} litres": "{0:0.0} liter",
+  "{0} kicked the pail over: 1 litre saved": "{0} schopte de emmer om: 1 liter gered",
+  "1 litre of milk from {0}, into the tank": "1 liter melk van {0}, in de tank"
 }

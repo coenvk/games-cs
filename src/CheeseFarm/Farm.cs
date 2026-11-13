@@ -101,6 +101,27 @@ public sealed class Farm
 
     public int Earned { get; private set; }
 
+    /// <summary>The day a cow was last milked by hand (0: never).</summary>
+    public int HandMilked { get; private set; }
+
+    /// <summary>Whether there is time this morning to milk a cow by hand: once a day.</summary>
+    public bool CanMilkByHand => HandMilked != Day && Cows > 0;
+
+    /// <summary>Pours the pail milked by hand into the tank, as much as fits; the litres it took.</summary>
+    public int MilkByHand(Milking milking)
+    {
+        ArgumentNullException.ThrowIfNull(milking);
+        if (!CanMilkByHand)
+        {
+            return 0;
+        }
+
+        HandMilked = Day;
+        var litres = Math.Min((int)MathF.Round(milking.Litres), Tank - Milk);
+        Milk += litres;
+        return litres;
+    }
+
     /// <summary>The day a wheel was last entered at the fair (0: never).</summary>
     public int FairEntered { get; private set; }
 
@@ -392,6 +413,7 @@ public sealed class Farm
         ["sold"] = WheelsSold,
         ["earned"] = Earned,
         ["fair"] = FairEntered,
+        ["handMilked"] = HandMilked,
         ["rosettes"] = new JsonArray([.. _rosettes.Select(n => (JsonNode?)n)]),
         ["fields"] = new JsonArray([.. _fields.Select(f => (JsonNode?)f.ToString())]),
         ["fieldSince"] = new JsonArray([.. _fieldSince.Select(d => (JsonNode?)d)]),
@@ -427,6 +449,7 @@ public sealed class Farm
                 WheelsSold = (int?)root["sold"] ?? 0,
                 Earned = (int?)root["earned"] ?? 0,
                 FairEntered = (int?)root["fair"] ?? 0,
+                HandMilked = (int?)root["handMilked"] ?? 0,
                 Fledged = (int?)root["fledged"] ?? 0,
             };
             var fields = root["fields"]?.AsArray() ?? [];
