@@ -26,7 +26,95 @@ public sealed class Trial
             Simulation.SetDemand(node, gate.PerHour);
         }
 
-        Unreachable = FindUnreachable();
+        Unreachable = FindUnreachable() ?? StartBus();
+    }
+
+    /// <summary>A bus stop's spot with no road through it (a junction there doesn't count), if there is one.</summary>
+    public Spot? BusStopUnbuilt { get; private set; }
+
+    /// <summary>Whether the roads past the stops give the bus no way from its gate to the other.</summary>
+    public bool BusHasNoWay { get; private set; }
+
+    /// <summary>The bus line's stops as laid out on the built roads, if it runs.</summary>
+    public IReadOnlyList<BusStop> BusStops { get; private set; } = [];
+
+    /// <summary>
+    /// Starts the level's bus line, its stops on the lanes through their spots that make a way from gate to gate; what
+    /// is wrong when there is none ("bus past (4, 2)"), or null.
+    /// </summary>
+    private string? StartBus()
+    {
+        if (Plan.Level.Bus is not { } bus)
+        {
+            return null;
+        }
+
+        var from = Gates.Single(g => g.Key.Name == bus.From).Value;
+        var to = Gates.Single(g => g.Key.Name == bus.To).Value;
+
+        // Every lane through each stop's spot, then each choice of them in turn till one makes a way.
+        var choices = bus.Stops.Select(spot => Network.Lanes.Where(l => !l.IsJunction).Select(l => (Lane: l, At: Along(l, Plan.World(spot)))).Where(c => c.At is not null).Select(c => BusStop.On(c.Lane, c.At!.Value / c.Lane.Length)).ToList()).ToList();
+        if (choices.FindIndex(c => c.Count == 0) is var missing and >= 0)
+        {
+            BusStopUnbuilt = bus.Stops[missing];
+            return $"bus past ({bus.Stops[missing].X}, {bus.Stops[missing].Y})";
+        }
+
+        foreach (var stops in Combinations(choices))
+        {
+            try
+            {
+                var line = new BusLine("bus", from, to, stops, bus.Every);
+                Simulation.AddLine(line);
+                BusStops = stops;
+                return null;
+            }
+            catch (ArgumentException)
+            {
+                // No way through these lanes: try the next.
+            }
+        }
+
+        BusHasNoWay = true;
+        return $"bus {bus.From} → {bus.To}";
+    }
+
+    /// <summary>How far along a lane a point lies, when the lane passes within a few metres of it.</summary>
+    private static float? Along(Lane lane, System.Numerics.Vector2 point)
+    {
+        var points = lane.Path.Points;
+        var travelled = 0f;
+        for (var i = 0; i + 1 < points.Count; i++)
+        {
+            var (a, b) = (points[i], points[i + 1]);
+            var length = System.Numerics.Vector2.Distance(a, b);
+            var t = length == 0 ? 0 : Math.Clamp(System.Numerics.Vector2.Dot(point - a, b - a) / (length * length), 0, 1);
+            if (System.Numerics.Vector2.Distance(a + ((b - a) * t), point) < 6 && travelled + (t * length) is var at && at > 5 && at < lane.Length - 5)
+            {
+                return at;
+            }
+
+            travelled += length;
+        }
+
+        return null;
+    }
+
+    private static IEnumerable<List<BusStop>> Combinations(List<List<BusStop>> choices, int index = 0)
+    {
+        if (index == choices.Count)
+        {
+            yield return [];
+            yield break;
+        }
+
+        foreach (var choice in choices[index])
+        {
+            foreach (var rest in Combinations(choices, index + 1))
+            {
+                yield return [choice, .. rest];
+            }
+        }
     }
 
     public Plan Plan { get; }

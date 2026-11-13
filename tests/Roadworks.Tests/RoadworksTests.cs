@@ -231,6 +231,31 @@ public class RoadworksTests
     }
 
     [Fact]
+    public void MainStreet_RunsItsBus_PastItsStop()
+    {
+        var level = Levels()[1];
+        level.Bus.Should().NotBeNull();
+        var trial = new Trial(Answer(level, 1));
+
+        trial.Unreachable.Should().BeNull();
+        trial.BusStops.Should().ContainSingle();
+        trial.RunToEnd().Passed.Should().BeTrue();
+        trial.Simulation.Lines.Single().Completed.Should().BeGreaterThan(2);
+    }
+
+    [Fact]
+    public void ABusStopAtAJunction_IsReported()
+    {
+        var level = Levels()[0] with { Bus = new BusRoute("A", "B", 120, [new Spot(3, 2)]) };
+        var trial = new Trial(Cross(level, Junction.Lights));
+        trial.BusStopUnbuilt.Should().Be(new Spot(3, 2));
+        trial.Unreachable.Should().NotBeNull();
+
+        var between = level with { Bus = new BusRoute("A", "B", 120, [new Spot(1, 2)]) };
+        new Trial(Cross(between, Junction.Lights)).Unreachable.Should().BeNull("the road passes through (1, 2)");
+    }
+
+    [Fact]
     public void TheBypass_WantsItsRoadWidened()
     {
         var level = Levels()[5];

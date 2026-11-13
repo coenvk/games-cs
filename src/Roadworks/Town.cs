@@ -36,6 +36,9 @@ public enum Junction
 /// <summary>A way into the town at the edge of the grid: traffic comes in here and leaves by the other gates.</summary>
 public sealed record Gate(string Name, Spot At, float PerHour);
 
+/// <summary>A bus line a level asks for: from one gate to another, a bus every so many seconds, stopping at its stops' spots.</summary>
+public sealed record BusRoute(string From, string To, float Every, IReadOnlyList<Spot> Stops);
+
 /// <summary>
 /// A level: the grid (spots from 0 to <see cref="Width"/> across and <see cref="Height"/> down), the gates, the spots
 /// where nothing can be built (houses, a river), the budget, and the goal: average delay at most
@@ -43,6 +46,9 @@ public sealed record Gate(string Name, Spot At, float PerHour);
 /// </summary>
 public sealed record TownLevel(string Name, int Width, int Height, IReadOnlyList<Gate> Gates, IReadOnlyList<Spot> Blocked, int Budget, float TargetDelay, int Minutes = 10)
 {
+    /// <summary>The bus line the town wants, if any: the roads must take it past its stops.</summary>
+    public BusRoute? Bus { get; init; }
+
     public bool Inside(Spot spot) => spot.X >= 0 && spot.X <= Width && spot.Y >= 0 && spot.Y <= Height;
 
     public bool IsBlocked(Spot spot) => Blocked.Contains(spot);
@@ -62,7 +68,12 @@ public sealed record TownLevel(string Name, int Width, int Height, IReadOnlyList
                 [.. (level["blocked"]?.AsArray() ?? []).Select(b => new Spot((int)b![0]!, (int)b[1]!))],
                 (int)level["budget"]!,
                 (float)level["delay"]!,
-                (int?)level["minutes"] ?? 10))];
+                (int?)level["minutes"] ?? 10)
+            {
+                Bus = level["bus"] is { } bus
+                    ? new BusRoute((string)bus["from"]!, (string)bus["to"]!, (float?)bus["every"] ?? 120, [.. bus["stops"]!.AsArray().Select(s => new Spot((int)s![0]!, (int)s[1]!))])
+                    : null,
+            })];
         }
         catch (Exception e) when (e is JsonException or InvalidOperationException or NullReferenceException or FormatException)
         {

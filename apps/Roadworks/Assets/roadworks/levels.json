@@ -2,6 +2,7 @@
   // Roadworks levels. Spots run from 0 to "width" across and 0 to "height" down; gates sit on the edge and send
   // "perHour" vehicles to the other gates. "blocked": spots nothing can be built on. "delay": the target average
   // delay in seconds; "budget": what the roads and junctions may cost (a stretch 100, lights 300, a roundabout 500).
+  // "bus": a bus line from gate to gate, every so many seconds, stopping at "stops" (spots a road must pass through).
   "levels": [
     {
       "name": "Crossroads", "width": 6, "height": 4, "budget": 1800, "delay": 25,
@@ -13,6 +14,7 @@
     },
     {
       "name": "Main street", "width": 8, "height": 4, "budget": 2000, "delay": 30,
+      "bus": { "from": "A", "to": "B", "every": 120, "stops": [[4, 2]] },
       "gates": [
         { "name": "A", "x": 0, "y": 2, "perHour": 360 }, { "name": "B", "x": 8, "y": 2, "perHour": 360 },
         { "name": "C", "x": 2, "y": 0, "perHour": 120 }, { "name": "D", "x": 6, "y": 4, "perHour": 120 }

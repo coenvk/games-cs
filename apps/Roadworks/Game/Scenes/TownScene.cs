@@ -168,7 +168,9 @@ internal sealed class TownScene : Scene
         var trial = new Trial(Plan, seed: Number + 1);
         if (trial.Unreachable is { } missing)
         {
-            _note = T("No way yet: {0}", missing);
+            _note = trial.BusStopUnbuilt is not null ? T("The bus needs a road through its stop, not a junction there")
+                : trial.BusHasNoWay ? T("The bus needs a way from {0} past its stops to {1}", Level.Bus!.From, Level.Bus.To)
+                : T("No way yet: {0}", missing);
             _context.Sounds.Play(Sound.Error);
             return;
         }
@@ -383,6 +385,16 @@ internal sealed class TownScene : Scene
             var at = Screen(Plan.Outside(gate));
             batch.FillCircle(at, _cell * 0.26f, Palette.Accent);
             batch.DrawText(font, gate.Name, new Rectangle((int)(at.X - _cell), (int)(at.Y - (_cell / 2)), (int)(_cell * 2), (int)_cell), Palette.Ink, Align.Center, shadow: false);
+        }
+
+        // The bus line's stops: a yellow sign at each spot the road must pass through.
+        foreach (var stop in Level.Bus?.Stops ?? [])
+        {
+            var at = Screen(stop) + new Vector2(_cell * 0.22f, -_cell * 0.22f);
+            batch.FillRectangle(new Rectangle((int)at.X - 1, (int)at.Y, 2, (int)(_cell * 0.3f)), new Color(60, 60, 60));
+            var sign = new Rectangle((int)(at.X - (_cell * 0.2f)), (int)(at.Y - (_cell * 0.28f)), (int)(_cell * 0.4f), (int)(_cell * 0.3f));
+            batch.FillRoundedRectangle(sign, Math.Max(2, (int)(_cell * 0.05f)), new Color(250, 210, 50));
+            batch.DrawText(font, "bus", sign, Palette.Ink, Align.Center, shadow: false);
         }
     }
 
