@@ -147,7 +147,8 @@ internal sealed class TrafficScene : Scene
 
     private TrafficSimulation Start()
     {
-        var simulation = new TrafficSimulation(Town(), seed: _context.Deal ?? 1);
+        // Drivers change lanes on the two-lane roads: overtaking, and moving out of a lane held up by a turn.
+        var simulation = new TrafficSimulation(Town(), seed: _context.Deal ?? 1) { LaneChanges = true };
         simulation.SetDemand(_demand);
         return simulation;
     }
