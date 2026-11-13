@@ -67,8 +67,14 @@ internal sealed class AssociateScene : Scene
 
     protected override void OnEnter() => _context.PlayMood(Music.Words);
 
+    private const float RewardShown = 1.4f;
+
+    private float _clock;
+    private float _rewarded = float.NegativeInfinity;
+
     public override void Update(TimeSpan elapsed, InputState input)
     {
+        _clock += (float)elapsed.TotalSeconds;
         var actions = _context.Actions;
         _cursor = input.Cursor.Position;
         if (actions.WasPressed(input, GameAction.Back))
@@ -117,6 +123,16 @@ internal sealed class AssociateScene : Scene
         text.Inflate(-margin, 0);
         batch.DrawText(fonts.Body, Puzzle.Title, text, Palette.Text, Align.Left);
         batch.DrawText(fonts.Body, T("{0} moves left", Game.MovesLeft), text, Game.MovesLeft <= 5 ? new Color(232, 72, 85) : Palette.Accent, Align.Right);
+
+        // A move given back for a finished category rises from the count and fades.
+        var since = _clock - _rewarded;
+        if (since is >= 0 and < RewardShown)
+        {
+            var t = since / RewardShown;
+            var label = AssociateGame.Reward == 1 ? T("+1 move") : T("+{0} moves", AssociateGame.Reward);
+            var width = fonts.Body.MeasureString(label).X;
+            batch.DrawText(fonts.Body, label, new Vector2(text.Right - width, hud.Bottom + fonts.Px(4) + (fonts.Px(30) * (1 - t))), new Color(120, 220, 120) * (1 - (t * t)), Align.Left);
+        }
 
         var buttonsHeight = ButtonBar.Height(fonts.Small) + fonts.Px(16);
         var buttons = new Rectangle(viewport.X + margin, viewport.Bottom - buttonsHeight, viewport.Width - (2 * margin), buttonsHeight);
@@ -177,6 +193,11 @@ internal sealed class AssociateScene : Scene
             }
 
             return;
+        }
+
+        if (turn.Has("reward"))
+        {
+            _rewarded = _clock;
         }
 
         if (turn.Has("complete"))

@@ -83,6 +83,8 @@ public class AssociateGameTests
         game.Completed.Should().Be(3);
         slot.IsEmpty.Should().BeTrue();
         game.Stars.Should().BeInRange(1, 3);
+        game.Bonus.Should().Be(3 * AssociateGame.Reward, "a move back for each category finished");
+        game.MovesLeft.Should().Be(game.Level.Moves + game.Bonus - game.MovesUsed);
     }
 
     [Fact]

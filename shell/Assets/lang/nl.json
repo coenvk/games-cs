@@ -1043,5 +1043,7 @@
   "Milking {0}: left, right, left, right, steady": "{0} melken: links, rechts, links, rechts, rustig",
   "{0:0.0} litres": "{0:0.0} liter",
   "{0} kicked the pail over: 1 litre saved": "{0} schopte de emmer om: 1 liter gered",
-  "1 litre of milk from {0}, into the tank": "1 liter melk van {0}, in de tank"
+  "1 litre of milk from {0}, into the tank": "1 liter melk van {0}, in de tank",
+  "+1 move": "+1 zet",
+  "+{0} moves": "+{0} zetten"
 }

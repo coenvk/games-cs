@@ -25,6 +25,10 @@ public sealed class AssociateGame : ICardRules
     public const string JokerGroup = "★";
 
     private const string MovesCounter = "moves";
+    private const string BonusCounter = "bonus";
+
+    /// <summary>Moves given back for each category finished: a reward that keeps a good run going.</summary>
+    public const int Reward = 1;
 
     public AssociateGame(AssociateLevel level)
     {
@@ -74,7 +78,10 @@ public sealed class AssociateGame : ICardRules
 
     public int MovesUsed => Table.Counter(MovesCounter);
 
-    public int MovesLeft => Level.Moves - MovesUsed;
+    public int MovesLeft => Level.Moves + Bonus - MovesUsed;
+
+    /// <summary>Moves earned back by finishing categories.</summary>
+    public int Bonus => Table.Counter(BonusCounter);
 
     public bool IsCleared => IsWon(Table);
 
@@ -299,6 +306,8 @@ public sealed class AssociateGame : ICardRules
         {
             turn.Move(to, 0, Table[Done]);
             turn.Tag("complete");
+            turn.Count(BonusCounter, Reward);
+            turn.Tag("reward");
         }
     }
 
