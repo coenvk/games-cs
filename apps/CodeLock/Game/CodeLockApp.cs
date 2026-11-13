@@ -13,6 +13,8 @@ internal sealed class CodeLockApp : IGameApp
 
     public string SaveName => "CodeLock";
 
+    public IReadOnlyCollection<string>? Moods => [Music.Puzzle];
+
     public IReadOnlyList<GameAction> ControlActions => [GameAction.Up, GameAction.Down, GameAction.Left, GameAction.Right, GameAction.Undo, GameAction.Hint, GameAction.Confirm];
 
     public void Load(GameContext context, GraphicsDevice device) => context.Add(new CodeLockStore(context.Store));

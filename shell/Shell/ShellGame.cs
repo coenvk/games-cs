@@ -119,7 +119,7 @@ internal sealed class ShellGame : JentlGame
         {
             ToBackground = ToBackground,
         };
-        _music = context.Add(new MusicLibrary(store, _sounds, _fonts));
+        _music = context.Add(new MusicLibrary(store, _sounds, _fonts, _app.Moods));
         Scenes.Overlay = _music.DrawNotice;
         _app.Load(context, GraphicsDevice);
         Scenes.Reset(_app.Start(context));

@@ -19,7 +19,7 @@ internal sealed class MusicScene : PanelScene
 
     protected override IReadOnlyList<PanelLine> Lines =>
     [
-        new(T("{0} of {1} tracks unlocked", Context.Music.UnlockedCount, Soundtrack.Tracks.Count), Palette.Muted),
+        new(T("{0} of {1} tracks unlocked", Context.Music.UnlockedCount, Context.Music.Tracks.Count), Palette.Muted),
         new(_hint ?? (Context.Music.Playing is { } playing ? T("Playing: {0}", playing.Title) : " "), _hint is null ? Palette.Text : Palette.Accent),
     ];
 
@@ -57,7 +57,7 @@ internal sealed class MusicScene : PanelScene
                 Menu = Build(Menu.Selected);
             }),
         ];
-        foreach (var track in Soundtrack.Tracks)
+        foreach (var track in Context.Music.Tracks)
         {
             var known = music.IsUnlocked(track);
             items.Add(new MenuItem(known ? track.Title : "? ? ?", () =>

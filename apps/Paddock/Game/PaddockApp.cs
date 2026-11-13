@@ -16,6 +16,8 @@ internal sealed class PaddockApp : IGameApp
 
     public string SaveName => "Paddock";
 
+    public IReadOnlyCollection<string>? Moods => [Music.Race];
+
     public void Load(GameContext context, GraphicsDevice device)
     {
         var data = context.Add(PaddockData.Load(context.Assets));

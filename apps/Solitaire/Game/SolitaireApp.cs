@@ -13,6 +13,8 @@ internal sealed class SolitaireApp : IGameApp
 
     public string SaveName => "Solitaire";
 
+    public IReadOnlyCollection<string>? Moods => [Music.Cards];
+
     public IReadOnlyList<GameAction> ControlActions => [GameAction.Undo, GameAction.Redo, GameAction.Hint, GameAction.Confirm];
 
     public void Load(GameContext context, GraphicsDevice device) => CardTableArt.Load(context, device);

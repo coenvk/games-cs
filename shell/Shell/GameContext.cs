@@ -62,6 +62,12 @@ internal interface IGameApp
 
     /// <summary>The game's own rows in the Options panel, shown above Back.</summary>
     IEnumerable<FormRow> Options(GameContext context) => [];
+
+    /// <summary>
+    /// The moods its places play (<see cref="Music"/>), whose songs its Music screen offers (with the title screen's
+    /// own); null for the whole soundtrack.
+    /// </summary>
+    IReadOnlyCollection<string>? Moods => null;
 }
 
 /// <summary>

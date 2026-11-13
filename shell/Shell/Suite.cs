@@ -24,6 +24,9 @@ internal sealed class SuiteApp(string title, string saveName, IReadOnlyList<IGam
 
     public string SaveName { get; } = saveName;
 
+    /// <summary>Every game's moods together; the whole soundtrack if any game plays it all.</summary>
+    public IReadOnlyCollection<string>? Moods => Games.Any(g => g.Moods is null) ? null : [.. Games.SelectMany(g => g.Moods!).Distinct()];
+
     /// <summary>Every game's controls, each once, for the Controls screen.</summary>
     public IReadOnlyList<GameAction> ControlActions => [.. Games.SelectMany(g => g.ControlActions).Distinct()];
 

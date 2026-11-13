@@ -18,6 +18,8 @@ internal sealed class ConnectWordApp : IGameApp
 
     public string SaveName => "ConnectWord";
 
+    public IReadOnlyCollection<string>? Moods => [Music.Words];
+
     public IReadOnlyList<GameAction> ControlActions => [GameAction.Up, GameAction.Down, GameAction.Left, GameAction.Right, GameAction.Confirm, GameAction.Hint, GameAction.Undo, GameAction.Restart];
 
     public void Load(GameContext context, GraphicsDevice device) =>

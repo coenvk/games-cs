@@ -16,6 +16,8 @@ internal sealed class HotPanApp : IGameApp
 
     public string SaveName => "HotPan";
 
+    public IReadOnlyCollection<string>? Moods => [Music.Kitchen];
+
     public void Load(GameContext context, GraphicsDevice device)
     {
         context.Add(new ScoreBoard(context, "hotpan", ScoreOrder.HigherIsBetter, score => score.ToString("N0", Culture)));

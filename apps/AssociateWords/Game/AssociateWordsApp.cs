@@ -18,6 +18,8 @@ internal sealed class AssociateWordsApp : IGameApp
 
     public string SaveName => "AssociateWords";
 
+    public IReadOnlyCollection<string>? Moods => [Music.Words];
+
     public IReadOnlyList<GameAction> ControlActions => [GameAction.Undo, GameAction.Hint, GameAction.Confirm, GameAction.Restart];
 
     public void Load(GameContext context, GraphicsDevice device)

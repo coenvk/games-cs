@@ -17,6 +17,8 @@ internal sealed class RoadworksApp : IGameApp
 
     public string SaveName => "Roadworks";
 
+    public IReadOnlyCollection<string>? Moods => [Music.Puzzle];
+
     public void Load(GameContext context, GraphicsDevice device) =>
         context.Add(new TownStore(context.Store, TownLevel.FromJson(GameFiles.ReadAllText("Assets/roadworks/levels.json"))));
 

@@ -46,8 +46,11 @@ internal sealed class MusicLibrary
     private readonly Stopwatch _noticeClock = new();
     private string? _notice;
 
-    public MusicLibrary(ISaveStore? store, SoundPlayer sounds, Fonts fonts)
+    /// <param name="moods">The moods the app plays: its Music screen and shuffle keep to their songs (and the title
+    /// screen's); null for the whole soundtrack.</param>
+    public MusicLibrary(ISaveStore? store, SoundPlayer sounds, Fonts fonts, IReadOnlyCollection<string>? moods = null)
     {
+        Tracks = moods is null ? Soundtrack.Tracks : [.. Soundtrack.Tracks.Where(t => t.Mood == Music.Menu || moods.Contains(t.Mood))];
         _sounds = sounds;
         _fonts = fonts;
         _file = SavedFile<MusicSave>.Load(store, "music.json", FromJson, ToJson, () => new MusicSave());
@@ -75,7 +78,10 @@ internal sealed class MusicLibrary
         }
     }
 
-    public int UnlockedCount => Soundtrack.Tracks.Count(IsUnlocked);
+    /// <summary>The app's songs: its moods' and the title screen's.</summary>
+    public IReadOnlyList<Track> Tracks { get; }
+
+    public int UnlockedCount => Tracks.Count(IsUnlocked);
 
     public bool IsUnlocked(Track track) => _file.Value.Tracks.Contains(track.Id);
 
@@ -133,7 +139,7 @@ internal sealed class MusicLibrary
     {
         if (Mode == MusicMode.Shuffle)
         {
-            var unlocked = Soundtrack.Tracks.Where(t => IsUnlocked(t) && t != _song).ToList();
+            var unlocked = Tracks.Where(t => IsUnlocked(t) && t != _song).ToList();
             if (unlocked.Count > 0)
             {
 #pragma warning disable CA5394 // A song order, not security relevant.

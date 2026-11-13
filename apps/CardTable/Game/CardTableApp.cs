@@ -13,6 +13,8 @@ internal sealed class CardTableApp : IGameApp
 
     public string SaveName => "CardTable";
 
+    public IReadOnlyCollection<string>? Moods => [Music.Table, Music.Cards];
+
     public void Load(GameContext context, GraphicsDevice device) => CardTableArt.Load(context, device);
 
     public Scene MainMenu(GameContext context) => new TitleScene(

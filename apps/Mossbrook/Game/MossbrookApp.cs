@@ -13,6 +13,8 @@ internal sealed class MossbrookApp : IGameApp
 
     public string SaveName => "Mossbrook";
 
+    public IReadOnlyCollection<string>? Moods => [Music.Village, Music.Cellar];
+
     public IReadOnlyList<GameAction> ControlActions => [GameAction.Up, GameAction.Down, GameAction.Left, GameAction.Right, GameAction.Inventory, GameAction.Journal, GameAction.Wait, GameAction.Confirm];
 
     public void Load(GameContext context, GraphicsDevice device) => context.Add(new AdventureSaves(context.Store));

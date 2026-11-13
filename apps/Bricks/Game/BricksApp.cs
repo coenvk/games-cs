@@ -13,6 +13,8 @@ internal sealed class BricksApp : IGameApp
 
     public string SaveName => "Bricks";
 
+    public IReadOnlyCollection<string>? Moods => [Music.Arcade];
+
     public void Load(GameContext context, GraphicsDevice device) =>
         context.Add(new ScoreBoard(context, "bricks", ScoreOrder.HigherIsBetter, score => score.ToString("N0", Culture)));
 
