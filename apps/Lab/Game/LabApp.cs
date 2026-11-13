@@ -22,6 +22,7 @@ internal sealed class LabApp : IGameApp
             new("3D: software and GPU", () => title.Open(new ThreeDScene(context))),
             new("Traffic", () => title.Open(new TrafficScene(context))),
             new("Animation", () => title.Open(new AnimationScene(context))),
+            new("UI: frames and tooltips", () => title.Open(new UiScene(context))),
         ],
         () => "Engine demos");
 }
