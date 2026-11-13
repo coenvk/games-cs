@@ -133,6 +133,15 @@ internal sealed class ShellGame : JentlGame
     /// <summary>The phone's back button or gesture, handed over by the activity: read as Escape on the next frame.</summary>
     public void PressBack() => _back = true;
 
+    /// <summary>The app goes to the background, or comes back: its sound is held meanwhile (the music resumes where it was).</summary>
+    public void Away(bool away)
+    {
+        if (_sounds is not null)
+        {
+            _sounds.Suspended = away;
+        }
+    }
+
     protected override KeyboardState ReadKeyboard()
     {
         if (_script is null)

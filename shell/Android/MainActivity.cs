@@ -43,6 +43,18 @@ public sealed class MainActivity : AndroidGameActivity
         _game.Run();
     }
 
+    protected override void OnPause()
+    {
+        _game?.Away(true);
+        base.OnPause();
+    }
+
+    protected override void OnResume()
+    {
+        base.OnResume();
+        _game?.Away(false);
+    }
+
     private sealed class BackCallback(ShellGame game) : Java.Lang.Object, Android.Window.IOnBackInvokedCallback
     {
         public void OnBackInvoked() => game.PressBack();
