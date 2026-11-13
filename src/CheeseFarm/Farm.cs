@@ -171,7 +171,11 @@ public sealed class Farm
 
     public int Room => Racks * WheelsPerRack;
 
-    public bool CanMake => Milk >= MilkPerWheel && _wheels.Count < Room;
+    /// <summary>Whether a cheese of some size can be made: milk for a baby cheese at least, and room on a rack.</summary>
+    public bool CanMake => CanMakeSize(CheeseSize.Baby);
+
+    /// <summary>Whether there is the milk for a cheese of <paramref name="size"/>, and room for it.</summary>
+    public bool CanMakeSize(CheeseSize size) => Milk >= Sizes.Milk(size) && _wheels.Count < Room;
 
     public IReadOnlyList<Customer> Customers => CheeseFarm.Customers.For(Seed, Day, 3 + Signs + Meadow.Walkers(FieldsOf(Field.Birds)), _flavours);
 
@@ -244,21 +248,21 @@ public sealed class Farm
     public int Due => _wheels.Count(w => w.NeedsTurning(Day));
 
     /// <summary>Starts a cheese of a flavour the farm has; null when there is no milk or room for it.</summary>
-    public Making? StartMaking(Flavour flavour) =>
-        CanMake && _flavours.Contains(flavour) ? new Making(flavour, GoodKettle, HashCode.Combine(Seed, Day, WheelsMade)) : null;
+    public Making? StartMaking(Flavour flavour, CheeseSize size = CheeseSize.Wheel) =>
+        CanMakeSize(size) && _flavours.Contains(flavour) ? new Making(flavour, GoodKettle, HashCode.Combine(Seed, Day, WheelsMade)) { Size = size } : null;
 
     /// <summary>Puts the finished cheese on a rack, using its milk.</summary>
     public Wheel Finish(Making making)
     {
         ArgumentNullException.ThrowIfNull(making);
-        if (!making.IsDone || !CanMake)
+        if (!making.IsDone || !CanMakeSize(making.Size))
         {
             throw new InvalidOperationException("The cheese isn't finished, or there is no milk or room for it.");
         }
 
-        Milk -= MilkPerWheel;
+        Milk -= Sizes.Milk(making.Size);
         WheelsMade++;
-        var wheel = new Wheel(NextId(), Day, making.Flavour, making.Made + (Meadow.RichMilk * Richness));
+        var wheel = new Wheel(NextId(), Day, making.Flavour, making.Made + (Meadow.RichMilk * Richness)) { Size = making.Size };
         _wheels.Add(wheel);
         return wheel;
     }
@@ -476,6 +480,7 @@ public sealed class Farm
             ["made"] = Math.Round(w.Made, 3),
             ["turned"] = w.LastTurned,
             ["neglect"] = w.Neglect,
+            ["size"] = w.Size == CheeseSize.Wheel ? null : w.Size.ToString(),
         })]),
     }.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
 
@@ -549,6 +554,7 @@ public sealed class Farm
             {
                 farm._wheels.Add(new Wheel((int)node!["id"]!, (int)node["madeOn"]!, Enum.Parse<Flavour>((string)node["flavour"]!), (float)node["made"]!)
                 {
+                    Size = node["size"] is { } size ? Enum.Parse<CheeseSize>((string)size!) : CheeseSize.Wheel,
                     LastTurned = (int)node["turned"]!,
                     Neglect = (int?)node["neglect"] ?? 0,
                 });

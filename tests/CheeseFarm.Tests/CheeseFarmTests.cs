@@ -286,7 +286,7 @@ public class FarmTests
         var farm = new Farm(7);
         for (var day = 0; day < 30; day++)
         {
-            while (farm.CanMake)
+            while (farm.CanMakeSize(CheeseSize.Wheel))
             {
                 farm.Finish(Perfect(farm));
             }

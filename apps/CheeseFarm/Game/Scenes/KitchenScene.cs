@@ -41,18 +41,22 @@ internal sealed class KitchenScene : Scene
     private Wheel? _wheel;
     private string? _note;
     private Rectangle _area;
+    private CheeseSize _size;
 
     public KitchenScene(GameContext context)
     {
         _context = context;
-        if (Farm.Flavours.Count == 1)
-        {
-            Begin(Flavour.Plain);
-        }
-        else
-        {
-            SetButtons();
-        }
+        _size = Farm.CanMakeSize(CheeseSize.Wheel) ? CheeseSize.Wheel : CheeseSize.Baby;
+        SetButtons();
+    }
+
+    /// <summary>The next size there is milk for, round again from the smallest.</summary>
+    private void NextSize()
+    {
+        var sizes = Enum.GetValues<CheeseSize>().Where(Farm.CanMakeSize).ToList();
+        _size = sizes.Count == 0 ? _size : sizes[(sizes.IndexOf(_size) + 1) % sizes.Count];
+        _context.Sounds.Play(Sound.Click);
+        SetButtons();
     }
 
     private Farm Farm => _context.Farm.Farm;
@@ -68,7 +72,7 @@ internal sealed class KitchenScene : Scene
 
     private void Begin(Flavour flavour)
     {
-        _making = Farm.StartMaking(flavour);
+        _making = Farm.StartMaking(flavour, _size);
         if (_making is null)
         {
             Scenes.Pop(Navigation.Fade());
@@ -83,7 +87,12 @@ internal sealed class KitchenScene : Scene
     {
         if (_making is null)
         {
-            _buttons.Set([.. Farm.Flavours.Order().Select(f => new Button(Cheese.Name(f), () => Begin(f))), new Button(T("Back"), Leave)]);
+            _buttons.Set(
+            [
+                new Button(T("Size: {0}, {1} litres", Cheese.Name(_size), Sizes.Milk(_size)), NextSize),
+                .. Farm.Flavours.Order().Select(f => new Button(Cheese.Name(f), () => Begin(f), Highlight: f == Flavour.Plain)),
+                new Button(T("Back"), Leave),
+            ]);
             return;
         }
 
@@ -264,9 +273,12 @@ internal sealed class KitchenScene : Scene
 
         if (_making is null)
         {
-            batch.DrawText(fonts.Body, T("Which cheese today?"), new Vector2(_area.Center.X, _area.Center.Y - fonts.Px(40)), Palette.Text, Align.Center);
             var flavours = Farm.Flavours.Order().ToList();
-            var radius = Math.Min(_area.Height / 6f, _area.Width / (flavours.Count * 3f));
+            var size = Math.Min(_area.Height / 6f, _area.Width / (flavours.Count * 3f));
+            var radius = size * Cheese.Scale(_size);
+            var above = _area.Center.Y + (size * 0.8f) - (size * 1.3f);
+            batch.DrawText(fonts.Body, T("Which cheese today?"), new Vector2(_area.Center.X, above - fonts.Px(70)), Palette.Text, Align.Center);
+            batch.DrawText(fonts.Small, T("A baby cheese ripens twice as fast; a big wheel takes twice as long, and fetches the most"), new Vector2(_area.Center.X, above - fonts.Px(38)), Palette.Muted, Align.Center, shadow: false);
             for (var i = 0; i < flavours.Count; i++)
             {
                 var at = new Vector2(_area.Center.X + ((i - ((flavours.Count - 1) / 2f)) * radius * 2.6f), _area.Center.Y + (radius * 0.8f));
@@ -428,7 +440,7 @@ internal sealed class KitchenScene : Scene
         water.Inflate(-fonts.Px(10), -fonts.Px(10));
         batch.FillRoundedRectangle(water, fonts.Px(12), new Color(150, 196, 220));
         var radius = Math.Min(water.Width, water.Height) * 0.32f;
-        FarmScene.DrawWheel(batch, new Vector2(water.Center.X, water.Center.Y), radius, Ripeness.Young, _making!.Flavour);
+        FarmScene.DrawWheel(batch, new Vector2(water.Center.X, water.Center.Y), radius * Cheese.Scale(_making!.Size), Ripeness.Young, _making.Flavour);
         for (var i = 0; i < 6; i++)
         {
             batch.FillCircle(new Vector2(water.X + (water.Width * (0.1f + (0.16f * i))), water.Y + (water.Height * (0.15f + (0.1f * (i % 3))))), fonts.Px(4), new Color(240, 248, 255, 160));
@@ -441,7 +453,7 @@ internal sealed class KitchenScene : Scene
         var fonts = _context.Fonts;
         var radius = Math.Min(_area.Height / 4.5f, _area.Width / 6f);
         var at = new Vector2(_area.Center.X, _area.Y + radius + fonts.Px(10));
-        FarmScene.DrawWheel(batch, at, radius, Ripeness.Young, wheel.Flavour);
+        FarmScene.DrawWheel(batch, at, radius * Cheese.Scale(wheel.Size), Ripeness.Young, wheel.Flavour);
         var y = at.Y + radius + fonts.Px(14);
         batch.DrawText(fonts.Title, Cheese.Stars(wheel.Stars), new Vector2(at.X, y), Palette.Accent, Align.Center);
         y += fonts.Title.LineHeight;

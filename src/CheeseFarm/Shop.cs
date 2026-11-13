@@ -29,6 +29,7 @@ public sealed record Customer(string Name, Ripeness Wants, Flavour Flavour, floa
         var price = Ripening.Price(ripeness) * (0.6f + (0.1f * wheel.Stars));
         price *= Flavour == Flavour.Plain ? 1 : 1.1f;
         price *= ripeness == Wants ? 1.25f : 1;
+        price *= Sizes.PriceFactor(wheel.Size);
         return (int)MathF.Round(price * Generosity);
     }
 }

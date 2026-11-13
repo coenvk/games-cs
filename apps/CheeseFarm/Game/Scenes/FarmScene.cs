@@ -78,7 +78,7 @@ internal sealed class FarmScene : Scene
 
     private void MakeCheese()
     {
-        if (Farm.Milk < Farm.MilkPerWheel)
+        if (Farm.Milk < Sizes.Milk(CheeseSize.Baby))
         {
             _context.Sounds.Play(Sound.Error);
             Say(T("Not enough milk: the cows are milked in the morning"));

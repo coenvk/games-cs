@@ -93,6 +93,21 @@ internal static class Cheese
         _ => T("Plain"),
     };
 
+    public static string Name(CheeseSize size) => size switch
+    {
+        CheeseSize.Baby => T("baby cheese"),
+        CheeseSize.Big => T("big wheel"),
+        _ => T("farm wheel"),
+    };
+
+    /// <summary>How big a cheese is drawn against a farm wheel.</summary>
+    public static float Scale(CheeseSize size) => size switch
+    {
+        CheeseSize.Baby => 0.7f,
+        CheeseSize.Big => 1.25f,
+        _ => 1,
+    };
+
     public static string Stars(int stars) => new string('★', stars) + new string('☆', 5 - stars);
 
     /// <summary>The rind's colour: pale when young, deepening to amber as it ripens.</summary>

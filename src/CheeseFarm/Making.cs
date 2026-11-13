@@ -36,6 +36,9 @@ public sealed class Making(Flavour flavour, bool goodKettle = false, int seed = 
 
     public Flavour Flavour { get; } = flavour;
 
+    /// <summary>How big the cheese is made.</summary>
+    public CheeseSize Size { get; init; } = CheeseSize.Wheel;
+
     /// <summary>A better kettle holds the milk steadier: a degree more room either side.</summary>
     public bool GoodKettle { get; } = goodKettle;
 

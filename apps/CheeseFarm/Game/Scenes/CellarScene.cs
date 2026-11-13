@@ -163,8 +163,8 @@ internal sealed class CellarScene : Scene
         batch.DrawText(fonts.Small, Farm.Due > 0 ? T("{0} to turn today", Farm.Due) : T("All turned"), text, Farm.Due > 0 ? new Color(240, 120, 100) : Palette.Muted, Align.Center, shadow: false);
 
         var line = Chosen is { } wheel
-            ? T("{0}, {1}  ·  {2}  ·  {3} days old", Cheese.Name(wheel.Ripeness(Farm.Day)), Cheese.Name(wheel.Flavour), Cheese.Stars(wheel.Stars), wheel.Age(Farm.Day))
-                + (wheel.Ripeness(Farm.Day) < Ripeness.VeryOld ? "  ·  " + T("{0} in {1} days", Cheese.Name(wheel.Ripeness(Farm.Day) + 1), Ripening.StartOf(wheel.Ripeness(Farm.Day) + 1) - wheel.Age(Farm.Day)) : "")
+            ? T("{0}, {1}, {2}  ·  {3}  ·  {4} days old", Cheese.Name(wheel.Ripeness(Farm.Day)), Cheese.Name(wheel.Flavour), Cheese.Name(wheel.Size), Cheese.Stars(wheel.Stars), wheel.Age(Farm.Day))
+                + (wheel.Ripeness(Farm.Day) < Ripeness.VeryOld ? "  ·  " + T("{0} in {1} days", Cheese.Name(wheel.Ripeness(Farm.Day) + 1), wheel.DaysTo(wheel.Ripeness(Farm.Day) + 1, Farm.Day)) : "")
             : T("The cellar is empty: make a cheese in the kitchen");
         batch.DrawText(fonts.Small, line, info, Palette.Text, Align.Center);
         _buttons.Draw(batch, fonts.Small, buttons);
@@ -207,11 +207,11 @@ internal sealed class CellarScene : Scene
                 var squash = _turning.TryGetValue(wheel, out var left) ? MathF.Abs(MathF.Cos((float)(1 - (left / TurnTime)) * MathF.PI)) : 1;
                 if (squash < 1)
                 {
-                    batch.FillEllipse(at, new Vector2(radius * MathF.Max(0.12f, squash), radius), Cheese.Rind(wheel.Ripeness(_context.Farm.Farm.Day)));
+                    batch.FillEllipse(at, new Vector2(radius * MathF.Max(0.12f, squash), radius) * Cheese.Scale(wheel.Size), Cheese.Rind(wheel.Ripeness(_context.Farm.Farm.Day)));
                 }
                 else
                 {
-                    FarmScene.DrawWheel(batch, at, radius, wheel.Ripeness(Farm.Day), wheel.Flavour);
+                    FarmScene.DrawWheel(batch, at + new Vector2(0, radius * (1 - Cheese.Scale(wheel.Size))), radius * Cheese.Scale(wheel.Size), wheel.Ripeness(Farm.Day), wheel.Flavour);
                 }
 
                 if (wheel.NeedsTurning(Farm.Day))

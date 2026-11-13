@@ -57,9 +57,9 @@ public class SeasonTests
         To(farm, Season.Winter);
         farm.Grazing.Should().Be(0, "the herd is in the barn");
 
-        var hay = farm.Hay;
+        var (hay, herd) = (farm.Hay, farm.Herd.Count);
         var report = farm.NextDay();
-        report.HayEaten.Should().Be(Math.Min(hay, farm.Herd.Count));
+        report.HayEaten.Should().Be(Math.Min(hay, herd));
         report.FeedBought.Should().Be(0, "there was hay enough");
 
         while (farm.Hay > 0)
@@ -68,7 +68,8 @@ public class SeasonTests
         }
 
         farm.Season.Should().Be(Season.Winter);
-        farm.NextDay().FeedBought.Should().Be(farm.Herd.Count * Meadow.FeedPrice);
+        var animals = farm.Herd.Count;
+        farm.NextDay().FeedBought.Should().Be(animals * Meadow.FeedPrice);
     }
 
     [Fact]

@@ -937,7 +937,6 @@
   "{0} litres to the dairy for €{1}": "{0} liter naar de zuivelfabriek voor €{1}",
   "{0} to turn today": "{0} vandaag te keren",
   "{0} wheels went unturned": "{0} kazen zijn niet gekeerd",
-  "{0}, {1}  ·  {2}  ·  {3} days old": "{0}, {1}  ·  {2}  ·  {3} dagen oud",
   "{0}: {1}, {2}": "{0}: {1}, {2}",
   "€ {0}  ·  {1} cows  ·  {2} racks": "€ {0}  ·  {1} koeien  ·  {2} rekken",
   "€ {0}  ·  {1} wheels on the racks": "€ {0}  ·  {1} kazen op de rekken",
@@ -1057,5 +1056,11 @@
   "Spring: the herd is out in the meadow again": "Lente: de kudde staat weer in het weiland",
   "{0} bales of hay eaten": "{0} balen hooi gegeten",
   "Winter: the herd is in the barn, {0} bales of hay left": "Winter: de kudde staat op stal, nog {0} balen hooi",
-  "Mow it for hay: {0} bales": "Maaien voor hooi: {0} balen"
+  "Mow it for hay: {0} bales": "Maaien voor hooi: {0} balen",
+  "baby cheese": "baby kaas",
+  "big wheel": "grote kaas",
+  "farm wheel": "boerenkaas",
+  "Size: {0}, {1} litres": "Formaat: {0}, {1} liter",
+  "A baby cheese ripens twice as fast; a big wheel takes twice as long, and fetches the most": "Een baby kaas rijpt twee keer zo snel; een grote kaas doet er twee keer zo lang over, en brengt het meest op",
+  "{0}, {1}, {2}  ·  {3}  ·  {4} days old": "{0}, {1}, {2}  ·  {3}  ·  {4} dagen oud"
 }

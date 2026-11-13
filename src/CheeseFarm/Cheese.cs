@@ -23,6 +23,43 @@ public enum Flavour
     Herbs,
 }
 
+/// <summary>How big a cheese is made: a baby cheese, a farm wheel, or a big wheel.</summary>
+public enum CheeseSize
+{
+    Baby,
+    Wheel,
+    Big,
+}
+
+/// <summary>
+/// What a cheese's size means: the milk it takes, how fast it ripens (a baby cheese twice as fast, a big wheel half),
+/// and what it fetches against a farm wheel of the same ripeness.
+/// </summary>
+public static class Sizes
+{
+    public static int Milk(CheeseSize size) => size switch
+    {
+        CheeseSize.Baby => 50,
+        CheeseSize.Big => 200,
+        _ => 100,
+    };
+
+    /// <summary>Days of ripening a day in the cellar counts for.</summary>
+    public static float Pace(CheeseSize size) => size switch
+    {
+        CheeseSize.Baby => 2,
+        CheeseSize.Big => 0.5f,
+        _ => 1,
+    };
+
+    public static float PriceFactor(CheeseSize size) => size switch
+    {
+        CheeseSize.Baby => 0.55f,
+        CheeseSize.Big => 2.3f,
+        _ => 1,
+    };
+}
+
 public static class Ripening
 {
     /// <summary>The first day of age each ripeness starts at (young from the day it is made).</summary>
@@ -74,9 +111,19 @@ public sealed class Wheel(int id, int madeOn, Flavour flavour, float made)
     /// <summary>Days it lay unturned when it needed turning.</summary>
     public int Neglect { get; set; }
 
+    /// <summary>A baby cheese, a farm wheel or a big wheel.</summary>
+    public CheeseSize Size { get; init; } = CheeseSize.Wheel;
+
     public int Age(int day) => Math.Max(0, day - MadeOn);
 
-    public Ripeness Ripeness(int day) => Ripening.At(Age(day));
+    /// <summary>How far it has ripened, in days of a farm wheel: faster for a baby cheese, slower for a big wheel.</summary>
+    public int Ripened(int day) => (int)(Age(day) * Sizes.Pace(Size));
+
+    public Ripeness Ripeness(int day) => Ripening.At(Ripened(day));
+
+    /// <summary>Days until it is <paramref name="ripeness"/>, 0 when it already is.</summary>
+    public int DaysTo(Ripeness ripeness, int day) =>
+        Math.Max(0, (int)MathF.Ceiling((Ripening.StartOf(ripeness) - Ripened(day)) / Sizes.Pace(Size)));
 
     public bool NeedsTurning(int day) => day - LastTurned >= Ripening.TurnEvery;
 
