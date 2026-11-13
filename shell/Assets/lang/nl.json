@@ -945,5 +945,8 @@
   "€ {0}  ·  {1} wheels on the racks": "€ {0}  ·  {1} kazen op de rekken",
   "€ {0}  ·  1 wheel on the racks": "€ {0}  ·  1 kaas op de rekken",
   "{0}: last card!": "{0}: laatste kaart!",
-  "Tap to choose": "Tik om te kiezen"
+  "Tap to choose": "Tik om te kiezen",
+  "First to {0} points wins the match.": "Wie het eerst {0} punten heeft, wint de partij.",
+  "{0} pts": "{0} pnt",
+  "{0}: {1} pts": "{0}: {1} pnt"
 }

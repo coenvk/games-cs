@@ -22,7 +22,7 @@ internal sealed class CardTableApp : IGameApp
         title =>
         [
             new(T("Colour Cards"), () => title.Open(new UnoSetupScene(context), fade: false)),
-            new(T("From a ruleset"), () => title.Open(new RulesetsScene(context, solitaire: false, ruleset => new RulesetTableScene(context, ruleset)), fade: false)),
+            new(T("From a ruleset"), () => title.Open(new RulesetsScene(context, solitaire: false, ruleset => new RulesetSetupScene(context, ruleset)), fade: false)),
         ],
         () => T("Colour Cards against bots or friends, here or online"));
 
