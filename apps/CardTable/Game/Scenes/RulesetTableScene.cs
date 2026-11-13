@@ -206,11 +206,18 @@ internal sealed class RulesetTableScene : Scene
     {
         var who = _match.Players[seat].Name;
         var turn = _game.Game.LastTurn!;
-        _message = turn.Has("play") && _game.Discard.Top is { } played ? T("{0} played {1}", who, Name(played.Card))
+        _message = turn.Has("call") && _ruleset.Turns.Call is { } called ? T("{0}: “{1}”", who, T(called.Name))
+            : turn.Has("play") && _game.Discard.Top is { } played ? T("{0} played {1}", who, Name(played.Card))
             : turn.Tags.FirstOrDefault(t => t.StartsWith("chose:", StringComparison.Ordinal)) is { } chose ? T("{0} named {1}", who, chose[6..])
             : turn.Has("drew") ? T("{0} drew", who)
             : turn.Has("pass") ? T("{0} passed", who)
             : _message;
+        // Down to the call's count: forgetting it cost cards.
+        if (turn.Tags.FirstOrDefault(t => t.StartsWith("forgot:", StringComparison.Ordinal)) is { } forgot)
+        {
+            _message += " · " + T("forgot to call, and drew {0}", forgot[7..]);
+        }
+
         // What the ruleset's script said, after what happened.
         foreach (var said in turn.Tags.Where(t => t.StartsWith("say:", StringComparison.Ordinal)))
         {
@@ -234,7 +241,7 @@ internal sealed class RulesetTableScene : Scene
     {
         var mine = _match.IsHumansTurn && _match.Current.Seat == _viewer;
         var moves = mine ? _game.LegalMoves(_viewer) : [];
-        var state = $"{_game.IsOver}/{mine}/{_game.IsChoosingSuit}/{moves.Contains(PassTurn.Instance)}/{_game.HasDrawn}/{_viewer}";
+        var state = $"{_game.IsOver}/{mine}/{_game.IsChoosingSuit}/{moves.Contains(PassTurn.Instance)}/{_game.HasDrawn}/{_viewer}/{moves.Contains(CallOut.Instance)}/{_game.HasCalled}";
         if (state == _buttonState)
         {
             return;
@@ -257,6 +264,12 @@ internal sealed class RulesetTableScene : Scene
         else if (mine && moves.Contains(PassTurn.Instance))
         {
             buttons.Add(new Button(_game.HasDrawn ? T("Keep it") : T("Pass"), () => _match.Play(PassTurn.Instance)));
+        }
+
+        // The ruleset's call ("Last card!"), to make before playing down to the count; lit once made.
+        if (mine && _ruleset.Turns.Call is { } call && !_game.IsOver && (moves.Contains(CallOut.Instance) || _game.HasCalled))
+        {
+            buttons.Insert(0, new Button(T(call.Name), () => _match.Play(CallOut.Instance), Highlight: _game.HasCalled));
         }
 
         buttons.Add(new Button(T("Leave"), () => Scenes.Pop()));

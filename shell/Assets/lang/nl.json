@@ -1025,5 +1025,7 @@
   "harmonics": "boventonen",
   "choir": "koor",
   "{0} (edited)": "{0} (aangepast)",
-  "Sound": "Geluid"
+  "Sound": "Geluid",
+  "{0}: “{1}”": "{0}: “{1}”",
+  "forgot to call, and drew {0}": "vergat het te zeggen, en pakte er {0}"
 }
