@@ -33,6 +33,7 @@ internal sealed class ShellGame : JentlGame
     private readonly Queue<ScriptFrame>? _script;
     private PointerState _scriptPointer;
     private GamePadState _scriptPad;
+    private int _scriptWheel;
     private int _settledFrames;
     private Fonts? _fonts;
     private SoundPlayer? _sounds;
@@ -176,6 +177,7 @@ internal sealed class ShellGame : JentlGame
         {
             _scriptPointer = frame.Pointer ?? _scriptPointer with { IsDown = false };
             _scriptPad = frame.Pad;
+            _scriptWheel = frame.Wheel;
             return frame.Keys;
         }
 
@@ -183,6 +185,19 @@ internal sealed class ShellGame : JentlGame
         _scriptPointer = _scriptPointer with { IsDown = false };
         _scriptPad = default;
         return default;
+    }
+
+    // Called after ReadKeyboard each frame, so it returns the same script frame's wheel steps (once).
+    protected override int ReadWheel()
+    {
+        if (_script is null)
+        {
+            return base.ReadWheel();
+        }
+
+        var steps = _scriptWheel;
+        _scriptWheel = 0;
+        return steps;
     }
 
     // Called right after ReadKeyboard each frame, so it returns the same script frame's pointer.
@@ -258,7 +273,7 @@ internal sealed class ShellGame : JentlGame
     /// Each key is held for one frame and released for one frame. <c>Tap:x,y</c> presses and releases the
     /// pointer there; <c>Drag:x1,y1,x2,y2</c> moves it from one point to the other while held. <c>Pad:A</c>
     /// presses a gamepad button; <c>RightStick:x,y,frames</c> tilts the right stick (with the trigger held when
-    /// <c>x,y,frames,1</c>).
+    /// <c>x,y,frames,1</c>); <c>Wheel:x,y,steps</c> turns the mouse wheel with the pointer there (up when positive).
     /// </summary>
     private static Queue<ScriptFrame> BuildScript(IEnumerable<string> keys)
     {
@@ -282,6 +297,15 @@ internal sealed class ShellGame : JentlGame
                 }
 
                 frames.Enqueue(new ScriptFrame(default, new PointerState(false, points[1])));
+                continue;
+            }
+
+            if (name.StartsWith("Wheel:", StringComparison.OrdinalIgnoreCase))
+            {
+                var numbers = Numbers(name);
+                var at = new Vector2(numbers[0], numbers[1]);
+                frames.Enqueue(new ScriptFrame(default, new PointerState(false, at)));
+                frames.Enqueue(new ScriptFrame(default, new PointerState(false, at), Wheel: (int)numbers[2]));
                 continue;
             }
 
@@ -335,5 +359,5 @@ internal sealed class ShellGame : JentlGame
     }
 
     /// <summary>One frame of scripted input; a null pointer means "released where it last was".</summary>
-    private readonly record struct ScriptFrame(KeyboardState Keys, PointerState? Pointer, GamePadState Pad = default);
+    private readonly record struct ScriptFrame(KeyboardState Keys, PointerState? Pointer, GamePadState Pad = default, int Wheel = 0);
 }

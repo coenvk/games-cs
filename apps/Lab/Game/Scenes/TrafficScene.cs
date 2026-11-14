@@ -15,7 +15,9 @@ namespace Games.Scenes;
 /// <summary>
 /// A small town's traffic on Jentl.Traffic: lights in the middle on a two-lane main road, a roundabout to the east, a
 /// crossroads with priority from the right to the west, and a priority junction on a bending road to the north.
-/// Turn the traffic up or down, speed time up, and watch the measurements.
+/// Cycle paths run along the roads from the lights to the east and north, cyclists turning left in two at the lights
+/// and riding their own ring round the roundabout. Turn the traffic up or down (the cycling with it), speed time up,
+/// and watch the measurements.
 /// </summary>
 internal sealed class TrafficScene : Scene
 {
@@ -127,17 +129,18 @@ internal sealed class TrafficScene : Scene
         var west = b.Node(-480, 0);
 
         // The main road east and west through the lights, two lanes each way.
-        b.Road(lights, round, 2, 50);
+        var main = b.Road(lights, round, 2, 50);
         b.Road(lights, plain, 2, 50);
-        b.Road(round, east, 2, 70);
+        var eastOut = b.Road(round, east, 2, 70);
         b.Road(plain, west, 1, 70);
-        b.Road(lights, junction, 1, 50);
-        b.Road(lights, b.Node(0, -230), 1, 50);
-        b.Road(round, b.Node(260, 230), 1, 50);
-        b.Road(round, b.Node(260, -230), 1, 50);
+        var up = b.Road(lights, junction, 1, 50);
+        var south = b.Road(lights, b.Node(0, -230), 1, 50);
+        var roundNorth = b.Road(round, b.Node(260, 230), 1, 50);
+        var roundSouth = b.Road(round, b.Node(260, -230), 1, 50);
         b.Road(plain, b.Node(-260, -230), 1, 50);
         var bend = b.Road(plain, junction, 1, 50, new Numerics.Vector2(-240, 150), new Numerics.Vector2(-120, 210));
         var north = b.Road(junction, b.Node(0, 330), 1, 50);
+        b.CyclePaths(main, eastOut, up, south, roundNorth, roundSouth, north);
         b.Road(junction, b.Node(200, 230), 1, 50);
         b.Signals(lights, green: 18);
         b.Roundabout(round, 16);
@@ -151,6 +154,7 @@ internal sealed class TrafficScene : Scene
         var network = Town();
         var simulation = new TrafficSimulation(network, seed: _context.Deal ?? 1) { LaneChanges = true };
         simulation.SetDemand(_demand);
+        simulation.SetCycling(_demand / 2);
 
         // A bus line across town, east to west, stopping before the lights and on the way out; one every minute and a half.
         Node At(float x, float y) => network.Nodes.First(n => n.Position == new Numerics.Vector2(x, y));
@@ -179,5 +183,6 @@ internal sealed class TrafficScene : Scene
     {
         _demand = Math.Clamp(_demand + change, 0, 600);
         _simulation.SetDemand(_demand);
+        _simulation.SetCycling(_demand / 2);
     }
 }
